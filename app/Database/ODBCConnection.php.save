@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Database;
+
+use Illuminate\Database\SQLiteConnection as BaseConnection;
+
+class ODBCConnection extends BaseConnection
+public{
+    /**
+     * Get the default query grammar instance.
+     *
+     * @return \Illuminate\Database\Query\Grammars\Grammar
+     */
+    protected function getDefaultQueryGrammar()
+    {
+        return $this->withTablePrefix(new \Illuminate\Database\Query\Grammars\SqlServerGrammar);
+    }
+
+    /**
+     * Get the default schema grammar instance.
+     *
+     * @return \Illuminate\Database\Schema\Grammars\Grammar
+     */
+    protected function getDefaultSchemaGrammar()
+    {
+        return $this->withTablePrefix(new \Illuminate\Database\Schema\Grammars\SqlServerGrammar);
+    }
+
+    /**
+     * Get the default post-processor instance.
+     *
+     * @return \Illuminate\Database\Query\Processors\Processor
+     */
+    protected function getDefaultPostProcessor()
+    {
+        return new \Illuminate\Database\Query\Processors\SqlServerProcessor;
+    }
+
+    /**
+     * Get the PDO driver name.
+     *
+     * @return string
+     */
+    protected function getDriverName()
+    {
+        return 'odbc';
+    }
+}

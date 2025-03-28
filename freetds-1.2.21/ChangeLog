@@ -1,0 +1,182 @@
+Author: Aaron M. Ucko <ucko@ncbi.nlm.nih.gov>
+Date:   Wed Apr 14 16:02:03 2021 -0400
+
+    tds_connect: Leave the original context's error handler alone.
+
+    Retire the code that temporarily set the socket's original context's
+    error handler to NULL during version probing.  The relevant socket
+    already uses a temporary copy of that context with a suitable custom
+    error handler, so the only potential usage of this context will be
+    from other threads that should be able to carry on independently.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Mon Apr 12 21:15:11 2021 +0100
+
+    Do not fail using CMake if gperf is not present but not needed
+
+    gperf is needed only if you need to generate some files,
+    not always.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Sat Apr 10 06:49:40 2021 +0100
+
+    ctlib: Use tds_get_conversion_type in _ct_get_client_type
+
+    Support some missing types like nullable unsigned smallint.
+    Simplify switch.
+
+Author: Aleksei Nikiforov <darktemplar@basealt.ru>
+Date:   Wed Dec 16 15:12:16 2020 +0300
+
+    Fix datacopy logging
+
+    Use stderr for logging when it's enabled instead of discarding logs.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Sun Dec 6 20:03:58 2020 +0000
+
+    dblib: Fix column length for terminated fields
+
+    Do not ignore length of data if collen < 0.
+    Do not use strlen if we already have a size.
+    Threat zero-size as NULL, this is what Sybase does; to pass
+    an empty field a zero byte or a single space is fine.
+
+    bcp2 tests some behaviour of NULL values and bulk copy.
+
+    Test based on a test case reported by Bellam R.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Sun Oct 11 11:15:21 2020 +0100
+
+    Avoid sending invalid data to Sybase during bulk insert
+
+    This reverts most of commit e1a1216a07246d6abe7a42bf71e369e4cf47a0fd
+
+        allow sending NULL (no pun intended) even if column is not NULL.
+
+    This fix issue #362, reported by Bellam R who proposed a similar
+    change.
+    This change remove most conditional USING_SYBEBCNN compilation
+    implementing how APIs should work.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Sun Nov 1 12:36:14 2020 +0000
+
+    Check minimal protocol version for bulk support
+
+    At least version 5.0 is required.
+
+    The check in tds_bcp_start handles case reconnecting to
+    different server.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Tue Sep 29 06:52:24 2020 +0100
+
+    dblib: Add KEEP_NULLS to BCP hints
+
+    This hint was added in MSSQL 2008.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Sun Nov 29 07:03:15 2020 +0000
+
+    Fix compilation for HP-UX
+
+    This should fix GitHub issue #367
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Sat Nov 21 06:57:24 2020 +0000
+
+    dblib: Do not limit database query to 92 character for Sybase
+
+    "tblname" is used as a query if direction is DB_QUERYOUT.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Thu Oct 22 13:49:06 2020 +0100
+
+    Fix CMake dependencies
+
+    Do not build generated files in source directories.
+    Add add_custom_target to add explicit dependencies between
+    generated files and other targets.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Fri Oct 30 15:54:11 2020 +0000
+
+    Check correctly for __builtin_bswap16 and __builtin_bswap32
+
+    __builtin_bswap16 was introduced in GCC 4.8.
+    __builtin_bswap32 was introduced in GCC 4.3.
+
+    Attempt to fix an issue compiling with GCC 4.2.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Thu Oct 29 16:12:32 2020 +0000
+
+    tds: Fix bulk insert for big endian machines
+
+    Now that network is always little endian the row data must be also
+    little endian.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Thu Oct 29 16:31:18 2020 +0000
+
+    tds: Swap correctly Sybase unsigned types for bit endian machines
+
+    Fix getting these types from server.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Thu Oct 29 13:48:59 2020 +0000
+
+    tds: Fix Sybse UNI(VAR)CHAR type for big endian machines
+
+    Network endian is now always little endian.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Wed Oct 28 20:03:33 2020 +0000
+
+    tds: Fix inserting bulk data into Sybase from big endian platforms
+
+    The encoding for client is always little endian, even for big endian
+    machines.
+    Reported by Bellam R.
+
+Author: Craig A. Berry <craigberry@mac.com>
+Date:   Tue Sep 15 16:10:45 2020 -0500
+
+    Fix VMS build for OpenSSL 1.1.x
+
+    It needed some configuration tinkering to recognize the pieces
+    correctly.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Thu Sep 3 14:50:08 2020 +0100
+
+    build: Compile gssapi.c always
+
+    Allows Sybase kerberos connections under Windows using GSSAPI.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Mon Jul 6 16:54:51 2020 +0100
+
+    tds: Optimization for char encoding
+
+    Detect same charset and avoid using larger buffer to store
+    result of conversion.
+    This also affects the column length on some libraries which do
+    not differ between DDL and byte length.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Tue Jul 7 07:54:37 2020 +0100
+
+    dblib: Allows to pass 0 as type for bcp_bind
+
+    0 value as type means no conversion performed.
+    This is correctly handled but it was rejected when more checks
+    were introduced.
+
+Author: Frediano Ziglio <freddy77@gmail.com>
+Date:   Tue Jul 7 07:31:38 2020 +0100
+
+    dblib: Add missing parameters to DBSETLSERVERPRINCIPAL macro
+

@@ -1,0 +1,21 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Produccion\ArticuloController;
+Route::get('/', function () {
+    return view('welcome'); // O cualquier otra vista que desees en la raíz
+});
+
+Route::get('/cumplido_tareas', function () {
+    return view('cumplido_tareas');
+});
+
+Route::get('/articulos/{cod_articulo}/colores', function ($cod_articulo) {
+    return view('produccion.ArticuloColor', ['cod_articulo' => $cod_articulo]);
+});
+
+Route::get('/articulos/crear', [ArticuloController::class, 'create'])->name('articulos.create');
+Route::post('/articulos/store', [ArticuloController::class, 'store'])->name('articulos.store');
+Route::get('/articulos/{cod_articulo}/edit', [ArticuloController::class, 'edit'])->name('articulos.edit');
+Route::post('/articulos/{cod_articulo}/update', [ArticuloController::class, 'update'])->name('articulos.update');
+Route::get('/articulos', [App\Http\Controllers\Produccion\ArticuloController::class, 'index'])->name('articulos.index
