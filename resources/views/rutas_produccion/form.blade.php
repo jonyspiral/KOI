@@ -2,9 +2,9 @@
 
 @section('content')
 <div class="container">
-  <h2>{{ isset($registro) ? 'Editar' : 'Nuevo' }} ArticulosNew</h2>
+  <h2>{{ isset($registro) ? 'Editar' : 'Nuevo' }} RutasProduccion</h2>
 
-  <form method="POST" action="{{ isset($registro) ? route('produccion.articulos_new.update', $registro->id) : route('produccion.articulos_new.store') }}">
+  <form method="POST" action="{{ isset($registro) ? route('rutas_produccion.update', $registro->id) : route('rutas_produccion.store') }}">
     @csrf
     @if(isset($registro)) @method('PUT') @endif
 
@@ -13,12 +13,16 @@
   <input type="text" name="id" value="{{ $registro->id ?? old('id') }}" class="form-control">
 </div>
 <div class="mb-3">
-  <label for="cod_articulo" class="form-label">Cod articulo</label>
-  <input type="text" name="cod_articulo" value="{{ $registro->cod_articulo ?? old('cod_articulo') }}" class="form-control">
+  <label for="cod_ruta" class="form-label">Cod ruta</label>
+  <input type="text" name="cod_ruta" value="{{ $registro->cod_ruta ?? old('cod_ruta') }}" class="form-control">
 </div>
 <div class="mb-3">
-  <label for="denom_articulo" class="form-label">Denom articulo</label>
-  <input type="text" name="denom_articulo" value="{{ $registro->denom_articulo ?? old('denom_articulo') }}" class="form-control">
+  <label for="denom_ruta" class="form-label">Denom ruta</label>
+  <input type="text" name="denom_ruta" value="{{ $registro->denom_ruta ?? old('denom_ruta') }}" class="form-control">
+</div>
+<div class="mb-3">
+  <label for="anulado" class="form-label">Anulado</label>
+  <input type="text" name="anulado" value="{{ $registro->anulado ?? old('anulado') }}" class="form-control">
 </div>
 <div class="mb-3">
   <label for="created_at" class="form-label">Created at</label>
@@ -35,7 +39,7 @@
 
 
     <button class="btn btn-primary">Guardar</button>
-    <a href="{{ route('produccion.articulos_new.index') }}" class="btn btn-secondary">Cancelar</a>
+    <a href="{{ route('rutas_produccion.index') }}" class="btn btn-secondary">Cancelar</a>
   </form>
 </div>
 @endsection

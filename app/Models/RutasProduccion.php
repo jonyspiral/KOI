@@ -11,5 +11,5 @@ class RutasProduccion extends Model
     public $incrementing = true;
     public $timestamps = true;
 
-    protected $fillable = ['id', 'cod_ruta', 'denom_ruta', 'anulado', 'fecha_ultima_modificacion', 'autor_ultima_modificacion', 'fechaAlta', 'created_at', 'updated_at', 'sync_status'];
+    protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'created_at', 'updated_at', 'sync_status'];
 }

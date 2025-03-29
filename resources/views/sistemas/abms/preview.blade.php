@@ -9,7 +9,7 @@
     <input type="hidden" name="tabla" value="{{ $modelo }}">
     <input type="hidden" name="namespace_controlador" value="{{ $namespace }}">
     <input type="hidden" name="carpeta_vistas" value="{{ $carpetaVistas }}">
-
+    <input type="hidden" name="modelo" value="{{ $modelo }}">
     <div class="mb-4">
       <label class="form-label">📁 Carpeta del Controlador (namespace)</label>
       <input type="text" class="form-control" value="{{ $namespace }}" readonly>
@@ -25,7 +25,12 @@
         <tr>
           <th>Campo</th>
           <th>Tipo</th>
-          <th>Incluir</th>
+          <th>
+  Incluir<br>
+  <input type="checkbox" id="checkAllIncluir">
+</th>
+
+          <!-- <th>Incluir</th> -->
           <th>Input</th>
           <th>Tabla Ref</th>
           <th>Campo Mostrar</th>
@@ -62,8 +67,27 @@
         @endforeach
       </tbody>
     </table>
-
+    <div class="mb-3 form-check">
+<input type="hidden" name="sobrescribir" value="0">
+<input type="checkbox" class="form-check-input" id="sobrescribir" name="sobrescribir" value="1">
+<label class="form-check-label" for="sobrescribir">Sobrescribir controlador si ya existe</label>
+</div>
     <button type="submit" class="btn btn-success">Generar ABM</button>
   </form>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const masterCheckbox = document.getElementById('checkAllIncluir');
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][name^="campos"][name$="[incluir]"]');
+
+    masterCheckbox.addEventListener('change', function () {
+      checkboxes.forEach(checkbox => {
+        if (!checkbox.disabled) {
+          checkbox.checked = masterCheckbox.checked;
+        }
+      });
+    });
+  });
+</script>
+
 @endsection

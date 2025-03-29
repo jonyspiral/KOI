@@ -2,14 +2,15 @@
 
 @section('content')
 <div class="container">
-  <h2>ArticulosNew</h2>
-  <a href="{{ route('produccion.articulos_new.create') }}" class="btn btn-success mb-2">Nuevo</a>
+  <h2>RutasProduccion</h2>
+  <a href="{{ route('rutas_produccion.create') }}" class="btn btn-success mb-2">Nuevo</a>
   <table class="table table-bordered">
     <thead>
       <tr>
         <th>id</th>
-<th>cod_articulo</th>
-<th>denom_articulo</th>
+<th>cod_ruta</th>
+<th>denom_ruta</th>
+<th>anulado</th>
 <th>created_at</th>
 <th>updated_at</th>
 <th>sync_status</th>
@@ -21,15 +22,16 @@
       @foreach($registros as $r)
         <tr>
           <td>{{ $r->id }}</td>
-<td>{{ $r->cod_articulo }}</td>
-<td>{{ $r->denom_articulo }}</td>
+<td>{{ $r->cod_ruta }}</td>
+<td>{{ $r->denom_ruta }}</td>
+<td>{{ $r->anulado }}</td>
 <td>{{ $r->created_at }}</td>
 <td>{{ $r->updated_at }}</td>
 <td>{{ $r->sync_status }}</td>
 
           <td>
-            <a href="{{ route('produccion.articulos_new.edit', $r->id) }}" class="btn btn-sm btn-primary">Editar</a>
-            <form method="POST" action="{{ route('produccion.articulos_new.destroy', $r->id) }}" style="display:inline;">
+            <a href="{{ route('rutas_produccion.edit', $r->id) }}" class="btn btn-sm btn-primary">Editar</a>
+            <form method="POST" action="{{ route('rutas_produccion.destroy', $r->id) }}" style="display:inline;">
               @csrf
               @method('DELETE')
               <button class="btn btn-sm btn-danger">Eliminar</button>

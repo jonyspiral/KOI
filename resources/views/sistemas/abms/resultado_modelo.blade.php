@@ -2,22 +2,21 @@
 
 @section('content')
 <div class="container">
-  <h3>🔧 Configurar ABM para: <strong>{{ \$modelo }}</strong></h3>
+  <h3>Configurar ABM para: <strong>{{ $modelo }}</strong></h3>
 
   <form method="POST" action="{{ url('/sistemas/abms/generar') }}">
     @csrf
-    <input type="hidden" name="tabla" value="{{ \$modelo }}">
-    <input type="hidden" name="namespace_controlador" value="{{ \$namespace }}">
-    <input type="hidden" name="carpeta_vistas" value="{{ \$carpetaVistas }}">
-
+    <input type="hidden" name="tabla" value="{{ $modelo }}">
+    <input type="hidden" name="namespace_controlador" value="{{ $namespace }}">
+    <input type="hidden" name="carpeta_vistas" value="{{ $carpetaVistas }}">
     <div class="mb-4">
       <label class="form-label">📁 Carpeta del Controlador (namespace)</label>
-      <input type="text" class="form-control" value="{{ \$namespace }}" readonly>
+      <input type="text" class="form-control" value="{{ $namespace }}" readonly>
     </div>
 
     <div class="mb-4">
       <label class="form-label">📁 Carpeta para las Vistas (en resources/views)</label>
-      <input type="text" class="form-control" value="{{ \$carpetaVistas }}" readonly>
+      <input type="text" class="form-control" value="{{ $carpetaVistas }}" readonly>
     </div>
 
     <table class="table table-bordered">

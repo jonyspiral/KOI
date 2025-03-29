@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Session;
 
 class AbmCreatorController extends Controller
 {
@@ -52,10 +52,11 @@ class AbmCreatorController extends Controller
     }
     public function preview(Request $request)
     {
+        $namespaceControlador = 'namespaceControlador';
         $modelo = $request->input('modelo');
         $carpetaVistas = $request->input('carpeta_vistas') ?? strtolower($modelo);
         $namespace = $request->input('namespace_controlador') ?? '';
-
+        
         $modeloClass = "App\\Models\\$modelo";
         if (!class_exists($modeloClass)) {
             return back()->with('error', "El modelo {$modeloClass} no existe.");
@@ -70,12 +71,16 @@ class AbmCreatorController extends Controller
 
         return view('sistemas.abms.preview', compact('modelo', 'namespace', 'carpetaVistas', 'columnas'));
     }
-
     public function configurar(Request $request)
     {
-        $modelo = $request->input('modelo');
+        $modeloCompleto = $request->input('modelo');
+        $partes = explode('.', $modeloCompleto);
+        $modelo = array_pop($partes);
+    
+        $tabla = Str::snake(Str::pluralStudly($modelo));
+        $namespaceControlador = $request->input('namespace') ?? 'Produccion';
         $carpetaVistas = $request->input('carpeta_vistas') ?? strtolower($modelo);
-        $namespace = $request->input('namespace') ?? '';
+        $carpetaVistas = Str::snake($modelo); // ✅ genera: articulos_new
     
         // Validación de modelo
         if (empty($modelo)) {
@@ -88,13 +93,14 @@ class AbmCreatorController extends Controller
             throw new \Exception("El modelo $modeloClass no existe. Verifica que el archivo esté en app/Models y el nombre coincida.");
         }
     
-        // Obtener los campos de la tabla desde el modelo
-        $tabla = (new $modeloClass)->getTable();
+        // Obtener la tabla y la conexión del modelo
+        $tablaReal = (new $modeloClass)->getTable();
         $conexion = (new $modeloClass)->getConnection();
     
+        // Obtener columnas desde INFORMATION_SCHEMA
         $camposRaw = $conexion->select("SELECT COLUMN_NAME, DATA_TYPE, COLUMN_KEY, EXTRA 
-                                         FROM INFORMATION_SCHEMA.COLUMNS 
-                                         WHERE TABLE_NAME = ?", [$tabla]);
+                                        FROM INFORMATION_SCHEMA.COLUMNS 
+                                        WHERE TABLE_NAME = ?", [$tablaReal]);
     
         $campos = [];
         foreach ($camposRaw as $col) {
@@ -116,15 +122,16 @@ class AbmCreatorController extends Controller
         // Guardar datos en sesión para usar en finalizar()
         session([
             'abm.modelo' => $modelo,
-            'abm.namespace' => $namespace,
+            'abm.namespace' => $namespaceControlador,
             'abm.carpeta_vistas' => $carpetaVistas,
             'abm.campos' => $campos,
         ]);
     
-        return view('sistemas.abms.preview', compact('modelo', 'namespace', 'carpetaVistas', 'campos'));
+        $namespace = $namespaceControlador;
+    
+        return view('sistemas.abms.preview', compact('modelo', 'tabla', 'namespace', 'carpetaVistas', 'campos'));
     }
     
-
 
     public function generar(Request $request)
     {
@@ -136,13 +143,22 @@ class AbmCreatorController extends Controller
             'carpeta_vistas' => 'required|string',
             'campos' => 'required|array',
         ]);
+        
     
         $tabla = $request->input('tabla');
         $namespace = $request->input('namespace_controlador');
         $carpetaVistas = $request->input('carpeta_vistas');
         $campos = $request->input('campos');
-    
+       
         $modelo = ucfirst(Str::camel($tabla));
+
+$request->merge([
+    'modelo' => $modelo,
+    'tabla' => $tabla,
+    'namespace_controlador' => $namespace,
+    'carpeta_vistas' => $carpetaVistas,
+    'campos' => $campos,
+]);
         $modeloPath = app_path("Models/{$modelo}.php");
     
         // Crear $fillable solo con campos seleccionados
@@ -207,12 +223,13 @@ class AbmCreatorController extends Controller
         'controllerPath' => $controllerPath,
         'campos' => $campos,
     ]); */
-      
+
         // Generar archivos
         $this->generarControlador($request);
         $this->generarVistas($request);
+       
         $this->agregarRutaWeb($namespace, $modelo, $carpetaVistas);
-    
+      
     
     
     
@@ -227,33 +244,34 @@ class AbmCreatorController extends Controller
                 'modeloCode' => File::get($modeloPath),
                 'campos' => $campos,
                 'rutaError' => $e->getMessage(),
+                'namespace' => $namespace, // ✅ agregado
+                'carpetaVistas' => $carpetaVistas // (opcional, por si se usa también)
             ]);
         }
     }
 
-public function generarControlador(Request $request)
-{
-    $modelo = $request->input('modelo');
-    $tabla = $request->input('tabla');
-    $campos = $this->decodificarCamposJson($request);
-    $namespace = $request->input('namespace_controlador');
+    public function generarControlador(Request $request)
+    {  
+        $modelo = $request->input('modelo');
+        $tabla = $request->input('tabla');
+        $campos = $this->decodificarCamposJson($request);
+        $namespace = $request->input('namespace_controlador');
 
-    $controllerName = $modelo . 'Controller';
-    $controllerDir = app_path('Http/Controllers/' . str_replace('.', '/', $namespace));
-    $controllerPath = $controllerDir . '/' . $controllerName . '.php';
+        $controllerName = $modelo . 'Controller';
+        $controllerDir = app_path('Http/Controllers/' . str_replace('.', '/', $namespace));
+        $controllerPath = $controllerDir . '/' . $controllerName . '.php';
 
-    $modeloClass = 'App\\Models\\' . $modelo;
-    $routeName = str_replace('/', '.', strtolower($namespace)) . '.' . strtolower($modelo);
-    $vistaPath = str_replace('.', '/', strtolower($namespace)) . '/' . strtolower($modelo);
+        $modeloClass = 'App\\Models\\' . $modelo;
+        $routeName = str_replace('/', '.', strtolower($namespace)) . '.' . Str::snake($modelo);
+        $vistaPath = str_replace('.', '/', strtolower($namespace)) . '/' . Str::snake($modelo);
 
-    // Solo los campos que no son autoincrementales y están marcados como "incluir"
-    $camposOnly = implode(', ', array_map(fn($c) => "'$c'", array_keys(array_filter($campos, fn($c) => !empty($c['incluir']) && empty($c['autoincremental'])))));
+        // Filtrar campos que no son autoincrementales y están marcados para incluir
+        $camposOnly = implode(', ', array_map(fn($c) => "'$c'", array_keys(array_filter($campos, fn($c) => !empty($c['incluir']) && empty($c['autoincremental'])))));
 
-    // Mostrar nombre legible en el título (ej: Secciones Produccion)
-    $displayModelo = \Illuminate\Support\Str::headline($modelo);
+        $displayModelo = Str::headline($modelo);
 
-    // Crear el código del controlador
-    $controllerCode = <<<PHP
+        // Generar el contenido del controlador
+        $controllerCode = <<<PHP
 <?php
 
 namespace App\Http\Controllers\\$namespace;
@@ -305,14 +323,155 @@ class $controllerName extends Controller
 }
 PHP;
 
-    // Crear carpeta si no existe
-    if (!File::exists($controllerDir)) {
-        File::makeDirectory($controllerDir, 0755, true);
-    }
+// Crear carpeta si no existe
+            if (!File::exists($controllerDir)) {
+                File::makeDirectory($controllerDir, 0755, true);
+            }
 
-    // Escribir el archivo (sobrescribe siempre)
-    File::put($controllerPath, $controllerCode);
-}
+            // Si el archivo ya existe y no se quiere sobrescribir
+            if (File::exists($controllerPath) && !$request->input('sobrescribir', false)) {
+                throw new \Exception("⚠️ El archivo $controllerPath ya existe. Si querés sobrescribirlo, activá la opción de sobrescribir.");
+            }
+
+            // Intentar guardar el archivo del controlador
+            try {
+                File::put($controllerPath, $controllerCode);
+            } catch (\Exception $e) {
+                throw new \Exception("❌ No se pudo escribir el controlador. Verificá permisos de escritura en: $controllerPath\n\n" . $e->getMessage());
+            }
+
+                }
+
+  /*   public function generarVistas(Request $request)
+    {
+        $modelo = $request->input('modelo');
+        $carpetaVistas = $request->input('carpeta_vistas') ?? strtolower($modelo);
+        $campos = $this->decodificarCamposJson($request);
+
+        $carpeta = resource_path('views/' . $carpetaVistas);
+        File::ensureDirectoryExists($carpeta);
+
+        $nombreRuta = str_replace('/', '.', $carpetaVistas);
+
+        // Generar index.blade.php
+        $thead = '';
+        $tbody = '';
+        foreach ($campos as $campo => $conf) {
+            if (isset($conf['incluir'])) {
+                $thead .= "<th>$campo</th>\n";
+                $tbody .= "<td>{{ \$r->$campo }}</td>\n";
+            }
+        }
+
+        $indexView = <<<BLADE
+@extends('layouts.app')
+
+@section('content')
+<div class="container">
+  <h2>$modelo</h2>
+  <a href="{{ route('$nombreRuta.create') }}" class="btn btn-success mb-2">Nuevo</a>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        $thead
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach(\$registros as \$r)
+        <tr>
+          $tbody
+          <td>
+            <a href="{{ route('$nombreRuta.edit', \$r->id) }}" class="btn btn-sm btn-primary">Editar</a>
+            <form method="POST" action="{{ route('$nombreRuta.destroy', \$r->id) }}" style="display:inline;">
+              @csrf
+              @method('DELETE')
+              <button class="btn btn-sm btn-danger">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+      @endforeach
+    </tbody>
+  </table>
+</div>
+@endsection
+BLADE;
+
+        File::put("$carpeta/index.blade.php", $indexView);
+
+        // Generar form.blade.php
+        $formFields = '';
+        foreach ($campos as $campo => $conf) {
+            if (!isset($conf['incluir'])) continue;
+
+            $label = ucfirst(str_replace('_', ' ', $campo));
+            $input = "<input type=\"text\" name=\"$campo\" value=\"{{ \$registro->$campo ?? old('$campo') }}\" class=\"form-control\">";
+
+            switch ($conf['tipo_input']) {
+                case 'textarea':
+                    $input = "<textarea name=\"$campo\" class=\"form-control\">{{ \$registro->$campo ?? old('$campo') }}</textarea>";
+                    break;
+                case 'select':
+                    if (!empty($conf['tabla_ref']) && !empty($conf['campo_mostrar'])) {
+                        $var = $conf['tabla_ref'];
+                        $campoMostrar = $conf['campo_mostrar'];
+                        $input = <<<HTML
+<select name="$campo" class="form-control">
+  @foreach(\${$var} as \$item)
+    <option value="{{ \$item->$campo }}" {{ (isset(\$registro) && \$registro->$campo == \$item->$campo) ? 'selected' : '' }}>
+      {{ \$item->$campoMostrar }}
+    </option>
+  @endforeach
+</select>
+HTML;
+                    }
+                    break;
+                case 'checkbox':
+                    $input = <<<HTML
+<input type="checkbox" name="$campo" value="1" {{ (!empty(\$registro) && \$registro->$campo) ? 'checked' : '' }}>
+HTML;
+                    break;
+                case 'date':
+                    $input = <<<HTML
+<input type="date" name="$campo" value="{{ isset(\$registro) ? \Illuminate\Support\Carbon::parse(\$registro->$campo)->format('Y-m-d') : old('$campo') }}" class="form-control">
+HTML;
+                    break;
+            }
+
+            $formFields .= <<<HTML
+<div class="mb-3">
+  <label for="$campo" class="form-label">$label</label>
+  $input
+</div>
+
+HTML;
+        }
+
+        $formView = <<<BLADE
+@extends('layouts.app')
+
+@section('content')
+<div class="container">
+  <h2>{{ isset(\$registro) ? 'Editar' : 'Nuevo' }} $modelo</h2>
+
+  <form method="POST" action="{{ isset(\$registro) ? route('$nombreRuta.update', \$registro->id) : route('$nombreRuta.store') }}">
+    @csrf
+    @if(isset(\$registro)) @method('PUT') @endif
+
+    $formFields
+
+    <button class="btn btn-primary">Guardar</button>
+    <a href="{{ route('$nombreRuta.index') }}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+@endsection
+BLADE;
+
+        Log::info('Generar controlador request:', $request->all());
+        File::put("$carpeta/form.blade.php", $formView);
+
+        return redirect(url($carpetaVistas));
+    } */
 
 
 
@@ -321,14 +480,14 @@ PHP;
     $modelo = $request->input('modelo');
     $carpetaVistas = $request->input('carpeta_vistas') ?? strtolower($modelo);
     $campos = $this->decodificarCamposJson($request);
-
+  
     // Crear carpeta de vistas si no existe
     $carpeta = resource_path('views/' . $carpetaVistas);
     File::ensureDirectoryExists($carpeta);
 
     // ✅ Corrige la forma del nombre de ruta para route(...)
     $nombreRuta = str_replace('/', '.', $carpetaVistas); // ej: 'produccion.rutas_produccion'
-
+   
     // INDEX
     $thead = '';
     $tbody = '';
@@ -446,31 +605,12 @@ HTML;
 @endsection
 BLADE;
 
+
+Log::info('Generar controlador request:', $request->all());
     File::put("$carpeta/form.blade.php", $formView);
 
     return redirect(url($carpetaVistas));
 }
-
-/* public function finalizar(Request $request)
-{
-    // 🧠 Guardar los campos actualizados para los métodos siguientes
-    $campos = $request->input('campos');
-    session(['abm.campos' => $campos]);
-
-    // 🛠️ Generar controlador y vistas con los datos actualizados
-    $this->generarControlador($request);
-    $this->generarVistas($request);
-
-    // 📁 Ruta de vistas para redirección
-    $carpetaVistas = session('abm.carpeta_vistas') ?? 'abms/' . strtolower(session('abm.modelo'));
-    $rutaNombre = str_replace('/', '.', $carpetaVistas);
-
-    // 🔁 Redireccionar al index del recurso generado
-    return redirect()->route("{$rutaNombre}.index");
-}
- */ 
-
-
 
 public function finalizar(Request $request)
 {
@@ -480,7 +620,7 @@ public function finalizar(Request $request)
     $namespace = session('abm.namespace_controlador');
     $carpetaVistas = session('abm.carpeta_vistas');
     $campos = session('abm.campos');
-
+   
     // 2. Validar que los campos existan
     if (!$campos || !is_array($campos)) {
         return back()->with('error', 'No hay campos válidos en sesión.');
@@ -516,23 +656,53 @@ public function finalizar(Request $request)
     }
 }
 
-    private function agregarRutaWeb(string $namespace, string $modeloNombre, string $carpetaVistas)
+private function agregarRutaWeb(string $namespace, string $modeloNombre, string $carpetaVistas)
 {
     $rutaArchivo = base_path('routes/web.php');
 
+    // Ruta para el navegador (ej: 'secciones-produccion')
     $ruta = strtolower(str_replace('_', '-', $carpetaVistas));
+
+    // Nombre de la clase del controlador
     $controlador = "{$modeloNombre}Controller";
     $namespaceCompleto = "App\\Http\\Controllers\\" . trim($namespace, '\\') . "\\{$controlador}";
 
+    // Línea de importación del controlador
     $lineaUse = "use $namespaceCompleto;";
-    $lineaRoute = "Route::resource('$ruta', $controlador::class)->names('" . str_replace('/', '.', strtolower($carpetaVistas)) . "');";
 
+    // Nombre de la ruta (ej: 'produccion.secciones_produccion')
+    $nombreRuta = strtolower(str_replace('/', '.', $carpetaVistas));
+
+    // Si tiene prefijo (ej: produccion.secciones_produccion)
+    $partes = explode('.', $nombreRuta);
+    if (count($partes) === 2) {
+        [$prefix, $subruta] = $partes;
+
+        $lineaRoute = <<<PHP
+Route::prefix('$prefix')->name('$prefix.')->group(function () {
+    Route::resource('$subruta', $controlador::class)->names('$subruta');
+});
+PHP;
+    } else {
+        // Sin prefijo
+        $lineaRoute = "Route::resource('$nombreRuta', $controlador::class)->names('$nombreRuta');";
+    }
+
+    // Leer contenido del archivo web.php
     $contenido = File::get($rutaArchivo);
+
+    // Agregar use si no existe
+    if (!str_contains($contenido, $lineaUse)) {
+        $contenido = $lineaUse . "\n" . $contenido;
+    }
+
+    // Agregar ruta si no está ya definida
     if (!str_contains($contenido, $lineaRoute)) {
-        $contenido .= "\n\n// 🧩 Ruta generada automáticamente por ABM Creator\n$lineaUse\n$lineaRoute\n";
+        $contenido .= "\n\n// 🧩 Ruta generada automáticamente por ABM Creator\n$lineaRoute\n";
         File::put($rutaArchivo, $contenido);
     }
 }
+
 
 private function decodificarCamposJson(Request $request)
 {

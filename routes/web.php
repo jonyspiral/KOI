@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Produccion\ArticuloController;
 
 use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
-use App\Http\Controllers\Produccion\RutasProduccionController;
+
 use App\Http\Controllers\Sistemas\Importar\ImportarController;
 
 //creador ABMs  
@@ -31,9 +31,9 @@ Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function (
 });
 
 
-Route::resource('', App\Http\Controllers\Abms\Controller::class);
+//Route::resource('', App\Http\Controllers\Abms\Controller::class);
 
-Route::resource('produccion/rutas-produccion', RutasProduccionController::class)->names('produccion.rutas_produccion');
+
 
 
 
@@ -43,3 +43,27 @@ Route::resource('produccion/secciones-produccion', SeccionesProduccionController
 // 🧩 Ruta generada automáticamente por ABM Creator
 use App\Http\Controllers\Produccion\ArticulosNewController;
 Route::resource('produccion/articulos-new', ArticulosNewController::class)->names('produccion.articulos_new');
+
+
+
+
+use App\Http\Controllers\Produccion\RutasProduccionController;
+
+Route::prefix('produccion')->name('produccion.')->group(function () {
+    Route::resource('rutas_produccion', RutasProduccionController::class)
+        ->names('rutas_produccion');
+});
+
+
+
+
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+use App\Http\Controllers\Produccion\ForecastEncabezadoController;
+Route::resource('forecast_encabezado', ForecastEncabezadoController::class)->names('forecast_encabezado');
+
+
+
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+Route::resource('secciones_produccion', SeccionesProduccionController::class)->names('secciones_produccion');
