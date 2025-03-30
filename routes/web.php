@@ -1,5 +1,13 @@
 
+
+
+
 <?php
+use App\Http\Controllers\Produccion\HormaController;
+use App\Http\Controllers\Produccion\RangoTalleController;
+use App\Http\Controllers\Produccion\MarcasSyncViewSpiralController;
+use App\Http\Controllers\Produccion\RutasProduccionController;
+use App\Http\Controllers\Produccion\ArticulosNewController;
 
 use App\Http\Controllers\Produccion\SeccionesProduccionController;
 use Illuminate\Support\Facades\Route;
@@ -31,39 +39,20 @@ Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function (
 });
 
 
-//Route::resource('', App\Http\Controllers\Abms\Controller::class);
-
-
-
-
-
-Route::resource('produccion/secciones-produccion', SeccionesProduccionController::class)->names('produccion.secciones_produccion');
-
-
 // 🧩 Ruta generada automáticamente por ABM Creator
-use App\Http\Controllers\Produccion\ArticulosNewController;
-Route::resource('produccion/articulos-new', ArticulosNewController::class)->names('produccion.articulos_new');
-
-
-
-
-use App\Http\Controllers\Produccion\RutasProduccionController;
-
-Route::prefix('produccion')->name('produccion.')->group(function () {
-    Route::resource('rutas_produccion', RutasProduccionController::class)
-        ->names('rutas_produccion');
+// Modelo: Articulo - Generado el 2025-03-30 07:36:58
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('articulos', ArticuloController::class)->names('articulos');
 });
 
-
-
-
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Horma - Generado el 2025-03-30 07:40:58
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('hormas', HormaController::class)->names('hormas');
+});
 
 // 🧩 Ruta generada automáticamente por ABM Creator
-use App\Http\Controllers\Produccion\ForecastEncabezadoController;
-Route::resource('forecast_encabezado', ForecastEncabezadoController::class)->names('forecast_encabezado');
-
-
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-Route::resource('secciones_produccion', SeccionesProduccionController::class)->names('secciones_produccion');
+// Modelo: RutasProduccion - Generado el 2025-03-30 08:11:41
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('rutas_produccion', RutasProduccionController::class)->names('rutas_produccion');
+});

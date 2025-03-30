@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-  <h2 class="mb-4">🛠️ Crear ABM desde Modelo</h2>
+  <h2 class="mb-4">🛠️ Crear ABM desde Modelos</h2>
 
   <form method="POST" action="{{ url('/sistemas/abms/configurar') }}">
     @csrf
@@ -37,7 +37,7 @@
       </label>
       <input type="text" name="carpeta_vistas" class="form-control" 
              placeholder="Ej: abms/rutasproduccion, produccion/rutas" 
-             value="{{ old('carpeta_vistas', 'produccion/rutas_produccion') }}" required>
+             value="{{ old('carpeta_vistas', 'produccion/abms') }}" required>
     </div>
 
     <button type="submit" class="btn btn-primary">Siguiente</button>

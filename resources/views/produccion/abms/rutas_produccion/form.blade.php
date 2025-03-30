@@ -2,9 +2,9 @@
 
 @section('content')
 <div class="container">
-  <h2>{{ isset($registro) ? 'Editar' : 'Nuevo' }} RutasProduccion</h2>
+  <h2>{{ isset($registro) ? 'Editar' : 'Nuevo' }} </h2>
 
-  <form method="POST" action="{{ isset($registro) ? route('rutas_produccion.update', $registro->id) : route('rutas_produccion.store') }}">
+  <form method="POST" action="{{ isset($registro) ? route('produccion.abms.rutas_produccion.update', $registro->id) : route('produccion.abms.rutas_produccion.store') }}">
     @csrf
     @if(isset($registro)) @method('PUT') @endif
 
@@ -39,7 +39,7 @@
 
 
     <button class="btn btn-primary">Guardar</button>
-    <a href="{{ route('rutas_produccion.index') }}" class="btn btn-secondary">Cancelar</a>
+    <a href="{{ route('produccion.abms.rutas_produccion.index') }}" class="btn btn-secondary">Cancelar</a>
   </form>
 </div>
 @endsection
