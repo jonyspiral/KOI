@@ -1,81 +1,72 @@
 <?php
 
+// KOI - ImportarController v1.2
+// Ejecuta el comando Artisan 'importar:tabla' desde la interfaz web con soporte para todos los flags
+
 namespace App\Http\Controllers\Sistemas\Importar;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class ImportarController extends Controller
 {
     /**
-     * Mostrar formulario de selección de tabla y opciones.
+     * Mostrar el formulario de importación
      */
     public function form()
     {
-        // Obtener lista de tablas desde SQL Server 2000 usando la conexión sqlsrv_koi
+        // Obtener todas las tablas del SQL Server 2000
         $tablas = DB::connection('sqlsrv_koi')
-            ->select("SELECT name FROM sysobjects WHERE xtype = 'U' ORDER BY name");
-        $lista = collect($tablas)->pluck('name');
+            ->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
+
+        $nombres = array_map(fn($t) => $t->TABLE_NAME, $tablas);
 
         return view('sistemas.importar.form', [
-            'tablas' => $lista,
+            'tablas' => $nombres,
         ]);
     }
 
     /**
-     * Ejecutar el comando artisan importar:tabla según los parámetros recibidos del formulario.
+     * Ejecutar la importación
      */
     public function importar(Request $request)
     {
         $request->validate([
-            'tabla' => 'required|string',
+            'nombre_tabla' => 'required|string',
         ]);
 
-        $nombreComando = 'importar:tabla';
+        $tabla = $request->input('nombre_tabla');
 
-        $argumentos = [
-            'nombre_tabla' => $request->input('tabla'),
-        ];
+        // Armamos los flags
+        $flags = [];
 
-        $opciones = [];
+        if ($request->has('force_table')) $flags['--force-table'] = true;
+        if ($request->has('force_models')) $flags['--force-models'] = true;
+        if ($request->has('with_sql_model')) $flags['--with-sql-model'] = true;
+        if ($request->has('fill_all')) $flags['--fill-all'] = true;
+        if ($request->has('skip_data')) $flags['--skip-data'] = true;
+        if ($request->has('insert_simple')) $flags['--insert-simple'] = true;
+       // dd("entro");
+        // Ejecutamos el comando
+        Artisan::call('importar:tabla', array_merge(
+            ['nombre_tabla' => $tabla],
+            $flags
+        ));
 
-        foreach (['force_models', 'force_table', 'with_sql_model'] as $flag) {
-            if ($request->boolean($flag)) {
-                $opciones['--' . str_replace('_', '-', $flag)] = true;
-            }
-        }
-
-        if ($request->filled('unique')) {
-            $opciones['--unique'] = $request->input('unique');
-        }
-
-        if ($request->boolean('fill_all')) {
-            $opciones['--fill-all'] = true;
-        }
-
-        // Construir comando completo como string (para mostrarlo al usuario)
-        $comando = "$nombreComando {$argumentos['nombre_tabla']}";
-        foreach ($opciones as $clave => $valor) {
-            $comando .= is_bool($valor) ? " {$clave}" : " {$clave}={$valor}";
-        }
-
-        // Ejecutar el comando con argumentos y opciones
-        Artisan::call($nombreComando, array_merge($argumentos, $opciones));
         $output = Artisan::output();
 
-        // Preparar información técnica para desarrolladores
-        $detallesTecnicos = [
-            'comando' => $comando,
-            'tabla' => $request->input('tabla'),
-            'unique' => $request->input('unique'),
-            'fill_all' => $request->boolean('fill_all'),
-        ];
+        // Recargamos las tablas
+        $tablas = DB::connection('sqlsrv_koi')
+            ->select("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
+        $nombres = array_map(fn($t) => $t->TABLE_NAME, $tablas);
 
-        return back()
-            ->with('output', $output)
-            ->with('tecnico', $detallesTecnicos);
+        // Retornamos directamente a la vista con el resultado
+        return view('sistemas.importar.form', [
+            'tablas' => $nombres,
+            'output' => $output,
+            'tablaSeleccionada' => $tabla,
+        ]);
     }
 }
-

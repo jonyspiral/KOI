@@ -1,0 +1,68 @@
+{
+    "modelo": "RutasProduccion",
+    "namespace": "Produccion",
+    "carpeta_vistas": "produccion\/abms\/rutas_produccion",
+    "campos": {
+        "cod_ruta": {
+            "default": null,
+            "visible": "1",
+            "input_type": "number",
+            "auto_increment_plus": "1",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "denom_ruta": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "anulado": {
+            "default": "N",
+            "visible": "1",
+            "input_type": "text",
+            "is_boolean": "1",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "fecha_baja": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "fecha_ultima_modificacion": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "autor_ultima_modificacion": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "fechaAlta": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        }
+    }
+}

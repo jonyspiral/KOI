@@ -19,7 +19,7 @@ use App\Http\Controllers\Sistemas\Importar\ImportarController;
 
 //creador ABMs  
 
-Route::prefix('sistemas/abms')->name('abms.')->group(function () {
+/* Route::prefix('sistemas/abms')->name('abms.')->group(function () {
     Route::get('/crear', [AbmCreatorController::class, 'index'])->name('crear');
     Route::post('/preview', [AbmCreatorController::class, 'preview'])->name('preview');
     Route::post('/generar', [AbmCreatorController::class, 'generar'])->name('generar');
@@ -30,6 +30,16 @@ Route::prefix('sistemas/abms')->name('abms.')->group(function () {
 
 });
 Route::post('/sistemas/abms/configurar', [AbmCreatorController::class, 'configurar'])->name('abms.configurar');
+ */
+
+Route::prefix('sistemas/abms')->group(function () {
+    Route::get('/crear', [AbmCreatorController::class, 'index'])->name('sistemas.abms.crear');
+    Route::post('/preview', [AbmCreatorController::class, 'redirectToPreview'])->name('sistemas.abms.preview.redirect');
+    Route::get('/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
+    Route::post('/configurar', [AbmCreatorController::class, 'configurar'])->name('sistemas.abms.configurar');
+});
+
+
 
 
 //importar tablas koi ABMs  

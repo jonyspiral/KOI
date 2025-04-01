@@ -4,23 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class RutasProduccion extends Model
+class FamiliasProducto extends Model
 {
-    protected $table = 'Rutas_produccion';
+    protected $table = 'familias_producto';
     public $timestamps = false;
-    protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'fecha_baja', 'fecha_ultima_modificacion', 'autor_ultima_modificacion', 'fechaAlta', 'id'];
+    protected $fillable = ['id'];
 
     public static function fieldsMeta()
     {
         return array (
-  'cod_ruta' => 
+  'id' => 
   array (
-    'type' => 'int',
+    'type' => 'int identity',
     'nullable' => false,
     'default' => NULL,
     'primary' => true,
   ),
-  'denom_ruta' => 
+  'nombre' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'descripcion' => 
   array (
     'type' => 'varchar',
     'nullable' => true,
@@ -30,6 +37,20 @@ class RutasProduccion extends Model
   'anulado' => 
   array (
     'type' => 'char',
+    'nullable' => false,
+    'default' => '(\'N\')',
+    'primary' => false,
+  ),
+  'cod_usuario' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'fecha_alta' => 
+  array (
+    'type' => 'datetime',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
@@ -41,21 +62,7 @@ class RutasProduccion extends Model
     'default' => NULL,
     'primary' => false,
   ),
-  'fecha_ultima_modificacion' => 
-  array (
-    'type' => 'datetime',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'autor_ultima_modificacion' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'fechaAlta' => 
+  'fecha_ultima_mod' => 
   array (
     'type' => 'datetime',
     'nullable' => true,
@@ -63,5 +70,5 @@ class RutasProduccion extends Model
     'primary' => false,
   ),
 );
-}
+    }
 }

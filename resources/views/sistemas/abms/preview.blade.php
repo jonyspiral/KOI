@@ -1,95 +1,139 @@
+{{-- preview.blade.php v3 - Sofía - ABM Creator avanzado --}}
 @extends('layouts.app')
 
 @section('content')
 <div class="container">
-  <h3>🔧 Configurar ABM para: <strong>{{ $modelo }}</strong></h3>
- 
-  <form method="POST" action="{{ url('/sistemas/abms/generar') }}">
-    @csrf
-    <input type="hidden" name="tabla" value="{{ $modelo }}">
-    <input type="hidden" name="namespace_controlador" value="{{ $namespace }}">
-    <input type="hidden" name="carpeta_vistas" value="{{ $carpetaVistas }}">
-    <input type="hidden" name="modelo" value="{{ $modelo }}">
+    <h2 class="mb-4">🛠️ Configurar campos del formulario para el modelo: {{ $modelo }}</h2>
 
-    <div class="mb-4">
-      <label class="form-label">📁 Carpeta del Controlador (namespace)</label>
-      <div class="mb-3 form-check">
-<input type="hidden" name="sobrescribir" value="0">
-<input type="checkbox" class="form-check-input" id="sobrescribir" name="sobrescribir" value="1">
-<label class="form-check-label" for="sobrescribir">Sobrescribir controlador si ya existe</label>
+    <form action="{{ route('sistemas.abms.configurar') }}" method="POST">
+        @csrf
+        <input type="hidden" name="modelo" value="{{ $modelo }}">
+        <input type="hidden" name="namespace" value="{{ $namespace }}">
+        <input type="hidden" name="carpeta_vistas" value="{{ $carpeta_vistas }}">
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Nullable</th>
+                    <th>Default</th>
+                    <th>Visible</th>
+                    <th>Input Type</th>
+                    <th>Boolean?</th>
+                    <th>Max+1?</th>
+                    <th>Es Foreign?</th>
+                    <th>Tabla FK</th>
+                    <th>Campo FK</th>
+                    <th>Label FK</th>
+                    <th>Incluir</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($fields as $campo => $meta)
+                @php
+                    $isId = $campo === 'id';
+                    $isNumeric = in_array($meta['type'], ['int', 'bigint', 'tinyint', 'smallint']);
+                    $isBool = isset($meta['type']) && in_array(strtolower($meta['type']), ['bit', 'bool', 'boolean', 'tinyint']);
+                @endphp
+                <tr>
+                    <td>{{ $campo }}</td>
+                    <td>{{ $meta['type'] ?? '-' }}</td>
+                    <td>{{ $meta['nullable'] ? 'Sí' : 'No' }}</td>
+
+                    {{-- Default editable --}}
+                    <td>
+                        <input type="text" name="campos[{{ $campo }}][default]" class="form-control"
+                               value="{{ $meta['default'] ?? '' }}">
+                    </td>
+
+                    {{-- Visible --}}
+                    <td>
+                        <input type="checkbox" name="campos[{{ $campo }}][visible]" value="1"
+                               {{ $isId ? '' : 'checked' }} {{ $isId ? 'disabled' : '' }}>
+                    </td>
+
+                    {{-- Input Type --}}
+                    <td>
+                        <select name="campos[{{ $campo }}][input_type]" class="form-select">
+                            <option value="text">text</option>
+                            <option value="number" {{ $isNumeric ? 'selected' : '' }}>number</option>
+                            <option value="date">date</option>
+                            <option value="select" {{ !empty($meta['foreign']) ? 'selected' : '' }}>select</option>
+                            <option value="textarea">textarea</option>
+                            <option value="checkbox" {{ $isBool ? 'selected' : '' }}>checkbox</option>
+                            <option value="hidden" {{ $isId ? 'selected' : '' }}>hidden</option>
+                        </select>
+                    </td>
+
+                    {{-- Boolean --}}
+                    <td class="text-center">
+                        <input type="checkbox" name="campos[{{ $campo }}][is_boolean]" value="1"
+                               {{ $isBool ? 'checked' : '' }}>
+                    </td>
+
+                    {{-- Max +1 --}}
+                    <td class="text-center">
+                        <input type="checkbox" name="campos[{{ $campo }}][auto_increment_plus]" value="1">
+                    </td>
+
+                    {{-- Foreign --}}
+                    <td>
+                        <input type="checkbox" name="campos[{{ $campo }}][foreign]" value="1"
+                               {{ !empty($meta['foreign']) ? 'checked' : '' }}>
+                    </td>
+
+                    {{-- Tabla FK --}}
+                    <td>
+                        <input type="text" name="campos[{{ $campo }}][referenced_table]" class="form-control"
+                               value="{{ $meta['referenced_table'] ?? '' }}">
+                    </td>
+
+                    {{-- Campo FK --}}
+                    <td>
+                        <input type="text" name="campos[{{ $campo }}][referenced_column]" class="form-control"
+                               value="{{ $meta['referenced_column'] ?? 'id' }}">
+                    </td>
+
+                    {{-- Label FK --}}
+                    <td>
+                        <input type="text" name="campos[{{ $campo }}][referenced_label]" class="form-control"
+                               value="{{ $meta['referenced_label'] ?? 'nombre' }}">
+                    </td>
+
+                    {{-- Incluir --}}
+                    <td>
+                        <input type="checkbox" name="campos[{{ $campo }}][incluir]" value="1" checked>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <div class="form-check mb-4">
+              <input class="form-check-input" type="checkbox" name="agregar_ruta" id="agregarRuta" value="1" checked>
+              <label class="form-check-label" for="agregarRuta">
+                  🧭 Agregar automáticamente la ruta al archivo <code>web.php</code>
+              </label>
+        </div>
+
+
+        <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" name="force_controlador" id="forceControlador" value="1">
+              <label class="form-check-label" for="forceControlador">
+                  🔁 Sobrescribir controlador existente
+            </label>
+        </div>
+
+
+        <div class="form-check mb-4">
+
+              <input class="form-check-input" type="checkbox" name="generar_request" id="generarRequest" value="1" checked>
+              <label class="form-check-label" for="generarRequest">
+              🛡️ Generar clase de validación automática (FormRequest)
+              </label>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">👉 Continuar con la generación del ABM</button>
+        <a href="{{ route('sistemas.abms.crear') }}" class="btn btn-secondary">⬅️ Volver</a>
+    </form>
 </div>
-      <input type="text" class="form-control" value="{{ $namespace }}" readonly>
-    </div>
-
-    <div class="mb-4">
-      <label class="form-label">📁 Carpeta para las Vistas (en resources/views)</label>
-      <input type="text" class="form-control" value="{{ $carpetaVistas }}" readonly>
-    </div>
-
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Campo</th>
-          <th>Tipo</th>
-          <th>
-  Incluir<br>
-  <input type="checkbox" id="checkAllIncluir">
-</th>
-
-          <!-- <th>Incluir</th> -->
-          <th>Input</th>
-          <th>Tabla Ref</th>
-          <th>Campo Mostrar</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach($campos as $campo => $config)
-        <tr>
-          <td>{{ $campo }}</td>
-          <td>{{ $config['tipo'] ?? '' }}</td>
-          <td>
-            <input type="checkbox" name="campos[{{ $campo }}][incluir]" value="1" {{ !empty($config['incluir']) ? 'checked' : '' }} {{ !empty($config['autoincremental']) ? 'disabled' : '' }}>
-            @if(!empty($config['autoincremental']))
-              <input type="hidden" name="campos[{{ $campo }}][incluir]" value="0">
-              <input type="hidden" name="campos[{{ $campo }}][autoincremental]" value="1">
-            @endif
-          </td>
-          <td>
-            <select name="campos[{{ $campo }}][tipo_input]" class="form-control">
-              <option value="text" {{ ($config['tipo_input'] ?? '') == 'text' ? 'selected' : '' }}>Input</option>
-              <option value="textarea" {{ ($config['tipo_input'] ?? '') == 'textarea' ? 'selected' : '' }}>Textarea</option>
-              <option value="select" {{ ($config['tipo_input'] ?? '') == 'select' ? 'selected' : '' }}>Combo box</option>
-              <option value="checkbox" {{ ($config['tipo_input'] ?? '') == 'checkbox' ? 'selected' : '' }}>Checkbox</option>
-              <option value="date" {{ ($config['tipo_input'] ?? '') == 'date' ? 'selected' : '' }}>Fecha</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" name="campos[{{ $campo }}][tabla_ref]" class="form-control" value="{{ $config['tabla_ref'] ?? '' }}">
-          </td>
-          <td>
-            <input type="text" name="campos[{{ $campo }}][campo_mostrar]" class="form-control" value="{{ $config['campo_mostrar'] ?? '' }}">
-          </td>
-        </tr>
-        @endforeach
-      </tbody>
-    </table>
-
-    <button type="submit" class="btn btn-success">Generar ABM</button>
-  </form>
-</div>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const masterCheckbox = document.getElementById('checkAllIncluir');
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][name^="campos"][name$="[incluir]"]');
-
-    masterCheckbox.addEventListener('change', function () {
-      checkboxes.forEach(checkbox => {
-        if (!checkbox.disabled) {
-          checkbox.checked = masterCheckbox.checked;
-        }
-      });
-    });
-  });
-</script>
-
 @endsection

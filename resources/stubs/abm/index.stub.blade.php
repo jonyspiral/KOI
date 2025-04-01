@@ -2,9 +2,9 @@
 
 @section('content')
 <div class="container">
-    <h2 class="mb-4">Listado de RutasProduccion</h2>
+    <h2 class="mb-4">Listado de __MODELO__</h2>
 
-    <a href="{{ route('produccion.abms.rutas_produccion.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    <a href="{{ route('__NOMBRE_RUTA__.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
    
     <div class="table-responsive">
         <table class="table table-striped table-sm">
@@ -33,8 +33,8 @@
                             @endif
                         @endforeach
                         <td>
-                            <a href="{{ route('produccion.abms.rutas_produccion.edit', $registro->id) }}" class="btn btn-sm btn-primary">✏️</a>
-                            <form action="{{ route('produccion.abms.rutas_produccion.destroy', $registro->id) }}" method="POST" class="d-inline">
+                            <a href="{{ route('__NOMBRE_RUTA__.edit', $registro->id) }}" class="btn btn-sm btn-primary">✏️</a>
+                            <form action="{{ route('__NOMBRE_RUTA__.destroy', $registro->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">🗑️</button>

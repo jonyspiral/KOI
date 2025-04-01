@@ -11,7 +11,7 @@
 <div class="container">
   <h2 class="mb-4">🛠️ Crear ABM desde Modelos</h2>
 
-  <form method="POST" action="{{ route('sistemas.abms.preview.redirect') }}">
+  <form method="POST" action="{{ url('/sistemas/abms/configurar') }}">
     @csrf
 
     {{-- Selección de modelo --}}

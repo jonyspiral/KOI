@@ -5,39 +5,51 @@ namespace App\Http\Controllers\Produccion;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\RutasProduccion;
+use Illuminate\Support\Facades\File;
 
 class RutasProduccionController extends Controller
 {
     public function index()
     {
         $registros = RutasProduccion::all();
-        $modelo = 'Rutas Produccion';
-        return view('produccion.abms.rutas_produccion.index', compact('registros', 'modelo'));
+
+        // Cargamos configuración del formulario
+        $configPath = resource_path("meta_abms/config_form_RutasProduccion.json");
+        $campos = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
+
+        $columnas = array_keys($campos);
+
+        return view('produccion/abms/rutas_produccion.index', compact('registros', 'campos', 'columnas'));
     }
 
     public function create()
     {
-        $modelo = 'Rutas Produccion';
-        return view('produccion.abms.rutas_produccion.form', compact('modelo'));
+        $configPath = resource_path("meta_abms/config_form_RutasProduccion.json");
+        $campos = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
+
+        return view('produccion/abms/rutas_produccion.create', compact('campos'));
     }
 
     public function store(Request $request)
     {
-        RutasProduccion::create($request->only(['cod_ruta', 'denom_ruta', 'anulado', 'created_at', 'updated_at', 'sync_status']));
+        RutasProduccion::create($request->all());
         return redirect()->route('produccion.abms.rutas_produccion.index');
     }
 
     public function edit($id)
     {
         $registro = RutasProduccion::findOrFail($id);
-        $modelo = 'Rutas Produccion';
-        return view('produccion.abms.rutas_produccion.form', compact('registro', 'modelo'));
+
+        $configPath = resource_path("meta_abms/config_form_RutasProduccion.json");
+        $campos = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
+
+        return view('produccion/abms/rutas_produccion.edit', compact('registro', 'campos'));
     }
 
     public function update(Request $request, $id)
     {
         $registro = RutasProduccion::findOrFail($id);
-        $registro->update($request->only(['cod_ruta', 'denom_ruta', 'anulado', 'created_at', 'updated_at', 'sync_status']));
+        $registro->update($request->all());
         return redirect()->route('produccion.abms.rutas_produccion.index');
     }
 

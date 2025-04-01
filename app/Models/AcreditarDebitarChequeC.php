@@ -4,58 +4,65 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class RutasProduccion extends Model
+class AcreditarDebitarChequeC extends Model
 {
-    protected $table = 'Rutas_produccion';
+    protected $table = 'acreditar_debitar_cheque_c';
     public $timestamps = false;
-    protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'fecha_baja', 'fecha_ultima_modificacion', 'autor_ultima_modificacion', 'fechaAlta', 'id'];
+    protected $fillable = ['cod_acreditar_debitar_cheque', 'empresa', 'tipo', 'fecha', 'observaciones', 'cod_usuario', 'fecha_documento', 'fecha_alta', 'id'];
 
     public static function fieldsMeta()
     {
         return array (
-  'cod_ruta' => 
+  'cod_acreditar_debitar_cheque' => 
   array (
     'type' => 'int',
     'nullable' => false,
     'default' => NULL,
     'primary' => true,
   ),
-  'denom_ruta' => 
+  'empresa' => 
   array (
-    'type' => 'varchar',
-    'nullable' => true,
+    'type' => 'int',
+    'nullable' => false,
     'default' => NULL,
-    'primary' => false,
+    'primary' => true,
   ),
-  'anulado' => 
+  'tipo' => 
   array (
     'type' => 'char',
-    'nullable' => true,
+    'nullable' => false,
     'default' => NULL,
     'primary' => false,
   ),
-  'fecha_baja' => 
+  'fecha' => 
   array (
     'type' => 'datetime',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
   ),
-  'fecha_ultima_modificacion' => 
+  'observaciones' => 
   array (
-    'type' => 'datetime',
+    'type' => 'text',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
   ),
-  'autor_ultima_modificacion' => 
+  'cod_usuario' => 
   array (
     'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
   ),
-  'fechaAlta' => 
+  'fecha_documento' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'fecha_alta' => 
   array (
     'type' => 'datetime',
     'nullable' => true,
@@ -63,5 +70,5 @@ class RutasProduccion extends Model
     'primary' => false,
   ),
 );
-}
+    }
 }

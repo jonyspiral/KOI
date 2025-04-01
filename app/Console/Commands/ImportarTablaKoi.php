@@ -1,5 +1,16 @@
 <?php
 
+// KOI Importador de tablas v1.8
+// Incluye:
+// - Creación condicional del campo 'id' en MySQL si no existe en SQL Server
+// - Generación de modelos con opción --fill-all o solo claves primarias
+// - Creación opcional del modelo SQL Server (--with-sql-model)
+// - Agregado de timestamps y campo sync_status para futura sincronización
+// - Generación automática del método fieldsMeta() en ambos modelos
+// - Flag --skip-data para evitar la importación de registros
+// - NUEVO: Flag --insert-simple para insertar sin updateOrInsert
+// - FIX: Se usa hash MD5 para nombre del índice único cuando supera límite
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -11,7 +22,7 @@ use Illuminate\Database\Schema\Blueprint;
 
 class ImportarTablaKoi extends Command
 {
-    protected $signature = 'importar:tabla {nombre_tabla} {--force-models} {--force-table} {--with-sql-model} {--unique=} {--fill-all}';
+    protected $signature = 'importar:tabla {nombre_tabla} {--force-models} {--force-table} {--with-sql-model} {--fill-all} {--skip-data} {--insert-simple}';
     protected $description = 'Importa una tabla desde SQL Server 2000 a MySQL y genera sus modelos Eloquent (MySQL y opcionalmente SQL Server)';
 
     public function handle()
@@ -22,20 +33,17 @@ class ImportarTablaKoi extends Command
         $forceModels = $this->option('force-models');
         $forceTable = $this->option('force-table');
         $withSqlModel = $this->option('with-sql-model');
-        $uniqueKey = $this->option('unique');
         $fillAll = $this->option('fill-all');
+        $skipData = $this->option('skip-data');
+        $insertSimple = $this->option('insert-simple');
 
-        if (!$uniqueKey) {
-            $pkeys = DB::connection('sqlsrv_koi')->select("exec sp_pkeys '$tabla'");
-            if (!empty($pkeys)) {
-                $uniqueKey = implode(',', array_map(fn($r) => $r->COLUMN_NAME, $pkeys));
-                $this->info("🔑 Clave única detectada automáticamente: $uniqueKey");
-            }
-        }
-        $uniqueFields = $uniqueKey ? array_map('trim', explode(',', $uniqueKey)) : [];
+        $pkeys = DB::connection('sqlsrv_koi')->select("exec sp_pkeys '$tabla'");
+        $uniqueFields = !empty($pkeys)
+            ? array_map(fn($r) => $r->COLUMN_NAME, $pkeys)
+            : [];
 
-        $tabla_sql = str_replace("'", "''", $tabla);
-        $columnas = DB::connection('sqlsrv_koi')->select("exec sp_columns '$tabla_sql'");
+        $columnas = DB::connection('sqlsrv_koi')->select("exec sp_columns '$tabla'");
+
         if (empty($columnas)) {
             $this->error("❌ No se encontró la tabla '$tabla' en SQL Server.");
             return;
@@ -48,13 +56,34 @@ class ImportarTablaKoi extends Command
 
         if (!Schema::hasTable($tabla)) {
             Schema::create($tabla, function (Blueprint $table) use ($columnas, $uniqueFields, $tabla) {
-                $table->id();
+
+                $tieneIdSQL = false;
+
+                foreach ($columnas as $col) {
+                    $nombre = strtolower($col->COLUMN_NAME);
+                    $tipo = strtolower($col->TYPE_NAME);
+                    $esPK = in_array($col->COLUMN_NAME, $uniqueFields);
+                    $identity = property_exists($col, 'IS_IDENTITY') && $col->IS_IDENTITY === 'YES';
+
+                    if ($nombre === 'id' && $identity && $esPK) {
+                        $tieneIdSQL = true;
+                        break;
+                    }
+                }
+
+                if (!$tieneIdSQL) {
+                    $table->id();
+                }
 
                 foreach ($columnas as $columna) {
                     $nombre = $columna->COLUMN_NAME;
                     $tipo = $columna->TYPE_NAME;
                     $largo = $columna->LENGTH ?? 255;
                     $nullable = ($columna->IS_NULLABLE ?? 'YES') === 'YES';
+
+                    if (strtolower($nombre) === 'id' && !$tieneIdSQL) {
+                        continue;
+                    }
 
                     $columnaNueva = match (strtolower($tipo)) {
                         'varchar', 'nvarchar' => $table->string($nombre, $largo),
@@ -75,7 +104,8 @@ class ImportarTablaKoi extends Command
                 $table->string('sync_status')->nullable();
 
                 if (!empty($uniqueFields)) {
-                    $indexName = Str::limit("{$tabla}_" . implode('_', $uniqueFields) . "_unique", 60);
+                    $hash = substr(md5(implode('_', $uniqueFields)), 0, 8);
+                    $indexName = "{$tabla}_u_{$hash}";
                     $table->unique($uniqueFields, $indexName);
                     echo "🔐 Índice único creado: {$indexName}\n";
                 }
@@ -84,45 +114,66 @@ class ImportarTablaKoi extends Command
             $this->info("✅ Tabla '$tabla' creada en MySQL.");
         }
 
-        $datos = DB::connection('sqlsrv_koi')->table($tabla)->get();
-        $this->info("📄 {$datos->count()} registros obtenidos desde SQL Server.");
+        if (!$skipData) {
+            $datos = DB::connection('sqlsrv_koi')->table($tabla)->get();
+            $this->info("📄 {$datos->count()} registros obtenidos desde SQL Server.");
 
-        $batchSize = 500;
-        $chunks = array_chunk($datos->toArray(), $batchSize);
-        $tablaVacia = DB::table($tabla)->count() === 0;
+            $batchSize = 500;
+            $chunks = array_chunk($datos->toArray(), $batchSize);
+            $tablaVacia = DB::table($tabla)->count() === 0;
 
-        foreach ($chunks as $i => $chunk) {
-            foreach ($chunk as $fila) {
-                $data = (array) $fila;
+            foreach ($chunks as $i => $chunk) {
+                foreach ($chunk as $fila) {
+                    $data = (array) $fila;
 
-                if (empty($uniqueFields) || $tablaVacia) {
-                    DB::table($tabla)->insert($data);
-                } else {
-                    $conditions = [];
-                    foreach ($uniqueFields as $field) {
-                        if (isset($data[$field])) {
-                            $conditions[$field] = $data[$field];
+                    if ($insertSimple || empty($uniqueFields) || $tablaVacia) {
+                        DB::table($tabla)->insert($data);
+                    } else {
+                        $conditions = [];
+                        foreach ($uniqueFields as $field) {
+                            if (isset($data[$field])) {
+                                $conditions[$field] = $data[$field];
+                            }
+                        }
+                        if (count($conditions) === count($uniqueFields)) {
+                            DB::table($tabla)->updateOrInsert($conditions, $data);
+                        } else {
+                            DB::table($tabla)->insert($data);
                         }
                     }
-                    if (count($conditions) === count($uniqueFields)) {
-                        DB::table($tabla)->updateOrInsert($conditions, $data);
-                    } else {
-                        DB::table($tabla)->insert($data);
-                    }
                 }
+                $this->info("🗓️ Procesado lote " . ($i + 1));
             }
-            $this->info("📅 Procesado lote " . ($i + 1));
+
+            $this->info("✅ Datos importados exitosamente en '$tabla'.");
+        } else {
+            $this->warn("⚠️ Flag --skip-data activado. No se importaron registros desde SQL Server.");
         }
 
-        $this->info("✅ Datos importados exitosamente en '$tabla'.");
+        $fieldsMeta = [];
+        foreach ($columnas as $col) {
+            $nombre = $col->COLUMN_NAME;
+            if (in_array($nombre, ['created_at', 'updated_at', 'sync_status'])) continue;
 
-        $campos = array_map(fn($col) => $col->COLUMN_NAME, $columnas);
-        $fillable = array_unique(array_merge($uniqueFields, $fillAll ? $campos : []));
+            $fieldsMeta[$nombre] = [
+                'type' => strtolower($col->TYPE_NAME),
+                'nullable' => ($col->IS_NULLABLE ?? 'YES') === 'YES',
+                'default' => $col->COLUMN_DEF ?? null,
+                'primary' => in_array($nombre, $uniqueFields),
+            ];
+        }
 
-        $modelName = ucfirst(Str::singular(Str::camel($tabla)));
+        $metaCode = "    public static function fieldsMeta()\n    {\n        return " . var_export($fieldsMeta, true) . ";\n    }";
 
-        // Modelo MySQL
+        $defaultFields = $fillAll ? array_keys($fieldsMeta) : $uniqueFields;
+
+        if (!in_array('id', $defaultFields)) {
+            $defaultFields[] = 'id';
+        }
+
+        $modelName = ucfirst(Str::camel(Str::singular($tabla)));
         $modelPath = app_path("Models/{$modelName}.php");
+
         $modelo = <<<PHP
 <?php
 
@@ -134,19 +185,21 @@ class {$modelName} extends Model
 {
     protected \$table = '{$tabla}';
     public \$timestamps = false;
-    protected \$fillable = {$this->formatArray($fillable)};
-}
+    protected \$fillable = {$this->formatArray(array_unique($defaultFields))};
 
+{$metaCode}
+}
 PHP;
 
         if ($forceModels || !File::exists($modelPath)) {
             File::ensureDirectoryExists(app_path('Models'));
             File::put($modelPath, $modelo);
-            $this->info("✅ Modelo MySQL generado: App\\Models\\{$modelName}");
+            $this->info("✅ Modelo MySQL generado: App\Models\{$modelName}");
         }
 
-        // Modelo SQL Server
         if ($withSqlModel) {
+            $sqlFields = $fillAll ? array_keys($fieldsMeta) : $uniqueFields;
+
             $modelSqlPath = app_path("Models/Sql/{$modelName}.php");
             $modeloSQL = <<<PHP
 <?php
@@ -160,14 +213,15 @@ class {$modelName} extends Model
     protected \$table = '{$tabla}';
     protected \$connection = 'sqlsrv_koi';
     public \$timestamps = false;
-    protected \$fillable = {$this->formatArray($fillable)};
-}
+    protected \$fillable = {$this->formatArray(array_unique($sqlFields))};
 
+{$metaCode}
+}
 PHP;
             if ($forceModels || !File::exists($modelSqlPath)) {
                 File::ensureDirectoryExists(app_path('Models/Sql'));
                 File::put($modelSqlPath, $modeloSQL);
-                $this->info("✅ Modelo SQL Server generado: App\\Models\\Sql\\{$modelName}");
+                $this->info("✅ Modelo SQL Server generado: App\Models\Sql\{$modelName}");
             }
         }
 

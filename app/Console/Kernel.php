@@ -21,5 +21,9 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ImportarTablaKoi::class,
     ];
     
+    protected $commands = [
+        \App\Console\Commands\SetupAbmStubs::class,
+    ];
+    
 
 }

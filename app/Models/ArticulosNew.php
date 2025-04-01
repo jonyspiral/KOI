@@ -8,5 +8,25 @@ class ArticulosNew extends Model
 {
     protected $table = 'articulos_new';
     public $timestamps = false;
-    protected $fillable = ['cod_articulo', 'denom_articulo', 'created_at', 'updated_at', 'sync_status'];
+    protected $fillable = ['cod_articulo', 'id'];
+
+    public static function fieldsMeta()
+    {
+        return array (
+  'cod_articulo' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => true,
+  ),
+  'denom_articulo' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => false,
+  ),
+);
+    }
 }
