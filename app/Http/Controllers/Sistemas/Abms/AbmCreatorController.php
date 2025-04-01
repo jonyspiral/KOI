@@ -228,12 +228,15 @@ protected function agregarRutaWeb($namespace, $modelo, $carpetaVistas)
     $contenidoActual = file_get_contents($rutaArchivo);
 
     $fecha = now()->format('Y-m-d H:i:s');
-    $modeloKebab = Str::kebab($modelo);   // ej: rutas-produccion
-    $modeloSnake = Str::snake($modelo);   // ej: rutas_produccion
-    $prefijo = Str::kebab($carpetaVistas);  // ej: produccion-abms
-    $nombreGrupo = str_replace('/', '.', strtolower($carpetaVistas));  // ej: produccion.abms
-    $controladorCompleto = "App\\Http\\Controllers\\{$namespace}\\{$modelo}Controller";
+    $modeloKebab = Str::kebab($modelo);   // ej: familias-producto
+    $modeloSnake = Str::snake($modelo);   // ej: familias_producto
 
+    // 🔄 Derivar desde la carpeta de vistas: produccion/abms/familias_producto
+    $partes = explode('/', $carpetaVistas);
+    $prefijo = implode('/', array_slice($partes, 0, 2)); // ej: produccion/abms
+    $nombreGrupo = implode('.', array_slice($partes, 0, 2)); // ej: produccion.abms
+
+    $controladorCompleto = "App\\Http\\Controllers\\{$namespace}\\{$modelo}Controller";
     $uso = "use {$controladorCompleto};";
 
     $bloqueRuta = <<<PHP
@@ -248,7 +251,7 @@ Route::prefix('{$prefijo}')->name('{$nombreGrupo}.')->group(function () {
 
 PHP;
 
-    // Verificar si ya existe (buscando por nombre de clase)
+    // 🔎 Evitar duplicados buscando el Route::resource con ese modelo
     if (!Str::contains($contenidoActual, "Route::resource('{$modeloSnake}'")) {
         file_put_contents($rutaArchivo, $bloqueRuta, FILE_APPEND);
         Log::info("✅ Ruta agregada al web.php para {$modelo}");
@@ -256,5 +259,6 @@ PHP;
         Log::info("ℹ️ La ruta para {$modelo} ya existe, no se duplicó.");
     }
 }
+
 
 }

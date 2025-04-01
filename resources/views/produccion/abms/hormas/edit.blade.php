@@ -4,7 +4,7 @@
 <div class="container">
     <h2 class="mb-4">Editar registro de {{ $modelo }}</h2>
 
-    <form action="{{ route('__NOMBRE_RUTA__.update', $registro->id) }}" method="POST">
+    <form action="{{ route('produccion.abms.horma.update', $registro->id) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -30,7 +30,7 @@
         @endforeach
 
         <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Actualizar</button>
-        <a href="{{ route('__NOMBRE_RUTA__.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Cancelar</a>
+        <a href="{{ route('produccion.abms.horma.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Cancelar</a>
     </form>
 </div>
-@endsection 
+@endsection

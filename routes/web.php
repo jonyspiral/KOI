@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Produccion\ArticuloController;
 
 use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
-
+use App\Http\Controllers\Produccion\FamiliasProductoController;
 use App\Http\Controllers\Sistemas\Importar\ImportarController;
 
 //creador ABMs  
@@ -65,4 +65,15 @@ Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
 // Modelo: RutasProduccion - Generado el 2025-03-30 08:11:41
 Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
     Route::resource('rutas_produccion', RutasProduccionController::class)->names('rutas_produccion');
+});
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: FamiliasProducto - Generado el 2025-04-01 09:46:58
+
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('familias_producto', FamiliasProductoController::class)->names('familias_producto');
+});
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Horma - Generado el 2025-04-01 10:37:10
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('horma', HormaController::class)->names('horma');
 });

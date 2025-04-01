@@ -1,56 +1,56 @@
 <?php
 
-namespace App\Http\Controllers\__NAMESPACE__;
+namespace App\Http\Controllers\Produccion;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\__MODELO__;
+use App\Models\FamiliasProducto;
 use Illuminate\Support\Facades\File;
 
-class __MODELO__Controller extends Controller
+class FamiliasProductoController extends Controller
 {
     public function index()
     {
-        $registros = __MODELO__::all();
+        $registros = FamiliasProducto::all();
 
         // 🛠 Cargar configuración del formulario
-        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+        $configPath = resource_path("meta_abms/config_form_FamiliasProducto.json");
         $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
 
         // Filtrar solo los campos incluidos
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
 
         $columnas = array_keys($campos);
-        $modelo = '__MODELO__';
+        $modelo = 'FamiliasProducto';
 
-        return view('__CARPETA_VISTAS__.index', compact('registros', 'campos', 'columnas', 'modelo'));
+        return view('produccion/abms/familias_producto.index', compact('registros', 'campos', 'columnas', 'modelo'));
     }
 
     public function create()
     {
-        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+        $configPath = resource_path("meta_abms/config_form_FamiliasProducto.json");
         $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
 
         // Filtrar solo los campos incluidos
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
 
-        $modelo = '__MODELO__';
+        $modelo = 'FamiliasProducto';
         $siguiente = [];
 
         // Calcular valores para campos con max+1 o auto_increment_plus
         foreach ($campos as $campo => $meta) {
             if (!empty($meta['max_mas_uno']) || !empty($meta['auto_increment_plus'])) {
-                $max = __MODELO__::max($campo);
+                $max = FamiliasProducto::max($campo);
                 $siguiente[$campo] = $max + 1;
             }
         }
 
-        return view('__CARPETA_VISTAS__.create', compact('campos', 'siguiente', 'modelo'));
+        return view('produccion/abms/familias_producto.create', compact('campos', 'siguiente', 'modelo'));
     }
 
     public function store(Request $request)
     {
-        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+        $configPath = resource_path("meta_abms/config_form_FamiliasProducto.json");
         $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
 
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
@@ -60,44 +60,44 @@ class __MODELO__Controller extends Controller
         // Asignar automáticamente valores de campos auto_increment_plus
         foreach ($campos as $campo => $meta) {
             if (!empty($meta['max_mas_uno']) || !empty($meta['auto_increment_plus'])) {
-                $datos[$campo] = __MODELO__::max($campo) + 1;
+                $datos[$campo] = FamiliasProducto::max($campo) + 1;
             }
         }
 
-        __MODELO__::create($datos);
-        return redirect()->route('__NOMBRE_RUTA__.index');
+        FamiliasProducto::create($datos);
+        return redirect()->route('produccion.abms.familias_producto.index');
     }
 
     public function edit($id)
     {
-        $registro = __MODELO__::findOrFail($id);
+        $registro = FamiliasProducto::findOrFail($id);
 
-        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+        $configPath = resource_path("meta_abms/config_form_FamiliasProducto.json");
         $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
 
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-        $modelo = '__MODELO__';
+        $modelo = 'FamiliasProducto';
 
-        return view('__CARPETA_VISTAS__.edit', compact('registro', 'campos', 'modelo'));
+        return view('produccion/abms/familias_producto.edit', compact('registro', 'campos', 'modelo'));
     }
 
     public function update(Request $request, $id)
     {
-        $registro = __MODELO__::findOrFail($id);
+        $registro = FamiliasProducto::findOrFail($id);
 
-        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+        $configPath = resource_path("meta_abms/config_form_FamiliasProducto.json");
         $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
 
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
 
         $registro->update($request->only(array_keys($campos)));
 
-        return redirect()->route('__NOMBRE_RUTA__.index');
+        return redirect()->route('produccion.abms.familias_producto.index');
     }
 
     public function destroy($id)
     {
-        __MODELO__::destroy($id);
-        return redirect()->route('__NOMBRE_RUTA__.index');
+        FamiliasProducto::destroy($id);
+        return redirect()->route('produccion.abms.familias_producto.index');
     }
 }

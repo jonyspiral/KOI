@@ -1,22 +1,30 @@
 {
-    "modelo": "RutasProduccion",
+    "modelo": "FamiliasProducto",
     "namespace": "Produccion",
-    "carpeta_vistas": "produccion\/abms\/rutas_produccion",
+    "carpeta_vistas": "produccion\/abms\/familias_producto",
     "campos": {
-        "cod_ruta": {
+        "id": {
             "default": null,
-            "visible": "1",
-            "input_type": "number",
+            "input_type": "hidden",
             "auto_increment_plus": "1",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "incluir": "1"
         },
-        "denom_ruta": {
+        "nombre": {
             "default": null,
             "visible": "1",
             "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "descripcion": {
+            "default": null,
+            "visible": "1",
+            "input_type": "textarea",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
@@ -26,11 +34,26 @@
             "default": "N",
             "visible": "1",
             "input_type": "text",
-            "is_boolean": "1",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "incluir": "1"
+        },
+        "cod_usuario": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "fecha_alta": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
         },
         "fecha_baja": {
             "default": null,
@@ -40,22 +63,9 @@
             "referenced_column": "id",
             "referenced_label": "nombre"
         },
-        "fecha_ultima_modificacion": {
+        "fecha_ultima_mod": {
             "default": null,
-            "input_type": "text",
-            "referenced_table": null,
-            "referenced_column": "id",
-            "referenced_label": "nombre"
-        },
-        "autor_ultima_modificacion": {
-            "default": null,
-            "input_type": "text",
-            "referenced_table": null,
-            "referenced_column": "id",
-            "referenced_label": "nombre"
-        },
-        "fechaAlta": {
-            "default": null,
+            "visible": "1",
             "input_type": "text",
             "referenced_table": null,
             "referenced_column": "id",

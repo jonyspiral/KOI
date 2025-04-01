@@ -1,0 +1,118 @@
+{
+    "modelo": "Horma",
+    "namespace": "Produccion",
+    "carpeta_vistas": "produccion\/abms\/hormas",
+    "campos": {
+        "cod_horma": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "denom_horma": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "talles_desde": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "talles_hasta": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "punto": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "is_boolean": "1",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "color_externo": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "diseñador": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "fabricante": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "activa": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "observaciones": {
+            "default": null,
+            "visible": "1",
+            "input_type": "textarea",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "incluir": "1"
+        },
+        "incorporada_fecha": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "desactivada_fecha": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        },
+        "decidio_retirar": {
+            "default": null,
+            "visible": "1",
+            "input_type": "text",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre"
+        }
+    }
+}

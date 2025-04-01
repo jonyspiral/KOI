@@ -5,7 +5,7 @@
     <h2 class="mb-4">➕ Nuevo registro en {{ $modelo }}</h2>
 
     {{-- 🧾 Formulario de creación --}}
-    <form action="{{ route('__NOMBRE_RUTA__.store') }}" method="POST">
+    <form action="{{ route('produccion.abms.horma.store') }}" method="POST">
         @csrf
 
         {{-- 🌐 Inputs dinámicos desde configuración --}}
@@ -47,7 +47,7 @@
         <button type="submit" class="btn btn-success">
             💾 Guardar
         </button>
-        <a href="{{ route('__NOMBRE_RUTA__.index') }}" class="btn btn-secondary">
+        <a href="{{ route('produccion.abms.horma.index') }}" class="btn btn-secondary">
             ⬅️ Cancelar
         </a>
     </form>
