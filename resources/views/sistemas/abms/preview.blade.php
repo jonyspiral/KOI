@@ -10,11 +10,21 @@
         <input type="hidden" name="modelo" value="{{ $modelo }}">
         <input type="hidden" name="namespace" value="{{ $namespace }}">
         <input type="hidden" name="carpeta_vistas" value="{{ $carpeta_vistas }}">
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="timestamps" name="timestamps" checked>
+            <label class="form-check-label" for="timestamps">Usar timestamps</label>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="sincronizable" name="sincronizable">
+            <label class="form-check-label" for="sincronizable">Sincronizable</label>
+        </div>
 
         <table class="table table-bordered">
             <thead>
                 <tr>
                     <th>Campo</th>
+                    <th>Label</th>
                     <th>Tipo</th>
                     <th>Nullable</th>
                     <th>Default</th>
@@ -38,6 +48,13 @@
                 @endphp
                 <tr>
                     <td>{{ $campo }}</td>
+
+                    {{-- Etiqueta editable --}}
+                        <td>
+                            <input type="text" name="campos[{{ $campo }}][label]" class="form-control"
+                                value="{{ ucwords(str_replace('_', ' ', $campo)) }}">
+                        </td>
+
                     <td>{{ $meta['type'] ?? '-' }}</td>
                     <td>{{ $meta['nullable'] ? 'Sí' : 'No' }}</td>
 

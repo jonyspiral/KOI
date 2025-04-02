@@ -184,7 +184,8 @@ use Illuminate\Database\Eloquent\Model;
 class {$modelName} extends Model
 {
     protected \$table = '{$tabla}';
-    public \$timestamps = false;
+    public \$timestamps = true;
+     public static \$sincronizable = true;
     protected \$fillable = {$this->formatArray(array_unique($defaultFields))};
 
 {$metaCode}

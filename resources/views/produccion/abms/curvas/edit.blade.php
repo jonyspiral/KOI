@@ -4,7 +4,7 @@
 <div class="container">
     <h2 class="mb-4">Editar registro de {{ $modelo }}</h2>
 
-    <form action="{{ route('produccion.abms.familias_productos.update', $registro->id) }}" method="POST">
+    <form action="{{ route('produccion.abms.curva.update', $registro->id) }}" method="POST">
         @csrf
         @method('PUT')
      
@@ -16,7 +16,6 @@
                     $isMaxPlusOne = !empty($meta['max_mas_uno']) || !empty($meta['auto_increment_plus']);
                     $inputId = 'input_' . $campo;
                     $value = old($campo, $registro->$campo ?? $default);
-                    $isSelect = !empty($meta['referenced_table']) && !empty($meta['referenced_label']);
                 @endphp
 
             @if (!empty($meta['incluir']))
@@ -31,19 +30,7 @@
                                 Marcar si corresponde
                             </label>
                         </div>
-                        @elseif ($isSelect)
-                            {{-- 🎯 SELECT FK --}}
-                            <div class="mb-3">
-                                <label for="{{ $inputId }}" class="form-label">{{ $campo }}</label>
-                                <select class="form-select select2" name="{{ $campo }}" id="{{ $inputId }}">
-                                    <option value="">Seleccione una opción</option>
-                                    @foreach (${$campo . '_opciones'} as $op)
-                                        <option value="{{ $op->id }}" {{ old($campo, $registro->$campo ?? '') == $op->id ? 'selected' : '' }}>
-                                            {{ $op->{$meta['referenced_label']} }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+
                     @else
                         <input type="text" class="form-control" name="{{ $campo }}" id="{{ $campo }}" value="{{ old($campo, $registro->$campo) }}">
                     @endif
@@ -52,7 +39,7 @@
         @endforeach
 
         <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Actualizar</button>
-        <a href="{{ route('produccion.abms.familias_productos.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Cancelar</a>
+        <a href="{{ route('produccion.abms.curva.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Cancelar</a>
     </form>
 </div>
 @endsection 

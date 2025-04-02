@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
+
 class AbmCreatorController extends Controller
 {
     /**
@@ -116,16 +117,6 @@ public function preview($modelo)
 }
 public function configurar(Request $request)
 {
-   // 🔍 DEBUG: mostramos los datos recibidos del formulario
-/*    dd([
-    'modelo' => $request->input('modelo'),
-    'namespace' => $request->input('namespace'),
-    'carpeta_vistas' => $request->input('carpeta_vistas'),
-    'campos' => $request->input('campos'),
-    'generar_request' => $request->filled('generar_request'),
-]); */
-
-
     $modelo = $request->input('modelo');
     $namespace = $request->input('namespace');
     $carpetaVistas = $request->input('carpeta_vistas');
@@ -145,34 +136,67 @@ public function configurar(Request $request)
     if (!file_exists($viewsPath)) {
         mkdir($viewsPath, 0755, true);
     }
-    logger("🧪 Debug controllerPath: $controllerPath");
-    logger("🧪 Forzar reemplazo: " . ($force ? 'sí' : 'no'));
-    
+   
     if (file_exists($controllerPath) && !$force) {
-        logger("🛑 El archivo existe y no se pidió forzar.");
         return back()->withErrors("El controlador ya existe. Activá 'Reemplazar controlador' para sobreescribirlo.");
     }
+   logger("✅ Pasa la validación y continúa el proceso...");
     
-    logger("✅ Pasa la validación y continúa el proceso...");
-    
-    // Guardar configuración en JSON
-    $config = [
+       // 🧠 Procesar campos antes de guardar el JSON
+       $camposProcesados = [];
+       $camposIncluir = [];
+   
+       foreach ($campos as $campo => $meta) {
+        $configCampo = [
+            'label' => $meta['label'] ?? ucwords(str_replace('_', ' ', $campo)),
+            'default' => $meta['default'] ?? null,
+            'visible' => !empty($meta['visible']),
+            'input_type' => $meta['input_type'] ?? 'text',
+            'is_boolean' => !empty($meta['is_boolean']),
+            'auto_increment_plus' => !empty($meta['auto_increment_plus']),
+            'foreign' => !empty($meta['foreign']),
+            'referenced_table' => $meta['referenced_table'] ?? null,
+            'referenced_column' => $meta['referenced_column'] ?? 'id',
+            'referenced_label' => $meta['referenced_label'] ?? 'nombre',
+            'incluir' => !empty($meta['incluir']),
+        ];
+   
+           if ($configCampo['incluir']) {
+               $camposIncluir[] = $campo;
+           }
+   
+           $camposProcesados[$campo] = $configCampo;
+       }
+     // 🧾 Guardar configuración extendida en JSON
+     $config = [
         'modelo' => $modelo,
         'namespace' => $namespace,
         'carpeta_vistas' => $carpetaVistas,
-        'campos' => $campos,
-    ];
+        'timestamps' => $request->has('timestamps'),
+        'sincronizable' => $request->has('sincronizable'),
+        'campos' => $camposProcesados,
+        
+    ]; 
+
     $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
     if (!file_exists(dirname($jsonPath))) {
         mkdir(dirname($jsonPath), 0755, true);
     }
     file_put_contents($jsonPath, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+ 
+    // ✅ ACTUALIZAR EL FILLABLE EN EL MODELO
+    $camposIncluir = [];
+    foreach ($campos as $campo => $conf) {
+        if (!empty($conf['incluir'])) {
+            $camposIncluir[] = $campo;
+        }
+    }
+    $this->actualizarFillableModelo($modelo, $namespace, $camposIncluir);
 
     // Reemplazos comunes
     $nombres = Str::snake(Str::pluralStudly($modelo)); // ej: rutas_produccion
-    
     $snakeModel = Str::snake($modelo); // rutas_produccion
-    $routeName = strtolower("{$namespace}.abms.{$snakeModel}"); // produccion.abms.rutas_produccion
+    $routeName = strtolower("{$namespace}.abms." . Str::plural($snakeModel));
     
     $replacements = [
         '__MODELO__' => $modelo,
@@ -209,41 +233,76 @@ public function configurar(Request $request)
         $this->info("🛡️ FormRequest generado: {$modelo}Request.php");
     }
 
-// Agregar ruta automáticamente al web.php
-if ($request->filled('agregar_ruta')) {
-    $this->agregarRutaWeb($namespace, $modelo, $carpetaVistas);
+        // Agregar ruta automáticamente al web.php
+        if ($request->filled('agregar_ruta')) {
+            $this->agregarRutaWeb($namespace, $modelo, $carpetaVistas);
+        }
+        return view('sistemas.abms.resultado', [
+            'modelo' => $modelo,
+            'carpeta_vistas' => $carpetaVistas,
+            'controller_path' => $controllerPath,
+            'request_path' => $request->filled('generar_request') ? $requestPath ?? null : null,
+        ]);
 }
-return view('sistemas.abms.resultado', [
-    'modelo' => $modelo,
-    'carpeta_vistas' => $carpetaVistas,
-    'controller_path' => $controllerPath,
-    'request_path' => $request->filled('generar_request') ? $requestPath ?? null : null,
-]);
 
+protected function actualizarFillableModelo($modelo, $namespace, array $camposIncluir)
+{
+    $rutaModelo = app_path("Models/{$modelo}.php");
+
+    if (!File::exists($rutaModelo)) {
+        throw new \Exception("No se encontró el modelo {$modelo}");
+    }
+
+    $contenido = File::get($rutaModelo);
+
+    // Construir el array $fillable
+    $fillableArray = "['" . implode("', '", $camposIncluir) . "']";
+    $lineaFillable = "    protected \$fillable = {$fillableArray};";
+
+    // Reemplazar o insertar el fillable
+    if (preg_match('/protected \$fillable = \[.*?\];/s', $contenido)) {
+        $contenido = preg_replace('/protected \$fillable = \[.*?\];/s', $lineaFillable, $contenido);
+    } else {
+        // Insertar después de la declaración de clase
+        $contenido = preg_replace(
+            '/class ' . $modelo . ' extends Model\s*\{/',
+            "class {$modelo} extends Model {\n{$lineaFillable}\n",
+            $contenido
+        );
+    }
+
+    File::put($rutaModelo, $contenido);
+    \Log::info("🛠 Modelo {$modelo} actualizado con \$fillable: " . json_encode($camposIncluir));
 }
-   
+  
 protected function agregarRutaWeb($namespace, $modelo, $carpetaVistas)
 {
     $rutaArchivo = base_path('routes/web.php');
     $contenidoActual = file_get_contents($rutaArchivo);
 
     $fecha = now()->format('Y-m-d H:i:s');
-    $modeloKebab = Str::kebab($modelo);   // ej: familias-producto
-    $modeloSnake = Str::snake($modelo);   // ej: familias_producto
 
-    // 🔄 Derivar desde la carpeta de vistas: produccion/abms/familias_producto
+    // Convertimos modelo a plural (para nombres de rutas)
+    $modeloPlural = Str::pluralStudly($modelo);   // ej: FamiliasProductos
+    $modeloSnake = Str::snake($modeloPlural);     // ej: familias_productos
+
+    // Derivamos prefijo y nombre del grupo desde la carpeta de vistas
     $partes = explode('/', $carpetaVistas);
-    $prefijo = implode('/', array_slice($partes, 0, 2)); // ej: produccion/abms
+    $prefijo = implode('/', array_slice($partes, 0, 2));     // ej: produccion/abms
     $nombreGrupo = implode('.', array_slice($partes, 0, 2)); // ej: produccion.abms
 
     $controladorCompleto = "App\\Http\\Controllers\\{$namespace}\\{$modelo}Controller";
     $uso = "use {$controladorCompleto};";
 
+    // ✅ Solo agregamos el use si no existe
+    $usoFinal = Str::contains($contenidoActual, $uso) ? '' : $uso;
+
+    // ✅ Generamos el bloque de ruta
     $bloqueRuta = <<<PHP
 
 // 🧩 Ruta generada automáticamente por ABM Creator
 // Modelo: {$modelo} - Generado el {$fecha}
-{$uso}
+{$usoFinal}
 
 Route::prefix('{$prefijo}')->name('{$nombreGrupo}.')->group(function () {
     Route::resource('{$modeloSnake}', {$modelo}Controller::class)->names('{$modeloSnake}');
@@ -251,7 +310,7 @@ Route::prefix('{$prefijo}')->name('{$nombreGrupo}.')->group(function () {
 
 PHP;
 
-    // 🔎 Evitar duplicados buscando el Route::resource con ese modelo
+    // 🔍 Evitamos duplicado del resource
     if (!Str::contains($contenidoActual, "Route::resource('{$modeloSnake}'")) {
         file_put_contents($rutaArchivo, $bloqueRuta, FILE_APPEND);
         Log::info("✅ Ruta agregada al web.php para {$modelo}");
@@ -259,6 +318,5 @@ PHP;
         Log::info("ℹ️ La ruta para {$modelo} ya existe, no se duplicó.");
     }
 }
-
 
 }

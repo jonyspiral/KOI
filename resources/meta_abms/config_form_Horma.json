@@ -84,7 +84,7 @@
         "observaciones": {
             "default": null,
             "visible": "1",
-            "input_type": "textarea",
+            "input_type": "text",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",

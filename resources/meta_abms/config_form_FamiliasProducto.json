@@ -2,74 +2,112 @@
     "modelo": "FamiliasProducto",
     "namespace": "Produccion",
     "carpeta_vistas": "produccion\/abms\/familias_producto",
+    "timestamps": true,
+    "sincronizable": true,
     "campos": {
         "id": {
+            "label": "Id",
             "default": null,
+            "visible": false,
             "input_type": "hidden",
-            "auto_increment_plus": "1",
+            "is_boolean": false,
+            "auto_increment_plus": true,
+            "foreign": false,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
-            "incluir": "1"
+            "incluir": true
         },
         "nombre": {
+            "label": "Nombre",
             "default": null,
-            "visible": "1",
+            "visible": true,
             "input_type": "text",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "foreign": false,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
-            "incluir": "1"
+            "incluir": true
         },
         "descripcion": {
+            "label": "Descripcion",
             "default": null,
-            "visible": "1",
-            "input_type": "textarea",
+            "visible": true,
+            "input_type": "text",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "foreign": false,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
-            "incluir": "1"
+            "incluir": true
         },
         "anulado": {
+            "label": "Anulado",
             "default": "N",
-            "visible": "1",
+            "visible": true,
             "input_type": "text",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "foreign": false,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
-            "incluir": "1"
+            "incluir": true
         },
         "cod_usuario": {
+            "label": "Cod Usuario",
             "default": null,
-            "visible": "1",
+            "visible": true,
             "input_type": "text",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "foreign": false,
             "referenced_table": null,
             "referenced_column": "id",
-            "referenced_label": "nombre"
+            "referenced_label": "nombre",
+            "incluir": false
         },
         "fecha_alta": {
+            "label": "Fecha Alta",
             "default": null,
-            "visible": "1",
+            "visible": true,
             "input_type": "text",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "foreign": false,
             "referenced_table": null,
             "referenced_column": "id",
-            "referenced_label": "nombre"
+            "referenced_label": "nombre",
+            "incluir": false
         },
         "fecha_baja": {
+            "label": "Fecha Baja",
             "default": null,
-            "visible": "1",
+            "visible": true,
             "input_type": "text",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "foreign": false,
             "referenced_table": null,
             "referenced_column": "id",
-            "referenced_label": "nombre"
+            "referenced_label": "nombre",
+            "incluir": false
         },
         "fecha_ultima_mod": {
+            "label": "Fecha Ultima Mod",
             "default": null,
-            "visible": "1",
+            "visible": true,
             "input_type": "text",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "foreign": false,
             "referenced_table": null,
             "referenced_column": "id",
-            "referenced_label": "nombre"
+            "referenced_label": "nombre",
+            "incluir": false
         }
     }
 }

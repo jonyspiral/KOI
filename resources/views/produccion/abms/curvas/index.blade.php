@@ -2,9 +2,9 @@
 
 @section('content')
 <div class="container">
-    <h2 class="mb-4">Listado de FamiliasProducto</h2>
+    <h2 class="mb-4">Listado de Curva</h2>
 
-    <a href="{{ route('produccion.abms.familias_productos.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    <a href="{{ route('produccion.abms.curva.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
    
     <div class="table-responsive">
         <table class="table table-striped table-sm">
@@ -39,8 +39,8 @@
                             @endif
                         @endforeach
                         <td>
-                            <a href="{{ route('produccion.abms.familias_productos.edit', $registro->id) }}" class="btn btn-sm btn-primary">✏️</a>
-                            <form action="{{ route('produccion.abms.familias_productos.destroy', $registro->id) }}" method="POST" class="d-inline">
+                            <a href="{{ route('produccion.abms.curva.edit', $registro->id) }}" class="btn btn-sm btn-primary">✏️</a>
+                            <form action="{{ route('produccion.abms.curva.destroy', $registro->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">🗑️</button>

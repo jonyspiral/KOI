@@ -27,26 +27,47 @@ class __MODELO__Controller extends Controller
     }
 
     public function create()
-    {
-        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
-        $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
+{
+    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+    $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
+    //dd($camposRaw);
+    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+    //dd($campos);
+    $modelo = '__MODELO__';
 
-        // Filtrar solo los campos incluidos
-        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+    $siguiente = [];
+    $opciones = [];
+    $labels = [];
+    $defaults = [];
 
-        $modelo = '__MODELO__';
-        $siguiente = [];
-
-        // Calcular valores para campos con max+1 o auto_increment_plus
-        foreach ($campos as $campo => $meta) {
-            if (!empty($meta['max_mas_uno']) || !empty($meta['auto_increment_plus'])) {
-                $max = __MODELO__::max($campo);
-                $siguiente[$campo] = $max + 1;
-            }
+    foreach ($campos as $campo => $meta) {
+        if (!empty($meta['max_mas_uno']) || !empty($meta['auto_increment_plus'])) {
+            $max = __MODELO__::max($campo);
+            $siguiente[$campo] = $max + 1;
         }
 
-        return view('__CARPETA_VISTAS__.create', compact('campos', 'siguiente', 'modelo'));
+        $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
+        $defaults[$campo] = $meta['default'] ?? '';
+
+        if (!empty($meta['referenced_table']) && !empty($meta['referenced_label'])) {  
+            $tabla = $meta['referenced_table'];
+            $label = $meta['referenced_label'];
+            $referenced_column = $meta['referenced_column'];
+
+            $modeloRelacionado = 'App\\Models\\' . \Str::studly(\Str::singular($tabla));
+            
+            if (class_exists($modeloRelacionado)) {  
+                $opciones["{$campo}_opciones"] = $modeloRelacionado::orderBy($label)->get();
+            }
+        }
     }
+    dd($opciones);
+    return view('__CARPETA_VISTAS__.create', array_merge(
+        compact('campos', 'siguiente', 'modelo', 'labels', 'defaults'),
+        $opciones
+    ));
+}
+
 
     public function store(Request $request)
     {
@@ -65,23 +86,48 @@ class __MODELO__Controller extends Controller
         }
 
         __MODELO__::create($datos);
+       
         return redirect()->route('__NOMBRE_RUTA__.index');
     }
-
     public function edit($id)
     {
         $registro = __MODELO__::findOrFail($id);
-
+    
         $configPath = resource_path("meta_abms/config_form___MODELO__.json");
         $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
-
+    
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
         $modelo = '__MODELO__';
-
-        return view('__CARPETA_VISTAS__.edit', compact('registro', 'campos', 'modelo'));
+    
+        $opciones = [];
+        $labels = [];
+        $defaults = [];
+    
+        foreach ($campos as $campo => $meta) {
+            // 🔠 Label personalizado
+            $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
+    
+            // 🧩 Valor por defecto
+            $defaults[$campo] = $meta['default'] ?? '';
+    
+            // 🔽 Opciones para campos select
+            if (!empty($meta['referenced_table']) && !empty($meta['referenced_label'])) {
+                $tabla = $meta['referenced_table'];
+                $label = $meta['referenced_label'];
+                $modeloRelacionado = 'App\\Models\\' . \Str::studly(\Str::singular($tabla));
+    
+                if (class_exists($modeloRelacionado)) {
+                    $opciones["{$campo}_opciones"] = $modeloRelacionado::orderBy($label)->get();
+                }
+            }
+        }
+        
+        return view('__CARPETA_VISTAS__.edit', array_merge(
+            compact('registro', 'campos', 'modelo', 'labels', 'defaults'),
+            $opciones
+        ));
     }
-
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
         $registro = __MODELO__::findOrFail($id);
 

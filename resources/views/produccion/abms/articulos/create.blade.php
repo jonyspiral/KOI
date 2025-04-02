@@ -4,7 +4,7 @@
 <div class="container">
     <h2 class="mb-4">➕ Nuevo registro en {{ $modelo }}</h2>
 
-    <form action="{{ route('__NOMBRE_RUTA__.store') }}" method="POST">
+    <form action="{{ route('produccion.abms.articulos.store') }}" method="POST">
         @csrf
 
         @foreach ($campos as $campo => $config)
@@ -18,7 +18,6 @@
                 $isTextarea = $type === 'textarea';
                 $value = $isMaxPlusOne && isset($siguiente[$campo]) ? $siguiente[$campo] : $default;
                 $inputId = 'input_' . $campo;
-                $varOpciones = $campo . '_opciones';
             @endphp
 
             <div class="mb-3">
@@ -33,21 +32,17 @@
                         <label class="form-check-label" for="{{ $inputId }}">Sí</label>
                     </div>
 
-                    @elseif ($isSelect)
-                        {{-- 🔽 Campo SELECT --}}
-                        <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
-                            <option value="">Seleccione una opción</option>
-                            @php
-                                $varOpciones = $campo . '_opciones';
-                            @endphp
-                            @if (!empty($$varOpciones))
-                                @foreach ($$varOpciones as $op)
-                                    <option value="{{ $op->id }}" {{ $value == $op->id ? 'selected' : '' }}>
-                                        {{ data_get($op, $config['referenced_label'], '—') }}
-                                    </option>
-                                @endforeach
-                            @endif
-                        </select>
+                @elseif ($isSelect)
+                    {{-- 🔽 Campo SELECT --}}
+                    <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
+                        <option value="">Seleccione una opción</option>
+                        @foreach (${$campo . '_opciones'} as $op)
+                            <option value="{{ $op->id }}" {{ $value == $op->id ? 'selected' : '' }}>
+                                {{ $op->{$config['referenced_label']} }}
+                            </option>
+                        @endforeach
+                    </select>
+
                 @elseif ($isMaxPlusOne)
                     {{-- 🔒 Campo autoincrementado --}}
                     <input type="text" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
@@ -66,7 +61,7 @@
         @endforeach
 
         <button type="submit" class="btn btn-success">💾 Guardar</button>
-        <a href="{{ route('__NOMBRE_RUTA__.index') }}" class="btn btn-secondary">⬅️ Cancelar</a>
+        <a href="{{ route('produccion.abms.articulos.index') }}" class="btn btn-secondary">⬅️ Cancelar</a>
     </form>
 </div>
 @endsection

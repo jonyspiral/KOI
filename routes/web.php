@@ -16,6 +16,7 @@ use App\Http\Controllers\Produccion\ArticuloController;
 use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
 use App\Http\Controllers\Produccion\FamiliasProductoController;
 use App\Http\Controllers\Sistemas\Importar\ImportarController;
+use App\Http\Controllers\Produccion\CurvaController;
 
 //creador ABMs  
 
@@ -77,3 +78,34 @@ Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
 Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
     Route::resource('horma', HormaController::class)->names('horma');
 });
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Curva - Generado el 2025-04-01 21:07:14
+
+
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('curva', CurvaController::class)->names('curva');
+});
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Curva - Generado el 2025-04-02 00:56:03
+
+
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('curvas', CurvaController::class)->names('curvas');
+});
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: FamiliasProducto - Generado el 2025-04-02 05:28:50
+
+
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('familias_productos', FamiliasProductoController::class)->names('familias_productos');
+});
+
+// 🧩 Ruta de prueba para el layout Master-Detail Livewire
+// Muestra un producto con sus colores relacionados (cabecera + subform)
+use App\Http\Controllers\Produccion\ProductController;
+
+Route::get('products/{id}/with-colors', [ProductController::class, 'showWithColors'])
+    ->name('products.showWithColors');

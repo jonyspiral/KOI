@@ -7,23 +7,14 @@
     <form action="{{ route('produccion.abms.horma.update', $registro->id) }}" method="POST">
         @csrf
         @method('PUT')
-     
-        @foreach ($campos as $campo => $meta)
-                        @php
-                    $type = $meta['input_type'] ?? 'text';
-                    $default = $meta['default'] ?? '';
-                    $isBoolean = !empty($meta['is_boolean']);
-                    $isMaxPlusOne = !empty($meta['max_mas_uno']) || !empty($meta['auto_increment_plus']);
-                    $inputId = 'input_' . $campo;
-                    $value = old($campo, $registro->$campo ?? $default);
-                @endphp
 
+        @foreach ($campos as $campo => $meta)
             @if (!empty($meta['incluir']))
                 <div class="mb-3">
                     <label for="{{ $campo }}" class="form-label">{{ $campo }}</label>
-                 
-                    @if ($isBoolean)
-                        <div class="form-check">
+
+                    @if (!empty($meta['booleano']))
+                        <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" name="{{ $campo }}" id="{{ $campo }}" value="S"
                                 {{ $registro->$campo === 'S' ? 'checked' : '' }}>
                             <label class="form-check-label" for="{{ $campo }}">

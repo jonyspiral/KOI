@@ -24,11 +24,17 @@
                         @foreach ($columnas as $col)
                             @if (!empty($campos[$col]['incluir']))
                                 <td>
-                                    @if(isset($campos[$col]['tipo']) && $campos[$col]['tipo'] === 'boolean')
-                                        {{ $registro->$col === 'S' ? '✅' : '✖️' }}
-                                    @else
-                                        {{ $registro->$col }}
-                                    @endif
+                                @php
+                                    $valor = $registro->$col;
+                                    $meta = $campos[$col] ?? [];
+                                    $isBoolean = !empty($meta['is_boolean']);
+                                @endphp
+
+                                @if ($isBoolean)
+                                    <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
+                                @else
+                                    {{ $valor }}
+                                @endif
                                 </td>
                             @endif
                         @endforeach

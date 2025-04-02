@@ -2,9 +2,9 @@
 
 @section('content')
 <div class="container">
-    <h2 class="mb-4">Listado de FamiliasProducto</h2>
+    <h2 class="mb-4">Listado de Horma</h2>
 
-    <a href="{{ route('produccion.abms.familias_productos.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    <a href="{{ route('produccion.abms.horma.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
    
     <div class="table-responsive">
         <table class="table table-striped table-sm">
@@ -24,23 +24,17 @@
                         @foreach ($columnas as $col)
                             @if (!empty($campos[$col]['incluir']))
                                 <td>
-                                @php
-                                    $valor = $registro->$col;
-                                    $meta = $campos[$col] ?? [];
-                                    $isBoolean = !empty($meta['is_boolean']);
-                                @endphp
-
-                                @if ($isBoolean)
-                                    <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
-                                @else
-                                    {{ $valor }}
-                                @endif
+                                    @if(isset($campos[$col]['tipo']) && $campos[$col]['tipo'] === 'boolean')
+                                        {{ $registro->$col === 'S' ? '✅' : '✖️' }}
+                                    @else
+                                        {{ $registro->$col }}
+                                    @endif
                                 </td>
                             @endif
                         @endforeach
                         <td>
-                            <a href="{{ route('produccion.abms.familias_productos.edit', $registro->id) }}" class="btn btn-sm btn-primary">✏️</a>
-                            <form action="{{ route('produccion.abms.familias_productos.destroy', $registro->id) }}" method="POST" class="d-inline">
+                            <a href="{{ route('produccion.abms.horma.edit', $registro->id) }}" class="btn btn-sm btn-primary">✏️</a>
+                            <form action="{{ route('produccion.abms.horma.destroy', $registro->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
