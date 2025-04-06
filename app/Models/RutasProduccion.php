@@ -8,7 +8,7 @@ class RutasProduccion extends Model
 {
     protected $table = 'Rutas_produccion';
     public $timestamps = false;
-    protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'fecha_baja', 'fecha_ultima_modificacion', 'autor_ultima_modificacion', 'fechaAlta', 'id'];
+protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado'];
 
     public static function fieldsMeta()
     {
@@ -64,4 +64,10 @@ class RutasProduccion extends Model
   ),
 );
 }
+public function pasos()
+{
+    return $this->hasMany(PasosRutasProduccion::class, 'cod_ruta', 'cod_ruta');
+}
+
+
 }

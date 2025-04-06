@@ -27,26 +27,47 @@ class HormaController extends Controller
     }
 
     public function create()
-    {
-        $configPath = resource_path("meta_abms/config_form_Horma.json");
-        $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
+{
+    $configPath = resource_path("meta_abms/config_form_Horma.json");
+    $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
+  
+    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
 
-        // Filtrar solo los campos incluidos
-        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+    $modelo = 'Horma';
 
-        $modelo = 'Horma';
-        $siguiente = [];
+    $siguiente = [];
+    $opciones = [];
+    $labels = [];
+    $defaults = [];
 
-        // Calcular valores para campos con max+1 o auto_increment_plus
-        foreach ($campos as $campo => $meta) {
-            if (!empty($meta['max_mas_uno']) || !empty($meta['auto_increment_plus'])) {
-                $max = Horma::max($campo);
-                $siguiente[$campo] = $max + 1;
-            }
+    foreach ($campos as $campo => $meta) {
+        if (!empty($meta['max_mas_uno']) || !empty($meta['auto_increment_plus'])) {
+            $max = Horma::max($campo);
+            $siguiente[$campo] = $max + 1;
         }
 
-        return view('produccion/abms/hormas.create', compact('campos', 'siguiente', 'modelo'));
+        $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
+        $defaults[$campo] = $meta['default'] ?? '';
+
+        if (!empty($meta['referenced_table']) && !empty($meta['referenced_label'])) {  
+            $tabla = $meta['referenced_table'];
+            $label = $meta['referenced_label'];
+            $referenced_column = $meta['referenced_column'];
+
+            $modeloRelacionado = 'App\\Models\\' . \Str::studly(\Str::singular($tabla));
+            
+            if (class_exists($modeloRelacionado)) {  
+                $opciones["{$campo}_opciones"] = $modeloRelacionado::orderBy($label)->get();
+            }
+        }
     }
+ 
+    return view('produccion/abms/hormas.create', array_merge(
+        compact('campos', 'siguiente', 'modelo', 'labels', 'defaults'),
+        $opciones
+    ));
+}
+
 
     public function store(Request $request)
     {
@@ -65,23 +86,49 @@ class HormaController extends Controller
         }
 
         Horma::create($datos);
-        return redirect()->route('produccion.abms.horma.index');
+       
+        return redirect()->route('produccion.abms.hormas.index');
     }
-
     public function edit($id)
     {
         $registro = Horma::findOrFail($id);
-
+    
         $configPath = resource_path("meta_abms/config_form_Horma.json");
         $camposRaw = File::exists($configPath) ? json_decode(File::get($configPath), true)['campos'] : [];
-
+    
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
         $modelo = 'Horma';
+    
+        $opciones = [];
+        $labels = [];        // Asignar automáticamente valores de campos auto_increment_plus
 
-        return view('produccion/abms/hormas.edit', compact('registro', 'campos', 'modelo'));
+        $defaults = [];
+    
+        foreach ($campos as $campo => $meta) {
+            // 🔠 Label personalizado
+            $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
+    
+            // 🧩 Valor por defecto
+            $defaults[$campo] = $meta['default'] ?? '';
+    
+            // 🔽 Opciones para campos select
+            if (!empty($meta['referenced_table']) && !empty($meta['referenced_label'])) {
+                $tabla = $meta['referenced_table'];
+                $label = $meta['referenced_label'];
+                $modeloRelacionado = 'App\\Models\\' . \Str::studly(\Str::singular($tabla));
+    
+                if (class_exists($modeloRelacionado)) {
+                    $opciones["{$campo}_opciones"] = $modeloRelacionado::orderBy($label)->get();
+                }
+            }
+        }
+        
+        return view('produccion/abms/hormas.edit', array_merge(
+            compact('registro', 'campos', 'modelo', 'labels', 'defaults'),
+            $opciones
+        ));
     }
-
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
         $registro = Horma::findOrFail($id);
 
@@ -92,12 +139,12 @@ class HormaController extends Controller
 
         $registro->update($request->only(array_keys($campos)));
 
-        return redirect()->route('produccion.abms.horma.index');
+        return redirect()->route('produccion.abms.hormas.index');
     }
 
     public function destroy($id)
     {
         Horma::destroy($id);
-        return redirect()->route('produccion.abms.horma.index');
+        return redirect()->route('produccion.abms.hormas.index');
     }
 }

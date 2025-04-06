@@ -6,51 +6,85 @@
 
     <form action="{{ route('__NOMBRE_RUTA__.update', $registro->id) }}" method="POST">
         @csrf
+        
         @method('PUT')
-     
-        @foreach ($campos as $campo => $meta)
-                        @php
-                    $type = $meta['input_type'] ?? 'text';
-                    $default = $meta['default'] ?? '';
-                    $isBoolean = !empty($meta['is_boolean']);
-                    $isMaxPlusOne = !empty($meta['max_mas_uno']) || !empty($meta['auto_increment_plus']);
-                    $inputId = 'input_' . $campo;
-                    $value = old($campo, $registro->$campo ?? $default);
-                    $isSelect = !empty($meta['referenced_table']) && !empty($meta['referenced_label']);
-                @endphp
+<div class="row justify-content-center">
+<div class="col-md-10">
+<div class="row">
+        @foreach ($campos as $campo => $config)
+        @php
+    $inputType = $config['input_type'] ?? 'text';
+    $label = $config['label'] ?? ucfirst(str_replace('_', ' ', $campo));
+    $default = old($campo, $defaults[$campo] ?? '');
+    $isAutonumerico = $inputType === 'autonumerico';
+    $isTextarea = $inputType === 'textarea';
+    $isCheckbox = $inputType === 'checkbox';
+    $isSelectList = $inputType === 'select_list';
+    $isSelect = $inputType === 'select';
+    $isHidden = $inputType === 'hidden';
+    $inputId = 'input_' . $campo;
+    $value = $isAutonumerico && isset($siguiente[$campo]) ? $siguiente[$campo] : $default;
+    $selectOptions = $opciones["{$campo}_opciones"] ?? collect();
+@endphp
 
-            @if (!empty($meta['incluir']))
-                <div class="mb-3">
-                    <label for="{{ $campo }}" class="form-label">{{ $campo }}</label>
-                 
-                    @if ($isBoolean)
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="{{ $campo }}" id="{{ $campo }}" value="S"
-                                {{ $registro->$campo === 'S' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="{{ $campo }}">
-                                Marcar si corresponde
-                            </label>
-                        </div>
-                        @elseif ($isSelect)
-                            {{-- 🎯 SELECT FK --}}
-                            <div class="mb-3">
-                                <label for="{{ $inputId }}" class="form-label">{{ $campo }}</label>
-                                <select class="form-select select2" name="{{ $campo }}" id="{{ $inputId }}">
-                                    <option value="">Seleccione una opción</option>
-                                    @foreach (${$campo . '_opciones'} as $op)
-                                        <option value="{{ $op->id }}" {{ old($campo, $registro->$campo ?? '') == $op->id ? 'selected' : '' }}>
-                                            {{ $op->{$meta['referenced_label']} }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                    @else
-                        <input type="text" class="form-control" name="{{ $campo }}" id="{{ $campo }}" value="{{ old($campo, $registro->$campo) }}">
-                    @endif
-                </div>
-            @endif
-        @endforeach
+@if ($isHidden)
+<input type="hidden" name="{{ $campo }}" value="{{ $value }}">
+@else
+<div class="col-md-6 mb-3">
+        <label for="{{ $inputId }}" class="form-label">{{ $label }}</label>
 
+        @if ($isCheckbox)
+            <input type="hidden" name="{{ $campo }}" value="N">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="{{ $campo }}" id="{{ $inputId }}" value="S"
+                    {{ $value === 'S' ? 'checked' : '' }}>
+                <label class="form-check-label" for="{{ $inputId }}">Sí</label>
+            </div>
+
+            @elseif ($isSelect)
+            <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
+                <option value="">Seleccione una opción</option>
+                @foreach ($selectOptions as $opt)
+                    <option value="{{ $opt->{$config['referenced_column']} }}"
+                        {{ $value == $opt->{$config['referenced_column']} ? 'selected' : '' }}>
+                        {{ $opt->{$config['referenced_label']} }}
+                    </option>
+                @endforeach
+            </select>
+
+
+        @elseif ($isSelectList && !empty($config['select_list_data']))
+            @php
+                $opcionesList = explode(',', $config['select_list_data']);
+            @endphp
+            <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
+                <option value="">Seleccione una opción</option>
+                @foreach ($opcionesList as $opcion)
+                    @php [$texto, $val] = array_pad(explode('=', $opcion, 2), 2, $opcion); @endphp
+                    <option value="{{ $val }}" {{ $value == $val ? 'selected' : '' }}>
+                        {{ $texto }}
+                    </option>
+                @endforeach
+            </select>
+
+        @elseif ($isAutonumerico)
+            <input type="text" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
+                value="{{ $value }}" readonly>
+
+        @elseif ($isTextarea)
+            <textarea class="form-control" name="{{ $campo }}" id="{{ $inputId }}" rows="3">{{ $value }}</textarea>
+
+        @else
+            <input type="{{ $inputType }}" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
+                value="{{ $value }}">
+        @endif
+    </div>
+@endif
+
+@endforeach
+</div>
+</div>
+</div>
         <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Actualizar</button>
         <a href="{{ route('__NOMBRE_RUTA__.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Cancelar</a>
     </form>

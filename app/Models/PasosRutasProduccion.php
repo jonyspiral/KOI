@@ -8,7 +8,7 @@ class PasosRutasProduccion extends Model
 {
     protected $table = 'Pasos_rutas_produccion';
     public $timestamps = false;
-    protected $fillable = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion', 'id'];
+ protected $fillable = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion', 'ejecucion', 'anulado', 'jerarquia_seccion', 'tiene_subordinadas', 'subordinada_de_seccion'];
 
     public static function fieldsMeta()
     {
@@ -162,4 +162,9 @@ class PasosRutasProduccion extends Model
   ),
 );
     }
+    public function ruta()
+{
+    return $this->belongsTo(RutaProduccion::class, 'cod_ruta', 'cod_ruta');
+}
+
 }

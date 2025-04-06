@@ -8,7 +8,7 @@ class FamiliasProducto extends Model
 {
     protected $table = 'familias_producto';
     public $timestamps = false;
-        protected $fillable = ['id', 'nombre', 'descripcion', 'anulado'];
+                                            protected $fillable = ['id', 'nombre', 'descripcion', 'anulado'];
 
     public static function fieldsMeta()
     {

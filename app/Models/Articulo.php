@@ -8,7 +8,7 @@ class Articulo extends Model
 {
     protected $table = 'articulos';
     public $timestamps = false;
-                                                                                                        protected $fillable = ['cod_articulo', 'cod_ruta', 'cod_linea', 'cod_marca', 'cod_rango', 'denom_articulo', 'vigente', 'cod_horma', 'naturaleza', 'unidad', 'cod_familia_producto', 'denom_articulo_largo'];
+                                                                                                                                                                                      protected $fillable = ['cod_articulo', 'cod_ruta', 'cod_linea', 'cod_marca', 'cod_rango', 'denom_articulo', 'vigente', 'forma_comercializacion', 'cod_horma', 'naturaleza', 'unidad', 'cod_rubro_iva', 'cod_familia_producto', 'denom_articulo_largo'];
 
     public static function fieldsMeta()
     {

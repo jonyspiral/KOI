@@ -4,52 +4,69 @@
 <div class="container">
     <h2 class="mb-4">➕ Nuevo registro en {{ $modelo }}</h2>
 
-    {{-- 🧾 Formulario de creación --}}
-    <form action="{{ route('produccion.abms.horma.store') }}" method="POST">
+    <form action="{{ route('produccion.abms.hormas.store') }}" method="POST">
         @csrf
 
-        {{-- 🌐 Inputs dinámicos desde configuración --}}
         @foreach ($campos as $campo => $config)
-            @php
-                $type = $config['input_type'] ?? 'text';
-                $default = $config['default'] ?? '';
-                $isBoolean = !empty($config['is_boolean']);
-                $isMaxPlusOne = !empty($config['max_mas_uno']) || !empty($config['auto_increment_plus']);
-                $inputId = 'input_' . $campo;
-                $value = $isMaxPlusOne && isset($siguiente[$campo]) ? $siguiente[$campo] : $default;
-            @endphp
+    @php
+        $inputType = $config['input_type'] ?? 'text';
+        $label = $labels[$campo] ?? ucfirst(str_replace('_', ' ', $campo));
+        $default = old($campo, $defaults[$campo] ?? '');
+        $isAutonumerico = $inputType === 'autonumerico';
+        $isTextarea = $inputType === 'textarea';
+        $isCheckbox = $inputType === 'checkbox';
+        $isSelectList = $inputType === 'select_list';
+        $inputId = 'input_' . $campo;
+        $value = $isAutonumerico && isset($siguiente[$campo]) ? $siguiente[$campo] : $default;
+    @endphp
 
-            <div class="mb-3">
-                <label for="{{ $inputId }}" class="form-label">{{ $campo }}</label>
+    @if ($inputType === 'hidden')
+        <input type="hidden" name="{{ $campo }}" value="{{ $value }}">
+    @else
+        <div class="mb-3">
+            <label for="{{ $inputId }}" class="form-label">{{ $label }}</label>
 
-                {{-- ✅ Campo booleano como checkbox --}}
-                @if ($isBoolean)
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="{{ $campo }}" id="{{ $inputId }}" value="S"
-                            {{ $default === 'S' ? 'checked' : '' }}>
-                        <label class="form-check-label" for="{{ $inputId }}">Sí</label>
-                    </div>
+            @if ($isCheckbox)
+                <input type="hidden" name="{{ $campo }}" value="N">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" name="{{ $campo }}" id="{{ $inputId }}" value="S"
+                        {{ $value === 'S' ? 'checked' : '' }}>
+                    <label class="form-check-label" for="{{ $inputId }}">Sí</label>
+                </div>
 
-                {{-- 🔒 Campo con Max+1 (autoincrementado y readonly) --}}
-                @elseif ($isMaxPlusOne)
-                    <input type="{{ $type }}" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
-                        value="{{ $value }}" readonly>
+            @elseif ($isSelectList && !empty($config['select_list_data']))
+                @php
+                    $opciones = explode(',', $config['select_list_data']);
+                @endphp
+                <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
+                    <option value="">Seleccione una opción</option>
+                    @foreach ($opciones as $opcion)
+                        @php
+                            [$texto, $val] = array_pad(explode('=', $opcion, 2), 2, $opcion);
+                        @endphp
+                        <option value="{{ $val }}" {{ $value == $val ? 'selected' : '' }}>
+                            {{ $texto }}
+                        </option>
+                    @endforeach
+                </select>
 
-                {{-- ✍️ Input normal --}}
-                @else
-                    <input type="{{ $type }}" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
-                        value="{{ $value }}">
-                @endif
-            </div>
-        @endforeach
+            @elseif ($isAutonumerico)
+                <input type="text" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
+                    value="{{ $value }}" readonly>
 
-        {{-- 💾 Botones --}}
-        <button type="submit" class="btn btn-success">
-            💾 Guardar
-        </button>
-        <a href="{{ route('produccion.abms.horma.index') }}" class="btn btn-secondary">
-            ⬅️ Cancelar
-        </a>
+            @elseif ($isTextarea)
+                <textarea class="form-control" name="{{ $campo }}" id="{{ $inputId }}" rows="3">{{ $value }}</textarea>
+
+            @else
+                <input type="{{ $inputType }}" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
+                    value="{{ $value }}">
+            @endif
+        </div>
+    @endif
+@endforeach
+
+        <button type="submit" class="btn btn-success">💾 Guardar</button>
+        <a href="{{ route('produccion.abms.hormas.index') }}" class="btn btn-secondary">⬅️ Cancelar</a>
     </form>
 </div>
 @endsection

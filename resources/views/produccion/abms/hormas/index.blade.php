@@ -4,7 +4,7 @@
 <div class="container">
     <h2 class="mb-4">Listado de Horma</h2>
 
-    <a href="{{ route('produccion.abms.horma.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    <a href="{{ route('produccion.abms.hormas.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
    
     <div class="table-responsive">
         <table class="table table-striped table-sm">
@@ -39,8 +39,8 @@
                             @endif
                         @endforeach
                         <td>
-                            <a href="{{ route('produccion.abms.horma.edit', $registro->id) }}" class="btn btn-sm btn-primary">✏️</a>
-                            <form action="{{ route('produccion.abms.horma.destroy', $registro->id) }}" method="POST" class="d-inline">
+                            <a href="{{ route('produccion.abms.hormas.edit', $registro->id) }}" class="btn btn-sm btn-primary">✏️</a>
+                            <form action="{{ route('produccion.abms.hormas.destroy', $registro->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">🗑️</button>

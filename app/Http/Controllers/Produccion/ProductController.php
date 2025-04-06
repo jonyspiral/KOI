@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Produccion;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Product;
+use App\Models\Articulo as Product;
 
 class ProductController extends Controller
 {
@@ -14,7 +14,9 @@ class ProductController extends Controller
 
         return view('products.show_with_colors', [
             'product' => $product,
-            'title' => 'Product: ' . $product->name
+            'title' => 'Product: ' . $product->denominacion
         ]);
     }
 }
+
+

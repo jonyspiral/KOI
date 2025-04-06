@@ -109,3 +109,19 @@ use App\Http\Controllers\Produccion\ProductController;
 
 Route::get('products/{id}/with-colors', [ProductController::class, 'showWithColors'])
     ->name('products.showWithColors');
+
+    
+
+Route::put('products/{id}', function () {
+    return redirect()->back()->with('status', 'Guardado de prueba.');
+})->name('products.update');
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: PasosRutasProduccion - Generado el 2025-04-04 18:05:35
+use App\Http\Controllers\Produccion\PasosRutasProduccionController;
+
+
+
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('pasos_rutas_produccion', PasosRutasProduccionController::class)->names('pasos_rutas_produccion');
+});

@@ -6,60 +6,80 @@
 
     <form action="{{ route('produccion.abms.articulos.store') }}" method="POST">
         @csrf
-
+        <div class="row justify-content-center">
+        <div class="col-md-10">
+        <div class="row">   
         @foreach ($campos as $campo => $config)
-            @php
-                $type = $config['input_type'] ?? 'text';
-                $label = $labels[$campo] ?? ucfirst(str_replace('_', ' ', $campo));
-                $default = old($campo, $defaults[$campo] ?? '');
-                $isBoolean = !empty($config['is_boolean']);
-                $isMaxPlusOne = !empty($config['max_mas_uno']) || !empty($config['auto_increment_plus']);
-                $isSelect = !empty($config['referenced_table']) && !empty($config['referenced_label']);
-                $isTextarea = $type === 'textarea';
-                $value = $isMaxPlusOne && isset($siguiente[$campo]) ? $siguiente[$campo] : $default;
-                $inputId = 'input_' . $campo;
-            @endphp
+       @php
+    $inputType = $config['input_type'] ?? 'text';
+    $label = $config['label'] ?? ucfirst(str_replace('_', ' ', $campo));
+    $default = old($campo, $defaults[$campo] ?? '');
+    $isAutonumerico = $inputType === 'autonumerico';
+    $isTextarea = $inputType === 'textarea';
+    $isCheckbox = $inputType === 'checkbox';
+    $isSelectList = $inputType === 'select_list';
+    $isSelect = $inputType === 'select';
+    $isHidden = $inputType === 'hidden';
+    $inputId = 'input_' . $campo;
+    $value = $isAutonumerico && isset($siguiente[$campo]) ? $siguiente[$campo] : $default;
+    $selectOptions = $opciones["{$campo}_opciones"] ?? collect();
+        @endphp
 
-            <div class="mb-3">
-                <label for="{{ $inputId }}" class="form-label">{{ $label }}</label>
+        @if ($isHidden)
+        <input type="hidden" name="{{ $campo }}" value="{{ $value }}">
+@else
+<div class="col-md-6 mb-3">
+        <label for="{{ $inputId }}" class="form-label">{{ $label }}</label>
 
-                @if ($isBoolean)
-                    {{-- ✅ Campo booleano --}}
-                    <input type="hidden" name="{{ $campo }}" value="N">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="{{ $campo }}" id="{{ $inputId }}" value="S"
-                            {{ $value === 'S' ? 'checked' : '' }}>
-                        <label class="form-check-label" for="{{ $inputId }}">Sí</label>
-                    </div>
-
-                @elseif ($isSelect)
-                    {{-- 🔽 Campo SELECT --}}
-                    <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
-                        <option value="">Seleccione una opción</option>
-                        @foreach (${$campo . '_opciones'} as $op)
-                            <option value="{{ $op->id }}" {{ $value == $op->id ? 'selected' : '' }}>
-                                {{ $op->{$config['referenced_label']} }}
-                            </option>
-                        @endforeach
-                    </select>
-
-                @elseif ($isMaxPlusOne)
-                    {{-- 🔒 Campo autoincrementado --}}
-                    <input type="text" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
-                        value="{{ $value }}" readonly>
-
-                @elseif ($isTextarea)
-                    {{-- 📝 Textarea --}}
-                    <textarea class="form-control" name="{{ $campo }}" id="{{ $inputId }}" rows="3">{{ $value }}</textarea>
-
-                @else
-                    {{-- ✍️ Input estándar --}}
-                    <input type="{{ $type }}" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
-                        value="{{ $value }}">
-                @endif
+        @if ($isCheckbox)
+<!--             <input type="hidden" name="{{ $campo }}" value="N">
+ -->            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="{{ $campo }}" id="{{ $inputId }}" value="S"
+                    {{ $value === 'S' ? 'checked' : '' }}>
+                <label class="form-check-label" for="{{ $inputId }}">Sí</label>
             </div>
-        @endforeach
 
+        @elseif ($isSelect)
+            <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
+                <option value="">Seleccione una opción</option>
+                @foreach ($selectOptions as $opt)
+                    <option value="{{ $opt->{$config['referenced_column']} }}"
+                        {{ $value == $opt->{$config['referenced_column']} ? 'selected' : '' }}>
+                        {{ $opt->{$config['referenced_label']} }}
+                    </option>
+                @endforeach
+            </select>
+
+        @elseif ($isSelectList && !empty($config['select_list_data']))
+            @php
+                $opcionesLista = explode(',', $config['select_list_data']);
+            @endphp
+            <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
+                <option value="">Seleccione una opción</option>
+                @foreach ($opcionesLista as $opcion)
+                    @php [$texto, $val] = array_pad(explode('=', $opcion, 2), 2, $opcion); @endphp
+                    <option value="{{ $val }}" {{ $value == $val ? 'selected' : '' }}>{{ $texto }}</option>
+                @endforeach
+            </select>
+
+        @elseif ($isAutonumerico)
+            <input type="text" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
+                value="{{ $value }}" readonly>
+
+        @elseif ($isTextarea)
+            <textarea class="form-control" name="{{ $campo }}" id="{{ $inputId }}" rows="3">{{ $value }}</textarea>
+
+        @else
+            <input type="{{ $inputType }}" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
+                value="{{ $value }}">
+        @endif
+    </div>
+@endif
+
+        @endforeach
+        </div>
+        </div>
+        </div>
         <button type="submit" class="btn btn-success">💾 Guardar</button>
         <a href="{{ route('produccion.abms.articulos.index') }}" class="btn btn-secondary">⬅️ Cancelar</a>
     </form>
