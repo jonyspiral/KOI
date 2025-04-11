@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class PasosRutasProduccion extends Model
 {
     protected $table = 'Pasos_rutas_produccion';
-    protected $connection = 'sqlsrv_koi';
+    protected $primaryKey = 'id';
     public $timestamps = false;
+    public $incrementing = false;
+    public static array $primaryKeySql = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion'];
+    protected $connection = 'sqlsrv_koi';
     protected $fillable = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion'];
 
     public static function fieldsMeta()

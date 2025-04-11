@@ -1,16 +1,4 @@
 <?php
-
-// KOI Importador de tablas v1.8
-// Incluye:
-// - Creación condicional del campo 'id' en MySQL si no existe en SQL Server
-// - Generación de modelos con opción --fill-all o solo claves primarias
-// - Creación opcional del modelo SQL Server (--with-sql-model)
-// - Agregado de timestamps y campo sync_status para futura sincronización
-// - Generación automática del método fieldsMeta() en ambos modelos
-// - Flag --skip-data para evitar la importación de registros
-// - NUEVO: Flag --insert-simple para insertar sin updateOrInsert
-// - FIX: Se usa hash MD5 para nombre del índice único cuando supera límite
-
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -23,7 +11,7 @@ use Illuminate\Database\Schema\Blueprint;
 class ImportarTablaKoi extends Command
 {
     protected $signature = 'importar:tabla {nombre_tabla} {--force-models} {--force-table} {--with-sql-model} {--fill-all} {--skip-data} {--insert-simple}';
-    protected $description = 'Importa una tabla desde SQL Server 2000 a MySQL y genera sus modelos Eloquent (MySQL y opcionalmente SQL Server)';
+    protected $description = 'Importa una tabla desde SQL Server 2000 a MySQL y genera sus modelos Eloquent (MySQL y opcionalmente SQL Server) - v2.1';
 
     public function handle()
     {
@@ -107,7 +95,8 @@ class ImportarTablaKoi extends Command
                     $hash = substr(md5(implode('_', $uniqueFields)), 0, 8);
                     $indexName = "{$tabla}_u_{$hash}";
                     $table->unique($uniqueFields, $indexName);
-                    echo "🔐 Índice único creado: {$indexName}\n";
+                    echo "🔐 Índice único creado: {$indexName}
+";
                 }
             });
 
@@ -163,7 +152,10 @@ class ImportarTablaKoi extends Command
             ];
         }
 
-        $metaCode = "    public static function fieldsMeta()\n    {\n        return " . var_export($fieldsMeta, true) . ";\n    }";
+        $metaCode = "    public static function fieldsMeta()
+    {
+        return " . var_export($fieldsMeta, true) . ";
+    }";
 
         $defaultFields = $fillAll ? array_keys($fieldsMeta) : $uniqueFields;
 
@@ -174,64 +166,81 @@ class ImportarTablaKoi extends Command
         $modelName = ucfirst(Str::camel(Str::singular($tabla)));
         $modelPath = app_path("Models/{$modelName}.php");
 
-        $modelo = <<<PHP
-<?php
+ // ✅ Generar contenido del modelo MySQL
+$modelo = $this->generarModeloSeguro($modelName, $tabla, $defaultFields, $metaCode);
 
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-
-class {$modelName} extends Model
-{
-    protected \$table = '{$tabla}';
-    public \$timestamps = true;
-     public static \$sincronizable = true;
-    protected \$fillable = {$this->formatArray(array_unique($defaultFields))};
-
-{$metaCode}
+// ✅ Escribir modelo MySQL en disco
+if ($forceModels || !File::exists($modelPath)) {
+    File::ensureDirectoryExists(app_path('Models'));
+    File::put($modelPath, $modelo);
+    $this->info("✅ Modelo MySQL generado: App\\Models\\{$modelName}");
 }
-PHP;
 
-        if ($forceModels || !File::exists($modelPath)) {
-            File::ensureDirectoryExists(app_path('Models'));
-            File::put($modelPath, $modelo);
-            $this->info("✅ Modelo MySQL generado: App\Models\{$modelName}");
-        }
+// ✅ Generar y escribir modelo SQL Server si se indica
+if ($withSqlModel) {
+    $sqlFields = $fillAll ? array_keys($fieldsMeta) : $uniqueFields;
+    $modelSqlPath = app_path("Models/Sql/{$modelName}.php");
 
-        if ($withSqlModel) {
-            $sqlFields = $fillAll ? array_keys($fieldsMeta) : $uniqueFields;
+    $modeloSQL = $this->generarModeloSQLSeguro($modelName, $tabla, $sqlFields, $uniqueFields, $metaCode);
 
-            $modelSqlPath = app_path("Models/Sql/{$modelName}.php");
-            $modeloSQL = <<<PHP
-<?php
-
-namespace App\Models\Sql;
-
-use Illuminate\Database\Eloquent\Model;
-
-class {$modelName} extends Model
-{
-    protected \$table = '{$tabla}';
-    protected \$connection = 'sqlsrv_koi';
-    public \$timestamps = false;
-    protected \$fillable = {$this->formatArray(array_unique($sqlFields))};
-
-{$metaCode}
-}
-PHP;
-            if ($forceModels || !File::exists($modelSqlPath)) {
-                File::ensureDirectoryExists(app_path('Models/Sql'));
-                File::put($modelSqlPath, $modeloSQL);
-                $this->info("✅ Modelo SQL Server generado: App\Models\Sql\{$modelName}");
-            }
-        }
-
-        $this->info("🎉 Finalizado correctamente");
-        return 0;
+    if ($forceModels || !File::exists($modelSqlPath)) {
+        File::ensureDirectoryExists(app_path('Models/Sql'));
+        File::put($modelSqlPath, $modeloSQL);
+        $this->info("✅ Modelo SQL Server generado: App\\Models\\Sql\\{$modelName}");
     }
+}
+if ($forceModels || !File::exists($modelSqlPath)) {
+    File::ensureDirectoryExists(app_path('Models/Sql'));
+    File::put($modelSqlPath, $modeloSQL);
+    $this->info("✅ Modelo SQL Server generado: App\\Models\\Sql\\{$modelName}");
+}
 
+// ✅ Acá debe estar
+$this->info("🎉 Finalizado correctamente");
+return 0;
+}
+
+    protected function generarModeloSeguro(string $modelName, string $tabla, array $defaultFields, string $metaCode): string
+    {
+        $modelo = "<?php\n\n";
+        $modelo .= "namespace App\\Models;\n\n";
+        $modelo .= "use Illuminate\\Database\\Eloquent\\Model;\n\n";
+        $modelo .= "class {$modelName} extends Model\n";
+        $modelo .= "{\n";
+        $modelo .= "    protected \$table = '{$tabla}';\n";
+        $modelo .= "    protected \$primaryKey = 'id';\n";
+        $modelo .= "    public \$timestamps = true;\n";
+        $modelo .= "    public static \$sincronizable = true;\n";
+        $modelo .= "    protected \$fillable = " . $this->formatArray(array_unique($defaultFields)) . ";\n\n";
+        $modelo .= $metaCode . "\n";
+        $modelo .= "}\n";
+    
+        return $modelo;
+    }
+    
+    protected function generarModeloSQLSeguro(string $modelName, string $tabla, array $sqlFields, array $uniqueFields, string $metaCode): string
+    {
+        $modelo = "<?php\n\n";
+        $modelo .= "namespace App\\Models\\Sql;\n\n";
+        $modelo .= "use Illuminate\\Database\\Eloquent\\Model;\n\n";
+        $modelo .= "class {$modelName} extends Model\n";
+        $modelo .= "{\n";
+        $modelo .= "    protected \$table = '{$tabla}';\n";
+        $modelo .= "    protected \$primaryKey = 'id';\n";
+        $modelo .= "    public \$timestamps = false;\n";
+        $modelo .= "    public \$incrementing = false;\n";
+        $modelo .= "    public static array \$primaryKeySql = " . $this->formatArray($uniqueFields) . ";\n";
+        $modelo .= "    protected \$connection = 'sqlsrv_koi';\n";
+        $modelo .= "    protected \$fillable = " . $this->formatArray(array_unique($sqlFields)) . ";\n\n";
+        $modelo .= $metaCode . "\n";
+        $modelo .= "}\n";
+    
+        return $modelo;
+    }
+    
     protected function formatArray(array $values): string
     {
-        return '[\'' . implode("', '", $values) . '\']';
+        return '[' . implode(', ', array_map(fn($v) => "'$v'", $values)) . ']';
     }
+    
 }

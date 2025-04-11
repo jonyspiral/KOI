@@ -49,6 +49,13 @@
         </div>
 
         <button type="submit" class="btn btn-primary mt-3">🚀 Ejecutar Importación</button>
+
+
+        <div class="mt-4">
+    <a href="{{ route('sistemas.abms.crear') }}" class="btn btn-outline-primary">
+        Ir al ABM Creator
+    </a>
+</div>
     </form>
 
     @if(!empty($output))

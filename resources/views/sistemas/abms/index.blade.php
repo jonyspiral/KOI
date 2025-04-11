@@ -45,9 +45,29 @@
       <input type="text" name="carpeta_vistas" class="form-control" 
              placeholder="Ej: abms/rutasproduccion, produccion/rutas" 
              value="{{ old('carpeta_vistas', 'produccion/abms') }}" required>
-    </div>
-
+             <div class="d-flex gap-2 mt-3">
     <button type="submit" class="btn btn-primary">Siguiente</button>
-  </form>
+
+    {{-- Botón que lleva al Importador de Tablas --}}
+    <a href="{{ route('sistemas.importar.form') }}" class="btn btn-outline-secondary">
+        Import
+    </a>
 </div>
+<div class="mt-4">
+    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#infoAbm" aria-expanded="false">
+        ¿Cómo funciona esta pantalla?
+    </button>
+    <div class="collapse" id="infoAbm">
+        <div class="card card-body mt-2">
+            <h5 class="mb-2">📘 Importar Tablas y Crear ABMs en KOI</h5>
+            <ul class="mb-1">
+                <li>Primero, importá una tabla desde SQL Server usando el botón <strong>Import</strong>.</li>
+                <li>Luego seleccioná un modelo MySQL generado y completá el namespace y carpeta de vistas.</li>
+                <li>Presioná <strong>Siguiente</strong> para previsualizar los campos y generar el ABM.</li>
+            </ul>
+            <small class="text-muted">Ruta de importador: <code>Route::get('/form')</code> en <code>sistemas.importar.form</code></small>
+        </div>
+    </div>
+</div>
+
 @endsection

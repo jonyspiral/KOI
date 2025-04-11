@@ -17,7 +17,7 @@ use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
 use App\Http\Controllers\Produccion\FamiliasProductoController;
 use App\Http\Controllers\Sistemas\Importar\ImportarController;
 use App\Http\Controllers\Produccion\CurvaController;
-
+use App\Http\Controllers\Produccion\PasosRutasProduccionController;
 //creador ABMs  
 
 /* Route::prefix('sistemas/abms')->name('abms.')->group(function () {
@@ -118,7 +118,7 @@ Route::put('products/{id}', function () {
 
 // 🧩 Ruta generada automáticamente por ABM Creator
 // Modelo: PasosRutasProduccion - Generado el 2025-04-04 18:05:35
-use App\Http\Controllers\Produccion\PasosRutasProduccionController;
+
 
 
 

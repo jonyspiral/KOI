@@ -70,6 +70,29 @@ return [
         'prefix'   => '',
     ],
 
+    'sqlsrv_encinitas' => [
+    'driver' => 'odbc',
+    'database' => 'encinitas',
+    'dsn' => 'ENCINITAS_DSN',
+    'username'=> env('DB_KOI_USERNAME', 'Koi'),
+    'password' => env('DB_KOI_PASSWORD', 'koisys'),
+    'charset'  => 'utf8',
+        'prefix'   => '',
+],
+
+'sqlsrv_spiral' => [
+    'driver' => 'odbc',
+    'database' => 'spiral',
+    'dsn' => 'SPIRAL_DSN',
+    'username' => 'user',
+    'password' => 'password',
+    'username'=> env('DB_KOI_USERNAME', 'Koi'),
+    'password' => env('DB_KOI_PASSWORD', 'koisys'),
+    'charset'  => 'utf8',
+        'prefix'   => '',
+
+],
+
 
         'sqlsrv' => [
             'driver' => 'sqlsrv',

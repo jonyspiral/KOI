@@ -1,0 +1,113 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid px-0">
+    <h2 class="mb-4">Listado de __MODELO__</h2>
+
+    {{-- ➕ Crear nuevo --}}
+    <a href="{{ route('__NOMBRE_RUTA__.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+
+    {{-- 🔍 Formulario de búsqueda --}}
+    <form action="{{ route('__NOMBRE_RUTA__.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
+        <div class="input-group">
+            <input type="text" name="buscar" value="{{ request('buscar') }}" class="form-control" placeholder="Buscar...">
+            <button type="submit" class="btn btn-outline-primary">Buscar</button>
+            @if(request('buscar'))
+                <a href="{{ route('__NOMBRE_RUTA__.index') }}" class="btn btn-outline-secondary">Limpiar</a>
+            @endif
+        </div>
+        <div class="input-group" style="max-width: 160px;">
+            <input type="number" name="por_pagina" min="10" max="500" value="{{ request('por_pagina', $perPage ?? 100) }}" class="form-control" placeholder="x página" title="Cantidad por página">
+        </div>
+    </form>
+
+    {{-- 📋 Tabla --}}
+    <div class="table-responsive">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr>
+                    @foreach ($columnas as $col)
+                        @php $tipo = $campos[$col]['input_type'] ?? 'text'; @endphp
+                        @if (!empty($campos[$col]['incluir']) && $tipo !== 'hidden')
+                            <th>{{ $campos[$col]['label'] ?? ucfirst(str_replace('_', ' ', $col)) }}</th>
+                        @endif
+                    @endforeach
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach ($registros as $registro)
+                    <tbody x-data="{ showSubform: false }">
+                        <tr>
+                            @foreach ($columnas as $col)
+                                @php
+                                    $meta = $campos[$col] ?? [];
+                                    $tipo = $meta['input_type'] ?? 'text';
+                                    $valor = $registro->$col;
+                                @endphp
+                                @if (!empty($meta['incluir']) && $tipo !== 'hidden')
+                                    <td>
+                                        @if (!empty($meta['is_boolean']))
+                                            <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
+                                        @else
+                                            {{ $valor }}
+                                        @endif
+                                    </td>
+                                @endif
+                            @endforeach
+
+                            {{-- Acciones --}}
+                            <td class="text-end">
+                                <div class="d-flex gap-1 justify-content-end">
+                                    <a href="{{ route('__NOMBRE_RUTA__.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
+
+                                    <form action="{{ route('__NOMBRE_RUTA__.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                                    </form>
+
+                                    <button @click="showSubform = true" x-show="!showSubform" type="button" class="btn btn-sm btn-outline-success">➕</button>
+
+                                    <button @click="showSubform = !showSubform" type="button" class="btn btn-sm btn-outline-secondary">
+                                        <span x-show="!showSubform">👁️</span>
+                                        <span x-show="showSubform">🙈</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        {{-- Subformulario inline condicional --}}
+                        <tr x-show="showSubform">
+                            <td colspan="{{ count($columnas) + 1 }}">
+                                @if (!empty($subformularios))
+                                    @foreach ($subformularios as $sub)
+                                        @if ($sub['modo'] === 'inline')
+                                            <x-koi-subformulario
+                                                :registro="$registro"
+                                                :subform="$sub"
+                                                :rutaBase="basename($sub['carpeta_vistas'])"
+                                            />
+                                        @endif
+                                    @endforeach
+                                @endif
+                            </td>
+                        </tr>
+                    </tbody>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Paginación --}}
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            {{ $registros->links('pagination::bootstrap-4') }}
+        </div>
+        <div class="text-muted small">
+            {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
+        </div>
+    </div>
+</div>
+@endsection

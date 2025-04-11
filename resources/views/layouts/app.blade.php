@@ -19,6 +19,9 @@
             width: 100%;
             overflow-x: hidden;
         }
+        svg.w-5.h-5 {
+    display: none !important;
+}
 
         .container-fluid {
             padding-left: 2% !important;

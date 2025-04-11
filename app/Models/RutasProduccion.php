@@ -8,7 +8,7 @@ class RutasProduccion extends Model
 {
     protected $table = 'Rutas_produccion';
     public $timestamps = false;
-protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado'];
+                                                                                                                                                                                                                                                                                                                                                    protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'id'];
 
     public static function fieldsMeta()
     {

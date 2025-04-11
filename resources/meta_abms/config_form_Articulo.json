@@ -2,9 +2,10 @@
     "modelo": "Articulo",
     "namespace": "Produccion",
     "carpeta_vistas": "produccion\/abms\/articulos",
-    "timestamps": true,
-    "sincronizable": true,
+    "timestamps": "1",
+    "sincronizable": "1",
     "force_controlador": true,
+    "primary_key": "cod_articulo",
     "campos": {
         "cod_articulo": {
             "label": "Code",
@@ -61,13 +62,13 @@
         "cod_ruta": {
             "label": "Ruta",
             "default": null,
-            "input_type": "number",
+            "input_type": "select",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
-            "referenced_table": null,
-            "referenced_column": "id",
-            "referenced_label": "nombre",
+            "referenced_table": "rutas_produccion",
+            "referenced_column": "cod_ruta",
+            "referenced_label": "denom_ruta",
             "is_boolean": false,
             "auto_increment_plus": false
         },
@@ -1201,6 +1202,20 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false
+        },
+        "id": {
+            "label": "ID Laravel",
+            "default": null,
+            "input_type": "autonumerico",
+            "incluir": true,
+            "nullable": true,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": true
         }
-    }
+    },
+    "subformularios": []
 }

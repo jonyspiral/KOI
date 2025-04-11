@@ -4,7 +4,7 @@
 <div class="container">
     <h2 class="mb-4">Editar registro de {{ $modelo }}</h2>
 
-    <form action="{{ route('produccion.abms.articulos.update', $registro->id) }}" method="POST">
+    <form action="{{ route('produccion.abms.articulos.update', $registro[$primaryKey]) }}" method="POST">
         @csrf
         
         @method('PUT')
