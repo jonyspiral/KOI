@@ -3,21 +3,22 @@
 
 
 <?php
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
+use App\Http\Controllers\Sistemas\Importar\ImportarController;
+use App\Http\Controllers\Produccion\MarcaController;
 use App\Http\Controllers\Produccion\HormaController;
 use App\Http\Controllers\Produccion\RangoTalleController;
-use App\Http\Controllers\Produccion\MarcasSyncViewSpiralController;
+
 use App\Http\Controllers\Produccion\RutasProduccionController;
 use App\Http\Controllers\Produccion\ArticulosNewController;
-
 use App\Http\Controllers\Produccion\SeccionesProduccionController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Produccion\ArticuloController;
-
-use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
 use App\Http\Controllers\Produccion\FamiliasProductoController;
-use App\Http\Controllers\Sistemas\Importar\ImportarController;
 use App\Http\Controllers\Produccion\CurvaController;
 use App\Http\Controllers\Produccion\PasosRutasProduccionController;
+use App\Http\Controllers\Produccion\ProductController;
+
 //creador ABMs  
 
 /* Route::prefix('sistemas/abms')->name('abms.')->group(function () {
@@ -105,7 +106,7 @@ Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
 
 // 🧩 Ruta de prueba para el layout Master-Detail Livewire
 // Muestra un producto con sus colores relacionados (cabecera + subform)
-use App\Http\Controllers\Produccion\ProductController;
+
 
 Route::get('products/{id}/with-colors', [ProductController::class, 'showWithColors'])
     ->name('products.showWithColors');
@@ -119,9 +120,40 @@ Route::put('products/{id}', function () {
 // 🧩 Ruta generada automáticamente por ABM Creator
 // Modelo: PasosRutasProduccion - Generado el 2025-04-04 18:05:35
 
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('pasos_rutas_produccion', PasosRutasProduccionController::class)->names('pasos_rutas_produccion');
+});
 
+
+
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Marca - Generado el 2025-04-12 09:50:42
+
+
+
+
+
+
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Marca - Generado el 2025-04-12 10:50:00
+
+
+
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Marca - Generado el 2025-04-12 10:58:13
 
 
 Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
-    Route::resource('pasos_rutas_produccion', PasosRutasProduccionController::class)->names('pasos_rutas_produccion');
+    Route::resource('marcas', MarcaController::class)->names('marcas');
+});
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: SeccionesProduccion - Generado el 2025-04-12 11:01:31
+
+
+Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+    Route::resource('secciones_produccion', SeccionesProduccionController::class)->names('secciones_produccion');
 });

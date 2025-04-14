@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class PasosRutasProduccion extends Model
 {
     protected $table = 'Pasos_rutas_produccion';
-    protected $primaryKey = 'id';
+    protected $primaryKey = null; // Clave compuesta, gestionada por KOI
+    public static array $primaryKeySql = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion'];
     public $timestamps = false;
     public $incrementing = false;
-    public static array $primaryKeySql = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion'];
     protected $connection = 'sqlsrv_koi';
     protected $fillable = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion'];
 
@@ -163,6 +163,20 @@ class PasosRutasProduccion extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_ruta_cod_paso_sub_paso_cod_seccion' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_ruta',
+        1 => 'cod_paso',
+        2 => 'sub_paso',
+        3 => 'cod_seccion',
+      ),
+      'unique' => true,
+    ),
   ),
 );
     }

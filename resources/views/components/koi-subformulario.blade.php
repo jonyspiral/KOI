@@ -136,6 +136,7 @@
                                             </form>
                                         </div>
                                     </td>
+                                    <td class="text-muted small">{{ $sub->{$primaryKey} }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

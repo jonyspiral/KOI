@@ -1,5 +1,12 @@
 @if ($meta['input_type'] === 'checkbox')
-    <span class="text-success fw-bold">{{ $sub->$campo === 'S' ? '✅ Sí' : '— No' }}</span>
+    @php
+        $checkedValue = $meta['checkbox_checked_value'] ?? 'S';
+        $uncheckedValue = $meta['checkbox_unchecked_value'] ?? 'N';
+        $valor = $sub->$campo ?? $uncheckedValue;
+    @endphp
+    <span class="fw-bold {{ $valor === $checkedValue ? 'text-success' : 'text-secondary' }}">
+        {{ $valor === $checkedValue ? '✅ Sí' : '— No' }}
+    </span>
 
 @elseif ($meta['input_type'] === 'select' && !empty($meta['referenced_table']))
     @php

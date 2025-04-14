@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Horma extends Model
 {
     protected $table = 'hormas';
+    protected $primaryKey = 'id';
     public $timestamps = true;
-     public static $sincronizable = true;
-    protected $fillable = ['cod_horma', 'id'];
+    public static $sincronizable = true;
+    public static array $primaryKeySql = ['cod_horma'];
+                                                                                                                                                                                                                                                                                                                                                                                                                            protected $fillable = ['cod_horma', 'denom_horma', 'talles_desde', 'talles_hasta', 'punto', 'activa', 'id'];
 
     public static function fieldsMeta()
     {
@@ -104,6 +106,17 @@ class Horma extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_horma' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_horma',
+      ),
+      'unique' => true,
+    ),
   ),
 );
     }

@@ -44,9 +44,12 @@ class ArticuloController extends Controller
     }
 
     // 📦 Paginación configurable desde JSON o input, valor por defecto: 100
-    $defaultPerPage = $config['per_page'] ?? 100;
+
+   $formConfig = $config['form_config'] ?? [];
+    $defaultPerPage = (int) ($formConfig['per_page'] ?? 100);
     $perPage = (int) $request->input('por_pagina', $defaultPerPage);
-    $perPage = max(10, min($perPage, 500));
+
+   // $perPage = max(10, min($perPage, 500));
 
     $tiempoAntesGet = microtime(true);
     $registros = $query->paginate($perPage)->appends($request->except('page'));
@@ -149,7 +152,7 @@ class ArticuloController extends Controller
             }
         }
 
-        return view('produccion/abms/articulos.create', compact(
+        return view('produccion/abms/articulos/.create', compact(
             'campos', 'siguiente', 'modelo', 'labels', 'defaults', 'opciones'
         ));
     }
@@ -201,7 +204,7 @@ class ArticuloController extends Controller
             }
         }
 
-        return view('produccion/abms/articulos.edit', compact(
+        return view('produccion/abms/articulos/.edit', compact(
             'registro', 'campos', 'modelo', 'labels', 'defaults', 'siguiente', 'opciones','primaryKey'
         ));
     }
@@ -230,7 +233,7 @@ class ArticuloController extends Controller
         Articulo::create($datos);
 
         $redirect = $this->redirectToParent($request, 'Articulo');
-        return $redirect ?? redirect()->route('produccion.abms.articulos.index')->with('success', 'Guardado correctamente.');
+        return $redirect ?? redirect()->route('produccion.abms.articulos..index')->with('success', 'Guardado correctamente.');
     }
 
     public function update(Request $request, $id)
@@ -243,46 +246,48 @@ class ArticuloController extends Controller
         $primaryKey = $config['primary_key'];
     
         $registro = Articulo::where($primaryKey, $id)->firstOrFail();
-
+    
         $camposRaw = $config['campos'] ?? [];
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-
+    
         $datos = [];
-
+    
         foreach ($campos as $campo => $meta) {
             $valor = $request->input($campo);
-            if (($meta['input_type'] ?? null) === 'checkbox') {
-                $valor = $request->has($campo) ? 'S' : 'N';
-            }
+    
+            // Ya no necesitamos lógica para checkbox gracias al input hidden en Blade
             $datos[$campo] = $valor;
         }
-
+    
         $registro->update($datos);
-        
-
+    
         $redirect = $this->redirectToParent($request, 'Articulo');
-        return $redirect ?? redirect()->route('produccion.abms.articulos.index')->with('success', 'Actualizado correctamente.');
+        return $redirect ?? redirect()->route('produccion.abms.articulos..index')->with('success', 'Actualizado correctamente.');
     }
+    
 
     public function destroy(Request $request, $id)
     {
         $configPath = resource_path("meta_abms/config_form_Articulo.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-        if (!isset($config['primary_key'])) {
-            abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
-        }
-        $primaryKey = $config['primary_key'];
     
-        $registro = Articulo::where($primaryKey, $id)->firstOrFail();
-
-
+        $primaryKey = $config['primary_key'] ?? 'id';
+        $camposRaw = $config['campos'] ?? [];
+        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+    
+        // 🧠 Buscar registro por ID lógico Laravel (siempre usar 'id' como clave de eliminación)
+        $registro = Articulo::where('id', $id)->firstOrFail();
+    
         $modeloNombre = class_basename($registro);
-
+    
         $registro->delete();
-
+    
+        // 🧭 Redirección al padre si corresponde
         return $this->redirectToParent($request->merge($registro->toArray()), $modeloNombre)
-            ?? redirect()->route('produccion.abms.articulos.index')->with('success', 'Registro eliminado correctamente.');
+            ?? redirect()->route('produccion.abms.articulos..index')->with('success', 'Registro eliminado correctamente.');
     }
+    
+
 
     // 📦 Redirección automática al padre (si es subformulario)
     protected function redirectToParent(Request $request, string $modeloNombre)
@@ -331,4 +336,20 @@ class ArticuloController extends Controller
 
         return null;
     }
+    public function show($id)
+    {
+        $configPath = resource_path("meta_abms/config_form_Articulo.json");
+        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+        if (!isset($config['primary_key'])) {
+            abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+        }
+        $primaryKey = $config['primary_key'];
+    
+        $registro = Articulo::where($primaryKey, $id)->firstOrFail();
+    
+        $campos = array_filter($config['campos'] ?? [], fn($cfg) => !empty($cfg['incluir']));
+    
+        return view('produccion/abms/articulos/.show', compact('registro', 'campos'));
+    }
+
 }

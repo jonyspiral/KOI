@@ -7,9 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class RutasProduccion extends Model
 {
     protected $table = 'Rutas_produccion';
-    protected $connection = 'sqlsrv_koi';
+    protected $primaryKey = null; // Clave compuesta, gestionada por KOI
+    public static array $primaryKeySql = ['cod_ruta'];
     public $timestamps = false;
-    protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'fecha_baja', 'fecha_ultima_modificacion', 'autor_ultima_modificacion', 'fechaAlta'];
+    public $incrementing = false;
+    protected $connection = 'sqlsrv_koi';
+    protected $fillable = ['cod_ruta'];
 
     public static function fieldsMeta()
     {
@@ -62,6 +65,17 @@ class RutasProduccion extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_ruta' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_ruta',
+      ),
+      'unique' => true,
+    ),
   ),
 );
     }

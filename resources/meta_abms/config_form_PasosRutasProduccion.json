@@ -3,9 +3,26 @@
     "namespace": "Produccion",
     "carpeta_vistas": "produccion\/abms\/pasos_rutas_produccion",
     "timestamps": "1",
-    "sincronizable": "1",
+    "sincronizable": true,
     "force_controlador": true,
     "primary_key": "id",
+    "primary_key_sql": [
+        "cod_ruta",
+        "cod_paso",
+        "sub_paso",
+        "cod_seccion"
+    ],
+    "indices": {
+        "idx_unico_cod_ruta_cod_paso_sub_paso_cod_seccion": {
+            "columns": [
+                "cod_ruta",
+                "cod_paso",
+                "sub_paso",
+                "cod_seccion"
+            ],
+            "unique": true
+        }
+    },
     "campos": {
         "cod_ruta": {
             "label": "Cod ruta",
@@ -104,12 +121,14 @@
             "input_type": "checkbox",
             "incluir": true,
             "nullable": false,
-            "select_list_data": null,
+            "select_list_data": "Si=S,No=N",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": true,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "checkbox_checked_value": "S",
+            "checkbox_unchecked_value": "N"
         },
         "fecha_baja": {
             "label": "Fecha baja",
@@ -208,12 +227,14 @@
             "input_type": "checkbox",
             "incluir": true,
             "nullable": false,
-            "select_list_data": null,
+            "select_list_data": "S=Si,N=No",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": true,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "checkbox_checked_value": "S",
+            "checkbox_unchecked_value": "N"
         },
         "subordinada_de_seccion": {
             "label": "Subordinada de seccion",
@@ -281,7 +302,7 @@
             "auto_increment_plus": false
         },
         "id": {
-            "label": "ID Laravel",
+            "label": "ID",
             "default": null,
             "input_type": "text",
             "incluir": true,
@@ -293,6 +314,13 @@
             "is_boolean": false,
             "auto_increment_plus": false
         }
+    },
+    "form_config": {
+        "form_name": "SubForn_PasosRutasProduccion_inline",
+        "form_route": "produccion\/abms\/pasos_rutas_produccion",
+        "tipo_formulario": "inline",
+        "usa_paginador": "1",
+        "per_page": "100"
     },
     "subformularios": []
 }

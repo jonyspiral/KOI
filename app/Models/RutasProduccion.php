@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class RutasProduccion extends Model
 {
     protected $table = 'Rutas_produccion';
-    public $timestamps = false;
-                                                                                                                                                                                                                                                                                                                                                    protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'id'];
+    protected $primaryKey = 'id';
+    public $timestamps = true;
+    public static $sincronizable = true;
+    public static array $primaryKeySql = ['cod_ruta'];
+        protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'id'];
 
     public static function fieldsMeta()
     {
@@ -62,12 +65,17 @@ class RutasProduccion extends Model
     'default' => NULL,
     'primary' => false,
   ),
+  'indices' => 
+  array (
+    'idx_unico_cod_ruta' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_ruta',
+      ),
+      'unique' => true,
+    ),
+  ),
 );
-}
-public function pasos()
-{
-    return $this->hasMany(PasosRutasProduccion::class, 'cod_ruta', 'cod_ruta');
-}
-
-
+    }
 }

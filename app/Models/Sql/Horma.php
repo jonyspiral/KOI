@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Horma extends Model
 {
     protected $table = 'hormas';
-    protected $connection = 'sqlsrv_koi';
+    protected $primaryKey = null; // Clave compuesta, gestionada por KOI
+    public static array $primaryKeySql = ['cod_horma'];
     public $timestamps = false;
+    public $incrementing = false;
+    protected $connection = 'sqlsrv_koi';
     protected $fillable = ['cod_horma'];
 
     public static function fieldsMeta()
@@ -104,6 +107,17 @@ class Horma extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_horma' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_horma',
+      ),
+      'unique' => true,
+    ),
   ),
 );
     }

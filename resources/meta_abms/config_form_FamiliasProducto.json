@@ -2,9 +2,21 @@
     "modelo": "FamiliasProducto",
     "namespace": "Produccion",
     "carpeta_vistas": "produccion\/abms\/familias_producto",
-    "timestamps": true,
-    "sincronizable": true,
+    "timestamps": "1",
+    "sincronizable": "1",
     "force_controlador": true,
+    "primary_key": "id",
+    "primary_key_sql": [
+        "id"
+    ],
+    "indices": {
+        "idx_unico_id": {
+            "columns": [
+                "id"
+            ],
+            "unique": true
+        }
+    },
     "campos": {
         "id": {
             "label": "Id",
@@ -47,19 +59,21 @@
         },
         "anulado": {
             "label": "Anulado",
-            "default": "N",
+            "default": null,
             "input_type": "checkbox",
             "incluir": true,
             "nullable": false,
-            "select_list_data": null,
+            "select_list_data": "Si=S,No=N",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": true,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "checkbox_checked_value": "S",
+            "checkbox_unchecked_value": "N"
         },
         "cod_usuario": {
-            "label": "Cod Usuario",
+            "label": "Cod usuario",
             "default": null,
             "input_type": "text",
             "incluir": false,
@@ -72,7 +86,7 @@
             "auto_increment_plus": false
         },
         "fecha_alta": {
-            "label": "Fecha Alta",
+            "label": "Fecha alta",
             "default": null,
             "input_type": "text",
             "incluir": false,
@@ -85,9 +99,9 @@
             "auto_increment_plus": false
         },
         "fecha_baja": {
-            "label": "Fecha Baja",
+            "label": "Fecha baja",
             "default": null,
-            "input_type": "date",
+            "input_type": "text",
             "incluir": false,
             "nullable": false,
             "select_list_data": null,
@@ -98,7 +112,20 @@
             "auto_increment_plus": false
         },
         "fecha_ultima_mod": {
-            "label": "Fecha Ultima Mod",
+            "label": "Fecha ultima mod",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "indices": {
+            "label": "Indices",
             "default": null,
             "input_type": "text",
             "incluir": false,
@@ -110,5 +137,15 @@
             "is_boolean": false,
             "auto_increment_plus": false
         }
-    }
+    },
+    "form_config": {
+        "form_name": "FamiliasProducto",
+        "form_route": "produccion\/abms\/familias_producto",
+        "tipo_formulario": "default",
+        "usa_paginador": "1",
+        "per_page": "100",
+        "form_view_type": "modal",
+        "index_view_type": "inline"
+    },
+    "subformularios": []
 }

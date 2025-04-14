@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class FamiliasProducto extends Model
 {
     protected $table = 'familias_producto';
-    public $timestamps = false;
-                                            protected $fillable = ['id', 'nombre', 'descripcion', 'anulado'];
+    protected $primaryKey = 'id';
+    public $timestamps = true;
+    public static $sincronizable = true;
+    public static array $primaryKeySql = ['id'];
+            protected $fillable = ['id', 'nombre', 'descripcion', 'anulado'];
 
     public static function fieldsMeta()
     {
@@ -68,6 +71,17 @@ class FamiliasProducto extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_id' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'id',
+      ),
+      'unique' => true,
+    ),
   ),
 );
     }

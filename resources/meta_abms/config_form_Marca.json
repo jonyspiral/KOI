@@ -1,0 +1,171 @@
+{
+    "modelo": "Marca",
+    "namespace": "Produccion",
+    "carpeta_vistas": "produccion\/abms\/marcas",
+    "timestamps": "1",
+    "sincronizable": "1",
+    "force_controlador": true,
+    "primary_key": "id",
+    "primary_key_sql": [
+        "cod_marca"
+    ],
+    "indices": {
+        "idx_unico_cod_marca": {
+            "columns": [
+                "cod_marca"
+            ],
+            "unique": true
+        }
+    },
+    "campos": {
+        "cod_marca": {
+            "label": "code",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "cod_cliente": {
+            "label": "Cod cliente",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "denom_marca": {
+            "label": "Nombre",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "anulado": {
+            "label": "Anulado",
+            "default": "N",
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": "Si=S,No=N",
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "fecha_ultima_modificacion": {
+            "label": "Fecha ultima modificacion",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "autor_ultima_modificacion": {
+            "label": "Autor ultima modificacion",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "cod_prov": {
+            "label": "Cod prov",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "logo": {
+            "label": "Logo",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "fechaAlta": {
+            "label": "FechaAlta",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "fechaBaja": {
+            "label": "FechaBaja",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        },
+        "indices": {
+            "label": "Indices",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false
+        }
+    },
+    "form_config": {
+        "tipo_formulario": "default",
+        "usa_paginador": "1",
+        "per_page": "100"
+    },
+    "subformularios": []
+}

@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Articulo extends Model
-{   
+{
     protected $table = 'articulos';
-    public $timestamps = false;
-                                                                                                                                                protected $fillable = ['cod_articulo', 'cod_ruta', 'cod_linea', 'cod_marca', 'cod_rango', 'denom_articulo', 'vigente', 'forma_comercializacion', 'cod_horma', 'naturaleza', 'unidad', 'cod_rubro_iva', 'cod_familia_producto', 'denom_articulo_largo', 'id'];
+    protected $primaryKey = 'id';
+    public $timestamps = true;
+    public static $sincronizable = true;
+    public static array $primaryKeySql = ['cod_articulo'];
+            protected $fillable = ['cod_articulo', 'cod_ruta', 'cod_linea', 'cod_marca', 'cod_rango', 'denom_articulo', 'vigente', 'forma_comercializacion', 'cod_horma', 'naturaleza', 'unidad', 'cod_rubro_iva', 'cod_familia_producto', 'denom_articulo_largo', 'id'];
 
     public static function fieldsMeta()
     {
@@ -656,6 +659,17 @@ class Articulo extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_articulo' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_articulo',
+      ),
+      'unique' => true,
+    ),
   ),
 );
     }

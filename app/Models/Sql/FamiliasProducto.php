@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class FamiliasProducto extends Model
 {
     protected $table = 'familias_producto';
-    protected $connection = 'sqlsrv_koi';
+    protected $primaryKey = null; // Clave compuesta, gestionada por KOI
+    public static array $primaryKeySql = ['id'];
     public $timestamps = false;
+    public $incrementing = false;
+    protected $connection = 'sqlsrv_koi';
     protected $fillable = ['id'];
 
     public static function fieldsMeta()
@@ -69,6 +72,17 @@ class FamiliasProducto extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_id' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'id',
+      ),
+      'unique' => true,
+    ),
   ),
 );
     }

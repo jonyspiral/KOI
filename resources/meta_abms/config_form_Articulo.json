@@ -1,11 +1,22 @@
 {
     "modelo": "Articulo",
     "namespace": "Produccion",
-    "carpeta_vistas": "produccion\/abms\/articulos",
+    "carpeta_vistas": "produccion\/abms\/articulos\/",
     "timestamps": "1",
     "sincronizable": "1",
     "force_controlador": true,
-    "primary_key": "cod_articulo",
+    "primary_key": "id",
+    "primary_key_sql": [
+        "cod_articulo"
+    ],
+    "indices": {
+        "idx_unico_cod_articulo": {
+            "columns": [
+                "cod_articulo"
+            ],
+            "unique": true
+        }
+    },
     "campos": {
         "cod_articulo": {
             "label": "Code",
@@ -66,7 +77,7 @@
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
-            "referenced_table": "rutas_produccion",
+            "referenced_table": "Rutas_produccion",
             "referenced_column": "cod_ruta",
             "referenced_label": "denom_ruta",
             "is_boolean": false,
@@ -75,26 +86,26 @@
         "cod_linea": {
             "label": "Linea",
             "default": null,
-            "input_type": "text",
+            "input_type": "select",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
-            "referenced_table": null,
-            "referenced_column": "id",
-            "referenced_label": "nombre",
+            "referenced_table": "lineas_productos",
+            "referenced_column": "cod_linea",
+            "referenced_label": "denom_linea",
             "is_boolean": false,
             "auto_increment_plus": false
         },
         "cod_marca": {
             "label": "Marca",
             "default": null,
-            "input_type": "text",
+            "input_type": "select",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
-            "referenced_table": null,
-            "referenced_column": "id",
-            "referenced_label": "nombre",
+            "referenced_table": "Marcas",
+            "referenced_column": "cod_marca",
+            "referenced_label": "denom_marca",
             "is_boolean": false,
             "auto_increment_plus": false
         },
@@ -195,12 +206,14 @@
             "input_type": "checkbox",
             "incluir": true,
             "nullable": false,
-            "select_list_data": null,
+            "select_list_data": "Si=S,No=N",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": true,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "checkbox_checked_value": "S",
+            "checkbox_unchecked_value": "N"
         },
         "fecha_de_baja": {
             "label": "Fecha De Baja",
@@ -247,7 +260,7 @@
             "input_type": "text",
             "incluir": false,
             "nullable": false,
-            "select_list_data": null,
+            "select_list_data": "q",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
@@ -881,10 +894,10 @@
         "unidad": {
             "label": "Unidad",
             "default": null,
-            "input_type": "text",
+            "input_type": "select_list",
             "incluir": true,
             "nullable": false,
-            "select_list_data": null,
+            "select_list_data": "par,unidad,metro",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
@@ -1204,7 +1217,7 @@
             "auto_increment_plus": false
         },
         "id": {
-            "label": "ID Laravel",
+            "label": "ID",
             "default": null,
             "input_type": "autonumerico",
             "incluir": true,
@@ -1216,6 +1229,13 @@
             "is_boolean": false,
             "auto_increment_plus": true
         }
+    },
+    "form_config": {
+        "form_name": "Articulo_inline_v1",
+        "form_route": "produccion\/abms\/articulos",
+        "tipo_formulario": "inline",
+        "usa_paginador": "1",
+        "per_page": "100"
     },
     "subformularios": []
 }

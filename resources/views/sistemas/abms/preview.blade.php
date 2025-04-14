@@ -8,7 +8,8 @@
         <input type="hidden" name="modelo" value="{{ $modelo }}">
         <input type="hidden" name="namespace" value="{{ $namespace }}">
         <input type="hidden" name="carpeta_vistas" value="{{ $carpeta_vistas }}">
-
+        <input type="hidden" name="primary_key" value="{{ $primary_key }}">
+        <input type="hidden" name="primary_key_sql" value="{{ implode(',', $primary_key_sql ?? []) }}">
         <div class="table-responsive">
             <table class="table table-bordered table-sm">
                 <thead class="table-light">
@@ -22,7 +23,17 @@
                         <th>Tabla FK</th>
                         <th>Columna FK</th>
                         <th>Label FK</th>
-                        <th>Valores (select_list / checkbox)</th>
+                        <th>
+                            Valores
+                        <span tabindex="0" class="ms-1 text-muted" data-bs-toggle="tooltip" data-bs-html="true"
+                            title=<code>Etiqueta=Valor</code> separados por coma<br>
+                                    Ejemplos:<br>
+                                    🔘 Checkbox: <code>Sí=S,No=N</code><br>
+                                    🔽 Select list: <code>Interna=1,Externa=2</code>>
+                            ℹ️
+                        </span>
+                    </th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -55,11 +66,70 @@
                             <td><input type="text" name="campos[{{ $campo }}][referenced_column]" class="form-control form-control-sm" value="{{ $referenced_column }}"></td>
                             <td><input type="text" name="campos[{{ $campo }}][referenced_label]" class="form-control form-control-sm" value="{{ $referenced_label }}"></td>
                             <td><input type="text" name="campos[{{ $campo }}][select_list_data]" class="form-control form-control-sm" value="{{ $select_list_data }}"></td>
+
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
+        {{-- 🧾 Configuración del formulario padre --}}
+<fieldset class="border rounded p-3 mt-4">
+    <legend class="w-auto px-2">🧾 Configuración del Formulario Principal</legend>
+
+    <div class="row g-3">
+
+            <div class="col-md-6">
+            <label class="form-label">🧱 Formato del Índice</label>
+            <select name="form_config[index_view_type]" class="form-select">
+                <option value="default" {{ ($form_config['index_view_type'] ?? 'default') == 'default' ? 'selected' : '' }}>Clásico</option>
+                <option value="inline" {{ ($form_config['index_view_type'] ?? 'default') == 'inline' ? 'selected' : '' }}>Inline</option>
+                <option value="tab" {{ ($form_config['index_view_type'] ?? 'default') == 'tab' ? 'selected' : '' }}>Pestañas</option>
+            </select>
+        </div>
+
+        <div class="col-md-6">
+    <label for="form_view_type" class="form-label">🧩 Formato del Create/Edit</label>
+    <select name="form_config[form_view_type]" id="form_view_type" class="form-select">
+        <option value="default" {{ ($form_config['form_view_type'] ?? 'default') == 'default' ? 'selected' : '' }}>Pantalla Completa</option>
+        <option value="inline" {{ ($form_config['form_view_type'] ?? 'default') == 'inline' ? 'selected' : '' }}>Inline (en tabla)</option>
+        <option value="modal" {{ ($form_config['form_view_type'] ?? 'default') == 'modal' ? 'selected' : '' }}>Modal (experimental)</option>
+    </select>
+</div>
+
+
+        <div class="col-md-4">
+            <label for="usa_paginador" class="form-label">📚 Usar paginador</label>
+            <select name="form_config[usa_paginador]" id="usa_paginador" class="form-select">
+                <option value="1" {{ old('form_config.usa_paginador', $form_config['usa_paginador'] ?? '1') == '1' ? 'selected' : '' }}>✅ Sí</option>
+                <option value="0" {{ old('form_config.usa_paginador', $form_config['usa_paginador'] ?? '1') == '0' ? 'selected' : '' }}>❌ No</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label for="per_page" class="form-label">📦 Registros por página</label>
+            <input type="number" name="form_config[per_page]" id="per_page" class="form-control"
+                   min="1" max="500" value="{{ old('form_config.per_page', $form_config['per_page'] ?? 100) }}">
+        </div>
+
+        <div class="col-md-6">
+            <label for="form_name" class="form-label">🆔 Nombre del Formulario</label>
+            <input type="text" name="form_config[form_name]" id="form_name" class="form-control"
+                   value="{{ old('form_config.form_name', $form_config['form_name'] ?? $modelo) }}"
+                   placeholder="Ej: ABM_Marcas_v1">
+            <small class="text-muted">Nombre técnico o identificador del formulario para uso interno.</small>
+        </div>
+
+        <div class="col-md-6">
+            <label for="form_route" class="form-label">📍 Ruta del Formulario <span class="text-danger">*</span></label>
+            <input type="text" name="form_config[form_route]" id="form_route" class="form-control" required
+                   value="{{ old('form_config.form_route', $form_config['form_route'] ?? '') }}"
+                   placeholder="Ej: produccion/abms/marcas">
+            <small class="text-muted">Usada para generar automáticamente las rutas web.</small>
+        </div>
+    </div>
+</fieldset>
+
+
 
         {{-- 📂 Subformularios relacionados --}}
         @php
@@ -164,3 +234,11 @@
 </div>
 
 @endsection
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        [...tooltips].forEach(el => new bootstrap.Tooltip(el));
+    });
+</script>
+@endpush

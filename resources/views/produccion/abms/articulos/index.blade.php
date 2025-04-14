@@ -71,13 +71,16 @@
                 @endforeach
             </tbody>
         </table>
+
+        {{-- 🔄 Paginación --}}
         <div class="d-flex justify-content-between align-items-center mt-3">
-    <div>
-        {{ $registros->links('pagination::bootstrap-4') }}
-    </div>
-    <div class="text-muted small">
-        {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
+            <div>
+                {{ $registros->links('pagination::bootstrap-4') }}
+            </div>
+            <div class="text-muted small">
+                {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
+            </div>
+        </div>
     </div>
 </div>
-
 @endsection

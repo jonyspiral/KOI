@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Articulo extends Model
 {
     protected $table = 'articulos';
-    protected $connection = 'sqlsrv_koi';
+    protected $primaryKey = null; // Clave compuesta, gestionada por KOI
+    public static array $primaryKeySql = ['cod_articulo'];
     public $timestamps = false;
+    public $incrementing = false;
+    protected $connection = 'sqlsrv_koi';
     protected $fillable = ['cod_articulo'];
 
     public static function fieldsMeta()
@@ -657,6 +660,17 @@ class Articulo extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_articulo' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_articulo',
+      ),
+      'unique' => true,
+    ),
   ),
 );
     }

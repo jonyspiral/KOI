@@ -23,6 +23,15 @@
         <li class="list-group-item">
             <strong>🧠 Configuración guardada en:</strong> <code>resources/meta_abms/config_form_{{ $modelo }}.json</code>
         </li>
+        @if (isset($ruta_logica))
+        <li class="list-group-item">
+            <p><strong>Ruta lógica:</strong> {{ $ruta_logica }}</p>
+        </li>
+    
+@endif
+
+
+
     </ul>
 
     <div class="d-flex gap-2">

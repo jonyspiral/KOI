@@ -18,9 +18,24 @@
             <input type="number" name="por_pagina" min="10" max="500" value="{{ request('por_pagina', $perPage ?? 100) }}" class="form-control" placeholder="x página" title="Cantidad por página">
         </div>
     </form>
+    @php
+    $formViewType = '__FORM_VIEW_TYPE__';
+@endphp
 
-    {{-- ➕ Crear nuevo --}}
+@if ($formViewType === 'modal')
+    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCreate">
+        ➕ Nuevo
+    </button>
+    <div class="modal fade" id="modalCreate" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            @include('__CARPETA_VISTAS__.create')
+        </div>
+    </div>
+</div>
+@else
     <a href="{{ route('__NOMBRE_RUTA__.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+@endif
 
     {{-- 📋 Tabla --}}
     <div class="table-responsive">

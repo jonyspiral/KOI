@@ -10,7 +10,8 @@ class PasosRutasProduccion extends Model
     protected $primaryKey = 'id';
     public $timestamps = true;
     public static $sincronizable = true;
-    protected $fillable = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion', 'id'];
+    public static array $primaryKeySql = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion'];
+            protected $fillable = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion', 'ejecucion', 'anulado', 'jerarquia_seccion', 'tiene_subordinadas', 'id'];
 
     public static function fieldsMeta()
     {
@@ -161,6 +162,20 @@ class PasosRutasProduccion extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_ruta_cod_paso_sub_paso_cod_seccion' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_ruta',
+        1 => 'cod_paso',
+        2 => 'sub_paso',
+        3 => 'cod_seccion',
+      ),
+      'unique' => true,
+    ),
   ),
 );
     }

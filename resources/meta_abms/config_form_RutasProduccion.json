@@ -3,9 +3,20 @@
     "namespace": "Produccion",
     "carpeta_vistas": "produccion\/abms\/rutas_produccion",
     "timestamps": "1",
-    "sincronizable": "1",
+    "sincronizable": true,
     "force_controlador": true,
-    "primary_key": "cod_ruta",
+    "primary_key": "id",
+    "primary_key_sql": [
+        "cod_ruta"
+    ],
+    "indices": {
+        "idx_unico_cod_ruta": {
+            "columns": [
+                "cod_ruta"
+            ],
+            "unique": true
+        }
+    },
     "campos": {
         "cod_ruta": {
             "label": "codigo",
@@ -39,12 +50,14 @@
             "input_type": "checkbox",
             "incluir": true,
             "nullable": false,
-            "select_list_data": null,
+            "select_list_data": "Si=S,No=N",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": true,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "checkbox_checked_value": "S",
+            "checkbox_unchecked_value": "N"
         },
         "fecha_baja": {
             "label": "Fecha baja",
@@ -112,13 +125,20 @@
             "auto_increment_plus": false
         }
     },
+    "form_config": {
+        "form_name": "subform_RutasProduccion_v1",
+        "form_route": "produccion\/abms\/rutas_produccion",
+        "tipo_formulario": "inline",
+        "usa_paginador": "1",
+        "per_page": "50"
+    },
     "subformularios": [
         {
             "modelo": "PasosRutasProduccion",
             "tabla": "Pasos_rutas_produccion",
             "foreign_key": "cod_ruta",
             "modo": "inline",
-            "titulo": null,
+            "titulo": "SubForm_Pasos_rutas_produccion_inline",
             "carpeta_vistas": "produccion\/abms\/pasos_rutas_produccion",
             "ruta": "pasos_rutas_produccion"
         }

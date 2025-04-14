@@ -4,10 +4,16 @@
 <div class="container-fluid px-0">
     <h2 class="mb-4">Listado de __MODELO__</h2>
 
-    {{-- ➕ Crear nuevo --}}
-    <a href="{{ route('__NOMBRE_RUTA__.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    @php
+        $formViewType = '__FORM_VIEW_TYPE__';
+    @endphp
 
-    {{-- 🔍 Formulario de búsqueda --}}
+    @if ($formViewType === 'modal')
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCreate">➕ Nuevo</button>
+    @else
+        <a href="{{ route('__NOMBRE_RUTA__.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    @endif
+
     <form action="{{ route('__NOMBRE_RUTA__.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
         <div class="input-group">
             <input type="text" name="buscar" value="{{ request('buscar') }}" class="form-control" placeholder="Buscar...">
@@ -21,7 +27,6 @@
         </div>
     </form>
 
-    {{-- 📋 Tabla --}}
     <div class="table-responsive">
         <table class="table table-striped table-sm">
             <thead>
@@ -57,19 +62,15 @@
                                 @endif
                             @endforeach
 
-                            {{-- Acciones --}}
                             <td class="text-end">
                                 <div class="d-flex gap-1 justify-content-end">
                                     <a href="{{ route('__NOMBRE_RUTA__.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
-
                                     <form action="{{ route('__NOMBRE_RUTA__.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
                                     </form>
-
                                     <button @click="showSubform = true" x-show="!showSubform" type="button" class="btn btn-sm btn-outline-success">➕</button>
-
                                     <button @click="showSubform = !showSubform" type="button" class="btn btn-sm btn-outline-secondary">
                                         <span x-show="!showSubform">👁️</span>
                                         <span x-show="showSubform">🙈</span>
@@ -78,17 +79,12 @@
                             </td>
                         </tr>
 
-                        {{-- Subformulario inline condicional --}}
                         <tr x-show="showSubform">
                             <td colspan="{{ count($columnas) + 1 }}">
                                 @if (!empty($subformularios))
                                     @foreach ($subformularios as $sub)
                                         @if ($sub['modo'] === 'inline')
-                                            <x-koi-subformulario
-                                                :registro="$registro"
-                                                :subform="$sub"
-                                                :rutaBase="basename($sub['carpeta_vistas'])"
-                                            />
+                                            <x-koi-subformulario :registro="$registro" :subform="$sub" :rutaBase="basename($sub['carpeta_vistas'])" />
                                         @endif
                                     @endforeach
                                 @endif
@@ -100,7 +96,6 @@
         </table>
     </div>
 
-    {{-- Paginación --}}
     <div class="d-flex justify-content-between align-items-center mt-3">
         <div>
             {{ $registros->links('pagination::bootstrap-4') }}
@@ -109,5 +104,9 @@
             {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
         </div>
     </div>
+
+    @if ($formViewType === 'modal')
+        @include('__CARPETA_VISTAS__.create-modal', ['registro' => []])
+    @endif
 </div>
 @endsection

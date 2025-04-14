@@ -1,5 +1,5 @@
 <?php
-
+echo "🚀 Laravel está funcionando desde public!";
 try {
     $dsn = "odbc:MiSQLServer";
     $username = "Koi";

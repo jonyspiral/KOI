@@ -30,10 +30,18 @@
     </select>
 
 @elseif ($meta['input_type'] === 'checkbox')
+    @php
+        $checkedValue = $meta['checkbox_checked_value'] ?? 'S';
+        $uncheckedValue = $meta['checkbox_unchecked_value'] ?? 'N';
+        $valorActual = old($campo, $meta['default'] ?? $uncheckedValue);
+    @endphp
     <div class="form-check">
-        <input type="hidden" name="{{ $campo }}" value="N">
-        <input type="checkbox" name="{{ $campo }}" value="S" class="form-check-input" @checked(old($campo, $meta['default'] ?? '') === 'S')>
-  
+        <input type="hidden" name="{{ $campo }}" value="{{ $uncheckedValue }}">
+        <input type="checkbox"
+               name="{{ $campo }}"
+               value="{{ $checkedValue }}"
+               class="form-check-input"
+               @checked($valorActual === $checkedValue)>
     </div>
 
 @else

@@ -34,6 +34,7 @@
 
                                 @if ($isCheckbox)
                                     {{-- ✅ Checkbox --}}
+                                    <input type="hidden" name="{{ $campo }}" value="N">
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input" name="{{ $campo }}" id="{{ $inputId }}" value="S"
                                             {{ $value === 'S' ? 'checked' : '' }}>
@@ -42,7 +43,7 @@
 
                                 @elseif ($isSelect)
                                     {{-- 🔽 Select relacional --}}
-                                    <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
+                                    <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}" {{ empty($config['nullable']) ? 'required' : '' }}>
                                         <option value="">Seleccione una opción</option>
                                         @foreach ($selectOptions as $opt)
                                             <option value="{{ $opt->{$config['referenced_column']} }}"
@@ -57,7 +58,7 @@
                                     @php
                                         $opcionesLista = explode(',', $config['select_list_data']);
                                     @endphp
-                                    <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}">
+                                    <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}" {{ empty($config['nullable']) ? 'required' : '' }}>
                                         <option value="">Seleccione una opción</option>
                                         @foreach ($opcionesLista as $opcion)
                                             @php [$texto, $val] = array_pad(explode('=', $opcion, 2), 2, $opcion); @endphp
@@ -77,7 +78,7 @@
                                 @else
                                     {{-- ✏️ Campo de texto u otro input --}}
                                     <input type="{{ $inputType }}" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
-                                        value="{{ $value }}">
+                                        value="{{ $value }}" {{ empty($config['nullable']) ? 'required' : '' }}>
                                 @endif
                             </div>
                         @endif
@@ -85,8 +86,11 @@
                 </div>
             </div>
         </div>
-        <button type="submit" class="btn btn-success">💾 Guardar</button>
-        <a href="{{ route('produccion.abms.articulos.index') }}" class="btn btn-secondary">⬅️ Cancelar</a>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">💾 Guardar</button>
+            <a href="{{ route('produccion.abms.articulos.index') }}" class="btn btn-secondary">⬅️ Cancelar</a>
+        </div>
     </form>
 </div>
 @endsection
