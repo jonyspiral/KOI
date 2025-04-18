@@ -20,6 +20,10 @@
             overflow-x: hidden;
         }
         svg.w-5.h-5 {
+            .fila-eliminada {
+    background-color: #f8f9fa !important;
+    color: #6c757d;
+}        
     display: none !important;
 }
 

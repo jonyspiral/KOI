@@ -11,7 +11,7 @@ class RutasProduccion extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_ruta'];
-        protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'id'];
+                protected $fillable = ['cod_ruta', 'denom_ruta', 'anulado', 'id'];
 
     public static function fieldsMeta()
     {

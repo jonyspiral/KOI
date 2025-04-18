@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Sql;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Almacene extends Model
+class Almacen extends Model
 {
     protected $table = 'Almacenes';
-    public $timestamps = true;
-     public static $sincronizable = true;
-    protected $fillable = ['cod_almacen', 'id'];
+    protected $connection = 'sqlsrv_koi';
+    public $timestamps = false;
+    protected $fillable = ['cod_almacen'];
 
     public static function fieldsMeta()
     {

@@ -1,53 +1,124 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-  <h2>RutasProduccion</h2>
-  <a href="{{ route('produccion.abms.create') }}" class="btn btn-success mb-2">Nuevo</a>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>id</th>
-<th>cod_ruta</th>
-<th>denom_ruta</th>
-<th>anulado</th>
-<th>fecha_baja</th>
-<th>fecha_ultima_modificacion</th>
-<th>autor_ultima_modificacion</th>
-<th>fechaAlta</th>
-<th>created_at</th>
-<th>updated_at</th>
-<th>sync_status</th>
+<div class="container-fluid px-0">
+    <h2 class="mb-4">Listado de ArticulosNew</h2>
 
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      @foreach($registros as $r)
-        <tr>
-          <td>{{ $r->id }}</td>
-<td>{{ $r->cod_ruta }}</td>
-<td>{{ $r->denom_ruta }}</td>
-<td>{{ $r->anulado }}</td>
-<td>{{ $r->fecha_baja }}</td>
-<td>{{ $r->fecha_ultima_modificacion }}</td>
-<td>{{ $r->autor_ultima_modificacion }}</td>
-<td>{{ $r->fechaAlta }}</td>
-<td>{{ $r->created_at }}</td>
-<td>{{ $r->updated_at }}</td>
-<td>{{ $r->sync_status }}</td>
+    @php
+        $formViewType = 'modal';
+    @endphp
 
-          <td>
-            <a href="{{ route('produccion.abms.edit', $r->id) }}" class="btn btn-sm btn-primary">Editar</a>
-            <form method="POST" action="{{ route('produccion.abms.destroy', $r->id) }}" style="display:inline;">
-              @csrf
-              @method('DELETE')
-              <button class="btn btn-sm btn-danger">Eliminar</button>
-            </form>
-          </td>
-        </tr>
-      @endforeach
-    </tbody>
-  </table>
+    @if ($formViewType === 'modal')
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCreate">➕ Nuevo</button>
+    @else
+        <a href="{{ route('produccion.abms.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    @endif
+
+    <form action="{{ route('produccion.abms.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
+        <div class="input-group">
+            <input type="text" name="buscar" value="{{ request('buscar') }}" class="form-control" placeholder="Buscar...">
+            <button type="submit" class="btn btn-outline-primary">Buscar</button>
+            @if(request('buscar'))
+                <a href="{{ route('produccion.abms.index') }}" class="btn btn-outline-secondary">Limpiar</a>
+            @endif
+        </div>
+        <div class="input-group" style="max-width: 160px;">
+            <input type="number" name="por_pagina" min="10" max="500" value="{{ request('por_pagina', $perPage ?? 100) }}" class="form-control" placeholder="x página" title="Cantidad por página">
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr>
+                    @foreach ($columnas as $col)
+                        @php $tipo = $campos[$col]['input_type'] ?? 'text'; @endphp
+                        @if (!empty($campos[$col]['incluir']) && $tipo !== 'hidden')
+                            <th>{{ $campos[$col]['label'] ?? ucfirst(str_replace('_', ' ', $col)) }}</th>
+                        @endif
+                    @endforeach
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+    @foreach ($registros as $registro)
+        @php
+            $eliminado = $registro->sync_status === 'D';
+        @endphp
+
+        <tbody x-data="{ showSubform: false }" class="{{ $eliminado ? 'fila-eliminada' : '' }}">
+            <tr>
+                @foreach ($columnas as $col)
+                    @php
+                        $meta = $campos[$col] ?? [];
+                        $tipo = $meta['input_type'] ?? 'text';
+                        $valor = $registro->$col;
+                    @endphp
+                    @if (!empty($meta['incluir']) && $tipo !== 'hidden')
+                        <td class="{{ $eliminado ? 'text-muted' : '' }}">
+                            @if (!empty($meta['is_boolean']))
+                                <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
+                            @else
+                                {{ $valor }}
+                            @endif
+                        </td>
+                    @endif
+                @endforeach
+
+                <td class="text-end">
+                    <div class="d-flex gap-1 justify-content-end">
+                        @if (!$eliminado)
+                            <a href="{{ route('produccion.abms.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
+                            <form action="{{ route('produccion.abms.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                            </form>
+                        @endif
+
+                        <button @click="showSubform = true" x-show="!showSubform" type="button" class="btn btn-sm btn-outline-success">➕</button>
+                        <button @click="showSubform = !showSubform" type="button" class="btn btn-sm btn-outline-secondary">
+                            <span x-show="!showSubform">👁️</span>
+                            <span x-show="showSubform">🙈</span>
+                        </button>
+                    </div>
+
+                    @if ($eliminado)
+                        <span class="badge bg-secondary mt-1">🗃 Eliminado</span>
+                    @endif
+                </td>
+            </tr>
+
+            <tr x-show="showSubform">
+                <td colspan="{{ count($columnas) + 1 }}">
+                    @if (!empty($subformularios))
+                        @foreach ($subformularios as $sub)
+                            @if ($sub['modo'] === 'inline')
+                                <x-koi-subformulario :registro="$registro" :subform="$sub" :rutaBase="basename($sub['carpeta_vistas'])" />
+                            @endif
+                        @endforeach
+                    @endif
+                </td>
+            </tr>
+        </tbody>
+    @endforeach
+</tbody>
+
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            {{ $registros->links('pagination::bootstrap-4') }}
+        </div>
+        <div class="text-muted small">
+            {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
+        </div>
+    </div>
+
+    @if ($formViewType === 'modal')
+        @include('produccion/abms.create-modal', ['registro' => []])
+    @endif
 </div>
 @endsection

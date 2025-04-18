@@ -11,7 +11,7 @@ class PasosRutasProduccion extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion'];
-            protected $fillable = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion', 'ejecucion', 'anulado', 'jerarquia_seccion', 'tiene_subordinadas', 'id'];
+                protected $fillable = ['cod_ruta', 'cod_paso', 'sub_paso', 'cod_seccion', 'ejecucion', 'anulado', 'jerarquia_seccion', 'tiene_subordinadas', 'id'];
 
     public static function fieldsMeta()
     {

@@ -14,7 +14,7 @@ class RutasProduccionController extends Controller
 {
     public function index(Request $request)
 {
-    $inicio = microtime(true);
+    
 
     $modelo = 'RutasProduccion';
     $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
@@ -51,9 +51,7 @@ class RutasProduccionController extends Controller
 
    // $perPage = max(10, min($perPage, 500));
 
-    $tiempoAntesGet = microtime(true);
-    $registros = $query->paginate($perPage)->appends($request->except('page'));
-    $tiempoDespuesGet = microtime(true);
+    
 
     // 🔁 Reemplazar campos tipo select con valor mostrado usando cache persistente
     $selectCache = [];
@@ -80,7 +78,7 @@ class RutasProduccionController extends Controller
             });
         }
     }
-
+    $registros = $query->paginate($perPage);
     foreach ($registros as $registro) {
         foreach ($campos as $campo => $meta) {
             if (($meta['input_type'] ?? null) === 'select' &&
@@ -95,12 +93,7 @@ class RutasProduccionController extends Controller
         }
     }
 
-    $fin = microtime(true);
-
-    \Log::info('📄 CARGA index()');
-    \Log::info('⏱ TOTAL: ' . round($fin - $inicio, 4) . ' s');
-    \Log::info('📥 .get(): ' . round($tiempoDespuesGet - $tiempoAntesGet, 4) . ' s');
-    \Log::info('🧩 Proceso extra: ' . round($fin - $tiempoDespuesGet, 4) . ' s');
+   
 
     return view("{$carpeta_vistas}.index", compact(
         'registros', 'campos', 'columnas', 'modelo', 'subformularios', 'carpeta_vistas','primaryKey', 'perPage'
@@ -230,6 +223,8 @@ class RutasProduccionController extends Controller
             $datos[$campo] = $valor;
         }
 
+        $datos = $this->aplicarSyncStatus($datos, 'create'); // ← 👈 APLICACIÓN DEL SYNC STATUS
+
         RutasProduccion::create($datos);
 
         $redirect = $this->redirectToParent($request, 'RutasProduccion');
@@ -259,6 +254,7 @@ class RutasProduccionController extends Controller
             $datos[$campo] = $valor;
         }
     
+        $datos = $this->aplicarSyncStatus($datos, 'update'); // ← 👈 APLICACIÓN DEL SYNC STATUS
         $registro->update($datos);
     
         $redirect = $this->redirectToParent($request, 'RutasProduccion');
@@ -267,25 +263,27 @@ class RutasProduccionController extends Controller
     
 
     public function destroy(Request $request, $id)
-    {
-        $configPath = resource_path("meta_abms/config_form_RutasProduccion.json");
-        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-    
-        $primaryKey = $config['primary_key'] ?? 'id';
-        $camposRaw = $config['campos'] ?? [];
-        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    
-        // 🧠 Buscar registro por ID lógico Laravel (siempre usar 'id' como clave de eliminación)
-        $registro = RutasProduccion::where('id', $id)->firstOrFail();
-    
-        $modeloNombre = class_basename($registro);
-    
-        $registro->delete();
-    
-        // 🧭 Redirección al padre si corresponde
-        return $this->redirectToParent($request->merge($registro->toArray()), $modeloNombre)
-            ?? redirect()->route('produccion.abms.rutas_produccion.index')->with('success', 'Registro eliminado correctamente.');
+{
+    $configPath = resource_path("meta_abms/config_form_RutasProduccion.json");
+    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+
+    if (!isset($config['primary_key'])) {
+        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
     }
+
+    $primaryKey = $config['primary_key'];
+
+    // 🧠 Buscar registro por clave primaria real
+    $registro = RutasProduccion::where($primaryKey, $id)->firstOrFail();
+
+    // ✅ Marcar como eliminado (soft delete vía sincronizador)
+    $registro->sync_status = 'D';
+    $registro->save();
+
+    // 🧭 Redirección al padre si corresponde
+    return $this->redirectToParent($request->merge($registro->toArray()), 'RutasProduccion')
+        ?? redirect()->route('produccion.abms.rutas_produccion.index')->with('success', 'Marcado como eliminado correctamente.');
+}
     
 
 
@@ -351,5 +349,31 @@ class RutasProduccionController extends Controller
     
         return view('produccion/abms/rutas_produccion.show', compact('registro', 'campos'));
     }
+    /**
+ * 🧠 Aplica el estado de sincronización y timestamps manuales.
+ *
+ * @param array $datos  Datos a guardar.
+ * @param string $modo  'create' o 'update'.
+ * @return array
+ */
+private function aplicarSyncStatus(array $datos, string $modo): array
+{
+    // Estado de sincronización
+    if (!isset($datos['sync_status'])) {
+        $datos['sync_status'] = $modo === 'create' ? 'N' : 'U';
+    }
+
+    // Timestamps manuales si están deshabilitados en el modelo
+    $now = now()->toDateTimeString();
+    if ($modo === 'create' && !isset($datos['created_at'])) {
+        $datos['created_at'] = $now;
+    }
+    if (!isset($datos['updated_at'])) {
+        $datos['updated_at'] = $now;
+    }
+
+    return $datos;
+}
+
 
 }

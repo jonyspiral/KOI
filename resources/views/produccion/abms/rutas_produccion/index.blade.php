@@ -4,10 +4,16 @@
 <div class="container-fluid px-0">
     <h2 class="mb-4">Listado de RutasProduccion</h2>
 
-    {{-- ➕ Crear nuevo --}}
-    <a href="{{ route('produccion.abms.rutas_produccion.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    @php
+        $formViewType = 'modal';
+    @endphp
 
-    {{-- 🔍 Formulario de búsqueda --}}
+    @if ($formViewType === 'modal')
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCreate">➕ Nuevo</button>
+    @else
+        <a href="{{ route('produccion.abms.rutas_produccion.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    @endif
+
     <form action="{{ route('produccion.abms.rutas_produccion.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
         <div class="input-group">
             <input type="text" name="buscar" value="{{ request('buscar') }}" class="form-control" placeholder="Buscar...">
@@ -21,7 +27,6 @@
         </div>
     </form>
 
-    {{-- 📋 Tabla --}}
     <div class="table-responsive">
         <table class="table table-striped table-sm">
             <thead>
@@ -37,70 +42,72 @@
             </thead>
 
             <tbody>
-                @foreach ($registros as $registro)
-                    <tbody x-data="{ showSubform: false }">
-                        <tr>
-                            @foreach ($columnas as $col)
-                                @php
-                                    $meta = $campos[$col] ?? [];
-                                    $tipo = $meta['input_type'] ?? 'text';
-                                    $valor = $registro->$col;
-                                @endphp
-                                @if (!empty($meta['incluir']) && $tipo !== 'hidden')
-                                    <td>
-                                        @if (!empty($meta['is_boolean']))
-                                            <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
-                                        @else
-                                            {{ $valor }}
-                                        @endif
-                                    </td>
-                                @endif
-                            @endforeach
+    @foreach ($registros as $registro)
+        @php
+            $eliminado = $registro->sync_status === 'D';
+        @endphp
 
-                            {{-- Acciones --}}
-                            <td class="text-end">
-                                <div class="d-flex gap-1 justify-content-end">
-                                    <a href="{{ route('produccion.abms.rutas_produccion.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
-
-                                    <form action="{{ route('produccion.abms.rutas_produccion.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
-                                    </form>
-
-                                    <button @click="showSubform = true" x-show="!showSubform" type="button" class="btn btn-sm btn-outline-success">➕</button>
-
-                                    <button @click="showSubform = !showSubform" type="button" class="btn btn-sm btn-outline-secondary">
-                                        <span x-show="!showSubform">👁️</span>
-                                        <span x-show="showSubform">🙈</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        {{-- Subformulario inline condicional --}}
-                        <tr x-show="showSubform">
-                            <td colspan="{{ count($columnas) + 1 }}">
-                                @if (!empty($subformularios))
-                                    @foreach ($subformularios as $sub)
-                                        @if ($sub['modo'] === 'inline')
-                                            <x-koi-subformulario
-                                                :registro="$registro"
-                                                :subform="$sub"
-                                                :rutaBase="basename($sub['carpeta_vistas'])"
-                                            />
-                                        @endif
-                                    @endforeach
-                                @endif
-                            </td>
-                        </tr>
-                    </tbody>
+        <tbody x-data="{ showSubform: false }" class="{{ $eliminado ? 'fila-eliminada' : '' }}">
+            <tr>
+                @foreach ($columnas as $col)
+                    @php
+                        $meta = $campos[$col] ?? [];
+                        $tipo = $meta['input_type'] ?? 'text';
+                        $valor = $registro->$col;
+                    @endphp
+                    @if (!empty($meta['incluir']) && $tipo !== 'hidden')
+                        <td class="{{ $eliminado ? 'text-muted' : '' }}">
+                            @if (!empty($meta['is_boolean']))
+                                <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
+                            @else
+                                {{ $valor }}
+                            @endif
+                        </td>
+                    @endif
                 @endforeach
-            </tbody>
+
+                <td class="text-end">
+                    <div class="d-flex gap-1 justify-content-end">
+                        @if (!$eliminado)
+                            <a href="{{ route('produccion.abms.rutas_produccion.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
+                            <form action="{{ route('produccion.abms.rutas_produccion.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                            </form>
+                        @endif
+
+                        <button @click="showSubform = true" x-show="!showSubform" type="button" class="btn btn-sm btn-outline-success">➕</button>
+                        <button @click="showSubform = !showSubform" type="button" class="btn btn-sm btn-outline-secondary">
+                            <span x-show="!showSubform">👁️</span>
+                            <span x-show="showSubform">🙈</span>
+                        </button>
+                    </div>
+
+                    @if ($eliminado)
+                        <span class="badge bg-secondary mt-1">🗃 Eliminado</span>
+                    @endif
+                </td>
+            </tr>
+
+            <tr x-show="showSubform">
+                <td colspan="{{ count($columnas) + 1 }}">
+                    @if (!empty($subformularios))
+                        @foreach ($subformularios as $sub)
+                            @if ($sub['modo'] === 'inline')
+                                <x-koi-subformulario :registro="$registro" :subform="$sub" :rutaBase="basename($sub['carpeta_vistas'])" />
+                            @endif
+                        @endforeach
+                    @endif
+                </td>
+            </tr>
+        </tbody>
+    @endforeach
+</tbody>
+
         </table>
     </div>
 
-    {{-- Paginación --}}
     <div class="d-flex justify-content-between align-items-center mt-3">
         <div>
             {{ $registros->links('pagination::bootstrap-4') }}
@@ -109,5 +116,9 @@
             {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
         </div>
     </div>
+
+    @if ($formViewType === 'modal')
+        @include('produccion/abms/rutas_produccion.create-modal', ['registro' => []])
+    @endif
 </div>
 @endsection

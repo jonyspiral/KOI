@@ -8,43 +8,34 @@ return [
     |--------------------------------------------------------------------------
     | Default Database Connection Name
     |--------------------------------------------------------------------------
-    |
-    | Here you may specify which of the database connections below you wish
-    | to use as your default connection for database operations. This is
-    | the connection which will be utilized unless another connection
-    | is explicitly specified when you execute a query / statement.
-    |
+    | Esta conexión se usa por defecto si no se especifica otra en los modelos
+    | o en los llamados a DB::connection(). Por convención, usamos 'mysql'.
     */
-
     'default' => env('DB_CONNECTION', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
     | Database Connections
     |--------------------------------------------------------------------------
-    |
-    | Below are all of the database connections defined for your application.
-    | An example configuration is provided for each database system which
-    | is supported by Laravel. You're free to add / remove connections.
-    |
+    | Acá se definen todas las conexiones que usa KOI.
     */
-
     'connections' => [
 
-      'odbc' => [
-        'driver' => 'odbc',
-        'dsn' => env('DB_DSN', 'MiSQLServer'),
-        'database' => env('DB_DATABASE', 'desarrollo'),
-        'username' => env('DB_USERNAME', 'Koi'),
-        'password' => env('DB_PASSWORD', 'koisys'),
-        'charset' => 'utf8',
-        'prefix' => '',
-        'prefix_indexes' => true,
-    ],
+        // 🔌 Conexión ODBC genérica (fallback, no se recomienda para producción)
+        'odbc' => [
+            'driver' => 'odbc',
+            'dsn' => env('DB_DSN', 'MiSQLServer'),
+            'database' => env('DB_DATABASE', 'desarrollo'),
+            'username' => env('DB_USERNAME', 'Koi'),
+            'password' => env('DB_PASSWORD', 'koisys'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
 
-
-
-       'mysql' => [
+        // 🐬 Conexión principal a MySQL (es la conexión por defecto del sistema)
+  // 🐬 Conexión principal a MySQL (por defecto)
+        'mysql' => [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
@@ -59,41 +50,41 @@ return [
             'engine' => null,
         ],
 
-     // ✅ Conexión a SQL Server 2000 (KOI)
-     'sqlsrv_koi' => [
-        'driver'   => 'odbc',
-        'dsn'      => 'MiSQLServer', // Debe coincidir con odbc.ini
-        'database' => 'desarrollo',  // 🔧 Agregamos la base de datos correcta
-        'username' => env('DB_KOI_USERNAME', 'Koi'),
-        'password' => env('DB_KOI_PASSWORD', 'koisys'),
-        'charset'  => 'utf8',
-        'prefix'   => '',
-    ],
+        // 🧠 Conexión SQL Server 2000 (usada por el importador KOI)
+// 🧠 Conexión a SQL Server 2000 vía FreeTDS/ODBC
+        'sqlsrv_koi' => [
+            'driver'   => 'odbc',
+            'dsn'      => env('DB_KOI_DSN', 'MiSQLServer'),
+            'database' => env('DB_KOI_DATABASE', 'desarrollo'),
+            'username' => env('DB_KOI_USERNAME', 'Koi'),
+            'password' => env('DB_KOI_PASSWORD', 'koisys'),
+            'charset'  => 'utf8',
+            'prefix'   => '',
+        ],
 
-    'sqlsrv_encinitas' => [
-    'driver' => 'odbc',
-    'database' => 'encinitas',
-    'dsn' => 'ENCINITAS_DSN',
-    'username'=> env('DB_KOI_USERNAME', 'Koi'),
-    'password' => env('DB_KOI_PASSWORD', 'koisys'),
-    'charset'  => 'utf8',
-        'prefix'   => '',
-],
+        // 🏢 Conexión a Encinitas (otra base del sistema)
+        'sqlsrv_encinitas' => [
+            'driver' => 'odbc',
+            'dsn' => 'ENCINITAS_DSN',
+            'database' => 'encinitas',
+            'username' => env('DB_KOI_USERNAME', 'Koi'),
+            'password' => env('DB_KOI_PASSWORD', 'koisys'),
+            'charset' => 'utf8',
+            'prefix' => '',
+        ],
 
-'sqlsrv_spiral' => [
-    'driver' => 'odbc',
-    'database' => 'spiral',
-    'dsn' => 'SPIRAL_DSN',
-    'username' => 'user',
-    'password' => 'password',
-    'username'=> env('DB_KOI_USERNAME', 'Koi'),
-    'password' => env('DB_KOI_PASSWORD', 'koisys'),
-    'charset'  => 'utf8',
-        'prefix'   => '',
+        // 🏭 Conexión a Spiral (segunda base opcional)
+        'sqlsrv_spiral' => [
+            'driver' => 'odbc',
+            'dsn' => 'SPIRAL_DSN',
+            'database' => 'spiral',
+            'username' => env('DB_KOI_USERNAME', 'Koi'),
+            'password' => env('DB_KOI_PASSWORD', 'koisys'),
+            'charset' => 'utf8',
+            'prefix' => '',
+        ],
 
-],
-
-
+        // 🧪 Conexión SQL Server alternativa con driver nativo (no se usa en producción)
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),
@@ -105,8 +96,6 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
     ],
@@ -115,13 +104,8 @@ return [
     |--------------------------------------------------------------------------
     | Migration Repository Table
     |--------------------------------------------------------------------------
-    |
-    | This table keeps track of all the migrations that have already run for
-    | your application. Using this information, we can determine which of
-    | the migrations on disk haven't actually been run on the database.
-    |
+    | Laravel guarda un historial de migraciones en esta tabla.
     */
-
     'migrations' => [
         'table' => 'migrations',
         'update_date_on_publish' => true,
@@ -131,13 +115,8 @@ return [
     |--------------------------------------------------------------------------
     | Redis Databases
     |--------------------------------------------------------------------------
-    |
-    | Redis is an open source, fast, and advanced key-value store that also
-    | provides a richer body of commands than a typical key-value system
-    | such as Memcached. You may define your connection settings here.
-    |
+    | Configuración de Redis (se usa opcionalmente para cache o colas).
     */
-
     'redis' => [
 
         'client' => env('REDIS_CLIENT', 'phpredis'),
@@ -165,7 +144,6 @@ return [
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
         ],
-              
 
     ],
 

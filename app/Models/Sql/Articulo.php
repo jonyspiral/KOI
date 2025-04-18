@@ -672,6 +672,34 @@ class Articulo extends Model
       'unique' => true,
     ),
   ),
+  'created_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'updated_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'sync_status' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'id' => 
+  array (
+    'type' => 'int',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => true,
+  ),
 );
     }
 }

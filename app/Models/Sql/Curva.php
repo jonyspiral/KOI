@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Curva extends Model
 {
     protected $table = 'curvas';
-    protected $connection = 'sqlsrv_koi';
+    protected $primaryKey = null; // Clave compuesta, gestionada por KOI
+    public static array $primaryKeySql = ['cod_curva'];
     public $timestamps = false;
+    public $incrementing = false;
+    protected $connection = 'sqlsrv_koi';
     protected $fillable = ['cod_curva'];
 
     public static function fieldsMeta()
@@ -153,6 +156,45 @@ class Curva extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_curva' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_curva',
+      ),
+      'unique' => true,
+    ),
+  ),
+  'created_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'updated_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'sync_status' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'id' => 
+  array (
+    'type' => 'int',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => true,
   ),
 );
     }

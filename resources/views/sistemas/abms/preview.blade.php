@@ -19,6 +19,7 @@
                         <th>Tipo Input</th>
                         <th>Default</th>
                         <th>Incluir</th>
+                        <th>Sync</th>  {{-- 🆕 --}}
                         <th>Nullable</th>
                         <th>Tabla FK</th>
                         <th>Columna FK</th>
@@ -61,6 +62,12 @@
                             </td>
                             <td><input type="text" name="campos[{{ $campo }}][default]" class="form-control form-control-sm" value="{{ $default }}"></td>
                             <td class="text-center"><input type="checkbox" name="campos[{{ $campo }}][incluir]" value="1" @checked($incluir)></td>
+
+                            <td class="text-center">
+                                    <input type="hidden" name="campos[{{ $campo }}][sync]" value="0">
+                                     <input type="checkbox" name="campos[{{ $campo }}][sync]" value="1" @checked(!empty($meta['sync']))>
+                            </td>
+
                             <td class="text-center"><input type="checkbox" name="campos[{{ $campo }}][nullable]" value="1" @checked($nullable)></td>
                             <td><input type="text" name="campos[{{ $campo }}][referenced_table]" class="form-control form-control-sm" value="{{ $referenced_table }}"></td>
                             <td><input type="text" name="campos[{{ $campo }}][referenced_column]" class="form-control form-control-sm" value="{{ $referenced_column }}"></td>

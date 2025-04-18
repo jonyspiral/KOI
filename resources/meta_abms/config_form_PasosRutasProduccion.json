@@ -3,7 +3,7 @@
     "namespace": "Produccion",
     "carpeta_vistas": "produccion\/abms\/pasos_rutas_produccion",
     "timestamps": "1",
-    "sincronizable": true,
+    "sincronizable": "1",
     "force_controlador": true,
     "primary_key": "id",
     "primary_key_sql": [
@@ -318,9 +318,11 @@
     "form_config": {
         "form_name": "SubForn_PasosRutasProduccion_inline",
         "form_route": "produccion\/abms\/pasos_rutas_produccion",
-        "tipo_formulario": "inline",
+        "tipo_formulario": "default",
         "usa_paginador": "1",
-        "per_page": "100"
+        "per_page": "50",
+        "form_view_type": "modal",
+        "index_view_type": "inline"
     },
     "subformularios": []
 }

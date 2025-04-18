@@ -42,57 +42,69 @@
             </thead>
 
             <tbody>
-                @foreach ($registros as $registro)
-                    <tbody x-data="{ showSubform: false }">
-                        <tr>
-                            @foreach ($columnas as $col)
-                                @php
-                                    $meta = $campos[$col] ?? [];
-                                    $tipo = $meta['input_type'] ?? 'text';
-                                    $valor = $registro->$col;
-                                @endphp
-                                @if (!empty($meta['incluir']) && $tipo !== 'hidden')
-                                    <td>
-                                        @if (!empty($meta['is_boolean']))
-                                            <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
-                                        @else
-                                            {{ $valor }}
-                                        @endif
-                                    </td>
-                                @endif
-                            @endforeach
+    @foreach ($registros as $registro)
+        @php
+            $eliminado = $registro->sync_status === 'D';
+        @endphp
 
-                            <td class="text-end">
-                                <div class="d-flex gap-1 justify-content-end">
-                                    <a href="{{ route('__NOMBRE_RUTA__.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
-                                    <form action="{{ route('__NOMBRE_RUTA__.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
-                                    </form>
-                                    <button @click="showSubform = true" x-show="!showSubform" type="button" class="btn btn-sm btn-outline-success">➕</button>
-                                    <button @click="showSubform = !showSubform" type="button" class="btn btn-sm btn-outline-secondary">
-                                        <span x-show="!showSubform">👁️</span>
-                                        <span x-show="showSubform">🙈</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr x-show="showSubform">
-                            <td colspan="{{ count($columnas) + 1 }}">
-                                @if (!empty($subformularios))
-                                    @foreach ($subformularios as $sub)
-                                        @if ($sub['modo'] === 'inline')
-                                            <x-koi-subformulario :registro="$registro" :subform="$sub" :rutaBase="basename($sub['carpeta_vistas'])" />
-                                        @endif
-                                    @endforeach
-                                @endif
-                            </td>
-                        </tr>
-                    </tbody>
+        <tbody x-data="{ showSubform: false }" class="{{ $eliminado ? 'fila-eliminada' : '' }}">
+            <tr>
+                @foreach ($columnas as $col)
+                    @php
+                        $meta = $campos[$col] ?? [];
+                        $tipo = $meta['input_type'] ?? 'text';
+                        $valor = $registro->$col;
+                    @endphp
+                    @if (!empty($meta['incluir']) && $tipo !== 'hidden')
+                        <td class="{{ $eliminado ? 'text-muted' : '' }}">
+                            @if (!empty($meta['is_boolean']))
+                                <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
+                            @else
+                                {{ $valor }}
+                            @endif
+                        </td>
+                    @endif
                 @endforeach
-            </tbody>
+
+                <td class="text-end">
+                    <div class="d-flex gap-1 justify-content-end">
+                        @if (!$eliminado)
+                            <a href="{{ route('__NOMBRE_RUTA__.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
+                            <form action="{{ route('__NOMBRE_RUTA__.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                            </form>
+                        @endif
+
+                        <button @click="showSubform = true" x-show="!showSubform" type="button" class="btn btn-sm btn-outline-success">➕</button>
+                        <button @click="showSubform = !showSubform" type="button" class="btn btn-sm btn-outline-secondary">
+                            <span x-show="!showSubform">👁️</span>
+                            <span x-show="showSubform">🙈</span>
+                        </button>
+                    </div>
+
+                    @if ($eliminado)
+                        <span class="badge bg-secondary mt-1">🗃 Eliminado</span>
+                    @endif
+                </td>
+            </tr>
+
+            <tr x-show="showSubform">
+                <td colspan="{{ count($columnas) + 1 }}">
+                    @if (!empty($subformularios))
+                        @foreach ($subformularios as $sub)
+                            @if ($sub['modo'] === 'inline')
+                                <x-koi-subformulario :registro="$registro" :subform="$sub" :rutaBase="basename($sub['carpeta_vistas'])" />
+                            @endif
+                        @endforeach
+                    @endif
+                </td>
+            </tr>
+        </tbody>
+    @endforeach
+</tbody>
+
         </table>
     </div>
 

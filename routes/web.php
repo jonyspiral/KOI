@@ -18,6 +18,7 @@ use App\Http\Controllers\Produccion\FamiliasProductoController;
 use App\Http\Controllers\Produccion\CurvaController;
 use App\Http\Controllers\Produccion\PasosRutasProduccionController;
 use App\Http\Controllers\Produccion\ProductController;
+use App\Http\Controllers\Produccion\AlmacenController;
 
 //creador ABMs  
 
@@ -74,19 +75,7 @@ Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
 Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
     Route::resource('familias_producto', FamiliasProductoController::class)->names('familias_producto');
 });
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Horma - Generado el 2025-04-01 10:37:10
-Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
-    Route::resource('horma', HormaController::class)->names('horma');
-});
 
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Curva - Generado el 2025-04-01 21:07:14
-
-
-Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
-    Route::resource('curva', CurvaController::class)->names('curva');
-});
 
 // 🧩 Ruta generada automáticamente por ABM Creator
 // Modelo: Curva - Generado el 2025-04-02 00:56:03
@@ -127,25 +116,6 @@ Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
 
 
 
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Marca - Generado el 2025-04-12 09:50:42
-
-
-
-
-
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Marca - Generado el 2025-04-12 10:50:00
-
-
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Marca - Generado el 2025-04-12 10:58:13
-
-
 Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
     Route::resource('marcas', MarcaController::class)->names('marcas');
 });
@@ -157,3 +127,31 @@ Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
 Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
     Route::resource('secciones_produccion', SeccionesProduccionController::class)->names('secciones_produccion');
 });
+
+
+
+
+
+
+
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Almacen - Generado el 2025-04-17 18:57:50
+
+
+Route::resource('produccion/abms/almacenes', AlmacenController::class)
+    ->names('produccion.abms.almacenes');
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: SeccionesProduccion - Generado el 2025-04-17 19:02:13
+
+
+Route::resource('produccion/abms/secciones_produccion', SeccionesProduccionController::class)
+    ->names('produccion.abms.secciones_produccion');
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: ArticulosNew - Generado el 2025-04-18 01:59:59
+
+
+Route::resource('produccion/abms/articulos_new', ArticulosNewController::class)
+    ->names('produccion.abms.articulos_new');

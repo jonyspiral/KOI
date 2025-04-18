@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Curva extends Model
 {
     protected $table = 'curvas';
+    protected $primaryKey = 'id';
     public $timestamps = true;
-     public static $sincronizable = true;
-                protected $fillable = ['cod_curva', 'denom_curva', 'anulado', 'tipo_curva', 'total_pares_curva', 'pos_1', 'pos_2', 'pos_3', 'pos_4', 'pos_5', 'pos_6', 'pos_7', 'pos_8', 'pos_9', 'pos_10'];
+    public static $sincronizable = true;
+    public static array $primaryKeySql = ['cod_curva'];
+    protected $fillable = ['cod_curva', 'id'];
 
     public static function fieldsMeta()
     {
@@ -153,6 +155,45 @@ class Curva extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_curva' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_curva',
+      ),
+      'unique' => true,
+    ),
+  ),
+  'created_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'updated_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'sync_status' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'id' => 
+  array (
+    'type' => 'int',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => true,
   ),
 );
     }

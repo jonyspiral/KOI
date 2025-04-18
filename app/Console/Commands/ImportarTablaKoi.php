@@ -31,17 +31,33 @@ class ImportarTablaKoi extends Command
             : [];
 
         $columnas = DB::connection('sqlsrv_koi')->select("exec sp_columns '$tabla'");
+        $this->info("🔹 Paso 2: Columnas obtenidas desde SQL Server.");
 
+
+/*         dump($columnas); // 🐛 Verifica qué datos llegaron
+        sleep(2);        // 🔄 Pequeña pausa por si hay muchos datos
+        $this->info("🔍 Total columnas: " . count($columnas));
+        
+ */
         if (empty($columnas)) {
             $this->error("❌ No se encontró la tabla '$tabla' en SQL Server.");
             return;
         }
-
-        if ($forceTable && Schema::hasTable($tabla)) {
-            Schema::drop($tabla);
-            $this->warn("⚠️ Tabla '$tabla' eliminada por --force-table");
+        if ($forceTable) {
+            try {
+                $pdo = DB::connection('mysql')->getPdo();
+                $stmt = $pdo->prepare("DROP TABLE IF EXISTS `$tabla`");
+                $stmt->execute();
+                $this->warn("⚠️ Tabla '$tabla' eliminada por --force-table con PDO.");
+            } catch (\Throwable $e) {
+                $this->error("❌ No se pudo eliminar la tabla '$tabla': " . $e->getMessage());
+                return;
+            }
         }
 
+
+
+        $this->info("🔹 Paso 4: Verificando si existe tabla para crearla...");
         if (!Schema::hasTable($tabla)) {
             Schema::create($tabla, function (Blueprint $table) use ($columnas, $uniqueFields, $tabla) {
 
@@ -65,6 +81,10 @@ class ImportarTablaKoi extends Command
 
                 foreach ($columnas as $columna) {
                     $nombre = $columna->COLUMN_NAME;
+                    // ⚠️ Evitar duplicar campos agregados manualmente después
+                    if (in_array($nombre, ['created_at', 'updated_at', 'sync_status'])) {
+                        continue;
+                    }
                     $tipo = $columna->TYPE_NAME;
                     $largo = $columna->LENGTH ?? 255;
                     $nullable = ($columna->IS_NULLABLE ?? 'YES') === 'YES';
@@ -124,7 +144,16 @@ class ImportarTablaKoi extends Command
                     } else {
                         $conditions = [];
                         foreach ($uniqueFields as $field) {
-                            if (isset($data[$field])) {
+                            if (!isset($data[$field])) {
+                                continue;
+                            }
+                        
+                            $fieldType = $fieldsMeta[$field]['type'] ?? '';
+                        
+                            // Si es un tipo no comparable, lo casteamos
+                            if (in_array($fieldType, ['text', 'ntext', 'image'])) {
+                                $conditions[DB::raw("CAST($field AS VARCHAR(4000))")] = $data[$field];
+                            } else {
                                 $conditions[$field] = $data[$field];
                             }
                         }
@@ -292,8 +321,36 @@ protected function generarFieldsMeta(string $tabla, array $columnas, array $uniq
     if (!empty($indices)) {
         $fieldsMeta['indices'] = $indices;
     }
+    // 👇 Agregar manualmente campos comunes de Laravel
+$fieldsMeta['created_at'] = [
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => null,
+    'primary' => false,
+];
+$fieldsMeta['updated_at'] = [
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => null,
+    'primary' => false,
+];
+$fieldsMeta['sync_status'] = [
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => null,
+    'primary' => false,
+];
+if (!array_key_exists('id', $fieldsMeta)) {
+    $fieldsMeta['id'] = [
+        'type'     => 'int',
+        'nullable' => false,
+        'default'  => null,
+        'primary'  => true, // ✅ Clave primaria lógica para Laravel
+    ];
+}
 
-    return $fieldsMeta;
+return $fieldsMeta;
+
 }
 
 /**

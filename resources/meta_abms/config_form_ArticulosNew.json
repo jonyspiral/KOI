@@ -1,0 +1,130 @@
+{
+    "modelo": "ArticulosNew",
+    "namespace": "Produccion",
+    "carpeta_vistas": "produccion\/abms\/articulos_new",
+    "timestamps": "1",
+    "sincronizable": "1",
+    "force_controlador": true,
+    "primary_key": "id",
+    "primary_key_sql": [
+        "cod_articulo"
+    ],
+    "indices": {
+        "idx_unico_cod_articulo": {
+            "columns": [
+                "cod_articulo"
+            ],
+            "unique": true
+        }
+    },
+    "campos": {
+        "cod_articulo": {
+            "label": "Cod articulo",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": true,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "1"
+        },
+        "denom_articulo": {
+            "label": "Denom articulo",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": true,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "1"
+        },
+        "indices": {
+            "label": "Indices",
+            "default": null,
+            "input_type": "text",
+            "incluir": false,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "created_at": {
+            "label": "Created at",
+            "default": null,
+            "input_type": "date",
+            "incluir": true,
+            "nullable": true,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "1"
+        },
+        "updated_at": {
+            "label": "Updated at",
+            "default": null,
+            "input_type": "date",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "1"
+        },
+        "sync_status": {
+            "label": "Sync status",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": true,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "id": {
+            "label": "Id",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        }
+    },
+    "form_config": {
+        "form_name": "ArticulosNew",
+        "form_route": "produccion\/abms\/articulos_new",
+        "tipo_formulario": "default",
+        "usa_paginador": "1",
+        "per_page": "100",
+        "form_view_type": "modal",
+        "index_view_type": "inline"
+    },
+    "subformularios": []
+}

@@ -14,7 +14,7 @@ class __MODELO__Controller extends Controller
 {
     public function index(Request $request)
 {
-    $inicio = microtime(true);
+    
 
     $modelo = '__MODELO__';
     $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
@@ -51,9 +51,7 @@ class __MODELO__Controller extends Controller
 
    // $perPage = max(10, min($perPage, 500));
 
-    $tiempoAntesGet = microtime(true);
-    $registros = $query->paginate($perPage)->appends($request->except('page'));
-    $tiempoDespuesGet = microtime(true);
+    
 
     // 🔁 Reemplazar campos tipo select con valor mostrado usando cache persistente
     $selectCache = [];
@@ -80,7 +78,7 @@ class __MODELO__Controller extends Controller
             });
         }
     }
-
+    $registros = $query->paginate($perPage);
     foreach ($registros as $registro) {
         foreach ($campos as $campo => $meta) {
             if (($meta['input_type'] ?? null) === 'select' &&
@@ -95,12 +93,7 @@ class __MODELO__Controller extends Controller
         }
     }
 
-    $fin = microtime(true);
-
-    \Log::info('📄 CARGA index()');
-    \Log::info('⏱ TOTAL: ' . round($fin - $inicio, 4) . ' s');
-    \Log::info('📥 .get(): ' . round($tiempoDespuesGet - $tiempoAntesGet, 4) . ' s');
-    \Log::info('🧩 Proceso extra: ' . round($fin - $tiempoDespuesGet, 4) . ' s');
+   
 
     return view("{$carpeta_vistas}.index", compact(
         'registros', 'campos', 'columnas', 'modelo', 'subformularios', 'carpeta_vistas','primaryKey', 'perPage'
@@ -210,32 +203,67 @@ class __MODELO__Controller extends Controller
     }
 
     public function store(Request $request)
-    {
-        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
-        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-        $camposRaw = $config['campos'] ?? [];
-        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+{
+    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+    $camposRaw = $config['campos'] ?? [];
+    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+    $usaTimestamps = $config['timestamps'] ?? false;
+    
+    $datos = [];
 
-        $datos = [];
+    foreach ($campos as $campo => $meta) {
+        $valor = $request->input($campo);
 
-        foreach ($campos as $campo => $meta) {
-            $valor = $request->input($campo);
-
-            if (($meta['input_type'] ?? null) === 'autonumerico') {
-                $valor = __MODELO__::max($campo) + 1;
-            } elseif (($meta['input_type'] ?? null) === 'checkbox') {
-                $valor = $request->has($campo) ? 'S' : 'N';
-            }
-
-            $datos[$campo] = $valor;
+        if (($meta['input_type'] ?? null) === 'autonumerico') {
+            $valor = __MODELO__::max($campo) + 1;
+        } elseif (($meta['input_type'] ?? null) === 'checkbox') {
+            $valor = $request->has($campo) ? 'S' : 'N';
         }
 
-        __MODELO__::create($datos);
-
-        $redirect = $this->redirectToParent($request, '__MODELO__');
-        return $redirect ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', 'Guardado correctamente.');
+        $datos[$campo] = $valor;
     }
 
+    // ✅ Agregar timestamps si corresponde
+    if ($usaTimestamps) {
+        $datos['created_at'] = now();
+        $datos['updated_at'] = now();
+    } else {
+        unset($datos['created_at'], $datos['updated_at']);
+    }
+
+    // ✅ Marcar como nuevo (para sync unidireccional)
+    $datos = $this->aplicarSyncStatus($datos, 'create');
+
+    // ✅ Insert en MySQL
+    $modelo = __MODELO__::create($datos);
+
+    $mensaje = 'Guardado correctamente.';
+
+    // 🔁 Sincronizar si está habilitado en config
+    if ($config['sincronizable'] ?? true) {
+        try {
+            $syncService = new \App\Services\SincronizadorService();
+            $ok = $syncService->syncCreate('__MODELO__', $datos, 'desarrollo');
+            
+            if ($ok) {
+                $modelo->sync_status = 'S';
+                $modelo->save();
+                \Log::info("✅ Registro sincronizado correctamente con SQL Server.");
+                $mensaje .= ' (✅ sincronizado con SQL Server)';
+            } else {
+                \Log::warning("⚠️ El registro fue guardado en MySQL, pero no se sincronizó con SQL Server.");
+            }
+        } catch (\Exception $e) {
+            \Log::error("❌ Error en la sincronización con SQL Server: " . $e->getMessage());
+        }
+    }
+
+    $redirect = $this->redirectToParent($request, '__MODELO__');
+    return $redirect ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', $mensaje);
+}
+
+    
     public function update(Request $request, $id)
     {
         $configPath = resource_path("meta_abms/config_form___MODELO__.json");
@@ -259,6 +287,7 @@ class __MODELO__Controller extends Controller
             $datos[$campo] = $valor;
         }
     
+        $datos = $this->aplicarSyncStatus($datos, 'update'); // ← 👈 APLICACIÓN DEL SYNC STATUS
         $registro->update($datos);
     
         $redirect = $this->redirectToParent($request, '__MODELO__');
@@ -267,25 +296,27 @@ class __MODELO__Controller extends Controller
     
 
     public function destroy(Request $request, $id)
-    {
-        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
-        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-    
-        $primaryKey = $config['primary_key'] ?? 'id';
-        $camposRaw = $config['campos'] ?? [];
-        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    
-        // 🧠 Buscar registro por ID lógico Laravel (siempre usar 'id' como clave de eliminación)
-        $registro = __MODELO__::where('id', $id)->firstOrFail();
-    
-        $modeloNombre = class_basename($registro);
-    
-        $registro->delete();
-    
-        // 🧭 Redirección al padre si corresponde
-        return $this->redirectToParent($request->merge($registro->toArray()), $modeloNombre)
-            ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', 'Registro eliminado correctamente.');
+{
+    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+
+    if (!isset($config['primary_key'])) {
+        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
     }
+
+    $primaryKey = $config['primary_key'];
+
+    // 🧠 Buscar registro por clave primaria real
+    $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
+
+    // ✅ Marcar como eliminado (soft delete vía sincronizador)
+    $registro->sync_status = 'D';
+    $registro->save();
+
+    // 🧭 Redirección al padre si corresponde
+    return $this->redirectToParent($request->merge($registro->toArray()), '__MODELO__')
+        ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', 'Marcado como eliminado correctamente.');
+}
     
 
 
@@ -351,5 +382,35 @@ class __MODELO__Controller extends Controller
     
         return view('__CARPETA_VISTAS__.show', compact('registro', 'campos'));
     }
+    /**
+ * 🧠 Aplica el estado de sincronización y timestamps manuales.
+ *
+ * @param array $datos  Datos a guardar.
+ * @param string $modo  'create' o 'update'.
+ * @return array
+ */
+private function aplicarSyncStatus(array $datos, string $modo): array
+{
+    // Si no está definido, asignamos el valor correspondiente
+    if (!isset($datos['sync_status'])) {
+        $datos['sync_status'] = $modo === 'create' ? 'N' : 'U'; // 'N' para nuevo, 'U' para actualizado
+    }
+
+    // Asignar timestamps manualmente si están deshabilitados en el modelo
+    $now = now()->toDateTimeString(); // Obtenemos la fecha y hora actual
+
+    if ($modo === 'create' && !isset($datos['created_at'])) {
+        $datos['created_at'] = $now; // Asignamos created_at solo si es un nuevo registro
+    }
+
+    if (!isset($datos['updated_at'])) {
+        $datos['updated_at'] = $now; // Siempre asignamos updated_at, incluso en create
+    }
+    
+
+    return $datos; // Devolvemos los datos con los valores correctos
+}
+
+
 
 }

@@ -14,7 +14,7 @@ class SeccionesProduccionController extends Controller
 {
     public function index(Request $request)
 {
-    $inicio = microtime(true);
+    
 
     $modelo = 'SeccionesProduccion';
     $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
@@ -51,9 +51,7 @@ class SeccionesProduccionController extends Controller
 
    // $perPage = max(10, min($perPage, 500));
 
-    $tiempoAntesGet = microtime(true);
-    $registros = $query->paginate($perPage)->appends($request->except('page'));
-    $tiempoDespuesGet = microtime(true);
+    
 
     // 🔁 Reemplazar campos tipo select con valor mostrado usando cache persistente
     $selectCache = [];
@@ -80,7 +78,7 @@ class SeccionesProduccionController extends Controller
             });
         }
     }
-
+    $registros = $query->paginate($perPage);
     foreach ($registros as $registro) {
         foreach ($campos as $campo => $meta) {
             if (($meta['input_type'] ?? null) === 'select' &&
@@ -95,12 +93,7 @@ class SeccionesProduccionController extends Controller
         }
     }
 
-    $fin = microtime(true);
-
-    \Log::info('📄 CARGA index()');
-    \Log::info('⏱ TOTAL: ' . round($fin - $inicio, 4) . ' s');
-    \Log::info('📥 .get(): ' . round($tiempoDespuesGet - $tiempoAntesGet, 4) . ' s');
-    \Log::info('🧩 Proceso extra: ' . round($fin - $tiempoDespuesGet, 4) . ' s');
+   
 
     return view("{$carpeta_vistas}.index", compact(
         'registros', 'campos', 'columnas', 'modelo', 'subformularios', 'carpeta_vistas','primaryKey', 'perPage'
@@ -230,7 +223,19 @@ class SeccionesProduccionController extends Controller
             $datos[$campo] = $valor;
         }
 
+        $datos = $this->aplicarSyncStatus($datos, 'create'); // ← 👈 APLICACIÓN DEL SYNC STATUS
+
         SeccionesProduccion::create($datos);
+// Sincronización con SQL Server
+try {
+    // Llamar al servicio de sincronización
+    $sincronizador = new \App\Services\SincronizadorService();
+    $sincronizador->syncCreate('SeccionesProduccion', $datos, 'desarrollo'); // Usamos 'desarrollo' como destino de SQL Server
+} catch (\Exception $e) {
+    // Si ocurre un error durante la sincronización, manejar el error y registrar
+    \Log::error("Error al sincronizar con SQL Server: " . $e->getMessage());
+    return redirect()->route('produccion.abms.secciones_produccion.index')->withErrors('Error en la sincronización con SQL Server');
+}
 
         $redirect = $this->redirectToParent($request, 'SeccionesProduccion');
         return $redirect ?? redirect()->route('produccion.abms.secciones_produccion.index')->with('success', 'Guardado correctamente.');
@@ -259,6 +264,7 @@ class SeccionesProduccionController extends Controller
             $datos[$campo] = $valor;
         }
     
+        $datos = $this->aplicarSyncStatus($datos, 'update'); // ← 👈 APLICACIÓN DEL SYNC STATUS
         $registro->update($datos);
     
         $redirect = $this->redirectToParent($request, 'SeccionesProduccion');
@@ -266,39 +272,29 @@ class SeccionesProduccionController extends Controller
     }
     
 
-public function destroy(Request $request, $id)
+    public function destroy(Request $request, $id)
 {
     $configPath = resource_path("meta_abms/config_form_SeccionesProduccion.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-    $primaryKey = $config['primary_key'] ?? 'id';
-    $camposRaw = $config['campos'] ?? [];
-    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
 
-    // 🧠 Detectar si es subform
-    $foreignKey = null;
-    foreach ($campos as $campo => $meta) {
-        if (!empty($meta['referenced_table']) || str_starts_with($campo, 'cod_')) {
-            if ($request->has($campo)) {
-                $foreignKey = $campo;
-                break;
-            }
-        }
+    if (!isset($config['primary_key'])) {
+        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
     }
 
-    // 🔍 Buscar registro por clave adecuada
-    if ($foreignKey && $request->has($foreignKey)) {
-        $registro = SeccionesProduccion::where($foreignKey, $request->input($foreignKey))->firstOrFail();
-    } else {
-        $registro = SeccionesProduccion::where($primaryKey, $id)->firstOrFail();
-    }
+    $primaryKey = $config['primary_key'];
 
-    $modeloNombre = class_basename($registro);
+    // 🧠 Buscar registro por clave primaria real
+    $registro = SeccionesProduccion::where($primaryKey, $id)->firstOrFail();
 
-    $registro->delete();
+    // ✅ Marcar como eliminado (soft delete vía sincronizador)
+    $registro->sync_status = 'D';
+    $registro->save();
 
-    return $this->redirectToParent($request->merge($registro->toArray()), $modeloNombre)
-        ?? redirect()->route('produccion.abms.secciones_produccion.index')->with('success', 'Registro eliminado correctamente.');
+    // 🧭 Redirección al padre si corresponde
+    return $this->redirectToParent($request->merge($registro->toArray()), 'SeccionesProduccion')
+        ?? redirect()->route('produccion.abms.secciones_produccion.index')->with('success', 'Marcado como eliminado correctamente.');
 }
+    
 
 
     // 📦 Redirección automática al padre (si es subformulario)
@@ -363,5 +359,35 @@ public function destroy(Request $request, $id)
     
         return view('produccion/abms/secciones_produccion.show', compact('registro', 'campos'));
     }
+    /**
+ * 🧠 Aplica el estado de sincronización y timestamps manuales.
+ *
+ * @param array $datos  Datos a guardar.
+ * @param string $modo  'create' o 'update'.
+ * @return array
+ */
+private function aplicarSyncStatus(array $datos, string $modo): array
+{
+    // Si no está definido, asignamos el valor correspondiente
+    if (!isset($datos['sync_status'])) {
+        $datos['sync_status'] = $modo === 'create' ? 'N' : 'U'; // 'N' para nuevo, 'U' para actualizado
+    }
+
+    // Asignar timestamps manualmente si están deshabilitados en el modelo
+    $now = now()->toDateTimeString(); // Obtenemos la fecha y hora actual
+
+    if ($modo === 'create' && !isset($datos['created_at'])) {
+        $datos['created_at'] = $now; // Asignamos created_at solo si es un nuevo registro
+    }
+
+    if (!isset($datos['updated_at'])) {
+        $datos['updated_at'] = $now; // Siempre asignamos updated_at, incluso en create
+    }
+    
+
+    return $datos; // Devolvemos los datos con los valores correctos
+}
+
+
 
 }

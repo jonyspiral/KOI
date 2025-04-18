@@ -311,6 +311,8 @@ $this->generarVistasAbm($modelo, $namespace, $carpeta_vistas, $routeName, $confi
 private function generarJsonAbm(array $data): array
 {
     $camposRaw = $data['campos'] ?? [];
+
+   
     $subformularios = $data['subformularios'] ?? [];
     $modelo = $data['modelo'];
     $clase = "App\\Models\\{$modelo}";
@@ -362,7 +364,9 @@ private function generarJsonAbm(array $data): array
             'referenced_label' => $meta['referenced_label'] ?? 'nombre',
             'is_boolean' => $inputType === 'checkbox',
             'auto_increment_plus' => $inputType === 'autonumerico',
-        ];
+             // ✅ Agregar esto:
+            'sync' => $meta['sync'] ?? true,
+             ];
 
         // 🎯 Checkbox: valores personalizados desde select_list_data
         if ($inputType === 'checkbox' && !empty($meta['select_list_data'])) {
@@ -409,7 +413,7 @@ private function generarJsonAbm(array $data): array
             'is_boolean' => false,
             'auto_increment_plus' => false,
         ];
-     
+        dd($camposProcesados);
     }
     $formConfig = $data['form_config'] ?? [];
 
@@ -599,42 +603,36 @@ protected function agregarRutaWeb(string $modelo, string $carpeta_vistas, string
     $config = json_decode(File::get($jsonPath), true);
     $formRoute = $config['form_config']['form_route'] ?? null;
 
-    // 🛑 Validación estricta: ruta lógica obligatoria
+    // 🛑 Validación estricta
     if (empty($formRoute)) {
         throw new \Exception("La ruta lógica ('form_route') no fue definida en la configuración de {$modelo}");
     }
 
-    // 🧠 Derivar componentes de la ruta
-    $prefix = $formRoute; // ej: produccion/abms/marcas
-    $modeloSnake = basename($formRoute); // ej: marcas
-    $nombreGrupo = str_replace('/', '.', $prefix); // ej: produccion.abms.marcas
-
-    // 📦 Controlador
+    // 🧠 Componentes derivados
+    $prefix = $formRoute; // ej: produccion/abms/almacenes
+    $nombreGrupo = str_replace('/', '.', $prefix); // ej: produccion.abms.almacenes
     $controladorCompleto = "App\\Http\\Controllers\\{$namespace}\\{$modelo}Controller";
     $uso = "use {$controladorCompleto};";
     $usoFinal = Str::contains($contenidoActual, $uso) ? '' : $uso;
 
-    // 🧩 Bloque de ruta
+    // 🧩 Bloque completo
     $bloqueRuta = <<<PHP
 
 // 🧩 Ruta generada automáticamente por ABM Creator
 // Modelo: {$modelo} - Generado el {$fecha}
 {$usoFinal}
 
-Route::prefix('{$prefix}')->name('{$nombreGrupo}.')->group(function () {
-    Route::resource('{$modeloSnake}', {$modelo}Controller::class)->names('{$modeloSnake}');
-});
+Route::resource('{$prefix}', {$modelo}Controller::class)
+    ->names('{$nombreGrupo}');
 
 PHP;
 
-    // 🔍 Evitar duplicados antes de agregar
-    if (!Str::contains($contenidoActual, "Route::resource('{$modeloSnake}'")) {
+    // ⚠️ Evitar duplicados
+    if (!Str::contains($contenidoActual, "Route::resource('{$prefix}'")) {
         file_put_contents($rutaArchivo, $bloqueRuta, FILE_APPEND);
         \Log::info("✅ Ruta agregada al web.php para {$modelo}");
     } else {
         \Log::info("ℹ️ La ruta para {$modelo} ya existía y no fue duplicada.");
     }
 }
-
-
 }

@@ -28,10 +28,17 @@ class ImportarController extends Controller
         ]);
     }
 
+
+
+
+
     /**
      * Ejecutar la importación
+     * 
      */
-    public function importar(Request $request)
+
+
+     public function importar(Request $request)
     {
         $request->validate([
             'nombre_tabla' => 'required|string',
