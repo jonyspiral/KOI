@@ -76,4 +76,16 @@ class ImportarController extends Controller
             'tablaSeleccionada' => $tabla,
         ]);
     }
+    public function eliminarConfig(Request $request)
+{
+    $modelo = $request->input('modelo');
+    $path = resource_path("meta_abms/config_form_{$modelo}.json");
+
+    if (File::exists($path)) {
+        File::delete($path);
+        return back()->with('success', "🗑️ Archivo config_form_{$modelo}.json eliminado correctamente.");
+    }
+
+    return back()->withErrors("⚠️ El archivo no existe o ya fue eliminado.");
+}
 }

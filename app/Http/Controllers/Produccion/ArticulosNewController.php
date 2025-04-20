@@ -264,36 +264,72 @@ class ArticulosNewController extends Controller
 }
 
     
-    public function update(Request $request, $id)
-    {
-        $configPath = resource_path("meta_abms/config_form_ArticulosNew.json");
-        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-        if (!isset($config['primary_key'])) {
-            abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
-        }
-        $primaryKey = $config['primary_key'];
-    
-        $registro = ArticulosNew::where($primaryKey, $id)->firstOrFail();
-    
-        $camposRaw = $config['campos'] ?? [];
-        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    
-        $datos = [];
-    
-        foreach ($campos as $campo => $meta) {
-            $valor = $request->input($campo);
-    
-            // Ya no necesitamos lógica para checkbox gracias al input hidden en Blade
-            $datos[$campo] = $valor;
-        }
-    
-        $datos = $this->aplicarSyncStatus($datos, 'update'); // ← 👈 APLICACIÓN DEL SYNC STATUS
-        $registro->update($datos);
-    
-        $redirect = $this->redirectToParent($request, 'ArticulosNew');
-        return $redirect ?? redirect()->route('produccion.abms.articulos_new.index')->with('success', 'Actualizado correctamente.');
+public function update(Request $request, $id)
+{
+    $modeloNombre = 'ArticulosNew';
+    $modeloClase = "\\App\\Models\\{$modeloNombre}";
+    $rutaNombre = 'produccion.abms.articulos_new';
+
+    $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
+    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+
+    if (!isset($config['primary_key'])) {
+        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
     }
-    
+
+    $primaryKey = $config['primary_key'];
+    $registro = $modeloClase::where($primaryKey, $id)->firstOrFail();
+
+    $camposRaw = $config['campos'] ?? [];
+    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+    $usaTimestamps = $config['timestamps'] ?? false;
+
+    $datos = [];
+
+    foreach ($campos as $campo => $meta) {
+        $valor = $request->input($campo);
+        $datos[$campo] = $valor;
+    }
+
+    // ⏱️ Timestamps manuales
+    if ($usaTimestamps) {
+        $datos['updated_at'] = now();
+    }
+
+    // 🔄 Marcar para sincronización
+    $datos = $this->aplicarSyncStatus($datos, 'update');
+
+    // ⚠️ Asegurar que la clave real SQL esté incluida
+    $primaryKeySql = $modeloClase::$primaryKeySql ?? [];
+    foreach ($primaryKeySql as $clave) {
+        if (!isset($datos[$clave])) {
+            $datos[$clave] = $registro->$clave;
+        }
+    }
+
+    // Guardar en MySQL
+    $registro->update($datos);
+
+    // Sincronizar con SQL Server si corresponde
+    $mensaje = 'Actualizado correctamente.';
+    if ($config['sincronizable'] ?? false) {
+        $syncService = new \App\Services\SincronizadorService;
+        $claveReal = $primaryKeySql[0] ?? $primaryKey; // fallback
+
+        $ok = $syncService->syncUpdate($modeloNombre, $datos, $claveReal, 'desarrollo');
+
+        if ($ok) {
+            \Log::info("✅ UPDATE sincronizado con éxito: {$datos[$claveReal]}");
+            $mensaje .= ' (✅ sincronizado)';
+        } else {
+            \Log::warning("⚠️ UPDATE guardado pero no sincronizado: {$datos[$claveReal]}");
+            $mensaje .= ' (⚠️ no sincronizado)';
+        }
+    }
+
+    return $this->redirectToParent($request, $modeloNombre) ?? redirect()->route("{$rutaNombre}.index")->with('success', $mensaje);
+}
+
 
     public function destroy(Request $request, $id)
 {

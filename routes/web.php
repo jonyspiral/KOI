@@ -50,8 +50,9 @@ Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function (
     Route::get('/form', [ImportarController::class, 'form'])->name('form');
     Route::post('/importar', [ImportarController::class, 'importar'])->name('importar');
 });
-
-
+Route::post('sistemas/importar/eliminar-config', [ImportarController::class, 'eliminarConfig'])
+    ->name('sistemas.importar.eliminar_config');
+    
 // 🧩 Ruta generada automáticamente por ABM Creator
 // Modelo: Articulo - Generado el 2025-03-30 07:36:58
 Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {

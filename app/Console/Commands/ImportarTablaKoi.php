@@ -117,7 +117,9 @@ class ImportarTablaKoi extends Command
                     foreach ($indicesFieldsMeta as $nombre => $indexData) {
                         if (!empty($indexData['unique'])) {
                             $table->unique($indexData['columns'], $nombre);
-                            echo "🔐 Índice único creado: {$nombre}\n";
+
+                            $this->info("🔐 Índice único creado: {$nombre}\n");
+                            //echo "🔐 Índice único creado: {$nombre}\n";
                         }
                     }
 

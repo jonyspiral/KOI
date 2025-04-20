@@ -15,6 +15,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Campo</th> 
+                        <th>Tipo SQL</th> {{-- 🆕 NUEVO --}}
                         <th>Label</th>
                         <th>Tipo Input</th>
                         <th>Default</th>
@@ -37,7 +38,10 @@
 
                     </tr>
                 </thead>
-                <tbody>
+                <tbody>@php
+                            $modelSql = "\\App\\Models\\Sql\\{$modelo}";
+                            $fieldsMeta = method_exists($modelSql, 'fieldsMeta') ? $modelSql::fieldsMeta() : [];
+                        @endphp
                     @foreach ($fields as $campo => $meta)
                         @php
                             $label = $meta['label'] ?? ucfirst(str_replace('_', ' ', $campo));
@@ -52,10 +56,13 @@
                         @endphp
                         <tr>
                             <td>{{ $campo }}</td>
+                            <td class="text-muted">
+                                {{ $fieldsMeta[$campo]['type'] ?? 'n/a' }}
+                            </td>
                             <td><input type="text" name="campos[{{ $campo }}][label]" class="form-control form-control-sm" value="{{ $label }}"></td>
                             <td>
                                 <select name="campos[{{ $campo }}][input_type]" class="form-select form-select-sm">
-                                    @foreach (['text','number','date','checkbox','textarea','select','select_list','hidden','email','password','file','color','url','tel','autonumerico'] as $tipo)
+                                    @foreach (['text','number','decimal','moneda','date','checkbox','textarea','select','select_list','hidden','email','password','file','color','url','tel','autonumerico'] as $tipo)
                                         <option value="{{ $tipo }}" @selected($inputType === $tipo)>{{ $tipo }}</option>
                                     @endforeach
                                 </select>

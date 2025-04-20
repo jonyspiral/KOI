@@ -9,6 +9,8 @@
         $esOculto = $tipo === 'hidden';
         $esSelectList = $tipo === 'select_list';
         $esSelect = $tipo === 'select';
+        $esDecimal = $tipo === 'decimal';   
+        $esMoneda = $tipo === 'moneda';
         $inputId = 'input_' . $campo;
 
         $valor = old($campo,
@@ -29,16 +31,20 @@
     @elseif ($tipo === 'textarea')
         <textarea name="{{ $campo }}" id="{{ $inputId }}" class="form-control" rows="3">{{ $valor }}</textarea>
 
-    @elseif ($esSelect && !empty($meta['referenced_table']))
-        <select name="{{ $campo }}" id="{{ $inputId }}" class="form-select">
-            <option value="">Seleccione una opción</option>
-            @foreach ($opciones["{$campo}_opciones"] ?? [] as $op)
-                <option value="{{ $op->{$meta['referenced_column']} }}"
-                    {{ $valor == $op->{$meta['referenced_column']} ? 'selected' : '' }}>
-                    {{ $op->{$meta['referenced_label']} }}
-                </option>
-            @endforeach
-        </select>
+    @elseif ($esSelectList && !empty($meta['select_list_data']))
+    @php
+        $lista = explode(',', $meta['select_list_data']);
+    @endphp
+    <select name="{{ $campo }}" id="{{ $inputId }}" class="form-select">
+        <option value="">Seleccione una opción</option>
+        @foreach ($lista as $opcion)
+            @php
+                // 👇 Nueva lógica más flexible
+                [$texto, $valorOption] = array_map('trim', array_pad(explode('=', $opcion, 2), 2, $opcion));
+            @endphp
+            <option value="{{ $valorOption }}" {{ $valor == $valorOption ? 'selected' : '' }}>{{ $texto }}</option>
+        @endforeach
+    </select>
 
     @elseif ($esSelectList && !empty($meta['select_list_data']))
         @php $lista = explode(',', $meta['select_list_data']); @endphp
@@ -59,9 +65,54 @@
             <label class="form-check-label" for="{{ $inputId }}">Sí</label>
         </div>
 
-    @else
-        <input type="{{ $tipo }}" name="{{ $campo }}" id="{{ $inputId }}" class="form-control" value="{{ $valor }}">
-    @endif
+        @elseif (in_array($tipo, ['text', 'email', 'url', 'file', 'color', 'password']))
+    <input 
+        type="{{ $tipo }}" 
+        name="{{ $campo }}" 
+        id="{{ $inputId }}" 
+        class="form-control" 
+        value="{{ $valor }}"
+    >
+
+@elseif ($tipo === 'number')
+    <input 
+        type="number" 
+        name="{{ $campo }}" 
+        id="{{ $inputId }}" 
+        class="form-control" 
+        value="{{ $valor }}"
+        step="any"
+    >
+    @elseif ($tipo === 'date')
+    <input 
+        type="date" 
+        name="{{ $campo }}" 
+        id="{{ $inputId }}" 
+        class="form-control" 
+        value="{{ $valor }}"
+    >
+
+@elseif ($esDecimal || $esMoneda)
+    <input 
+        type="number" 
+        name="{{ $campo }}" 
+        id="{{ $inputId }}" 
+        class="form-control {{ $esMoneda ? 'input-moneda' : '' }}" 
+        value="{{ $valor }}" 
+        step="0.01"
+    >
+
+@else
+    {{-- Fallback a texto plano si no se reconoce el tipo --}}
+    <input 
+        type="text" 
+        name="{{ $campo }}" 
+        id="{{ $inputId }}" 
+        class="form-control" 
+        value="{{ $valor }}"
+    >
+@endif
+
 
     @if (!$esOculto)
         </div>
