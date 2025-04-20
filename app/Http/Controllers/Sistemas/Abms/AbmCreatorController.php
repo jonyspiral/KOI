@@ -587,7 +587,7 @@ protected function actualizarFillableModelo($modelo, $namespace, array $camposIn
     \Log::info("🛠 Modelo {$modelo} actualizado con \$fillable: " . json_encode($camposIncluir));
 }
   
-protected function agregarRutaWeb(string $modelo, string $carpeta_vistas, string $namespace): void
+/* protected function agregarRutaWeb(string $modelo, string $carpeta_vistas, string $namespace): void
 {
     $rutaArchivo = base_path('routes/web.php');
     $contenidoActual = file_get_contents($rutaArchivo);
@@ -634,5 +634,59 @@ PHP;
     } else {
         \Log::info("ℹ️ La ruta para {$modelo} ya existía y no fue duplicada.");
     }
+} */
+protected function agregarRutaWeb(string $modelo, string $carpeta_vistas, string $namespace): void
+{
+    $rutaArchivo = base_path('routes/web.php');
+    $contenidoActual = file_get_contents($rutaArchivo);
+    $fecha = now()->format('Y-m-d H:i:s');
+
+    // ✅ Leer JSON del modelo
+    $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
+
+    if (!File::exists($jsonPath)) {
+        throw new \Exception("No se encontró el archivo de configuración JSON para {$modelo}");
+    }
+
+    $config = json_decode(File::get($jsonPath), true);
+    $formRoute = $config['form_config']['form_route'] ?? null;
+
+    // 🛑 Validación estricta: ruta lógica obligatoria
+    if (empty($formRoute)) {
+        throw new \Exception("La ruta lógica ('form_route') no fue definida en la configuración de {$modelo}");
+    }
+
+    // 🧠 Derivar componentes de la ruta
+    $prefix = $formRoute; // ej: produccion/abms/marcas
+    $modeloSnake = basename($formRoute); // ej: marcas
+    $nombreGrupo = str_replace('/', '.', $prefix); // ej: produccion.abms.marcas
+
+    // 📦 Controlador
+    $controladorCompleto = "App\\Http\\Controllers\\{$namespace}\\{$modelo}Controller";
+    $uso = "use {$controladorCompleto};";
+    $usoFinal = Str::contains($contenidoActual, $uso) ? '' : $uso;
+
+    // ✅ Verificar si la ruta base ya está
+    if (!Str::contains($contenidoActual, "Route::prefix('{$prefix}')->name('{$nombreGrupo}.')->group")) {
+
+        $bloqueRuta = <<<PHP
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: {$modelo} - Generado el {$fecha}
+{$usoFinal}
+
+Route::prefix('{$prefix}')->name('{$nombreGrupo}.')->group(function () {
+    Route::resource('', {$modelo}Controller::class)->names('{$modeloSnake}');
+    Route::post('{id}/restaurar', [{$modelo}Controller::class, 'restaurar'])->name('{$modeloSnake}.restaurar');
+});
+
+PHP;
+
+        file_put_contents($rutaArchivo, $bloqueRuta, FILE_APPEND);
+        \Log::info("✅ Ruta agregada al web.php para {$modelo}");
+    } else {
+        \Log::info("ℹ️ La ruta para {$modelo} ya existía y no fue duplicada.");
+    }
 }
+
 }

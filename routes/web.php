@@ -156,3 +156,8 @@ Route::resource('produccion/abms/secciones_produccion', SeccionesProduccionContr
 
 Route::resource('produccion/abms/articulos_new', ArticulosNewController::class)
     ->names('produccion.abms.articulos_new');
+
+    Route::put('__NOMBRE_RUTA__/restaurar/{id}', [\App\Http\Controllers\__NAMESPACE__\__MODELO__Controller::class, 'restaurar'])->name('__NOMBRE_RUTA__.restaurar');
+    
+    Route::put('produccion/abms/articulos_new/restaurar/{id}', [\App\Http\Controllers\Produccion\ArticulosNewController::class, 'restaurar'])
+    ->name('produccion.abms.articulos_new.restaurar');

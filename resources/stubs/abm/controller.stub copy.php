@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\Produccion;
+namespace App\Http\Controllers\__NAMESPACE__;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\ArticulosNew;
+use App\Models\__MODELO__;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\SubformManager;
 
-class ArticulosNewController extends Controller
+class __MODELO__Controller extends Controller
 {
     public function index(Request $request)
 {
     
 
-    $modelo = 'ArticulosNew';
+    $modelo = '__MODELO__';
     $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
@@ -29,9 +29,9 @@ class ArticulosNewController extends Controller
     $columnas = array_keys($campos);
 
     $subformularios = $config['subformularios'] ?? [];
-    $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/articulos_news';
+    $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/__NOMBRES__';
 
-    $query = ArticulosNew::query();
+    $query = __MODELO__::query();
 
     // 🔍 Búsqueda simple sobre columnas visibles
     if ($request->filled('buscar')) {
@@ -104,11 +104,11 @@ class ArticulosNewController extends Controller
 
     public function create()
     {
-        $configPath = resource_path("meta_abms/config_form_ArticulosNew.json");
+        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
         $camposRaw = $config['campos'] ?? [];
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-        $modelo = 'ArticulosNew';
+        $modelo = '__MODELO__';
 
         $siguiente = [];
         $labels = [];
@@ -120,7 +120,7 @@ class ArticulosNewController extends Controller
             $defaults[$campo] = $meta['default'] ?? '';
 
             if (($meta['input_type'] ?? null) === 'autonumerico') {
-                $siguiente[$campo] = ArticulosNew::max($campo) + 1;
+                $siguiente[$campo] = __MODELO__::max($campo) + 1;
             }
 
             if (
@@ -145,14 +145,14 @@ class ArticulosNewController extends Controller
             }
         }
 
-        return view('produccion/abms/articulos_new.create', compact(
+        return view('__CARPETA_VISTAS__.create', compact(
             'campos', 'siguiente', 'modelo', 'labels', 'defaults', 'opciones'
         ));
     }
 
     public function edit($id)
     {
-        $configPath = resource_path("meta_abms/config_form_ArticulosNew.json");
+        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
         if (!isset($config['primary_key'])) {
             abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
@@ -160,11 +160,11 @@ class ArticulosNewController extends Controller
         $primaryKey = $config['primary_key'];
 
         
-        $registro = ArticulosNew::where($primaryKey, $id)->firstOrFail();
+        $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
 
         $camposRaw = $config['campos'] ?? [];
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-        $modelo = 'ArticulosNew';
+        $modelo = '__MODELO__';
 
         $siguiente = [];
         $labels = [];
@@ -197,14 +197,14 @@ class ArticulosNewController extends Controller
             }
         }
 
-        return view('produccion/abms/articulos_new.edit', compact(
+        return view('__CARPETA_VISTAS__.edit', compact(
             'registro', 'campos', 'modelo', 'labels', 'defaults', 'siguiente', 'opciones','primaryKey'
         ));
     }
 
     public function store(Request $request)
 {
-    $configPath = resource_path("meta_abms/config_form_ArticulosNew.json");
+    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
     $camposRaw = $config['campos'] ?? [];
     $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
@@ -216,7 +216,7 @@ class ArticulosNewController extends Controller
         $valor = $request->input($campo);
 
         if (($meta['input_type'] ?? null) === 'autonumerico') {
-            $valor = ArticulosNew::max($campo) + 1;
+            $valor = __MODELO__::max($campo) + 1;
         } elseif (($meta['input_type'] ?? null) === 'checkbox') {
             $valor = $request->has($campo) ? 'S' : 'N';
         }
@@ -236,7 +236,7 @@ class ArticulosNewController extends Controller
     $datos = $this->aplicarSyncStatus($datos, 'create');
 
     // ✅ Insert en MySQL
-    $modelo = ArticulosNew::create($datos);
+    $modelo = __MODELO__::create($datos);
 
     $mensaje = 'Guardado correctamente.';
 
@@ -244,7 +244,7 @@ class ArticulosNewController extends Controller
     if ($config['sincronizable'] ?? true) {
         try {
             $syncService = new \App\Services\SincronizadorService();
-            $ok = $syncService->syncCreate('ArticulosNew', $datos, 'desarrollo');
+            $ok = $syncService->syncCreate('__MODELO__', $datos, 'desarrollo');
             
             if ($ok) {
                 $modelo->sync_status = 'S';
@@ -259,18 +259,45 @@ class ArticulosNewController extends Controller
         }
     }
 
-    $redirect = $this->redirectToParent($request, 'ArticulosNew');
-    return $redirect ?? redirect()->route('produccion.abms.articulos_new.index')->with('success', $mensaje);
+    $redirect = $this->redirectToParent($request, '__MODELO__');
+    return $redirect ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', $mensaje);
 }
 
     
-public function update(Request $request, $id)
-{
-    $modeloNombre = 'ArticulosNew';
-    $modeloClase = "\\App\\Models\\{$modeloNombre}";
-    $rutaNombre = 'produccion.abms.articulos_new';
+    public function update(Request $request, $id)
+    {
+        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+        if (!isset($config['primary_key'])) {
+            abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+        }
+        $primaryKey = $config['primary_key'];
+    
+        $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
+    
+        $camposRaw = $config['campos'] ?? [];
+        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+    
+        $datos = [];
+    
+        foreach ($campos as $campo => $meta) {
+            $valor = $request->input($campo);
+    
+            // Ya no necesitamos lógica para checkbox gracias al input hidden en Blade
+            $datos[$campo] = $valor;
+        }
+    
+        $datos = $this->aplicarSyncStatus($datos, 'update'); // ← 👈 APLICACIÓN DEL SYNC STATUS
+        $registro->update($datos);
+    
+        $redirect = $this->redirectToParent($request, '__MODELO__');
+        return $redirect ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', 'Actualizado correctamente.');
+    }
+    
 
-    $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
+    public function destroy(Request $request, $id)
+{
+    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
     if (!isset($config['primary_key'])) {
@@ -278,114 +305,22 @@ public function update(Request $request, $id)
     }
 
     $primaryKey = $config['primary_key'];
-    $registro = $modeloClase::where($primaryKey, $id)->firstOrFail();
 
-    $camposRaw = $config['campos'] ?? [];
-    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    $usaTimestamps = $config['timestamps'] ?? false;
+    // 🧠 Buscar registro por clave primaria real
+    $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
 
-    $datos = [];
-
-    foreach ($campos as $campo => $meta) {
-        $valor = $request->input($campo);
-        $datos[$campo] = $valor;
-    }
-
-    // ⏱️ Timestamps manuales
-    if ($usaTimestamps) {
-        $datos['updated_at'] = now();
-    }
-
-    // 🔄 Marcar para sincronización
-    $datos = $this->aplicarSyncStatus($datos, 'update');
-
-    // ⚠️ Asegurar que la clave real SQL esté incluida
-    $primaryKeySql = $modeloClase::$primaryKeySql ?? [];
-    foreach ($primaryKeySql as $clave) {
-        if (!isset($datos[$clave])) {
-            $datos[$clave] = $registro->$clave;
-        }
-    }
-
-    // Guardar en MySQL
-    $registro->update($datos);
-
-    // Sincronizar con SQL Server si corresponde
-    $mensaje = 'Actualizado correctamente.';
-    if ($config['sincronizable'] ?? false) {
-        $syncService = new \App\Services\SincronizadorService;
-        $claveReal = $primaryKeySql[0] ?? $primaryKey; // fallback
-
-        $ok = $syncService->syncUpdate($modeloNombre, $datos, $claveReal, 'desarrollo');
-
-        if ($ok) {
-            \Log::info("✅ UPDATE sincronizado con éxito: {$datos[$claveReal]}");
-            $mensaje .= ' (✅ sincronizado)';
-        } else {
-            \Log::warning("⚠️ UPDATE guardado pero no sincronizado: {$datos[$claveReal]}");
-            $mensaje .= ' (⚠️ no sincronizado)';
-        }
-    }
-
-    return $this->redirectToParent($request, $modeloNombre) ?? redirect()->route("{$rutaNombre}.index")->with('success', $mensaje);
-}
-
-
-public function destroy(Request $request, $id)
-{
-    $configPath = resource_path("meta_abms/config_form_ArticulosNew.json");
-    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-
-    if (!isset($config['primary_key'])) {
-        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
-    }
-
-    $primaryKey = $config['primary_key'];
-    $registro = ArticulosNew::where($primaryKey, $id)->firstOrFail();
-
-    // ✅ Marcar como eliminado
+    // ✅ Marcar como eliminado (soft delete vía sincronizador)
     $registro->sync_status = 'D';
-
-    if ($config['timestamps'] ?? false) {
-        $registro->updated_at = now();
-    }
-
     $registro->save();
 
-    // 🔁 Sincronizar si corresponde
-    if ($config['sincronizable'] ?? false) {
-        $syncService = new \App\Services\SincronizadorService;
-
-        // ✅ Usar siempre la clave primaria real del modelo SQL
-        $primaryKeySql = $registro::$primaryKeySql[0] ?? null;
-
-        if (!$primaryKeySql || !isset($registro->{$primaryKeySql})) {
-            \Log::error("❌ No se encontró valor para la clave primaria real ($primaryKeySql) en delete.");
-            \Log::warning("⚠️ Eliminación local, pero no sincronizada: " . json_encode($registro->toArray()));
-            $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
-        } else {
-            $ok = $syncService->syncDelete('ArticulosNew', $registro->toArray(), $primaryKeySql, 'desarrollo');
-
-            if ($ok) {
-                \Log::info("✅ Eliminación sincronizada: {$registro->{$primaryKeySql}}");
-                $mensaje = 'Registro eliminado y sincronizado correctamente.';
-            } else {
-                \Log::warning("⚠️ Eliminación local, pero no sincronizada: {$registro->{$primaryKeySql}}");
-                $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
-            }
-        }
-    } else {
-        $mensaje = 'Registro marcado como eliminado.';
-    }
-
-    return $this->redirectToParent($request->merge($registro->toArray()), 'ArticulosNew')
-        ?? redirect()->route('produccion.abms.articulos_new.index')->with('success', $mensaje);
+    // 🧭 Redirección al padre si corresponde
+    return $this->redirectToParent($request->merge($registro->toArray()), '__MODELO__')
+        ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', 'Marcado como eliminado correctamente.');
 }
+    
 
 
-
-
-   // 📦 Redirección automática al padre (si es subformulario)
+    // 📦 Redirección automática al padre (si es subformulario)
     protected function redirectToParent(Request $request, string $modeloNombre)
     {
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
@@ -434,46 +369,19 @@ public function destroy(Request $request, $id)
     }
     public function show($id)
     {
-        $configPath = resource_path("meta_abms/config_form_ArticulosNew.json");
+        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
         if (!isset($config['primary_key'])) {
             abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
         }
         $primaryKey = $config['primary_key'];
     
-        $registro = ArticulosNew::where($primaryKey, $id)->firstOrFail();
+        $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
     
         $campos = array_filter($config['campos'] ?? [], fn($cfg) => !empty($cfg['incluir']));
     
-        return view('produccion/abms/articulos_new.show', compact('registro', 'campos'));
+        return view('__CARPETA_VISTAS__.show', compact('registro', 'campos'));
     }
-
-    public function restaurar($id)
-{
-    $configPath = resource_path("meta_abms/config_form_ArticulosNew.json");
-    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-
-    if (!isset($config['primary_key'])) {
-        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
-    }
-
-    $primaryKey = $config['primary_key'];
-
-    // 🧠 Buscar registro por clave primaria real
-    $registro = ArticulosNew::where($primaryKey, $id)->firstOrFail();
-
-    // ✅ Restaurar marcando como actualizado
-    $registro->sync_status = 'U';
-    if ($config['timestamps'] ?? false) {
-        $registro->updated_at = now();
-    }
-
-    $registro->save();
-
-    return redirect()->route('produccion.abms.articulos_new.index')->with('success', 'Registro restaurado correctamente.');
-}
-
-
     /**
  * 🧠 Aplica el estado de sincronización y timestamps manuales.
  *

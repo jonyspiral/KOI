@@ -331,7 +331,7 @@ public function update(Request $request, $id)
 }
 
 
-    public function destroy(Request $request, $id)
+public function destroy(Request $request, $id)
 {
     $configPath = resource_path("meta_abms/config_form___MODELO__.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
@@ -341,22 +341,51 @@ public function update(Request $request, $id)
     }
 
     $primaryKey = $config['primary_key'];
-
-    // 🧠 Buscar registro por clave primaria real
     $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
 
-    // ✅ Marcar como eliminado (soft delete vía sincronizador)
+    // ✅ Marcar como eliminado
     $registro->sync_status = 'D';
+
+    if ($config['timestamps'] ?? false) {
+        $registro->updated_at = now();
+    }
+
     $registro->save();
 
-    // 🧭 Redirección al padre si corresponde
+    // 🔁 Sincronizar si corresponde
+    if ($config['sincronizable'] ?? false) {
+        $syncService = new \App\Services\SincronizadorService;
+
+        // ✅ Usar siempre la clave primaria real del modelo SQL
+        $primaryKeySql = $registro::$primaryKeySql[0] ?? null;
+
+        if (!$primaryKeySql || !isset($registro->{$primaryKeySql})) {
+            \Log::error("❌ No se encontró valor para la clave primaria real ($primaryKeySql) en delete.");
+            \Log::warning("⚠️ Eliminación local, pero no sincronizada: " . json_encode($registro->toArray()));
+            $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
+        } else {
+            $ok = $syncService->syncDelete('__MODELO__', $registro->toArray(), $primaryKeySql, 'desarrollo');
+
+            if ($ok) {
+                \Log::info("✅ Eliminación sincronizada: {$registro->{$primaryKeySql}}");
+                $mensaje = 'Registro eliminado y sincronizado correctamente.';
+            } else {
+                \Log::warning("⚠️ Eliminación local, pero no sincronizada: {$registro->{$primaryKeySql}}");
+                $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
+            }
+        }
+    } else {
+        $mensaje = 'Registro marcado como eliminado.';
+    }
+
     return $this->redirectToParent($request->merge($registro->toArray()), '__MODELO__')
-        ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', 'Marcado como eliminado correctamente.');
+        ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', $mensaje);
 }
-    
 
 
-    // 📦 Redirección automática al padre (si es subformulario)
+
+
+   // 📦 Redirección automática al padre (si es subformulario)
     protected function redirectToParent(Request $request, string $modeloNombre)
     {
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
@@ -418,6 +447,33 @@ public function update(Request $request, $id)
     
         return view('__CARPETA_VISTAS__.show', compact('registro', 'campos'));
     }
+
+    public function restaurar($id)
+{
+    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+
+    if (!isset($config['primary_key'])) {
+        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+    }
+
+    $primaryKey = $config['primary_key'];
+
+    // 🧠 Buscar registro por clave primaria real
+    $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
+
+    // ✅ Restaurar marcando como actualizado
+    $registro->sync_status = 'U';
+    if ($config['timestamps'] ?? false) {
+        $registro->updated_at = now();
+    }
+
+    $registro->save();
+
+    return redirect()->route('__NOMBRE_RUTA__.index')->with('success', 'Registro restaurado correctamente.');
+}
+
+
     /**
  * 🧠 Aplica el estado de sincronización y timestamps manuales.
  *

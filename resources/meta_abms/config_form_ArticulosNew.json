@@ -75,7 +75,7 @@
             "sync": "1"
         },
         "cantidad_stock": {
-            "label": "Cantidad stock",
+            "label": "stock",
             "default": null,
             "input_type": "number",
             "incluir": true,
@@ -119,7 +119,7 @@
             "sync": "1"
         },
         "categoria_id": {
-            "label": "Categoria id",
+            "label": "Categoria",
             "default": null,
             "input_type": "select_list",
             "incluir": true,
@@ -133,7 +133,7 @@
             "sync": "1"
         },
         "fecha_lanzamiento": {
-            "label": "Fecha lanzamiento",
+            "label": "lanzamiento",
             "default": null,
             "input_type": "date",
             "incluir": true,
@@ -147,7 +147,7 @@
             "sync": "1"
         },
         "email_contacto": {
-            "label": "Email contacto",
+            "label": "Email",
             "default": null,
             "input_type": "email",
             "incluir": true,

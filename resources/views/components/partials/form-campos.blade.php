@@ -1,5 +1,14 @@
 @php
     $registro = $registro ?? [];
+    // 👉 Si hay fechas, formatearlas a Y-m-d
+    foreach ($campos as $campo => $meta) {
+        if (($meta['input_type'] ?? '') === 'date') {
+            if (isset($registro[$campo]) && strtotime($registro[$campo])) {
+                $registro[$campo] = date('Y-m-d', strtotime($registro[$campo]));
+            }
+        }
+    }
+
 @endphp
 
 @foreach ($campos as $campo => $meta)
@@ -31,6 +40,17 @@
     @elseif ($tipo === 'textarea')
         <textarea name="{{ $campo }}" id="{{ $inputId }}" class="form-control" rows="3">{{ $valor }}</textarea>
 
+        @elseif ($esSelect && !empty($meta['referenced_table']))
+    <select name="{{ $campo }}" id="{{ $inputId }}" class="form-select">
+        <option value="">Seleccione una opción</option>
+        @foreach ($opciones["{$campo}_opciones"] ?? [] as $op)
+            <option value="{{ $op->{$meta['referenced_column']} }}"
+                {{ $valor == $op->{$meta['referenced_column']} ? 'selected' : '' }}>
+                {{ $op->{$meta['referenced_label']} }}
+            </option>
+        @endforeach
+    </select>
+
     @elseif ($esSelectList && !empty($meta['select_list_data']))
     @php
         $lista = explode(',', $meta['select_list_data']);
@@ -46,15 +66,7 @@
         @endforeach
     </select>
 
-    @elseif ($esSelectList && !empty($meta['select_list_data']))
-        @php $lista = explode(',', $meta['select_list_data']); @endphp
-        <select name="{{ $campo }}" id="{{ $inputId }}" class="form-select">
-            <option value="">Seleccione una opción</option>
-            @foreach ($lista as $opcion)
-                @php [$text, $val] = array_pad(explode('=', $opcion, 2), 2, $opcion); @endphp
-                <option value="{{ $val }}" {{ $valor == $val ? 'selected' : '' }}>{{ $text }}</option>
-            @endforeach
-        </select>
+
 
     @elseif ($tipo === 'checkbox')
         <input type="hidden" name="{{ $campo }}" value="{{ $meta['checkbox_unchecked_value'] ?? 'N' }}">
@@ -101,6 +113,17 @@
         value="{{ $valor }}" 
         step="0.01"
     >
+    @elseif ($tipo === 'file')
+    <input 
+        type="file" 
+        name="{{ $campo }}" 
+        id="{{ $inputId }}" 
+        class="form-control"
+    >
+    @if (!empty($valor))
+        <div class="form-text">Archivo actual: <code>{{ basename($valor) }}</code></div>
+    @endif
+
 
 @else
     {{-- Fallback a texto plano si no se reconoce el tipo --}}

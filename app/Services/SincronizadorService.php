@@ -32,7 +32,7 @@ class SincronizadorService
                 : $v
             : (is_null($v) ? 'NULL' : "'$v'");
     }, $valores));
-    dd($datos);
+
     $sql = "INSERT INTO {$tabla} ({$camposStr}) VALUES ({$valoresStr})";
 
     // 🔍 Mostrar si estás debugueando
@@ -106,17 +106,33 @@ public function syncUpdate(string $modeloNombre, array $data, string $campoClave
 
 
 
-    public function syncDelete(string $tabla, string $campoClave, string $valorClave): bool
-    {
-        try {
-            $sql = "DELETE FROM {$tabla} WHERE {$campoClave} = ?";
-            return DB::connection($this->conexion)->statement($sql, [$valorClave]);
-        } catch (\Throwable $e) {
-            Log::error("❌ [SYNC-DELETE] {$tabla} - " . $e->getMessage());
-            return false;
-        }
+public function syncDelete(string $modeloNombre, array $data, string $campoClave, string $destino = 'default'): bool
+{
+    $modelo = "\\App\\Models\\Sql\\{$modeloNombre}";
+    $tabla = (new $modelo)->getTable();
+
+    $valorClave = $data[$campoClave] ?? null;
+
+    if (empty($valorClave)) {
+        \Log::error("❌ No se encontró valor para la clave primaria en delete.");
+        return false;
     }
 
+    // Escapar comillas simples
+    $valorEscapado = str_replace("'", "''", $valorClave);
+
+    // Construir SQL seguro con CAST por compatibilidad
+    $sql = "DELETE FROM {$tabla} WHERE CAST({$campoClave} AS VARCHAR(255)) = '{$valorEscapado}'";
+
+    try {
+        DB::connection($this->getConexionDestino($destino))->statement($sql);
+        \Log::info("🗑️ Eliminación física en SQL Server exitosa: {$valorClave}");
+        return true;
+    } catch (\Throwable $e) {
+        \Log::error("❌ Error al eliminar físicamente en SQL Server: " . $e->getMessage());
+        return false;
+    }
+}
     protected function transformarFechas(array $datos): array
     {
         foreach (['created_at', 'updated_at'] as $campo) {
