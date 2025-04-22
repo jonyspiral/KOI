@@ -244,7 +244,8 @@ class ArticulosNewController extends Controller
     if ($config['sincronizable'] ?? true) {
         try {
             $syncService = new \App\Services\SincronizadorService();
-            $ok = $syncService->syncCreate('ArticulosNew', $datos, 'desarrollo');
+            $conexionSql = (new $modeloSql)->getConnectionName();
+            $ok = $syncService->syncCreate('ArticulosNew', $datos,  $conexionSql);
             
             if ($ok) {
                 $modelo->sync_status = 'S';
@@ -315,8 +316,8 @@ public function update(Request $request, $id)
     if ($config['sincronizable'] ?? false) {
         $syncService = new \App\Services\SincronizadorService;
         $claveReal = $primaryKeySql[0] ?? $primaryKey; // fallback
-
-        $ok = $syncService->syncUpdate($modeloNombre, $datos, $claveReal, 'desarrollo');
+        $conexionSql = (new $modeloSql)->getConnectionName();
+        $ok = $syncService->syncUpdate($modeloNombre, $datos, $claveReal,  $conexionSql);
 
         if ($ok) {
             \Log::info("✅ UPDATE sincronizado con éxito: {$datos[$claveReal]}");
@@ -364,7 +365,8 @@ public function destroy(Request $request, $id)
             \Log::warning("⚠️ Eliminación local, pero no sincronizada: " . json_encode($registro->toArray()));
             $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
         } else {
-            $ok = $syncService->syncDelete('ArticulosNew', $registro->toArray(), $primaryKeySql, 'desarrollo');
+            $conexionSql = (new $modeloSql)->getConnectionName();
+            $ok = $syncService->syncDelete('ArticulosNew', $registro->toArray(), $primaryKeySql,  $conexionSql);
 
             if ($ok) {
                 \Log::info("✅ Eliminación sincronizada: {$registro->{$primaryKeySql}}");

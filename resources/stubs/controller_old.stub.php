@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\Produccion;
+namespace App\Http\Controllers\__NAMESPACE__;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Horma;
+use App\Models\__MODELO__;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\SubformManager;
 
-class HormaController extends Controller
+class __MODELO__Controller extends Controller
 {
     public function index(Request $request)
 {
     
 
-    $modelo = 'Horma';
+    $modelo = '__MODELO__';
     $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
@@ -29,9 +29,9 @@ class HormaController extends Controller
     $columnas = array_keys($campos);
 
     $subformularios = $config['subformularios'] ?? [];
-    $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/hormas';
+    $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/__NOMBRES__';
 
-    $query = Horma::query();
+    $query = __MODELO__::query();
 
     // 🔍 Búsqueda simple sobre columnas visibles
     if ($request->filled('buscar')) {
@@ -104,12 +104,12 @@ class HormaController extends Controller
 
 public function create()
 {
-    $configPath = resource_path("meta_abms/config_form_Horma.json");
+    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
     $camposRaw = $config['campos'] ?? [];
     $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    $modelo = 'Horma';
+    $modelo = '__MODELO__';
     $modeloSql = "\\App\\Models\\Sql\\$modelo";
 
     $labels = [];
@@ -151,7 +151,7 @@ public function create()
         }
     }
 
-    return view('produccion/abms/hormas.create', compact(
+    return view('__CARPETA_VISTAS__.create', compact(
         'campos', 'modelo', 'labels', 'defaults', 'opciones'
     ));
 }
@@ -159,7 +159,7 @@ public function create()
 
     public function edit($id)
     {
-        $configPath = resource_path("meta_abms/config_form_Horma.json");
+        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
         if (!isset($config['primary_key'])) {
             abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
@@ -167,11 +167,11 @@ public function create()
         $primaryKey = $config['primary_key'];
 
         
-        $registro = Horma::where($primaryKey, $id)->firstOrFail();
+        $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
 
         $camposRaw = $config['campos'] ?? [];
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-        $modelo = 'Horma';
+        $modelo = '__MODELO__';
 
         $siguiente = [];
         $labels = [];
@@ -204,14 +204,14 @@ public function create()
             }
         }
 
-        return view('produccion/abms/hormas.edit', compact(
+        return view('__CARPETA_VISTAS__.edit', compact(
             'registro', 'campos', 'modelo', 'labels', 'defaults', 'siguiente', 'opciones','primaryKey'
         ));
     }
 
     public function store(Request $request)
     {
-        $modeloNombre = 'Horma'; // ← Nombre del modelo (se reemplaza dinámicamente)
+        $modeloNombre = '__MODELO__'; // ← Nombre del modelo (se reemplaza dinámicamente)
         $modelo = "\\App\\Models\\{$modeloNombre}"; // ← Namespace real del modelo
     
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
@@ -254,8 +254,8 @@ public function create()
         if ($config['sincronizable'] ?? false) {
             $syncService = new \App\Services\SincronizadorService;
             $datosSql = $syncService->formatearParaSqlServer($datos, $modeloNombre);
-            $conexionSql = (new $modeloSql)->getConnectionName();
-            $ok = $syncService->syncCreate($modeloNombre, $datosSql, $conexionSql);
+    
+            $ok = $syncService->syncCreate($modeloNombre, $datosSql, 'desarrollo');
     
             if (!$ok) {
                 \Log::error("❌ No se pudo sincronizar con SQL Server. ABORTANDO.");
@@ -270,7 +270,7 @@ public function create()
         // 🟢 Guardar en MySQL
         $registro = $modelo::create($datos);
     
-        return redirect()->route('produccion.abms.hormas.index')->with('success', '✅ Registro creado y sincronizado.');
+        return redirect()->route('__NOMBRE_RUTA__.index')->with('success', '✅ Registro creado y sincronizado.');
     }
     
     
@@ -278,9 +278,9 @@ public function create()
     
 public function update(Request $request, $id)
 {
-    $modeloNombre = 'Horma';
+    $modeloNombre = '__MODELO__';
     $modeloClase = "\\App\\Models\\{$modeloNombre}";
-    $rutaNombre = 'produccion.abms.hormas';
+    $rutaNombre = '__NOMBRE_RUTA__';
 
     $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
@@ -327,8 +327,8 @@ public function update(Request $request, $id)
     if ($config['sincronizable'] ?? false) {
         $syncService = new \App\Services\SincronizadorService;
         $claveReal = $primaryKeySql[0] ?? $primaryKey; // fallback
-        $conexionSql = (new $modeloSql)->getConnectionName();
-        $ok = $syncService->syncUpdate($modeloNombre, $datos, $claveReal, $conexionSql);
+
+        $ok = $syncService->syncUpdate($modeloNombre, $datos, $claveReal, 'desarrollo');
 
         if ($ok) {
             \Log::info("✅ UPDATE sincronizado con éxito: {$datos[$claveReal]}");
@@ -345,7 +345,7 @@ public function update(Request $request, $id)
 
 public function destroy(Request $request, $id)
 {
-    $configPath = resource_path("meta_abms/config_form_Horma.json");
+    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
     if (!isset($config['primary_key'])) {
@@ -353,7 +353,7 @@ public function destroy(Request $request, $id)
     }
 
     $primaryKey = $config['primary_key'];
-    $registro = Horma::where($primaryKey, $id)->firstOrFail();
+    $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
 
     // ✅ Marcar como eliminado
     $registro->sync_status = 'D';
@@ -376,8 +376,7 @@ public function destroy(Request $request, $id)
             \Log::warning("⚠️ Eliminación local, pero no sincronizada: " . json_encode($registro->toArray()));
             $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
         } else {
-            $conexionSql = (new $modeloSql)->getConnectionName();
-            $ok = $syncService->syncDelete('Horma', $registro->toArray(), $primaryKeySql, $conexionSql);
+            $ok = $syncService->syncDelete('__MODELO__', $registro->toArray(), $primaryKeySql, 'desarrollo');
 
             if ($ok) {
                 \Log::info("✅ Eliminación sincronizada: {$registro->{$primaryKeySql}}");
@@ -391,8 +390,8 @@ public function destroy(Request $request, $id)
         $mensaje = 'Registro marcado como eliminado.';
     }
 
-    return $this->redirectToParent($request->merge($registro->toArray()), 'Horma')
-        ?? redirect()->route('produccion.abms.hormas.index')->with('success', $mensaje);
+    return $this->redirectToParent($request->merge($registro->toArray()), '__MODELO__')
+        ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', $mensaje);
 }
 
 
@@ -447,23 +446,23 @@ public function destroy(Request $request, $id)
     }
     public function show($id)
     {
-        $configPath = resource_path("meta_abms/config_form_Horma.json");
+        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
         if (!isset($config['primary_key'])) {
             abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
         }
         $primaryKey = $config['primary_key'];
     
-        $registro = Horma::where($primaryKey, $id)->firstOrFail();
+        $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
     
         $campos = array_filter($config['campos'] ?? [], fn($cfg) => !empty($cfg['incluir']));
     
-        return view('produccion/abms/hormas.show', compact('registro', 'campos'));
+        return view('__CARPETA_VISTAS__.show', compact('registro', 'campos'));
     }
 
     public function restaurar($id)
 {
-    $configPath = resource_path("meta_abms/config_form_Horma.json");
+    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
     if (!isset($config['primary_key'])) {
@@ -473,7 +472,7 @@ public function destroy(Request $request, $id)
     $primaryKey = $config['primary_key'];
 
     // 🧠 Buscar registro por clave primaria real
-    $registro = Horma::where($primaryKey, $id)->firstOrFail();
+    $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
 
     // ✅ Restaurar marcando como actualizado
     $registro->sync_status = 'U';
@@ -483,7 +482,7 @@ public function destroy(Request $request, $id)
 
     $registro->save();
 
-    return redirect()->route('produccion.abms.hormas.index')->with('success', 'Registro restaurado correctamente.');
+    return redirect()->route('__NOMBRE_RUTA__.index')->with('success', 'Registro restaurado correctamente.');
 }
 
 

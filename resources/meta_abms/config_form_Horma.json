@@ -29,7 +29,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "denom_horma": {
             "label": "Denom horma",
@@ -42,7 +43,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "talles_desde": {
             "label": "Talles desde",
@@ -55,7 +57,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "talles_hasta": {
             "label": "Talles hasta",
@@ -68,7 +71,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "punto": {
             "label": "Punto",
@@ -76,12 +80,13 @@
             "input_type": "checkbox",
             "incluir": true,
             "nullable": false,
-            "select_list_data": "1=S,0=N",
+            "select_list_data": "Si=S,No=N",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": true,
             "auto_increment_plus": false,
+            "sync": "1",
             "checkbox_checked_value": "S",
             "checkbox_unchecked_value": "N"
         },
@@ -96,7 +101,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "diseñador": {
             "label": "Diseñador",
@@ -109,7 +115,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "fabricante": {
             "label": "Fabricante",
@@ -122,25 +129,11 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "activa": {
             "label": "Activa",
-            "default": null,
-            "input_type": "checkbox",
-            "incluir": true,
-            "nullable": false,
-            "select_list_data": "Si=S,No=N",
-            "referenced_table": null,
-            "referenced_column": "id",
-            "referenced_label": "nombre",
-            "is_boolean": true,
-            "auto_increment_plus": false,
-            "checkbox_checked_value": "S",
-            "checkbox_unchecked_value": "N"
-        },
-        "observaciones": {
-            "label": "Observaciones",
             "default": null,
             "input_type": "text",
             "incluir": false,
@@ -150,7 +143,22 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "observaciones": {
+            "label": "Observaciones",
+            "default": null,
+            "input_type": "textarea",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "incorporada_fecha": {
             "label": "Incorporada fecha",
@@ -163,7 +171,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "desactivada_fecha": {
             "label": "Desactivada fecha",
@@ -176,7 +185,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "decidio_retirar": {
             "label": "Decidio retirar",
@@ -189,7 +199,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "indices": {
             "label": "Indices",
@@ -202,12 +213,13 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
-        "id": {
-            "label": "Id",
+        "created_at": {
+            "label": "Created at",
             "default": null,
-            "input_type": "number",
+            "input_type": "date",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
@@ -215,11 +227,54 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "updated_at": {
+            "label": "Updated at",
+            "default": null,
+            "input_type": "date",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "sync_status": {
+            "label": "Sync status",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "id": {
+            "label": "Id",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
         }
     },
     "form_config": {
-        "form_name": "hormas_modal_v1",
+        "form_name": "Horma",
         "form_route": "produccion\/abms\/hormas",
         "tipo_formulario": "default",
         "usa_paginador": "1",
@@ -227,5 +282,23 @@
         "form_view_type": "modal",
         "index_view_type": "inline"
     },
-    "subformularios": []
+    "subformularios": [],
+    "menu": [
+        {
+            "mostrar": true,
+            "label": "Hormas",
+            "icon": "📄",
+            "modulo": "Produccion ",
+            "grupo": "Abms",
+            "posicion": 1
+        },
+        {
+            "mostrar": true,
+            "label": "Hormas",
+            "icon": "📄",
+            "modulo": "Sistemas",
+            "grupo": "Abms",
+            "posicion": 1
+        }
+    ]
 }

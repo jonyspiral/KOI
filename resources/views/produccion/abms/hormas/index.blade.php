@@ -42,57 +42,72 @@
             </thead>
 
             <tbody>
-                @foreach ($registros as $registro)
-                    <tbody x-data="{ showSubform: false }">
-                        <tr>
-                            @foreach ($columnas as $col)
-                                @php
-                                    $meta = $campos[$col] ?? [];
-                                    $tipo = $meta['input_type'] ?? 'text';
-                                    $valor = $registro->$col;
-                                @endphp
-                                @if (!empty($meta['incluir']) && $tipo !== 'hidden')
-                                    <td>
-                                        @if (!empty($meta['is_boolean']))
-                                            <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
-                                        @else
-                                            {{ $valor }}
-                                        @endif
-                                    </td>
-                                @endif
-                            @endforeach
+@foreach ($registros as $registro)
+    @php
+        $eliminado = $registro->sync_status === 'D';
+    @endphp
 
-                            <td class="text-end">
-                                <div class="d-flex gap-1 justify-content-end">
-                                    <a href="{{ route('produccion.abms.hormas.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
-                                    <form action="{{ route('produccion.abms.hormas.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
-                                    </form>
-                                    <button @click="showSubform = true" x-show="!showSubform" type="button" class="btn btn-sm btn-outline-success">➕</button>
-                                    <button @click="showSubform = !showSubform" type="button" class="btn btn-sm btn-outline-secondary">
-                                        <span x-show="!showSubform">👁️</span>
-                                        <span x-show="showSubform">🙈</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+    <tr x-data="{ showSubform: false }" class="{{ $eliminado ? 'fila-eliminada' : '' }}">
+        @foreach ($columnas as $col)
+            @php
+                $meta = $campos[$col] ?? [];
+                $tipo = $meta['input_type'] ?? 'text';
+                $valor = $registro->$col;
+            @endphp
+            @if (!empty($meta['incluir']) && $tipo !== 'hidden')
+                <td class="{{ $eliminado ? 'text-muted' : '' }}">
+                    @if (!empty($meta['is_boolean']))
+                        <input type="checkbox" disabled {{ in_array($valor, ['S', '1', 1]) ? 'checked' : '' }}>
+                    @else
+                        {{ $valor }}
+                    @endif
+                </td>
+            @endif
+        @endforeach
 
-                        <tr x-show="showSubform">
-                            <td colspan="{{ count($columnas) + 1 }}">
-                                @if (!empty($subformularios))
-                                    @foreach ($subformularios as $sub)
-                                        @if ($sub['modo'] === 'inline')
-                                            <x-koi-subformulario :registro="$registro" :subform="$sub" :rutaBase="basename($sub['carpeta_vistas'])" />
-                                        @endif
-                                    @endforeach
-                                @endif
-                            </td>
-                        </tr>
-                    </tbody>
+        <td class="text-end">
+            <div class="d-flex gap-1 justify-content-end">
+                @if (!$eliminado)
+                    <a href="{{ route('produccion.abms.hormas.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
+                    <form action="{{ route('produccion.abms.hormas.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                    </form>
+                @endif
+
+                @if ($eliminado)
+                <form action="{{ route('produccion.abms.hormas.restaurar', $registro->{$primaryKey}) }}" method="POST" style="display:inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-success">♻️ Restaurar</button>
+                </form>
+
+                    <span class="badge bg-secondary mt-1">🗃 Eliminado</span>
+                @endif
+
+                <button @click="showSubform = !showSubform" type="button" class="btn btn-sm btn-outline-secondary">
+                    <span x-show="!showSubform">👁️</span>
+                    <span x-show="showSubform">🙈</span>
+                </button>
+            </div>
+        </td>
+    </tr>
+
+    <tr x-show="showSubform">
+        <td colspan="{{ count($columnas) + 1 }}">
+            @if (!empty($subformularios))
+                @foreach ($subformularios as $sub)
+                    @if ($sub['modo'] === 'inline')
+                        <x-koi-subformulario :registro="$registro" :subform="$sub" :rutaBase="basename($sub['carpeta_vistas'])" />
+                    @endif
                 @endforeach
-            </tbody>
+            @endif
+        </td>
+    </tr>
+@endforeach
+</tbody>
+
+
         </table>
     </div>
 
@@ -104,7 +119,22 @@
             {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
         </div>
     </div>
+    @php
+    $defaults = [];
 
+    foreach ($campos as $campo => $meta) {
+        $defaults[$campo] = $meta['default'] ?? '';
+
+        if (($meta['input_type'] ?? null) === 'autonumerico' && empty($defaults[$campo])) {
+            try {
+                $modeloSql = "\\App\\Models\\Sql\\{$modelo}";
+                $defaults[$campo] = $modeloSql::max($campo) + 1;
+            } catch (\Throwable $e) {
+                $defaults[$campo] = 1;
+            }
+        }
+    }
+@endphp
     @if ($formViewType === 'modal')
         @include('produccion/abms/hormas.create-modal', ['registro' => []])
     @endif

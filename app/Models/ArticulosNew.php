@@ -11,7 +11,7 @@ class ArticulosNew extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_articulo'];
-                                                                                                                                                                    protected $fillable = ['cod_articulo', 'denom_articulo', 'descripcion_larga', 'precio_unitario', 'cantidad_stock', 'disponible', 'tipo_articulo', 'categoria_id', 'fecha_lanzamiento', 'email_contacto', 'url_manual', 'color_preferido', 'telefono_fabrica', 'archivo_manual', 'created_at', 'updated_at', 'sync_status', 'id'];
+    protected $fillable = ['cod_articulo', 'id'];
 
     public static function fieldsMeta()
     {
@@ -32,14 +32,14 @@ class ArticulosNew extends Model
   ),
   'descripcion_larga' => 
   array (
-    'type' => 'text',
+    'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
   ),
   'precio_unitario' => 
   array (
-    'type' => 'float',
+    'type' => 'decimal',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,

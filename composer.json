@@ -26,8 +26,10 @@
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }
+        
     },
     "autoload-dev": {
+        
         "psr-4": {
             "Tests\\": "tests/"
         }
@@ -57,6 +59,9 @@
             "dont-discover": []
         }
     },
+    
+
+
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
@@ -68,4 +73,5 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true
+    
 }

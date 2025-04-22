@@ -59,16 +59,7 @@
 
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">KOI</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/articulos">Artículos</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<x-koi-menu />
 
     <main class="container-fluid px-0">
         @if(session('success'))
@@ -114,4 +105,16 @@
     </script>
     @livewireScripts
 </body>
+@if (app()->environment('production'))
+    <div style="position: fixed; top: 0; width: 100%; background: #b91c1c; color: white; text-align: center; z-index: 9999;">
+        🔴 Estás en PRODUCCIÓN - KOI2
+    </div>
+@else
+    <div style="position: fixed; top: 0; width: 100%; background: #065f46; color: white; text-align: center; z-index: 9999;">
+        🟢 Entorno de DESARROLLO - KOI2_v1
+    </div>
+@endif
+
+<!-- opcional: espacio extra para que no tape la barra superior -->
+<div style="height: 30px;"></div>
 </html>

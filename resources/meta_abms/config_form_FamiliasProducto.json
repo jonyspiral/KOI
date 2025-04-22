@@ -29,7 +29,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": true
+            "auto_increment_plus": true,
+            "sync": "1"
         },
         "nombre": {
             "label": "Nombre",
@@ -42,7 +43,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "descripcion": {
             "label": "Descripcion",
@@ -55,7 +57,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "anulado": {
             "label": "Anulado",
@@ -69,21 +72,23 @@
             "referenced_label": "nombre",
             "is_boolean": true,
             "auto_increment_plus": false,
+            "sync": "1",
             "checkbox_checked_value": "S",
             "checkbox_unchecked_value": "N"
         },
         "cod_usuario": {
             "label": "Cod usuario",
-            "default": null,
+            "default": "JONY",
             "input_type": "text",
-            "incluir": false,
+            "incluir": true,
             "nullable": false,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "fecha_alta": {
             "label": "Fecha alta",
@@ -96,7 +101,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "fecha_baja": {
             "label": "Fecha baja",
@@ -109,7 +115,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "fecha_ultima_mod": {
             "label": "Fecha ultima mod",
@@ -122,7 +129,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "indices": {
             "label": "Indices",
@@ -135,11 +143,54 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "created_at": {
+            "label": "Created at",
+            "default": null,
+            "input_type": "date",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "updated_at": {
+            "label": "Updated at",
+            "default": null,
+            "input_type": "date",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "sync_status": {
+            "label": "Sync status",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
         }
     },
     "form_config": {
-        "form_name": "FamiliasProducto",
+        "form_name": "FamiliasProducto_v1",
         "form_route": "produccion\/abms\/familias_producto",
         "tipo_formulario": "default",
         "usa_paginador": "1",
@@ -147,5 +198,15 @@
         "form_view_type": "modal",
         "index_view_type": "inline"
     },
-    "subformularios": []
+    "subformularios": [],
+    "menu": [
+        {
+            "mostrar": true,
+            "label": "FamiliasProducto",
+            "icon": "📄",
+            "modulo": "Produccion",
+            "grupo": "Abms",
+            "posicion": 99
+        }
+    ]
 }

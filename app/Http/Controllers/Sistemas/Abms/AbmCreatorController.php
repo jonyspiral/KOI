@@ -97,7 +97,9 @@ public function redirectToPreview(Request $request)
 public function preview($modelo)
 {
     $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
-   
+    $json = [];
+
+
     if (File::exists($jsonPath)) {
         // ✅ Si ya existe el JSON, usarlo como fuente principal
         $json = json_decode(File::get($jsonPath), true);
@@ -184,6 +186,7 @@ public function preview($modelo)
                 'referenced_table' => null,
                 'referenced_label' => 'nombre',
                 'referenced_column' => 'id',
+
             ];
         }
 
@@ -206,6 +209,7 @@ public function preview($modelo)
         'primary_key' => $primaryKey,
         'primary_key_sql' => $primaryKeySql,
         'form_config' => $form_config,
+        'config' => $json, // 👈 ESTA LÍNEA AGREGA EL MENÚ Y OTROS CAMPOS
     ]);
 }
 
@@ -413,7 +417,7 @@ private function generarJsonAbm(array $data): array
             'is_boolean' => false,
             'auto_increment_plus' => false,
         ];
-        dd($camposProcesados);
+        
     }
     $formConfig = $data['form_config'] ?? [];
 
@@ -427,7 +431,28 @@ private function generarJsonAbm(array $data): array
         'form_view_type' => $formConfig['form_view_type'] ?? 'default',
         'index_view_type' => $formConfig['index_view_type'] ?? 'default',
     ], $formConfig);
-    
+    // ✅ Menu: convertir JSON si viene desde el formulario
+$menu = [];
+
+if (!empty($data['menu_json'])) {
+    $decoded = json_decode($data['menu_json'], true);
+    if (is_array($decoded)) {
+        $menu = $decoded;
+    }
+}
+
+// Si no vino menu_json, usar default basado en modelo
+if (empty($menu)) {
+    $menu[] = [
+        'mostrar' => true,
+        'label' => $data['modelo'] ?? 'SinNombre',
+        'icon' => '📄',
+        'modulo' => strtolower($data['namespace'] ?? 'general'),
+        'grupo' => ucfirst($data['namespace'] ?? 'General'),
+        'posicion' => 99,
+    ];
+}
+
 
 
     return [
@@ -443,6 +468,7 @@ private function generarJsonAbm(array $data): array
         'campos' => $camposProcesados,
         'form_config' => $formConfig,
         'subformularios' => $subformularios,
+        'menu' => $menu
         
     ];
 }
@@ -518,11 +544,6 @@ private function generarJsonAbm(array $data): array
 
     }
 
-
-
-
-
-
 protected function actualizarChangelogAbm(string $modelo, string $namespace): void
 {
     $fecha = now()->format('Y-m-d');
@@ -587,54 +608,7 @@ protected function actualizarFillableModelo($modelo, $namespace, array $camposIn
     \Log::info("🛠 Modelo {$modelo} actualizado con \$fillable: " . json_encode($camposIncluir));
 }
   
-/* protected function agregarRutaWeb(string $modelo, string $carpeta_vistas, string $namespace): void
-{
-    $rutaArchivo = base_path('routes/web.php');
-    $contenidoActual = file_get_contents($rutaArchivo);
-    $fecha = now()->format('Y-m-d H:i:s');
 
-    // ✅ Leer JSON del modelo
-    $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
-
-    if (!File::exists($jsonPath)) {
-        throw new \Exception("No se encontró el archivo de configuración JSON para {$modelo}");
-    }
-
-    $config = json_decode(File::get($jsonPath), true);
-    $formRoute = $config['form_config']['form_route'] ?? null;
-
-    // 🛑 Validación estricta
-    if (empty($formRoute)) {
-        throw new \Exception("La ruta lógica ('form_route') no fue definida en la configuración de {$modelo}");
-    }
-
-    // 🧠 Componentes derivados
-    $prefix = $formRoute; // ej: produccion/abms/almacenes
-    $nombreGrupo = str_replace('/', '.', $prefix); // ej: produccion.abms.almacenes
-    $controladorCompleto = "App\\Http\\Controllers\\{$namespace}\\{$modelo}Controller";
-    $uso = "use {$controladorCompleto};";
-    $usoFinal = Str::contains($contenidoActual, $uso) ? '' : $uso;
-
-    // 🧩 Bloque completo
-    $bloqueRuta = <<<PHP
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: {$modelo} - Generado el {$fecha}
-{$usoFinal}
-
-Route::resource('{$prefix}', {$modelo}Controller::class)
-    ->names('{$nombreGrupo}');
-
-PHP;
-
-    // ⚠️ Evitar duplicados
-    if (!Str::contains($contenidoActual, "Route::resource('{$prefix}'")) {
-        file_put_contents($rutaArchivo, $bloqueRuta, FILE_APPEND);
-        \Log::info("✅ Ruta agregada al web.php para {$modelo}");
-    } else {
-        \Log::info("ℹ️ La ruta para {$modelo} ya existía y no fue duplicada.");
-    }
-} */
 protected function agregarRutaWeb(string $modelo, string $carpeta_vistas, string $namespace): void
 {
     $rutaArchivo = base_path('routes/web.php');
@@ -676,8 +650,19 @@ protected function agregarRutaWeb(string $modelo, string $carpeta_vistas, string
 {$usoFinal}
 
 Route::prefix('{$prefix}')->name('{$nombreGrupo}.')->group(function () {
-    Route::resource('', {$modelo}Controller::class)->names('{$modeloSnake}');
-    Route::post('{id}/restaurar', [{$modelo}Controller::class, 'restaurar'])->name('{$modeloSnake}.restaurar');
+    Route::resource('', {$modelo}Controller::class)
+        ->parameters(['' => 'id'])
+        ->names([
+            'index' => 'index',
+            'create' => 'create',
+            'store' => 'store',
+            'show' => 'show',
+            'edit' => 'edit',
+            'update' => 'update',
+            'destroy' => 'destroy',
+        ]);
+    
+    Route::post('{id}/restaurar', [{$modelo}Controller::class, 'restaurar'])->name('restaurar');
 });
 
 PHP;
@@ -688,5 +673,6 @@ PHP;
         \Log::info("ℹ️ La ruta para {$modelo} ya existía y no fue duplicada.");
     }
 }
+
 
 }

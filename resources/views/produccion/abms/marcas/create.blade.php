@@ -1,96 +1,44 @@
-@extends('layouts.app')
 
-@section('content')
-<div class="container">
-    <h2 class="mb-4">➕ Nuevo registro en {{ $modelo }}</h2>
 
-    <form action="{{ route('produccion.abms.marcas.store') }}" method="POST">
-        @csrf
-        <div class="row justify-content-center">
-            <div class="col-md-10">
-                <div class="row">   
-                    @foreach ($campos as $campo => $config)
-                        @php
-                            $inputType = $config['input_type'] ?? 'text';
-                            $label = $config['label'] ?? ucfirst(str_replace('_', ' ', $campo));
-                            $default = old($campo, $defaults[$campo] ?? '');
-                            $isAutonumerico = $inputType === 'autonumerico';
-                            $isTextarea = $inputType === 'textarea';
-                            $isCheckbox = $inputType === 'checkbox';
-                            $isSelectList = $inputType === 'select_list';
-                            $isSelect = $inputType === 'select';
-                            $isHidden = $inputType === 'hidden';
-                            $inputId = 'input_' . $campo;
-                            $value = $isAutonumerico && isset($siguiente[$campo]) ? $siguiente[$campo] : $default;
-                            $selectOptions = $opciones["{$campo}_opciones"] ?? collect();
-                        @endphp
 
-                        @if ($isHidden)
-                            {{-- 🔒 Campo oculto --}}
-                            <input type="hidden" name="{{ $campo }}" value="{{ $value }}">
-                        @else
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ $inputId }}" class="form-label">{{ $label }}</label>
+<div class="container-fluid px-0">
+    <!-- <h2 class="mb-4">Listado de Marca</h2>
 
-                                @if ($isCheckbox)
-                                    {{-- ✅ Checkbox --}}
-                                    <input type="hidden" name="{{ $campo }}" value="N">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="{{ $campo }}" id="{{ $inputId }}" value="S"
-                                            {{ $value === 'S' ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="{{ $inputId }}">Sí</label>
-                                    </div>
+    {{-- Botón para abrir el modal --}}
+    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCreate">
+        ➕ Nuevo
+    </button>
 
-                                @elseif ($isSelect)
-                                    {{-- 🔽 Select relacional --}}
-                                    <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}" {{ empty($config['nullable']) ? 'required' : '' }}>
-                                        <option value="">Seleccione una opción</option>
-                                        @foreach ($selectOptions as $opt)
-                                            <option value="{{ $opt->{$config['referenced_column']} }}"
-                                                {{ $value == $opt->{$config['referenced_column']} ? 'selected' : '' }}>
-                                                {{ $opt->{$config['referenced_label']} }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+    {{-- Aquí podrías tener la tabla o resultados --}}
+ -->
+    {{-- 🎬 Modal Create --}}
+    <div class="modal fade" id="modalCreate" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form action="{{ route('produccion.abms.marcas.store') }}" method="POST">
+                    @csrf
 
-                                @elseif ($isSelectList && !empty($config['select_list_data']))
-                                    {{-- 🔽 Select list fijo --}}
-                                    @php
-                                        $opcionesLista = explode(',', $config['select_list_data']);
-                                    @endphp
-                                    <select class="form-select" name="{{ $campo }}" id="{{ $inputId }}" {{ empty($config['nullable']) ? 'required' : '' }}>
-                                        <option value="">Seleccione una opción</option>
-                                        @foreach ($opcionesLista as $opcion)
-                                            @php [$texto, $val] = array_pad(explode('=', $opcion, 2), 2, $opcion); @endphp
-                                            <option value="{{ $val }}" {{ $value == $val ? 'selected' : '' }}>{{ $texto }}</option>
-                                        @endforeach
-                                    </select>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalCreateLabel">Nuevo Marca</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
 
-                                @elseif ($isAutonumerico)
-                                    {{-- 🔢 Autonumérico --}}
-                                    <input type="text" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
-                                        value="{{ $value }}" readonly>
+                    <div class="modal-body">
+                    @include('components.partials.form-campos', [
+    'registro' => [],
+    'campos' => $campos ?? [],
+    'defaults' => $defaults ?? [],
+    'labels' => $labels ?? [],
+    'opciones' => $opciones ?? []
+])
+                    </div>
 
-                                @elseif ($isTextarea)
-                                    {{-- 📝 Área de texto --}}
-                                    <textarea class="form-control" name="{{ $campo }}" id="{{ $inputId }}" rows="3">{{ $value }}</textarea>
-
-                                @else
-                                    {{-- ✏️ Campo de texto u otro input --}}
-                                    <input type="{{ $inputType }}" class="form-control" name="{{ $campo }}" id="{{ $inputId }}"
-                                        value="{{ $value }}" {{ empty($config['nullable']) ? 'required' : '' }}>
-                                @endif
-                            </div>
-                        @endif
-                    @endforeach
-                </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">💾 Guardar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancelar</button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-success">💾 Guardar</button>
-            <a href="{{ route('produccion.abms.marcas.index') }}" class="btn btn-secondary">⬅️ Cancelar</a>
-        </div>
-    </form>
-</div>
-@endsection

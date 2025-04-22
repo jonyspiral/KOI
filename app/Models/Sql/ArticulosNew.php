@@ -33,14 +33,14 @@ class ArticulosNew extends Model
   ),
   'descripcion_larga' => 
   array (
-    'type' => 'text',
+    'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
   ),
   'precio_unitario' => 
   array (
-    'type' => 'float',
+    'type' => 'decimal',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,

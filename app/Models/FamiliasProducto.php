@@ -11,7 +11,7 @@ class FamiliasProducto extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['id'];
-            protected $fillable = ['id', 'nombre', 'descripcion', 'anulado'];
+                                                                                                                                        protected $fillable = ['id', 'nombre', 'descripcion', 'anulado', 'cod_usuario', 'created_at', 'updated_at', 'sync_status'];
 
     public static function fieldsMeta()
     {
@@ -82,6 +82,27 @@ class FamiliasProducto extends Model
       ),
       'unique' => true,
     ),
+  ),
+  'created_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'updated_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'sync_status' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
   ),
 );
     }

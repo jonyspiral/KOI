@@ -25,7 +25,7 @@ return [
         'odbc' => [
             'driver' => 'odbc',
             'dsn' => env('DB_DSN', 'MiSQLServer'),
-            'database' => env('DB_DATABASE', 'desarrollo'),
+            'database' => env('DB_DATABASE', 'koi2'),
             'username' => env('DB_USERNAME', 'Koi'),
             'password' => env('DB_PASSWORD', 'koisys'),
             'charset' => 'utf8',

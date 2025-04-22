@@ -19,7 +19,7 @@
     },
     "campos": {
         "cod_marca": {
-            "label": "code",
+            "label": "Cod marca",
             "default": null,
             "input_type": "text",
             "incluir": true,
@@ -29,23 +29,25 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "cod_cliente": {
             "label": "Cod cliente",
             "default": null,
             "input_type": "text",
-            "incluir": false,
+            "incluir": true,
             "nullable": false,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "denom_marca": {
-            "label": "Nombre",
+            "label": "Denom marca",
             "default": null,
             "input_type": "text",
             "incluir": true,
@@ -55,20 +57,24 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "anulado": {
             "label": "Anulado",
             "default": "N",
-            "input_type": "text",
+            "input_type": "checkbox",
             "incluir": true,
             "nullable": false,
             "select_list_data": "Si=S,No=N",
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
-            "is_boolean": false,
-            "auto_increment_plus": false
+            "is_boolean": true,
+            "auto_increment_plus": false,
+            "sync": "1",
+            "checkbox_checked_value": "S",
+            "checkbox_unchecked_value": "N"
         },
         "fecha_ultima_modificacion": {
             "label": "Fecha ultima modificacion",
@@ -81,7 +87,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "autor_ultima_modificacion": {
             "label": "Autor ultima modificacion",
@@ -94,7 +101,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "cod_prov": {
             "label": "Cod prov",
@@ -107,20 +115,22 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "logo": {
             "label": "Logo",
             "default": null,
             "input_type": "text",
-            "incluir": false,
+            "incluir": true,
             "nullable": false,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "1"
         },
         "fechaAlta": {
             "label": "FechaAlta",
@@ -133,7 +143,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "fechaBaja": {
             "label": "FechaBaja",
@@ -146,7 +157,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "indices": {
             "label": "Indices",
@@ -159,13 +171,84 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "created_at": {
+            "label": "Created at",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "updated_at": {
+            "label": "Updated at",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "sync_status": {
+            "label": "Sync status",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
+        },
+        "id": {
+            "label": "Id",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": "0"
         }
     },
     "form_config": {
+        "form_name": "Marca",
+        "form_route": "produccion\/abms\/marcas",
         "tipo_formulario": "default",
         "usa_paginador": "1",
-        "per_page": "100"
+        "per_page": "100",
+        "form_view_type": "modal",
+        "index_view_type": "inline"
     },
-    "subformularios": []
+    "subformularios": [],
+    "menu": [
+        {
+            "mostrar": true,
+            "label": "Marcas",
+            "icon": "📄",
+            "modulo": "Produccion",
+            "grupo": "Abms",
+            "posicion": 99
+        }
+    ]
 }

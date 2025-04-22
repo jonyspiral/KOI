@@ -77,13 +77,11 @@
                 @endif
 
                 @if ($eliminado)
-                    <form action="{{ route('__NOMBRE_RUTA__.restaurar', $registro->{$primaryKey}) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('PUT')
-                        <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('¿Seguro que querés restaurar este registro?')">
-                            ♻️ Restaurar
-                        </button>
-                    </form>
+                <form action="{{ route('__NOMBRE_RUTA__.restaurar', $registro->{$primaryKey}) }}" method="POST" style="display:inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-success">♻️ Restaurar</button>
+                </form>
+
                     <span class="badge bg-secondary mt-1">🗃 Eliminado</span>
                 @endif
 
@@ -121,7 +119,22 @@
             {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
         </div>
     </div>
+    @php
+    $defaults = [];
 
+    foreach ($campos as $campo => $meta) {
+        $defaults[$campo] = $meta['default'] ?? '';
+
+        if (($meta['input_type'] ?? null) === 'autonumerico' && empty($defaults[$campo])) {
+            try {
+                $modeloSql = "\\App\\Models\\Sql\\{$modelo}";
+                $defaults[$campo] = $modeloSql::max($campo) + 1;
+            } catch (\Throwable $e) {
+                $defaults[$campo] = 1;
+            }
+        }
+    }
+@endphp
     @if ($formViewType === 'modal')
         @include('__CARPETA_VISTAS__.create-modal', ['registro' => []])
     @endif

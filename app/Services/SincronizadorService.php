@@ -147,7 +147,7 @@ public function syncDelete(string $modeloNombre, array $data, string $campoClave
     private function getConexionDestino(string $destino): string
 {
     return match ($destino) {
-        'desarrollo', 'sqlsrv_koi' => 'sqlsrv_koi',
+        'sqlsrv_koi' => 'sqlsrv_koi',
         default => $this->conexion, // usa la propiedad protegida si no se especifica otra
     };
 }
@@ -211,15 +211,25 @@ public function formatearParaSqlServer(array $data, string $modeloNombre): array
             case 'color':
             case 'url':
             case 'file':
-                $datos[$campo] = is_null($valor)
-                    ? DB::raw("NULL")
-                    : DB::raw("'" . str_replace("'", "''", $valor) . "'");
+                if ($valor instanceof \Illuminate\Database\Query\Expression) {
+                    $datos[$campo] = $valor; // ya viene formateado
+                } else {
+                    $datos[$campo] = is_null($valor)
+                        ? DB::raw("NULL")
+                        : DB::raw("'" . str_replace("'", "''", (string) $valor) . "'");
+                }
                 break;
 
-            default:
-                $datos[$campo] = is_null($valor)
-                    ? DB::raw("NULL")
-                    : DB::raw("'" . str_replace("'", "''", $valor) . "'");
+                default:
+                if ($valor instanceof \Illuminate\Database\Query\Expression) {
+                    $datos[$campo] = $valor;
+                } else {
+                    $datos[$campo] = is_null($valor)
+                        ? DB::raw("NULL")
+                        : DB::raw("'" . str_replace("'", "''", $valor) . "'");
+                }
+                break;
+            
         }
     }
 

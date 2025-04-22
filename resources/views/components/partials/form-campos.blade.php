@@ -12,22 +12,35 @@
 @endphp
 
 @foreach ($campos as $campo => $meta)
-    @php
-        $label = $meta['label'] ?? ucfirst(str_replace('_', ' ', $campo));
-        $tipo = $meta['input_type'] ?? 'text';
-        $esOculto = $tipo === 'hidden';
-        $esSelectList = $tipo === 'select_list';
-        $esSelect = $tipo === 'select';
-        $esDecimal = $tipo === 'decimal';   
-        $esMoneda = $tipo === 'moneda';
-        $inputId = 'input_' . $campo;
+@php
+    $label = $meta['label'] ?? ucfirst(str_replace('_', ' ', $campo));
+    $tipo = $meta['input_type'] ?? 'text';
+    $esOculto = $tipo === 'hidden';
+    $esSelectList = $tipo === 'select_list';
+    $esSelect = $tipo === 'select';
+    $esDecimal = $tipo === 'decimal';   
+    $esMoneda = $tipo === 'moneda';
+    $inputId = 'input_' . $campo;
 
-        $valor = old($campo,
-            isset($registro[$campo]) ? $registro[$campo] :
-            (is_object($registro) && isset($registro->$campo) ? $registro->$campo :
-            ($defaults[$campo] ?? ''))
-        );
-    @endphp
+    // 🧠 Valor con prioridad: old > registro > default (incluso si default es false)
+    $valor = old($campo);
+    if ($valor === null) {
+        $valor = $registro[$campo] ?? ($registro->$campo ?? ($defaults[$campo] ?? null));
+    }
+
+    // 🧩 Ajuste para checkbox (controlar 'S' / 'N')
+  if ($tipo === 'checkbox')
+    
+        $checkedValue = $meta['checkbox_checked_value'] ?? 'S';
+        $uncheckedValue = $meta['checkbox_unchecked_value'] ?? 'N';
+
+        // Si es booleano o no está definido, interpretamos
+        if (is_bool($valor)) {
+            $valor = $valor ? $checkedValue : $uncheckedValue;
+        }
+    
+@endphp
+
 
     @if (!$esOculto)
         <div class="mb-3">
@@ -36,6 +49,17 @@
 
     @if ($campo === 'id')
         <input type="text" name="{{ $campo }}" class="form-control" value="{{ $valor }}" readonly>
+        
+        @elseif ($tipo === 'autonumerico')
+    <input 
+        type="number" 
+        name="{{ $campo }}" 
+        id="{{ $inputId }}" 
+        class="form-control" 
+        value="{{ $valor ?? ($defaults[$campo] ?? '') }}" 
+        readonly
+    >
+
 
     @elseif ($tipo === 'textarea')
         <textarea name="{{ $campo }}" id="{{ $inputId }}" class="form-control" rows="3">{{ $valor }}</textarea>
@@ -65,19 +89,18 @@
             <option value="{{ $valorOption }}" {{ $valor == $valorOption ? 'selected' : '' }}>{{ $texto }}</option>
         @endforeach
     </select>
-
-
-
+   
     @elseif ($tipo === 'checkbox')
-        <input type="hidden" name="{{ $campo }}" value="{{ $meta['checkbox_unchecked_value'] ?? 'N' }}">
-        <div class="form-check">
-            <input type="checkbox" class="form-check-input" name="{{ $campo }}" id="{{ $inputId }}"
-                value="{{ $meta['checkbox_checked_value'] ?? 'S' }}"
-                {{ $valor === ($meta['checkbox_checked_value'] ?? 'S') ? 'checked' : '' }}>
-            <label class="form-check-label" for="{{ $inputId }}">Sí</label>
-        </div>
+      
+    <input type="hidden" name="{{ $campo }}" value="{{ $uncheckedValue }}">
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" name="{{ $campo }}" id="{{ $inputId }}"
+            value="{{ $checkedValue }}"
+            {{ $valor == $checkedValue ? 'checked' : '' }}>
+        <label class="form-check-label" for="{{ $inputId }}">Sí</label>
+    </div>
 
-        @elseif (in_array($tipo, ['text', 'email', 'url', 'file', 'color', 'password']))
+                @elseif (in_array($tipo, ['text', 'email', 'url', 'color', 'password']))
     <input 
         type="{{ $tipo }}" 
         name="{{ $campo }}" 

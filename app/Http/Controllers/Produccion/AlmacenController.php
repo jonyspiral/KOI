@@ -230,7 +230,8 @@ class AlmacenController extends Controller
 try {
     // Llamar al servicio de sincronización
     $sincronizador = new \App\Services\SincronizadorService();
-    $sincronizador->syncCreate('Almacen', $datos, 'desarrollo'); // Usamos 'desarrollo' como destino de SQL Server
+    $conexionSql = (new $modeloSql)->getConnectionName();
+    $sincronizador->syncCreate('Almacen', $datos, $conexionSql); 
 } catch (\Exception $e) {
     // Si ocurre un error durante la sincronización, manejar el error y registrar
     \Log::error("Error al sincronizar con SQL Server: " . $e->getMessage());
