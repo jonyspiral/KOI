@@ -1,7 +1,3 @@
-
-
-
-
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
@@ -9,7 +5,6 @@ use App\Http\Controllers\Sistemas\Importar\ImportarController;
 use App\Http\Controllers\Produccion\MarcaController;
 use App\Http\Controllers\Produccion\HormaController;
 use App\Http\Controllers\Produccion\RangoTalleController;
-
 use App\Http\Controllers\Produccion\RutasProduccionController;
 use App\Http\Controllers\Produccion\ArticulosNewController;
 use App\Http\Controllers\Produccion\SeccionesProduccionController;
@@ -168,4 +163,66 @@ Route::prefix('produccion/abms/marcas')->name('produccion.abms.marcas.')->group(
         ]);
     
     Route::post('{id}/restaurar', [MarcaController::class, 'restaurar'])->name('restaurar');
+});
+Route::get('exportar-colores-articulo', [\App\Http\Controllers\Produccion\ColoresPorArticuloController::class, 'exportar'])->name('colores.exportar');
+
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: ColoresPorArticulo - Generado el 2025-04-23 01:50:34
+use App\Http\Controllers\Produccion\ColoresPorArticuloController;
+
+Route::prefix('produccion/abms/colores_por_articulo')->name('produccion.abms.colores_por_articulo.')->group(function () {
+    Route::resource('', ColoresPorArticuloController::class)
+        ->parameters(['' => 'id'])
+        ->names([
+            'index' => 'index',
+            'create' => 'create',
+            'store' => 'store',
+            'show' => 'show',
+            'edit' => 'edit',
+            'update' => 'update',
+            'destroy' => 'destroy',
+        ]);
+    
+    Route::post('{id}/restaurar', [ColoresPorArticuloController::class, 'restaurar'])->name('restaurar');
+});
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Articulo - Generado el 2025-04-25 02:21:00
+
+
+Route::prefix('produccion/abms/articulos')->name('produccion.abms.articulos.')->group(function () {
+    Route::resource('', ArticuloController::class)
+        ->parameters(['' => 'id'])
+        ->names([
+            'index' => 'index',
+            'create' => 'create',
+            'store' => 'store',
+            'show' => 'show',
+            'edit' => 'edit',
+            'update' => 'update',
+            'destroy' => 'destroy',
+        ]);
+    
+    Route::post('{id}/restaurar', [ArticuloController::class, 'restaurar'])->name('restaurar');
+});
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: PasosRutasProduccion - Generado el 2025-04-25 16:29:01
+
+
+Route::prefix('produccion/abms/pasos_rutas_produccion')->name('produccion.abms.pasos_rutas_produccion.')->group(function () {
+    Route::resource('', PasosRutasProduccionController::class)
+        ->parameters(['' => 'id'])
+        ->names([
+            'index' => 'index',
+            'create' => 'create',
+            'store' => 'store',
+            'show' => 'show',
+            'edit' => 'edit',
+            'update' => 'update',
+            'destroy' => 'destroy',
+        ]);
+    
+    Route::post('{id}/restaurar', [PasosRutasProduccionController::class, 'restaurar'])->name('restaurar');
 });

@@ -2,24 +2,24 @@
 
 @section('content')
 <div class="container-fluid px-0">
-    <h2 class="mb-4">Listado de Horma</h2>
+    <h2 class="mb-4">Listado de __MODELO__</h2>
 
     @php
-        $formViewType = 'modal';
+        $formViewType = '__FORM_VIEW_TYPE__';
     @endphp
 
     @if ($formViewType === 'modal')
         <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCreate">➕ Nuevo</button>
     @else
-        <a href="{{ route('produccion.abms.hormas.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+        <a href="{{ route('__NOMBRE_RUTA__.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
     @endif
 
-    <form action="{{ route('produccion.abms.hormas.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
+    <form action="{{ route('__NOMBRE_RUTA__.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
         <div class="input-group">
             <input type="text" name="buscar" value="{{ request('buscar') }}" class="form-control" placeholder="Buscar...">
             <button type="submit" class="btn btn-outline-primary">Buscar</button>
             @if(request('buscar'))
-                <a href="{{ route('produccion.abms.hormas.index') }}" class="btn btn-outline-secondary">Limpiar</a>
+                <a href="{{ route('__NOMBRE_RUTA__.index') }}" class="btn btn-outline-secondary">Limpiar</a>
             @endif
         </div>
         <div class="input-group" style="max-width: 160px;">
@@ -68,18 +68,8 @@
         <td class="text-end">
             <div class="d-flex gap-1 justify-content-end">
                 @if (!$eliminado)
-
-                <button 
-                    type="button" 
-                    class="btn btn-sm btn-primary" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#modalEdit_{{ $registro[$primaryKey] }}">
-                    ✏️
-                </button>
-
-                
-               
-                    <form action="{{ route('produccion.abms.hormas.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                    <a href="{{ route('__NOMBRE_RUTA__.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
+                    <form action="{{ route('__NOMBRE_RUTA__.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
@@ -87,7 +77,7 @@
                 @endif
 
                 @if ($eliminado)
-                <form action="{{ route('produccion.abms.hormas.restaurar', $registro->{$primaryKey}) }}" method="POST" style="display:inline">
+                <form action="{{ route('__NOMBRE_RUTA__.restaurar', $registro->{$primaryKey}) }}" method="POST" style="display:inline">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-success">♻️ Restaurar</button>
                 </form>
@@ -146,13 +136,7 @@
     }
 @endphp
     @if ($formViewType === 'modal')
-        @include('produccion/abms/hormas.create-modal', ['registro' => []])
+        @include('__CARPETA_VISTAS__.create-modal', ['registro' => []])
     @endif
-    @if ($formViewType === 'modal')
-    @foreach ($registros as $registro)
-        @include('produccion/abms/hormas.edit-modal', ['registro' => $registro])
-    @endforeach
-    @endif
-
 </div>
 @endsection

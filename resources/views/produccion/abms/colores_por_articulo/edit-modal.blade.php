@@ -2,12 +2,12 @@
 <div class="modal fade" id="modalEdit_{{ $registro->{$primaryKey} }}" tabindex="-1" aria-labelledby="modalEditLabel_{{ $registro->{$primaryKey} }}" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form action="{{ route('__NOMBRE_RUTA__.update', $registro->{$primaryKey}) }}" method="POST">
+            <form action="{{ route('produccion.abms.colores_por_articulo.update', $registro->{$primaryKey}) }}" method="POST">
                 @csrf
                 @method('PUT')
 
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalEditLabel_{{ $registro->{$primaryKey} }}">✏️ Editar __MODELO__</h5>
+                    <h5 class="modal-title" id="modalEditLabel_{{ $registro->{$primaryKey} }}">✏️ Editar ColoresPorArticulo</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
 

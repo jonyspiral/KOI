@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class ColoresPorArticulo extends Model
 {
     protected $table = 'colores_por_articulo';
+    protected $primaryKey = 'id';
     public $timestamps = true;
-     public static $sincronizable = true;
-    protected $fillable = ['cod_articulo', 'cod_color_articulo', 'id'];
+    public static $sincronizable = true;
+    public static array $primaryKeySql = ['cod_articulo', 'cod_color_articulo'];
+                                                                                                        protected $fillable = ['cod_articulo', 'cod_color_articulo', 'vigente', 'precio_mayorista_usd', 'precio_distrib', 'fotografia', 'id_tipo_producto_stock', 'stock_temp_ecommerce', 'stock_temp', 'prod_trim_temp', 'ecommerce_existe', 'ecommerce_price1', 'ecommerce_cod_category', 'mlibre_precio', 'ecomm_especific_price_reduction', 'ecomm_especific_price_from', 'ecomm_especific_price_to', 'ecomm_especific_price_identifier', 'ecommerce_reference', 'ecommerce_name', 'ecommerce_description', 'ml_description', 'ml_name', 'ml_reference', 'composition', 'updated_at', 'id'];
 
     public static function fieldsMeta()
     {
@@ -528,14 +530,14 @@ class ColoresPorArticulo extends Model
   'utiliza_cb_cliente' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
   'ecommerce_existe' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
@@ -563,42 +565,42 @@ class ColoresPorArticulo extends Model
   'ecommerce_forsale' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
   'ecommerce_condition' => 
   array (
     'type' => 'varchar',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'traditional\')',
     'primary' => false,
   ),
   'ecommerce_exclusive' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
   'ecommerce_featured' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
   'ecommerce_price1' => 
   array (
     'type' => 'real',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(0)',
     'primary' => false,
   ),
   'ecommerce_price2' => 
   array (
     'type' => 'real',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(0)',
     'primary' => false,
   ),
@@ -695,14 +697,14 @@ class ColoresPorArticulo extends Model
   ),
   'ecommerce_description' => 
   array (
-    'type' => 'text',
+    'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
   ),
   'ml_description' => 
   array (
-    'type' => 'text',
+    'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
@@ -714,12 +716,59 @@ class ColoresPorArticulo extends Model
     'default' => NULL,
     'primary' => false,
   ),
-  'id_articulocolor' => 
+  'ml_reference' => 
   array (
-    'type' => 'int',
+    'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'composition' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_articulo_cod_color_articulo' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_articulo',
+        1 => 'cod_color_articulo',
+      ),
+      'unique' => true,
+    ),
+  ),
+  'created_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'updated_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'sync_status' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'id' => 
+  array (
+    'type' => 'int',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => true,
   ),
 );
     }

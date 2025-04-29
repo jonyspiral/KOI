@@ -15,6 +15,10 @@ class ImportarTablaKoi extends Command
 
     public function handle()
     {
+
+
+
+
         $tabla = $this->argument('nombre_tabla');
         $this->info("📦 Importando tabla: $tabla");
 
@@ -140,6 +144,13 @@ class ImportarTablaKoi extends Command
             foreach ($chunks as $i => $chunk) {
                 foreach ($chunk as $fila) {
                     $data = (array) $fila;
+
+                     // 📅 Agregar timestamps manualmente
+                        $data['created_at'] = now();
+                        $data['updated_at'] = now();
+
+                        // 🔄 Marcar como pendiente de sincronización
+                        $data['sync_status'] = 'U';
 
                     if ($insertSimple || empty($uniqueFields) || $tablaVacia) {
                         DB::table($tabla)->insert($data);

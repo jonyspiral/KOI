@@ -68,7 +68,17 @@
         <td class="text-end">
             <div class="d-flex gap-1 justify-content-end">
                 @if (!$eliminado)
-                    <a href="{{ route('__NOMBRE_RUTA__.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
+
+                <button 
+                    type="button" 
+                    class="btn btn-sm btn-primary" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalEdit_{{ $registro[$primaryKey] }}">
+                    ✏️
+                </button>
+
+                
+               
                     <form action="{{ route('__NOMBRE_RUTA__.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
                         @csrf
                         @method('DELETE')
@@ -138,5 +148,11 @@
     @if ($formViewType === 'modal')
         @include('__CARPETA_VISTAS__.create-modal', ['registro' => []])
     @endif
+    @if ($formViewType === 'modal')
+    @foreach ($registros as $registro)
+        @include('__CARPETA_VISTAS__.edit-modal', ['registro' => $registro])
+    @endforeach
+    @endif
+
 </div>
 @endsection

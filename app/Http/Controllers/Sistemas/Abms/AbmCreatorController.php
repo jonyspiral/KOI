@@ -24,17 +24,22 @@ class AbmCreatorController extends Controller
 // Método principal que renderiza el formulario inicial del ABM Creator
 public function index(Request $request)
 {
+    // Array para almacenar los modelos detectados
     $modelos = [];
 
-    // 📁 Buscar modelos dentro de los paths definidos
+    // Solo escanea modelos de MySQL (app/Models), ignora los de Sql/
     foreach ([app_path('Models')] as $path) {
         if (!File::exists($path)) continue;
 
         foreach (File::allFiles($path) as $file) {
             $relativePath = $file->getRelativePathname();
+
+            // ❌ Ignorar modelos ubicados en subcarpeta Sql/
+            if (Str::startsWith($relativePath, 'Sql/')) continue;
+
             $class = "App\\Models\\" . str_replace(['/', '.php'], ['\\', ''], $relativePath);
 
-            // 🧠 Validar que sea un modelo válido
+            // 🧠 Validar que sea un modelo válido con fieldsMeta
             if (class_exists($class) && method_exists($class, 'fieldsMeta')) {
                 $modelos[] = class_basename($class);
             }
@@ -60,15 +65,41 @@ public function index(Request $request)
         ]);
     }
 
-    // 📦 Obtener campos desde el modelo si está definido
-    if ($modeloSeleccionado && class_exists("App\\Models\\$modeloSeleccionado")) {
-        $modelo = app("App\\Models\\$modeloSeleccionado");
-        $campos = method_exists($modelo, 'fieldsMeta') ? $modelo->fieldsMeta() : [];
-    }
+// Cargar JSON si existe para el modelo seleccionado
+$configPath = resource_path("meta_abms/config_form_{$modeloSeleccionado}.json");
+if (File::exists($configPath)) {
+    $configJson = json_decode(File::get($configPath), true);
+    $campos = $configJson['campos'] ?? [];
+    $namespaceSeleccionado = $configJson['namespace'] ?? $namespaceSeleccionado;
+    $carpetaSeleccionada = $configJson['carpeta_vistas'] ?? $carpetaSeleccionada;
+}
 
-    return view('sistemas.abms.index', compact(
-        'modelos', 'modeloSeleccionado', 'namespaceSeleccionado', 'carpetaSeleccionada', 'campos'
-    ));
+
+    // 📦 Obtener campos desde el modelo si está definido
+    if ($modeloSeleccionado) {
+        $jsonPath = resource_path("meta_abms/config_form_{$modeloSeleccionado}.json");
+    
+        if (File::exists($jsonPath)) {
+            // 📄 Leer campos desde el JSON ya existente
+            $config = json_decode(File::get($jsonPath), true);
+            $campos = $config['campos'] ?? [];
+        } elseif (class_exists("App\\Models\\$modeloSeleccionado")) {
+            // 🧠 Usar fieldsMeta como fallback
+            $modelo = app("App\\Models\\$modeloSeleccionado");
+            $campos = method_exists($modelo, 'fieldsMeta') ? $modelo->fieldsMeta() : [];
+        }
+    }
+    
+
+    return view('sistemas.abms.index', [
+        'modelos' => $modelos,
+        'modeloSeleccionado' => $modeloSeleccionado,
+        'namespaceSeleccionado' => $namespaceSeleccionado,
+        'carpetaSeleccionada' => $carpetaSeleccionada,
+        'campos' => $campos,
+        'configJson' => $configJson ?? [],
+    ]);
+    
 }
 
 public function redirectToPreview(Request $request)
@@ -119,11 +150,12 @@ public function preview($modelo)
             'referenced_column' => 'id',
         ];
         }
-
+     
         
         if (!isset($json['primary_key'])) {
             return back()->withErrors("❌ El archivo JSON de configuración para el modelo {$modelo} no contiene la clave 'primary_key'. Revisá la configuración.");
         }
+       
 
         $modeloClase = "App\\Models\\$modelo";
         $primaryKey = property_exists($modeloClase, 'primaryKey') ? (new $modeloClase)->getKeyName() : 'id';
@@ -150,15 +182,15 @@ public function preview($modelo)
     } else {
         // 🧠 Si no hay config previa, usar el método fieldsMeta del modelo
         $clase = "App\\Models\\" . ucfirst(Str::camel($modelo));
-
+       
         if (!class_exists($clase)) {
             return redirect()->route('sistemas.abms.crear')->withErrors("El modelo {$modelo} no existe.");
         }
-
+    
         if (!method_exists($clase, 'fieldsMeta')) {
             return redirect()->route('sistemas.abms.crear')->withErrors("El modelo {$modelo} no tiene definido el método fieldsMeta().");
         }
-
+      
         $fields = $clase::fieldsMeta();
         $namespace = session('abm.namespace');
         $carpeta_vistas = session('abm.carpeta_vistas');
@@ -166,7 +198,7 @@ public function preview($modelo)
         $primaryKeySql = collect($fields)->filter(fn($f) => $f['primary'] ?? false)->keys()->toArray();
 
         $campos = [];
-
+     
         foreach ($fields as $campo => $tipo) {
             $input_type = match ($tipo) {
                 'int', 'bigint', 'smallint' => 'number',
@@ -189,7 +221,7 @@ public function preview($modelo)
 
             ];
         }
-
+        
         $form_config = array_merge([
             'form_name' => $modelo,
             'form_route' => strtolower("produccion/abms/" . Str::snake($modelo)),
@@ -200,7 +232,7 @@ public function preview($modelo)
             'index_view_type' => 'default',
         ], $json['form_config'] ?? []);
     }
-
+    
     return view('sistemas.abms.preview', [
         'modelo' => $modelo,
         'fields' => $campos,
@@ -217,6 +249,7 @@ public function preview($modelo)
 
 public function configurar(Request $request)
 {
+
     $modelo = $request->input('modelo');
     $namespace = $request->input('namespace');
     $carpeta_vistas = $request->input('carpeta_vistas');
@@ -226,6 +259,8 @@ public function configurar(Request $request)
     $controllerPath = app_path("Http/Controllers/{$namespace}/{$controllerName}.php");
     $viewsPath = resource_path("views/{$carpeta_vistas}");
     
+    
+
     // 🧱 Crear carpetas necesarias si no existen
     if (!file_exists(dirname($controllerPath))) {
         mkdir(dirname($controllerPath), 0755, true);
@@ -233,22 +268,38 @@ public function configurar(Request $request)
     if (!file_exists($viewsPath)) {
         mkdir($viewsPath, 0755, true);
     }
-
+   
     // ⛔ Evitar sobrescritura accidental
     if (file_exists($controllerPath) && !$force) {
         return back()->withErrors("El controlador ya existe. Activá 'Reemplazar controlador' para sobreescribirlo.");
     }
-
-    // 🧠 Armar estructura completa del JSON de configuración
-    $config = $this->generarJsonAbm($request->all());
     
+    // 🧠 Armar estructura completa del JSON de configuración
+    $data = [
+        'modelo' => $request->input('modelo'),
+        'namespace' => $request->input('namespace'),
+        'carpeta_vistas' => $request->input('carpeta_vistas'),
+        'timestamps' => $request->boolean('timestamps'),
+        'sincronizable' => $request->boolean('sincronizable'),
+        'force_controlador' => $request->boolean('force_controlador'),
+        'primary_key' => $request->input('primary_key'),
+        'primary_key_sql' => explode(',', $request->input('primary_key_sql', '')),
+        'campos' => $request->input('campos', []),
+        'form_config' => $request->input('form_config', []),
+        'subformularios' => $request->input('subformularios', []),
+        'menu_json' => $request->input('menu_json', ''),
+    ];
+    
+    $config = $this->generarJsonAbm($data);
+ 
+       
     $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
     if (!file_exists(dirname($jsonPath))) {
         mkdir(dirname($jsonPath), 0755, true);
     }
     file_put_contents($jsonPath, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     logger('📄 JSON generado:', $config);
-
+ 
     // 🛠️ Actualizar fillable en el modelo
     $camposIncluir = array_keys(array_filter($config['campos'], fn($c) => !empty($c['incluir'])));
     $this->actualizarFillableModelo($modelo, $namespace, $camposIncluir);
@@ -313,7 +364,7 @@ $this->generarVistasAbm($modelo, $namespace, $carpeta_vistas, $routeName, $confi
 
 // 📦 Nuevo método centralizado para armar el JSON del ABM
 private function generarJsonAbm(array $data): array
-{
+{    
     $camposRaw = $data['campos'] ?? [];
 
    
@@ -482,67 +533,77 @@ if (empty($menu)) {
  * @param string $routeName         Nombre de la ruta (ej: produccion.abms.marcas)
  * @param array  $config            Configuración completa del formulario, incluyendo form_config
  */
-    protected function generarVistasAbm(string $modelo, string $namespace, string $carpeta_vistas, string $routeName, array $config, array $replacements): void
-    {
-        $viewsPath = resource_path("views/{$carpeta_vistas}");
+protected function generarVistasAbm(string $modelo, string $namespace, string $carpeta_vistas, string $routeName, array $config, array $replacements): void
+{
+    $viewsPath = resource_path("views/{$carpeta_vistas}");
 
-        // 🧱 Crear la carpeta si no existe
-        if (!file_exists($viewsPath)) {
-            mkdir($viewsPath, 0755, true);
-        }
-
-        // 🔁 Variables para reemplazar en los stubs
-        $nombres = Str::snake(Str::pluralStudly($modelo));
-
-        $formViewType = $config['form_config']['form_view_type'] ?? 'default';
-        $indexViewType = $config['form_config']['index_view_type'] ?? 'default';
-
-        foreach (['index', 'create', 'edit', 'show'] as $vista) {
-         
-            if ($vista === 'index') { 
-                // 🔍 Si hay subformularios inline, usamos el stub adecuado
-                $subformularios = $config['subformularios'] ?? [];
-              
-                $tieneSubformInline = collect($subformularios)->contains(fn($s) => ($s['modo'] ?? null) === 'inline');
-
-                $stubFilename = match ($indexViewType) {
-                    'inline' => 'index-inline.stub.blade.php',
-                    'tab' => 'index-tab.stub.blade.php',
-                    default => $tieneSubformInline ? 'index-inline.stub.blade.php' : 'index.stub.blade.php',
-                };
-
-           
-            
-            }
-            elseif ($vista === 'create' || $vista === 'edit') {
-                
-                // 🧩 Stub específico para create/edit según form_view_type
-                $stubFilename = match ($formViewType) {
-                    'modal' => "{$vista}-modal.stub.blade.php",
-                    default => "{$vista}.stub.blade.php",
-                };
-            } else {
-                $stubFilename = "{$vista}.stub.blade.php";
-            }
-
-            $stubPath = resource_path("stubs/abm/{$stubFilename}");
-
-            if (file_exists($stubPath)) {
-                $contenido = str_replace(array_keys($replacements), array_values($replacements), file_get_contents($stubPath));
-                file_put_contents("{$viewsPath}/{$vista}.blade.php", $contenido);
-            }
-
-            if ($formViewType === 'modal') {
-                $modalStubPath = resource_path("stubs/abm/create-modal.stub.blade.php");
-                if (file_exists($modalStubPath)) {
-                    $contenido = str_replace(array_keys($replacements), array_values($replacements), file_get_contents($modalStubPath));
-                    file_put_contents("{$viewsPath}/create-modal.blade.php", $contenido);
-                }
-            }
-            
-        }
-
+    // 🧱 Crear la carpeta de vistas si no existe
+    if (!file_exists($viewsPath)) {
+        mkdir($viewsPath, 0755, true);
     }
+
+    // 🔁 Variables base
+    $nombres = Str::snake(Str::pluralStudly($modelo));
+
+    $formViewType = $config['form_config']['form_view_type'] ?? 'default';
+    $indexViewType = $config['form_config']['index_view_type'] ?? 'default';
+
+    // 🧩 Preparar agrupaciones de campos para index-inline-tab
+    $campos = $config['campos'] ?? [];
+    $tabs = collect($campos)->groupBy(fn($meta) => $meta['tab'] ?? 'general');
+    $fieldLabels = collect($campos)->mapWithKeys(fn($meta, $campo) => [$campo => $meta['label'] ?? Str::headline($campo)]);
+
+    // 📦 Variables adicionales para reemplazo dinámico en stubs
+    $replacements['__TABS__'] = var_export($tabs->toArray(), true);
+    $replacements['__FIELD_LABELS__'] = var_export($fieldLabels->toArray(), true);
+
+    // 🛠 Recorrer las vistas a generar
+    foreach (['index', 'create', 'edit', 'show'] as $vista) {
+        if ($vista === 'index') {
+            $subformularios = $config['subformularios'] ?? [];
+            $tieneSubformInline = collect($subformularios)->contains(fn($s) => ($s['modo'] ?? null) === 'inline');
+
+            // 📌 Elegir el stub correcto para index
+            $stubFilename = match ($indexViewType) {
+                'inline-tab' => 'index-inline-tab.stub.blade.php',
+                'inline' => 'index-inline.stub.blade.php',
+                'tab' => 'index-tab.stub.blade.php',
+                default => $tieneSubformInline ? 'index-inline.stub.blade.php' : 'index.stub.blade.php',
+            };
+        } elseif (in_array($vista, ['create', 'edit'])) {
+            // 📌 Elegir stub de create/edit
+            $stubFilename = match ($formViewType) {
+                'modal' => "{$vista}-modal.stub.blade.php",
+                default => "{$vista}.stub.blade.php",
+            };
+        } else {
+            // 📌 Show por defecto
+            $stubFilename = "{$vista}.stub.blade.php";
+        }
+
+        $stubPath = resource_path("stubs/abm/{$stubFilename}");
+
+        if (file_exists($stubPath)) {
+            $contenido = str_replace(array_keys($replacements), array_values($replacements), file_get_contents($stubPath));
+            file_put_contents("{$viewsPath}/{$vista}.blade.php", $contenido);
+        }
+    }
+
+   
+ // 🧩 Si formViewType es modal, generar create-modal y edit-modal adicionales
+if ($formViewType === 'modal') {
+    foreach (['create', 'edit'] as $tipo) {
+        $modalStubPath = resource_path("stubs/abm/{$tipo}-modal.stub.blade.php");
+        if (file_exists($modalStubPath)) {
+            $contenido = str_replace(array_keys($replacements), array_values($replacements), file_get_contents($modalStubPath));
+            file_put_contents("{$viewsPath}/{$tipo}-modal.blade.php", $contenido);
+        }
+    }
+}
+
+}
+
+
 
 protected function actualizarChangelogAbm(string $modelo, string $namespace): void
 {

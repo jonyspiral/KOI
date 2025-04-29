@@ -13,7 +13,14 @@
 
   <form method="POST" action="{{ route('sistemas.abms.preview.redirect') }}">
     @csrf
-
+    @if(!empty($configJson))
+    <div class="alert alert-info">
+        Ya existe una configuración guardada para este modelo.
+        <a href="{{ route('sistemas.abms.preview', ['modelo' => $modeloSeleccionado]) }}" class="btn btn-sm btn-outline-primary">
+            Ver configuración
+        </a>
+    </div>
+  @endif
     {{-- Selección de modelo --}}
     <div class="mb-4">
       <label class="form-label">Seleccioná el modelo</label>

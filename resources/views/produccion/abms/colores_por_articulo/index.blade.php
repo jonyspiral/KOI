@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container-fluid px-0">
-    <h2 class="mb-4">Listado de Horma</h2>
+    <h2 class="mb-4">Listado de ColoresPorArticulo</h2>
 
     @php
         $formViewType = 'modal';
@@ -11,15 +11,15 @@
     @if ($formViewType === 'modal')
         <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCreate">➕ Nuevo</button>
     @else
-        <a href="{{ route('produccion.abms.hormas.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+        <a href="{{ route('produccion.abms.colores_por_articulo.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
     @endif
 
-    <form action="{{ route('produccion.abms.hormas.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
+    <form action="{{ route('produccion.abms.colores_por_articulo.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
         <div class="input-group">
             <input type="text" name="buscar" value="{{ request('buscar') }}" class="form-control" placeholder="Buscar...">
             <button type="submit" class="btn btn-outline-primary">Buscar</button>
             @if(request('buscar'))
-                <a href="{{ route('produccion.abms.hormas.index') }}" class="btn btn-outline-secondary">Limpiar</a>
+                <a href="{{ route('produccion.abms.colores_por_articulo.index') }}" class="btn btn-outline-secondary">Limpiar</a>
             @endif
         </div>
         <div class="input-group" style="max-width: 160px;">
@@ -79,7 +79,7 @@
 
                 
                
-                    <form action="{{ route('produccion.abms.hormas.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                    <form action="{{ route('produccion.abms.colores_por_articulo.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
@@ -87,7 +87,7 @@
                 @endif
 
                 @if ($eliminado)
-                <form action="{{ route('produccion.abms.hormas.restaurar', $registro->{$primaryKey}) }}" method="POST" style="display:inline">
+                <form action="{{ route('produccion.abms.colores_por_articulo.restaurar', $registro->{$primaryKey}) }}" method="POST" style="display:inline">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-success">♻️ Restaurar</button>
                 </form>
@@ -146,11 +146,11 @@
     }
 @endphp
     @if ($formViewType === 'modal')
-        @include('produccion/abms/hormas.create-modal', ['registro' => []])
+        @include('produccion/abms/colores_por_articulo.create-modal', ['registro' => []])
     @endif
     @if ($formViewType === 'modal')
     @foreach ($registros as $registro)
-        @include('produccion/abms/hormas.edit-modal', ['registro' => $registro])
+        @include('produccion/abms/colores_por_articulo.edit-modal', ['registro' => $registro])
     @endforeach
     @endif
 

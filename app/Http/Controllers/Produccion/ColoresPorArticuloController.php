@@ -4,17 +4,17 @@ namespace App\Http\Controllers\Produccion;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Articulo;
+use App\Models\ColoresPorArticulo;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\SubformManager;
 
-class ArticuloController extends Controller
+class ColoresPorArticuloController extends Controller
 {
     public function index(Request $request)
     {
-        $modelo = 'Articulo';
+        $modelo = 'ColoresPorArticulo';
         $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
     
@@ -27,9 +27,9 @@ class ArticuloController extends Controller
         $columnas = array_keys($campos);
     
         $subformularios = $config['subformularios'] ?? [];
-        $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/articulos';
+        $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/colores_por_articulos';
     
-        $query = Articulo::query();
+        $query = ColoresPorArticulo::query();
     
         // 🔍 Búsqueda simple sobre columnas visibles
         if ($request->filled('buscar')) {
@@ -102,11 +102,11 @@ class ArticuloController extends Controller
     
         public function create()
         {
-            $configPath = resource_path("meta_abms/config_form_Articulo.json");
+            $configPath = resource_path("meta_abms/config_form_ColoresPorArticulo.json");
             $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
             $camposRaw = $config['campos'] ?? [];
             $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-            $modelo = 'Articulo';
+            $modelo = 'ColoresPorArticulo';
     
             $siguiente = [];
             $labels = [];
@@ -118,7 +118,7 @@ class ArticuloController extends Controller
                 $defaults[$campo] = $meta['default'] ?? '';
     
                 if (($meta['input_type'] ?? null) === 'autonumerico') {
-                    $siguiente[$campo] = Articulo::max($campo) + 1;
+                    $siguiente[$campo] = ColoresPorArticulo::max($campo) + 1;
                 }
     
                 if (
@@ -143,14 +143,14 @@ class ArticuloController extends Controller
                 }
             }
     
-            return view('produccion/abms/articulos.create', compact(
+            return view('produccion/abms/colores_por_articulo.create', compact(
                 'campos', 'siguiente', 'modelo', 'labels', 'defaults', 'opciones'
             ));
         }
     
         public function edit($id)
         {
-            $configPath = resource_path("meta_abms/config_form_Articulo.json");
+            $configPath = resource_path("meta_abms/config_form_ColoresPorArticulo.json");
             $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
             if (!isset($config['primary_key'])) {
                 abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
@@ -158,11 +158,11 @@ class ArticuloController extends Controller
             $primaryKey = $config['primary_key'];
     
             
-            $registro = Articulo::where($primaryKey, $id)->firstOrFail();
+            $registro = ColoresPorArticulo::where($primaryKey, $id)->firstOrFail();
     
             $camposRaw = $config['campos'] ?? [];
             $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-            $modelo = 'Articulo';
+            $modelo = 'ColoresPorArticulo';
     
             $siguiente = [];
             $labels = [];
@@ -195,14 +195,14 @@ class ArticuloController extends Controller
                 }
             }
     
-            return view('produccion/abms/articulos.edit', compact(
+            return view('produccion/abms/colores_por_articulo.edit', compact(
                 'registro', 'campos', 'modelo', 'labels', 'defaults', 'siguiente', 'opciones','primaryKey'
             ));
         }
 
     public function store(Request $request)
     {
-        $modeloNombre = 'Articulo';
+        $modeloNombre = 'ColoresPorArticulo';
         $modelo = "\\App\\Models\\{$modeloNombre}";
         $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
 
@@ -253,15 +253,15 @@ class ArticuloController extends Controller
 
         // ✅ Guardar en MySQL
         $registro = $modelo::create($datos);
-        return redirect()->route('produccion.abms.articulos.index')->with('success', '✅ Registro creado y sincronizado.');
+        return redirect()->route('produccion.abms.colores_por_articulo.index')->with('success', '✅ Registro creado y sincronizado.');
     }
 
     public function update(Request $request, $id)
     {
-        $modeloNombre = 'Articulo';
+        $modeloNombre = 'ColoresPorArticulo';
         $modeloClase = "\\App\\Models\\{$modeloNombre}";
         $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
-        $rutaNombre = 'produccion.abms.articulos';
+        $rutaNombre = 'produccion.abms.colores_por_articulo';
 
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
@@ -320,7 +320,7 @@ class ArticuloController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $modeloNombre = 'Articulo';
+        $modeloNombre = 'ColoresPorArticulo';
         $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
 
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
@@ -331,7 +331,7 @@ class ArticuloController extends Controller
         }
 
         $primaryKey = $config['primary_key'];
-        $registro = Articulo::where($primaryKey, $id)->firstOrFail();
+        $registro = ColoresPorArticulo::where($primaryKey, $id)->firstOrFail();
 
         $registro->sync_status = 'D';
         if ($config['timestamps'] ?? false) {
@@ -364,7 +364,7 @@ class ArticuloController extends Controller
         }
 
         return $this->redirectToParent($request->merge($registro->toArray()), $modeloNombre)
-            ?? redirect()->route('produccion.abms.articulos.index')->with('success', $mensaje);
+            ?? redirect()->route('produccion.abms.colores_por_articulo.index')->with('success', $mensaje);
     }
     // 📦 Redirección automática al padre (si es subformulario)
     protected function redirectToParent(Request $request, string $modeloNombre)
@@ -415,18 +415,18 @@ class ArticuloController extends Controller
     }
     public function show($id)
     {
-        $configPath = resource_path("meta_abms/config_form_Articulo.json");
+        $configPath = resource_path("meta_abms/config_form_ColoresPorArticulo.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
         if (!isset($config['primary_key'])) {
             abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
         }
         $primaryKey = $config['primary_key'];
     
-        $registro = Articulo::where($primaryKey, $id)->firstOrFail();
+        $registro = ColoresPorArticulo::where($primaryKey, $id)->firstOrFail();
     
         $campos = array_filter($config['campos'] ?? [], fn($cfg) => !empty($cfg['incluir']));
     
-        return view('produccion/abms/articulos.show', compact('registro', 'campos'));
+        return view('produccion/abms/colores_por_articulo.show', compact('registro', 'campos'));
     }
 
     /**
@@ -460,7 +460,7 @@ private function aplicarSyncStatus(array $datos, string $modo): array
 
 public function restaurar($id)
 {
-    $configPath = resource_path("meta_abms/config_form_Articulo.json");
+    $configPath = resource_path("meta_abms/config_form_ColoresPorArticulo.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
     if (!isset($config['primary_key'])) {
@@ -470,7 +470,7 @@ public function restaurar($id)
     $primaryKey = $config['primary_key'];
 
     // 🧠 Buscar registro por clave primaria real
-    $registro = Articulo::where($primaryKey, $id)->firstOrFail();
+    $registro = ColoresPorArticulo::where($primaryKey, $id)->firstOrFail();
 
     // ✅ Restaurar marcando como actualizado
     $registro->sync_status = 'U';
@@ -480,6 +480,6 @@ public function restaurar($id)
 
     $registro->save();
 
-    return redirect()->route('produccion.abms.articulos.index')->with('success', 'Registro restaurado correctamente.');
+    return redirect()->route('produccion.abms.colores_por_articulo.index')->with('success', 'Registro restaurado correctamente.');
 }
 }

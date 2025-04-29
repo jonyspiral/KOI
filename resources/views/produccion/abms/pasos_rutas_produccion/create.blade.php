@@ -24,7 +24,13 @@
                     </div>
 
                     <div class="modal-body">
-                    @include('components.partials.form-campos', ['registro' => []])
+                    @include('components.partials.form-campos', [
+    'registro' => [],
+    'campos' => $campos ?? [],
+    'defaults' => $defaults ?? [],
+    'labels' => $labels ?? [],
+    'opciones' => $opciones ?? []
+])
                     </div>
 
                     <div class="modal-footer">

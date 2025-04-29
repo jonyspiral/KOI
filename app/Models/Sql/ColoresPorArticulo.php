@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class ColoresPorArticulo extends Model
 {
     protected $table = 'colores_por_articulo';
-    protected $connection = 'sqlsrv_koi';
+    protected $primaryKey = null; // Clave compuesta, gestionada por KOI
+    public static array $primaryKeySql = ['cod_articulo', 'cod_color_articulo'];
     public $timestamps = false;
+    public $incrementing = false;
+    protected $connection = 'sqlsrv_koi';
     protected $fillable = ['cod_articulo', 'cod_color_articulo'];
 
     public static function fieldsMeta()
@@ -528,14 +531,14 @@ class ColoresPorArticulo extends Model
   'utiliza_cb_cliente' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
   'ecommerce_existe' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
@@ -563,42 +566,42 @@ class ColoresPorArticulo extends Model
   'ecommerce_forsale' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
   'ecommerce_condition' => 
   array (
     'type' => 'varchar',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'traditional\')',
     'primary' => false,
   ),
   'ecommerce_exclusive' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
   'ecommerce_featured' => 
   array (
     'type' => 'char',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(\'N\')',
     'primary' => false,
   ),
   'ecommerce_price1' => 
   array (
     'type' => 'real',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(0)',
     'primary' => false,
   ),
   'ecommerce_price2' => 
   array (
     'type' => 'real',
-    'nullable' => false,
+    'nullable' => true,
     'default' => '(0)',
     'primary' => false,
   ),
@@ -695,14 +698,14 @@ class ColoresPorArticulo extends Model
   ),
   'ecommerce_description' => 
   array (
-    'type' => 'text',
+    'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
   ),
   'ml_description' => 
   array (
-    'type' => 'text',
+    'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
@@ -714,12 +717,59 @@ class ColoresPorArticulo extends Model
     'default' => NULL,
     'primary' => false,
   ),
-  'id_articulocolor' => 
+  'ml_reference' => 
   array (
-    'type' => 'int',
+    'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'composition' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_articulo_cod_color_articulo' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_articulo',
+        1 => 'cod_color_articulo',
+      ),
+      'unique' => true,
+    ),
+  ),
+  'created_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'updated_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'sync_status' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'id' => 
+  array (
+    'type' => 'int',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => true,
   ),
 );
     }

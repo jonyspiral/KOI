@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
 
-    <h2 class="mb-4">🛠 Configurar campos para el modelo: {{ $modelo }}</h2>
+    <h2 class="mb-4">🛠 Campos para el modelo: {{ $modelo }}</h2>
     <form action="{{ route('sistemas.abms.configurar') }}" method="POST">
         @csrf
         <input type="hidden" name="modelo" value="{{ $modelo }}">
@@ -13,32 +13,38 @@
         <input type="hidden" name="primary_key_sql" value="{{ implode(',', $primary_key_sql ?? []) }}">
         <div class="table-responsive">
             <table class="table table-bordered table-sm">
-                <thead class="table-light">
-                    <tr>
-                        <th>Campo</th> 
-                        <th>Tipo SQL</th> {{-- 🆕 NUEVO --}}
-                        <th>Label</th>
-                        <th>Tipo Input</th>
-                        <th>Default</th>
-                        <th>Incluir</th>
-                        <th>Sync</th>  {{-- 🆕 --}}
-                        <th>Nullable</th>
-                        <th>Tabla FK</th>
-                        <th>Columna FK</th>
-                        <th>Label FK</th>
-                        <th>
-                            Valores
-                        <span tabindex="0" class="ms-1 text-muted" data-bs-toggle="tooltip" data-bs-html="true"
-                            title=<code>Etiqueta=Valor</code> separados por coma<br>
-                                    Ejemplos:<br>
-                                    🔘 Checkbox: <code>Sí=S,No=N</code><br>
-                                    🔽 Select list: <code>Interna=1,Externa=2</code>>
-                            ℹ️
-                        </span>
-                    </th>
+            <thead class="table-light">
+    <tr>
+        <th>Campo</th> 
+        <th>Tipo SQL</th> {{-- 🆕 NUEVO --}}
+        <th>Label</th>
+        <th>Tipo Input</th>
+        <th>Default</th>
+        <th class="text-center">
+            Incluir
+            <button type="button" class="btn btn-sm btn-outline-secondary btn-toggle-incluir ms-2"
+                    onclick="toggleIncluir(this)" title="Activar/Desactivar todos los incluir">
+                🔁
+            </button>
+        </th>
+        <th>Sync</th> {{-- 🆕 --}}
+        <th>Nullable</th>
+        <th>Tabla FK</th>
+        <th>Columna FK</th>
+        <th>Label FK</th>
+        <th>
+            Valores
+            <span tabindex="0" class="ms-1 text-muted" data-bs-toggle="tooltip" data-bs-html="true"
+                title="<code>Etiqueta=Valor</code> separados por coma<br>
+                       Ejemplos:<br>
+                       🔘 Checkbox: <code>Sí=S,No=N</code><br>
+                       🔽 Select list: <code>Interna=1,Externa=2</code>">
+                ℹ️
+            </span>
+        </th>
+    </tr>
+</thead>
 
-                    </tr>
-                </thead>
                 <tbody>@php
                             $modelSql = "\\App\\Models\\Sql\\{$modelo}";
                             $fieldsMeta = method_exists($modelSql, 'fieldsMeta') ? $modelSql::fieldsMeta() : [];
@@ -69,6 +75,7 @@
                                 </select>
                             </td>
                             <td><input type="text" name="campos[{{ $campo }}][default]" class="form-control form-control-sm" value="{{ $default }}"></td>
+                            
                             <td class="text-center"><input type="checkbox" name="campos[{{ $campo }}][incluir]" value="1" @checked($incluir)></td>
 
                             <td class="text-center">
@@ -329,6 +336,17 @@
     }
 
     renderMenuEntries();
+
+
+
+</script>
+<script>
+function toggleIncluir(btn) {
+    const checkboxes = document.querySelectorAll('input[name^="campos"][name$="[incluir]"]');
+    const algunoMarcado = Array.from(checkboxes).some(cb => cb.checked);
+
+    checkboxes.forEach(cb => cb.checked = !algunoMarcado);
+}
 </script>
 </div>
 

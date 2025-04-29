@@ -103,17 +103,15 @@
             });
         });
     </script>
-    @livewireScripts
+        @stack('scripts')
+        @livewireScripts
 </body>
 @if (app()->environment('production'))
-    <div style="position: fixed; top: 0; width: 100%; background: #b91c1c; color: white; text-align: center; z-index: 9999;">
-        🔴 Estás en PRODUCCIÓN - KOI2
-    </div>
+    <div class="alert alert-danger"style="position: fixed; top: 0; width: 100%; z-index: 9999;">🛑 PRODUCCIÓN</div>
 @else
-    <div style="position: fixed; top: 0; width: 100%; background: #065f46; color: white; text-align: center; z-index: 9999;">
-        🟢 Entorno de DESARROLLO - KOI2_v1
-    </div>
+    <div class="alert alert-info"style="position: fixed; top: 0; width: 100%; z-index: 9999;">⚙️ DESARROLL</div>
 @endif
+
 
 <!-- opcional: espacio extra para que no tape la barra superior -->
 <div style="height: 30px;"></div>

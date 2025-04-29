@@ -35,7 +35,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "cod_paso": {
             "label": "Cod paso",
@@ -48,7 +49,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "sub_paso": {
             "label": "Sub paso",
@@ -61,7 +63,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "cod_seccion": {
             "label": "Cod seccion",
@@ -74,7 +77,8 @@
             "referenced_column": "cod_seccion",
             "referenced_label": "denom_seccion",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "secciones_subordinadas": {
             "label": "Secciones subordinadas",
@@ -87,7 +91,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "cod_seccion_subordinada": {
             "label": "Cod seccion subordinada",
@@ -100,7 +105,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "ejecucion": {
             "label": "Ejecución",
@@ -113,7 +119,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "anulado": {
             "label": "Anulado",
@@ -127,6 +134,7 @@
             "referenced_label": "nombre",
             "is_boolean": true,
             "auto_increment_plus": false,
+            "sync": "0",
             "checkbox_checked_value": "S",
             "checkbox_unchecked_value": "N"
         },
@@ -141,7 +149,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "duracion": {
             "label": "Duracion",
@@ -154,7 +163,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "demora": {
             "label": "Demora",
@@ -167,7 +177,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "punto_programacion": {
             "label": "Punto programacion",
@@ -180,7 +191,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "capacidad_produccion_hora": {
             "label": "Capacidad produccion hora",
@@ -193,7 +205,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "impresion_stickers": {
             "label": "Impresion stickers",
@@ -206,7 +219,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "jerarquia_seccion": {
             "label": "Jerarquia seccion",
@@ -219,7 +233,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "tiene_subordinadas": {
             "label": "Tiene subordinadas",
@@ -233,6 +248,7 @@
             "referenced_label": "nombre",
             "is_boolean": true,
             "auto_increment_plus": false,
+            "sync": "0",
             "checkbox_checked_value": "S",
             "checkbox_unchecked_value": "N"
         },
@@ -247,7 +263,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "imprimir_orden_f2": {
             "label": "Imprimir orden f2",
@@ -260,7 +277,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "ordenamiento_hoja_tarea": {
             "label": "Ordenamiento hoja tarea",
@@ -273,7 +291,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "fechaAlta": {
             "label": "FechaAlta",
@@ -286,7 +305,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "fechaUltimaMod": {
             "label": "FechaUltimaMod",
@@ -299,7 +319,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         },
         "id": {
             "label": "ID",
@@ -312,7 +333,8 @@
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
-            "auto_increment_plus": false
+            "auto_increment_plus": false,
+            "sync": "0"
         }
     },
     "form_config": {
@@ -324,5 +346,15 @@
         "form_view_type": "modal",
         "index_view_type": "inline"
     },
-    "subformularios": []
+    "subformularios": [],
+    "menu": [
+        {
+            "mostrar": true,
+            "label": "PasosRutasProduccion",
+            "icon": "📄",
+            "modulo": "produccion",
+            "grupo": "Produccion",
+            "posicion": 99
+        }
+    ]
 }

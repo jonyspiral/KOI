@@ -13,73 +13,47 @@ use App\Helpers\SubformManager;
 class PasosRutasProduccionController extends Controller
 {
     public function index(Request $request)
-{
+    {
+        $modelo = 'PasosRutasProduccion';
+        $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
+        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
     
-
-    $modelo = 'PasosRutasProduccion';
-    $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
-    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-
-    if (!isset($config['primary_key'])) {
-        abort(500, "El archivo de configuración no tiene definida la clave 'primary_key'.");
-    }
-    $primaryKey = $config['primary_key'];
-    $camposRaw = $config['campos'] ?? [];
-    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    $columnas = array_keys($campos);
-
-    $subformularios = $config['subformularios'] ?? [];
-    $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/pasos_rutas_produccions';
-
-    $query = PasosRutasProduccion::query();
-
-    // 🔍 Búsqueda simple sobre columnas visibles
-    if ($request->filled('buscar')) {
-        $search = $request->input('buscar');
-        $query->where(function ($q) use ($columnas, $search) {
-            foreach ($columnas as $col) {
-                $q->orWhere($col, 'LIKE', "%{$search}%");
-            }
-        });
-    }
-
-    // 📦 Paginación configurable desde JSON o input, valor por defecto: 100
-
-   $formConfig = $config['form_config'] ?? [];
-    $defaultPerPage = (int) ($formConfig['per_page'] ?? 100);
-    $perPage = (int) $request->input('por_pagina', $defaultPerPage);
-
-   // $perPage = max(10, min($perPage, 500));
-
+        if (!isset($config['primary_key'])) {
+            abort(500, "El archivo de configuración no tiene definida la clave 'primary_key'.");
+        }
+        $primaryKey = $config['primary_key'];
+        $camposRaw = $config['campos'] ?? [];
+        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+        $columnas = array_keys($campos);
     
-
-    // 🔁 Reemplazar campos tipo select con valor mostrado usando cache persistente
-    $selectCache = [];
-
-    foreach ($campos as $campo => $meta) {
-        if (($meta['input_type'] ?? null) === 'select' &&
-            !empty($meta['referenced_table']) &&
-            !empty($meta['referenced_column']) &&
-            !empty($meta['referenced_label'])
-        ) {
-            $tabla = $meta['referenced_table'];
-            $columna = $meta['referenced_column'];
-            $label = $meta['referenced_label'];
-
-            $selectCache[$tabla] = \Cache::remember("select_cache_{$tabla}", 3600, function () use ($tabla, $columna, $label) {
-                try {
-                    return DB::table($tabla)
-                        ->pluck($label, $columna)
-                        ->toArray();
-                } catch (\Throwable $e) {
-                    logger()->warning("Error precargando '$tabla': " . $e->getMessage());
-                    return [];
+        $subformularios = $config['subformularios'] ?? [];
+        $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/pasos_rutas_produccions';
+    
+        $query = PasosRutasProduccion::query();
+    
+        // 🔍 Búsqueda simple sobre columnas visibles
+        if ($request->filled('buscar')) {
+            $search = $request->input('buscar');
+            $query->where(function ($q) use ($columnas, $search) {
+                foreach ($columnas as $col) {
+                    $q->orWhere($col, 'LIKE', "%{$search}%");
                 }
             });
         }
-    }
-    $registros = $query->paginate($perPage);
-    foreach ($registros as $registro) {
+    
+        // 📦 Paginación configurable desde JSON o input, valor por defecto: 100
+    
+       $formConfig = $config['form_config'] ?? [];
+        $defaultPerPage = (int) ($formConfig['per_page'] ?? 100);
+        $perPage = (int) $request->input('por_pagina', $defaultPerPage);
+    
+       // $perPage = max(10, min($perPage, 500));
+    
+        
+    
+        // 🔁 Reemplazar campos tipo select con valor mostrado usando cache persistente
+        $selectCache = [];
+    
         foreach ($campos as $campo => $meta) {
             if (($meta['input_type'] ?? null) === 'select' &&
                 !empty($meta['referenced_table']) &&
@@ -87,206 +61,311 @@ class PasosRutasProduccionController extends Controller
                 !empty($meta['referenced_label'])
             ) {
                 $tabla = $meta['referenced_table'];
-                $valor = $registro->$campo;
-                $registro->$campo = $selectCache[$tabla][$valor] ?? $valor;
-            }
-        }
-    }
-
-   
-
-    return view("{$carpeta_vistas}.index", compact(
-        'registros', 'campos', 'columnas', 'modelo', 'subformularios', 'carpeta_vistas','primaryKey', 'perPage'
-    ));
-}
-
+                $columna = $meta['referenced_column'];
+                $label = $meta['referenced_label'];
     
-
-    public function create()
-    {
-        $configPath = resource_path("meta_abms/config_form_PasosRutasProduccion.json");
-        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-        $camposRaw = $config['campos'] ?? [];
-        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-        $modelo = 'PasosRutasProduccion';
-
-        $siguiente = [];
-        $labels = [];
-        $defaults = [];
-        $opciones = [];
-
-        foreach ($campos as $campo => $meta) {
-            $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
-            $defaults[$campo] = $meta['default'] ?? '';
-
-            if (($meta['input_type'] ?? null) === 'autonumerico') {
-                $siguiente[$campo] = PasosRutasProduccion::max($campo) + 1;
+                $selectCache[$tabla] = \Cache::remember("select_cache_{$tabla}", 3600, function () use ($tabla, $columna, $label) {
+                    try {
+                        return DB::table($tabla)
+                            ->pluck($label, $columna)
+                            ->toArray();
+                    } catch (\Throwable $e) {
+                        logger()->warning("Error precargando '$tabla': " . $e->getMessage());
+                        return [];
+                    }
+                });
             }
-
-            if (
-                ($meta['input_type'] ?? null) === 'select' &&
-                !empty($meta['referenced_table']) &&
-                !empty($meta['referenced_label']) &&
-                !empty($meta['referenced_column'])
-            ) {
-                $tabla = $meta['referenced_table'];
-                $columna = $meta['referenced_column'];
-                $label = $meta['referenced_label'];
-
-                try {
-                    $opciones["{$campo}_opciones"] = DB::table($tabla)
-                        ->select($columna, $label)
-                        ->orderBy($label)
-                        ->get();
-                } catch (\Throwable $e) {
-                    $opciones["{$campo}_opciones"] = collect();
-                    logger()->error("Error al cargar opciones para $campo desde $tabla: " . $e->getMessage());
+        }
+        $registros = $query->paginate($perPage);
+        foreach ($registros as $registro) {
+            foreach ($campos as $campo => $meta) {
+                if (($meta['input_type'] ?? null) === 'select' &&
+                    !empty($meta['referenced_table']) &&
+                    !empty($meta['referenced_column']) &&
+                    !empty($meta['referenced_label'])
+                ) {
+                    $tabla = $meta['referenced_table'];
+                    $valor = $registro->$campo;
+                    $registro->$campo = $selectCache[$tabla][$valor] ?? $valor;
                 }
             }
         }
-
-        return view('produccion/abms/pasos_rutas_produccion.create', compact(
-            'campos', 'siguiente', 'modelo', 'labels', 'defaults', 'opciones'
+    
+       
+    
+        return view("{$carpeta_vistas}.index", compact(
+            'registros', 'campos', 'columnas', 'modelo', 'subformularios', 'carpeta_vistas','primaryKey', 'perPage'
         ));
     }
-
-    public function edit($id)
-    {
-        $configPath = resource_path("meta_abms/config_form_PasosRutasProduccion.json");
-        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-        if (!isset($config['primary_key'])) {
-            abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
-        }
-        $primaryKey = $config['primary_key'];
-
+    
         
-        $registro = PasosRutasProduccion::where($primaryKey, $id)->firstOrFail();
-
-        $camposRaw = $config['campos'] ?? [];
-        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-        $modelo = 'PasosRutasProduccion';
-
-        $siguiente = [];
-        $labels = [];
-        $defaults = [];
-        $opciones = [];
-
-        foreach ($campos as $campo => $meta) {
-            $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
-            $defaults[$campo] = $registro->$campo ?? $meta['default'] ?? '';
-
-            if (
-                ($meta['input_type'] ?? null) === 'select' &&
-                !empty($meta['referenced_table']) &&
-                !empty($meta['referenced_column']) &&
-                !empty($meta['referenced_label'])
-            ) {
-                $tabla = $meta['referenced_table'];
-                $columna = $meta['referenced_column'];
-                $label = $meta['referenced_label'];
-
-                try {
-                    $opciones["{$campo}_opciones"] = DB::table($tabla)
-                        ->select($columna, $label)
-                        ->orderBy($label)
-                        ->get();
-                } catch (\Throwable $e) {
-                    $opciones["{$campo}_opciones"] = collect();
-                    logger()->error("Error al cargar opciones para $campo desde $tabla: " . $e->getMessage());
+    
+        public function create()
+        {
+            $configPath = resource_path("meta_abms/config_form_PasosRutasProduccion.json");
+            $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+            $camposRaw = $config['campos'] ?? [];
+            $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+            $modelo = 'PasosRutasProduccion';
+    
+            $siguiente = [];
+            $labels = [];
+            $defaults = [];
+            $opciones = [];
+    
+            foreach ($campos as $campo => $meta) {
+                $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
+                $defaults[$campo] = $meta['default'] ?? '';
+    
+                if (($meta['input_type'] ?? null) === 'autonumerico') {
+                    $siguiente[$campo] = PasosRutasProduccion::max($campo) + 1;
+                }
+    
+                if (
+                    ($meta['input_type'] ?? null) === 'select' &&
+                    !empty($meta['referenced_table']) &&
+                    !empty($meta['referenced_label']) &&
+                    !empty($meta['referenced_column'])
+                ) {
+                    $tabla = $meta['referenced_table'];
+                    $columna = $meta['referenced_column'];
+                    $label = $meta['referenced_label'];
+    
+                    try {
+                        $opciones["{$campo}_opciones"] = DB::table($tabla)
+                            ->select($columna, $label)
+                            ->orderBy($label)
+                            ->get();
+                    } catch (\Throwable $e) {
+                        $opciones["{$campo}_opciones"] = collect();
+                        logger()->error("Error al cargar opciones para $campo desde $tabla: " . $e->getMessage());
+                    }
                 }
             }
+    
+            return view('produccion/abms/pasos_rutas_produccion.create', compact(
+                'campos', 'siguiente', 'modelo', 'labels', 'defaults', 'opciones'
+            ));
         }
-
-        return view('produccion/abms/pasos_rutas_produccion.edit', compact(
-            'registro', 'campos', 'modelo', 'labels', 'defaults', 'siguiente', 'opciones','primaryKey'
-        ));
-    }
+    
+        public function edit($id)
+        {
+            $configPath = resource_path("meta_abms/config_form_PasosRutasProduccion.json");
+            $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+            if (!isset($config['primary_key'])) {
+                abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+            }
+            $primaryKey = $config['primary_key'];
+    
+            
+            $registro = PasosRutasProduccion::where($primaryKey, $id)->firstOrFail();
+    
+            $camposRaw = $config['campos'] ?? [];
+            $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+            $modelo = 'PasosRutasProduccion';
+    
+            $siguiente = [];
+            $labels = [];
+            $defaults = [];
+            $opciones = [];
+    
+            foreach ($campos as $campo => $meta) {
+                $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
+                $defaults[$campo] = $registro->$campo ?? $meta['default'] ?? '';
+    
+                if (
+                    ($meta['input_type'] ?? null) === 'select' &&
+                    !empty($meta['referenced_table']) &&
+                    !empty($meta['referenced_column']) &&
+                    !empty($meta['referenced_label'])
+                ) {
+                    $tabla = $meta['referenced_table'];
+                    $columna = $meta['referenced_column'];
+                    $label = $meta['referenced_label'];
+    
+                    try {
+                        $opciones["{$campo}_opciones"] = DB::table($tabla)
+                            ->select($columna, $label)
+                            ->orderBy($label)
+                            ->get();
+                    } catch (\Throwable $e) {
+                        $opciones["{$campo}_opciones"] = collect();
+                        logger()->error("Error al cargar opciones para $campo desde $tabla: " . $e->getMessage());
+                    }
+                }
+            }
+    
+            return view('produccion/abms/pasos_rutas_produccion.edit', compact(
+                'registro', 'campos', 'modelo', 'labels', 'defaults', 'siguiente', 'opciones','primaryKey'
+            ));
+        }
 
     public function store(Request $request)
     {
-        $configPath = resource_path("meta_abms/config_form_PasosRutasProduccion.json");
+        $modeloNombre = 'PasosRutasProduccion';
+        $modelo = "\\App\\Models\\{$modeloNombre}";
+        $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
+
+        // 📄 Cargar configuración
+        $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+
+        // 🔁 Procesar campos
         $camposRaw = $config['campos'] ?? [];
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+        $usaTimestamps = $config['timestamps'] ?? false;
 
         $datos = [];
-
         foreach ($campos as $campo => $meta) {
             $valor = $request->input($campo);
-
             if (($meta['input_type'] ?? null) === 'autonumerico') {
-                $valor = PasosRutasProduccion::max($campo) + 1;
+                $valor = $modelo::max($campo) + 1;
             } elseif (($meta['input_type'] ?? null) === 'checkbox') {
                 $valor = $request->has($campo) ? 'S' : 'N';
             }
-
             $datos[$campo] = $valor;
         }
 
-        $datos = $this->aplicarSyncStatus($datos, 'create'); // ← 👈 APLICACIÓN DEL SYNC STATUS
+        // 🕒 Timestamps manuales
+        if ($usaTimestamps) {
+            $datos['created_at'] = now();
+            $datos['updated_at'] = now();
+        }
 
-        PasosRutasProduccion::create($datos);
+        $datos = $this->aplicarSyncStatus($datos, 'create');
 
-        $redirect = $this->redirectToParent($request, 'PasosRutasProduccion');
-        return $redirect ?? redirect()->route('produccion.abms.pasos_rutas_produccion.index')->with('success', 'Guardado correctamente.');
+        // 🔄 Sincronización con SQL Server
+        if ($config['sincronizable'] ?? false) {
+            $syncService = new \App\Services\SincronizadorService;
+            $datosSql = $syncService->formatearParaSqlServer($datos, $modeloNombre);
+
+            $conexionSql = (new $modeloSql)->getConnectionName();
+            $ok = $syncService->syncCreate($modeloNombre, $datosSql, $conexionSql);
+
+            if (!$ok) {
+                \Log::error("❌ No se pudo sincronizar con SQL Server. ABORTANDO.");
+                return redirect()->back()->withInput()->with('error', '❌ No se pudo crear el registro porque la sincronización con SQL Server falló.');
+            }
+
+            $datos['sync_status'] = 'S';
+            \Log::info("✅ Registro sincronizado correctamente con SQL Server.");
+        }
+
+        // ✅ Guardar en MySQL
+        $registro = $modelo::create($datos);
+        return redirect()->route('produccion.abms.pasos_rutas_produccion.index')->with('success', '✅ Registro creado y sincronizado.');
     }
 
     public function update(Request $request, $id)
     {
-        $configPath = resource_path("meta_abms/config_form_PasosRutasProduccion.json");
+        $modeloNombre = 'PasosRutasProduccion';
+        $modeloClase = "\\App\\Models\\{$modeloNombre}";
+        $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
+        $rutaNombre = 'produccion.abms.pasos_rutas_produccion';
+
+        $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+
         if (!isset($config['primary_key'])) {
             abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
         }
+
         $primaryKey = $config['primary_key'];
-    
-        $registro = PasosRutasProduccion::where($primaryKey, $id)->firstOrFail();
-    
+        $registro = $modeloClase::where($primaryKey, $id)->firstOrFail();
+
         $camposRaw = $config['campos'] ?? [];
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    
+        $usaTimestamps = $config['timestamps'] ?? false;
+
         $datos = [];
-    
         foreach ($campos as $campo => $meta) {
             $valor = $request->input($campo);
-    
-            // Ya no necesitamos lógica para checkbox gracias al input hidden en Blade
             $datos[$campo] = $valor;
         }
-    
-        $datos = $this->aplicarSyncStatus($datos, 'update'); // ← 👈 APLICACIÓN DEL SYNC STATUS
+
+        if ($usaTimestamps) {
+            $datos['updated_at'] = now();
+        }
+
+        $datos = $this->aplicarSyncStatus($datos, 'update');
+
+        $primaryKeySql = $modeloClase::$primaryKeySql ?? [];
+        foreach ($primaryKeySql as $clave) {
+            if (!isset($datos[$clave])) {
+                $datos[$clave] = $registro->$clave;
+            }
+        }
+
         $registro->update($datos);
-    
-        $redirect = $this->redirectToParent($request, 'PasosRutasProduccion');
-        return $redirect ?? redirect()->route('produccion.abms.pasos_rutas_produccion.index')->with('success', 'Actualizado correctamente.');
+
+        $mensaje = 'Actualizado correctamente.';
+        if ($config['sincronizable'] ?? false) {
+            $syncService = new \App\Services\SincronizadorService;
+            $claveReal = $primaryKeySql[0] ?? $primaryKey;
+            $conexionSql = (new $modeloSql)->getConnectionName();
+
+            $ok = $syncService->syncUpdate($modeloNombre, $datos, $claveReal, $conexionSql);
+
+            if ($ok) {
+                \Log::info("✅ UPDATE sincronizado con éxito: {$datos[$claveReal]}");
+                $mensaje .= ' (✅ sincronizado)';
+            } else {
+                \Log::warning("⚠️ UPDATE guardado pero no sincronizado: {$datos[$claveReal]}");
+                $mensaje .= ' (⚠️ no sincronizado)';
+            }
+        }
+
+        return $this->redirectToParent($request, $modeloNombre) ?? redirect()->route("{$rutaNombre}.index")->with('success', $mensaje);
     }
-    
 
     public function destroy(Request $request, $id)
-{
-    $configPath = resource_path("meta_abms/config_form_PasosRutasProduccion.json");
-    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+    {
+        $modeloNombre = 'PasosRutasProduccion';
+        $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
 
-    if (!isset($config['primary_key'])) {
-        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+        $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
+        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+
+        if (!isset($config['primary_key'])) {
+            abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+        }
+
+        $primaryKey = $config['primary_key'];
+        $registro = PasosRutasProduccion::where($primaryKey, $id)->firstOrFail();
+
+        $registro->sync_status = 'D';
+        if ($config['timestamps'] ?? false) {
+            $registro->updated_at = now();
+        }
+        $registro->save();
+
+        if ($config['sincronizable'] ?? false) {
+            $syncService = new \App\Services\SincronizadorService;
+            $primaryKeySql = $registro::$primaryKeySql[0] ?? null;
+
+            if (!$primaryKeySql || !isset($registro->{$primaryKeySql})) {
+                \Log::error("❌ No se encontró valor para la clave primaria real ($primaryKeySql) en delete.");
+                \Log::warning("⚠️ Eliminación local, pero no sincronizada: " . json_encode($registro->toArray()));
+                $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
+            } else {
+                $conexionSql = (new $modeloSql)->getConnectionName();
+                $ok = $syncService->syncDelete($modeloNombre, $registro->toArray(), $primaryKeySql, $conexionSql);
+
+                if ($ok) {
+                    \Log::info("✅ Eliminación sincronizada: {$registro->{$primaryKeySql}}");
+                    $mensaje = 'Registro eliminado y sincronizado correctamente.';
+                } else {
+                    \Log::warning("⚠️ Eliminación local, pero no sincronizada: {$registro->{$primaryKeySql}}");
+                    $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
+                }
+            }
+        } else {
+            $mensaje = 'Registro marcado como eliminado.';
+        }
+
+        return $this->redirectToParent($request->merge($registro->toArray()), $modeloNombre)
+            ?? redirect()->route('produccion.abms.pasos_rutas_produccion.index')->with('success', $mensaje);
     }
-
-    $primaryKey = $config['primary_key'];
-
-    // 🧠 Buscar registro por clave primaria real
-    $registro = PasosRutasProduccion::where($primaryKey, $id)->firstOrFail();
-
-    // ✅ Marcar como eliminado (soft delete vía sincronizador)
-    $registro->sync_status = 'D';
-    $registro->save();
-
-    // 🧭 Redirección al padre si corresponde
-    return $this->redirectToParent($request->merge($registro->toArray()), 'PasosRutasProduccion')
-        ?? redirect()->route('produccion.abms.pasos_rutas_produccion.index')->with('success', 'Marcado como eliminado correctamente.');
-}
-    
-
-
     // 📦 Redirección automática al padre (si es subformulario)
     protected function redirectToParent(Request $request, string $modeloNombre)
     {
@@ -349,6 +428,7 @@ class PasosRutasProduccionController extends Controller
     
         return view('produccion/abms/pasos_rutas_produccion.show', compact('registro', 'campos'));
     }
+
     /**
  * 🧠 Aplica el estado de sincronización y timestamps manuales.
  *
@@ -358,22 +438,48 @@ class PasosRutasProduccionController extends Controller
  */
 private function aplicarSyncStatus(array $datos, string $modo): array
 {
-    // Estado de sincronización
+    // Si no está definido, asignamos el valor correspondiente
     if (!isset($datos['sync_status'])) {
-        $datos['sync_status'] = $modo === 'create' ? 'N' : 'U';
+        $datos['sync_status'] = $modo === 'create' ? 'N' : 'U'; // 'N' para nuevo, 'U' para actualizado
     }
 
-    // Timestamps manuales si están deshabilitados en el modelo
-    $now = now()->toDateTimeString();
+    // Asignar timestamps manualmente si están deshabilitados en el modelo
+    $now = now()->toDateTimeString(); // Obtenemos la fecha y hora actual
+
     if ($modo === 'create' && !isset($datos['created_at'])) {
-        $datos['created_at'] = $now;
-    }
-    if (!isset($datos['updated_at'])) {
-        $datos['updated_at'] = $now;
+        $datos['created_at'] = $now; // Asignamos created_at solo si es un nuevo registro
     }
 
-    return $datos;
+    if (!isset($datos['updated_at'])) {
+        $datos['updated_at'] = $now; // Siempre asignamos updated_at, incluso en create
+    }
+    
+
+    return $datos; // Devolvemos los datos con los valores correctos
 }
 
+public function restaurar($id)
+{
+    $configPath = resource_path("meta_abms/config_form_PasosRutasProduccion.json");
+    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
+    if (!isset($config['primary_key'])) {
+        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+    }
+
+    $primaryKey = $config['primary_key'];
+
+    // 🧠 Buscar registro por clave primaria real
+    $registro = PasosRutasProduccion::where($primaryKey, $id)->firstOrFail();
+
+    // ✅ Restaurar marcando como actualizado
+    $registro->sync_status = 'U';
+    if ($config['timestamps'] ?? false) {
+        $registro->updated_at = now();
+    }
+
+    $registro->save();
+
+    return redirect()->route('produccion.abms.pasos_rutas_produccion.index')->with('success', 'Registro restaurado correctamente.');
+}
 }

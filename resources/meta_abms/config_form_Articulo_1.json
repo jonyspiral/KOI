@@ -1,0 +1,24 @@
+{
+    "modelo": "Articulo",
+    "namespace": "Produccion",
+    "carpeta_vistas": "produccion/abms/articulos",
+    "timestamps": true,
+    "sincronizable": true,
+    "form_view_type": "default",
+    "index_view_type": "default",
+    "campos": {
+      "cod_articulo": { "input_type": "text", "incluir": true },
+      "denom_articulo": { "input_type": "text", "incluir": true },
+      "unidad": { "input_type": "text", "incluir": true },
+      "forma_comercializacion": { "input_type": "text", "incluir": true },
+      "vigente": { "input_type": "checkbox", "default": "S", "incluir": true }
+    },
+    "subformularios": [
+      {
+        "modelo": "ColoresPorArticulo",
+        "modo": "tab",
+        "foreign_key": "cod_articulo"
+      }
+    ]
+  }
+  

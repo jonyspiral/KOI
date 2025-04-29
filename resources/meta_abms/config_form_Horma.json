@@ -286,19 +286,11 @@
     "menu": [
         {
             "mostrar": true,
-            "label": "Hormas",
+            "label": "Horma",
             "icon": "📄",
-            "modulo": "Produccion ",
-            "grupo": "Abms",
-            "posicion": 1
-        },
-        {
-            "mostrar": true,
-            "label": "Hormas",
-            "icon": "📄",
-            "modulo": "Sistemas",
-            "grupo": "Abms",
-            "posicion": 1
+            "modulo": "produccion",
+            "grupo": "Produccion",
+            "posicion": 99
         }
     ]
 }

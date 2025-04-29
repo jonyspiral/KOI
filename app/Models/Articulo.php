@@ -11,7 +11,7 @@ class Articulo extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_articulo'];
-    protected $fillable = ['cod_articulo', 'id'];
+            protected $fillable = ['cod_articulo', 'cod_ruta', 'cod_linea', 'cod_marca', 'cod_rango', 'denom_articulo', 'fabricante', 'vigente', 'forma_comercializacion', 'cod_prov', 'cod_horma', 'unidad', 'cod_rubro_iva', 'cod_familia_producto', 'denom_articulo_largo', 'indices', 'created_at', 'updated_at', 'sync_status', 'id'];
 
     public static function fieldsMeta()
     {
