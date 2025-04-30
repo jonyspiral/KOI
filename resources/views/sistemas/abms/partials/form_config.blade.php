@@ -2,7 +2,25 @@
 
 <fieldset class="border rounded p-3 mt-4">
     <legend class="w-auto px-2">🧾 Configuración del Formulario Principal</legend>
+  
 
+{{-- Checkbox visible --}}
+<div class="form-check mt-3">
+<input type="hidden" name="force_controlador" value="0">
+    <input class="form-check-input" type="checkbox" name="force_controlador" id="force_controlador" value="1" {{ old('force_controlador') ? 'checked' : '' }}>
+    <label class="form-check-label" for="force_controlador">
+        Reemplazar controlador existente
+    </label>
+</div>
+
+        <div class="mt-3">
+            <label><input type="checkbox" name="timestamps" value="1" @checked(session('timestamps', true))> Usar timestamps</label><br>
+            <label><input type="checkbox" name="sincronizable" value="1" @checked(session('sincronizable', false))> Es sincronizable</label>
+        </div>
+
+        <div class="mt-4">
+            <button class="btn btn-primary">📏 Guardar configuración</button>
+        </div>
     <div class="row g-3">
         <div class="col-md-6">
             <label class="form-label">🏡 Formato del Índice</label>
@@ -60,6 +78,8 @@
                    placeholder="Ej: produccion/abms/marcas">
             <small class="text-muted">Usada para generar automáticamente las rutas web.</small>
         </div>
+
+
     </div>
 </fieldset>
 

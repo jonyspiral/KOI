@@ -14,13 +14,13 @@ use App\Http\Controllers\Produccion\CurvaController;
 use App\Http\Controllers\Produccion\PasosRutasProduccionController;
 use App\Http\Controllers\Produccion\ProductController;
 use App\Http\Controllers\Produccion\AlmacenController;
-
+use App\Http\Controllers\Produccion\ColoresPorArticuloController;
 //creador ABMs  
 
 
 Route::prefix('sistemas/abms')->group(function () {
-    Route::get('/crear', [AbmCreatorController::class, 'index'])->name('sistemas.abms.crear');
-    Route::post('/preview', [AbmCreatorController::class, 'redirectToPreview'])->name('sistemas.abms.preview.redirect');
+    Route::get('/crear', [AbmCreatorController::class, 'index'])->name('sistemas.abms.crear');   
+    Route::post('/crearjson', [AbmCreatorController::class, 'crearJson'])->name('sistemas.abms.crearjson');
     Route::get('/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
     Route::post('/configurar', [AbmCreatorController::class, 'configurar'])->name('sistemas.abms.configurar');
 });
@@ -33,11 +33,6 @@ Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function (
 Route::post('sistemas/importar/eliminar-config', [ImportarController::class, 'eliminarConfig'])
     ->name('sistemas.importar.eliminar_config');
     
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Articulo - Generado el 2025-03-30 07:36:58
-Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
-    Route::resource('articulos', ArticuloController::class)->names('articulos');
-});
 
 
 // 🧩 Ruta generada automáticamente por ABM Creator
@@ -169,7 +164,7 @@ Route::get('exportar-colores-articulo', [\App\Http\Controllers\Produccion\Colore
 
 // 🧩 Ruta generada automáticamente por ABM Creator
 // Modelo: ColoresPorArticulo - Generado el 2025-04-23 01:50:34
-use App\Http\Controllers\Produccion\ColoresPorArticuloController;
+;
 
 Route::prefix('produccion/abms/colores_por_articulo')->name('produccion.abms.colores_por_articulo.')->group(function () {
     Route::resource('', ColoresPorArticuloController::class)
