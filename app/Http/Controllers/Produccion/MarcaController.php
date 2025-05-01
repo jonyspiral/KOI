@@ -13,73 +13,47 @@ use App\Helpers\SubformManager;
 class MarcaController extends Controller
 {
     public function index(Request $request)
-{
+    {
+        $modelo = 'Marca';
+        $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
+        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
     
-
-    $modelo = 'Marca';
-    $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
-    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-
-    if (!isset($config['primary_key'])) {
-        abort(500, "El archivo de configuración no tiene definida la clave 'primary_key'.");
-    }
-    $primaryKey = $config['primary_key'];
-    $camposRaw = $config['campos'] ?? [];
-    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    $columnas = array_keys($campos);
-
-    $subformularios = $config['subformularios'] ?? [];
-    $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/marcas';
-
-    $query = Marca::query();
-
-    // 🔍 Búsqueda simple sobre columnas visibles
-    if ($request->filled('buscar')) {
-        $search = $request->input('buscar');
-        $query->where(function ($q) use ($columnas, $search) {
-            foreach ($columnas as $col) {
-                $q->orWhere($col, 'LIKE', "%{$search}%");
-            }
-        });
-    }
-
-    // 📦 Paginación configurable desde JSON o input, valor por defecto: 100
-
-   $formConfig = $config['form_config'] ?? [];
-    $defaultPerPage = (int) ($formConfig['per_page'] ?? 100);
-    $perPage = (int) $request->input('por_pagina', $defaultPerPage);
-
-   // $perPage = max(10, min($perPage, 500));
-
+        if (!isset($config['primary_key'])) {
+            abort(500, "El archivo de configuración no tiene definida la clave 'primary_key'.");
+        }
+        $primaryKey = $config['primary_key'];
+        $camposRaw = $config['campos'] ?? [];
+        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+        $columnas = array_keys($campos);
     
-
-    // 🔁 Reemplazar campos tipo select con valor mostrado usando cache persistente
-    $selectCache = [];
-
-    foreach ($campos as $campo => $meta) {
-        if (($meta['input_type'] ?? null) === 'select' &&
-            !empty($meta['referenced_table']) &&
-            !empty($meta['referenced_column']) &&
-            !empty($meta['referenced_label'])
-        ) {
-            $tabla = $meta['referenced_table'];
-            $columna = $meta['referenced_column'];
-            $label = $meta['referenced_label'];
-
-            $selectCache[$tabla] = \Cache::remember("select_cache_{$tabla}", 3600, function () use ($tabla, $columna, $label) {
-                try {
-                    return DB::table($tabla)
-                        ->pluck($label, $columna)
-                        ->toArray();
-                } catch (\Throwable $e) {
-                    logger()->warning("Error precargando '$tabla': " . $e->getMessage());
-                    return [];
+        $subformularios = $config['subformularios'] ?? [];
+        $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/marcas';
+    
+        $query = Marca::query();
+    
+        // 🔍 Búsqueda simple sobre columnas visibles
+        if ($request->filled('buscar')) {
+            $search = $request->input('buscar');
+            $query->where(function ($q) use ($columnas, $search) {
+                foreach ($columnas as $col) {
+                    $q->orWhere($col, 'LIKE', "%{$search}%");
                 }
             });
         }
-    }
-    $registros = $query->paginate($perPage);
-    foreach ($registros as $registro) {
+    
+        // 📦 Paginación configurable desde JSON o input, valor por defecto: 100
+    
+       $formConfig = $config['form_config'] ?? [];
+        $defaultPerPage = (int) ($formConfig['per_page'] ?? 100);
+        $perPage = (int) $request->input('por_pagina', $defaultPerPage);
+    
+       // $perPage = max(10, min($perPage, 500));
+    
+        
+    
+        // 🔁 Reemplazar campos tipo select con valor mostrado usando cache persistente
+        $selectCache = [];
+    
         foreach ($campos as $campo => $meta) {
             if (($meta['input_type'] ?? null) === 'select' &&
                 !empty($meta['referenced_table']) &&
@@ -87,319 +61,312 @@ class MarcaController extends Controller
                 !empty($meta['referenced_label'])
             ) {
                 $tabla = $meta['referenced_table'];
-                $valor = $registro->$campo;
-                $registro->$campo = $selectCache[$tabla][$valor] ?? $valor;
-            }
-        }
-    }
-
-   
-
-    return view("{$carpeta_vistas}.index", compact(
-        'registros', 'campos', 'columnas', 'modelo', 'subformularios', 'carpeta_vistas','primaryKey', 'perPage'
-    ));
-}
-
-    
-
-public function create()
-{
-    $configPath = resource_path("meta_abms/config_form_Marca.json");
-    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-
-    $camposRaw = $config['campos'] ?? [];
-    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    $modelo = 'Marca';
-    $modeloSql = "\\App\\Models\\Sql\\$modelo";
-
-    $labels = [];
-    $defaults = [];
-    $opciones = [];
-
-    foreach ($campos as $campo => $meta) {
-        $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
-
-        // 🧠 1. Tomar default del JSON (si existe)
-        $defaults[$campo] = $meta['default'] ?? '';
-
-        // 🧮 2. Autonumérico: si no tiene default, generar MAX+1
-        if (($meta['input_type'] ?? null) === 'autonumerico' && empty($defaults[$campo])) {
-            try {
-                $defaults[$campo] = $modeloSql::max($campo) + 1;
-            } catch (\Throwable $e) {
-                logger()->error("Error obteniendo max({$campo}) para $modeloSql: " . $e->getMessage());
-                $defaults[$campo] = 1;
-            }
-        }
-
-        // 🔽 3. Select referenciado
-        if (
-            ($meta['input_type'] ?? null) === 'select' &&
-            !empty($meta['referenced_table']) &&
-            !empty($meta['referenced_label']) &&
-            !empty($meta['referenced_column'])
-        ) {
-            try {
-                $opciones["{$campo}_opciones"] = DB::table($meta['referenced_table'])
-                    ->select($meta['referenced_column'], $meta['referenced_label'])
-                    ->orderBy($meta['referenced_label'])
-                    ->get();
-            } catch (\Throwable $e) {
-                $opciones["{$campo}_opciones"] = collect();
-                logger()->error("Error al cargar opciones para $campo desde {$meta['referenced_table']}: " . $e->getMessage());
-            }
-        }
-    }
-
-    return view('produccion/abms/marcas.create', compact(
-        'campos', 'modelo', 'labels', 'defaults', 'opciones'
-    ));
-}
-
-
-    public function edit($id)
-    {
-        $configPath = resource_path("meta_abms/config_form_Marca.json");
-        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-        if (!isset($config['primary_key'])) {
-            abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
-        }
-        $primaryKey = $config['primary_key'];
-
-        
-        $registro = Marca::where($primaryKey, $id)->firstOrFail();
-
-        $camposRaw = $config['campos'] ?? [];
-        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-        $modelo = 'Marca';
-
-        $siguiente = [];
-        $labels = [];
-        $defaults = [];
-        $opciones = [];
-
-        foreach ($campos as $campo => $meta) {
-            $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
-            $defaults[$campo] = $registro->$campo ?? $meta['default'] ?? '';
-
-            if (
-                ($meta['input_type'] ?? null) === 'select' &&
-                !empty($meta['referenced_table']) &&
-                !empty($meta['referenced_column']) &&
-                !empty($meta['referenced_label'])
-            ) {
-                $tabla = $meta['referenced_table'];
                 $columna = $meta['referenced_column'];
                 $label = $meta['referenced_label'];
-
-                try {
-                    $opciones["{$campo}_opciones"] = DB::table($tabla)
-                        ->select($columna, $label)
-                        ->orderBy($label)
-                        ->get();
-                } catch (\Throwable $e) {
-                    $opciones["{$campo}_opciones"] = collect();
-                    logger()->error("Error al cargar opciones para $campo desde $tabla: " . $e->getMessage());
+    
+                $selectCache[$tabla] = \Cache::remember("select_cache_{$tabla}", 3600, function () use ($tabla, $columna, $label) {
+                    try {
+                        return DB::table($tabla)
+                            ->pluck($label, $columna)
+                            ->toArray();
+                    } catch (\Throwable $e) {
+                        logger()->warning("Error precargando '$tabla': " . $e->getMessage());
+                        return [];
+                    }
+                });
+            }
+        }
+        $registros = $query->paginate($perPage);
+        foreach ($registros as $registro) {
+            foreach ($campos as $campo => $meta) {
+                if (($meta['input_type'] ?? null) === 'select' &&
+                    !empty($meta['referenced_table']) &&
+                    !empty($meta['referenced_column']) &&
+                    !empty($meta['referenced_label'])
+                ) {
+                    $tabla = $meta['referenced_table'];
+                    $valor = $registro->$campo;
+                    $registro->$campo = $selectCache[$tabla][$valor] ?? $valor;
                 }
             }
         }
-
-        return view('produccion/abms/marcas.edit', compact(
-            'registro', 'campos', 'modelo', 'labels', 'defaults', 'siguiente', 'opciones','primaryKey'
+    
+       
+    
+        return view("{$carpeta_vistas}.index", compact(
+            'registros', 'campos', 'columnas', 'modelo', 'subformularios', 'carpeta_vistas','primaryKey', 'perPage'
         ));
     }
+    
+        
+    
+        public function create()
+        {
+            $configPath = resource_path("meta_abms/config_form_Marca.json");
+            $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+            $camposRaw = $config['campos'] ?? [];
+            $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+            $modelo = 'Marca';
+    
+            $siguiente = [];
+            $labels = [];
+            $defaults = [];
+            $opciones = [];
+    
+            foreach ($campos as $campo => $meta) {
+                $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
+                $defaults[$campo] = $meta['default'] ?? '';
+    
+                if (($meta['input_type'] ?? null) === 'autonumerico') {
+                    $siguiente[$campo] = Marca::max($campo) + 1;
+                }
+    
+                if (
+                    ($meta['input_type'] ?? null) === 'select' &&
+                    !empty($meta['referenced_table']) &&
+                    !empty($meta['referenced_label']) &&
+                    !empty($meta['referenced_column'])
+                ) {
+                    $tabla = $meta['referenced_table'];
+                    $columna = $meta['referenced_column'];
+                    $label = $meta['referenced_label'];
+    
+                    try {
+                        $opciones["{$campo}_opciones"] = DB::table($tabla)
+                            ->select($columna, $label)
+                            ->orderBy($label)
+                            ->get();
+                    } catch (\Throwable $e) {
+                        $opciones["{$campo}_opciones"] = collect();
+                        logger()->error("Error al cargar opciones para $campo desde $tabla: " . $e->getMessage());
+                    }
+                }
+            }
+    
+            return view('produccion/abms/marcas.create', compact(
+                'campos', 'siguiente', 'modelo', 'labels', 'defaults', 'opciones'
+            ));
+        }
+    
+        public function edit($id)
+        {
+            $configPath = resource_path("meta_abms/config_form_Marca.json");
+            $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+            if (!isset($config['primary_key'])) {
+                abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+            }
+            $primaryKey = $config['primary_key'];
+    
+            
+            $registro = Marca::where($primaryKey, $id)->firstOrFail();
+    
+            $camposRaw = $config['campos'] ?? [];
+            $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+            $modelo = 'Marca';
+    
+            $siguiente = [];
+            $labels = [];
+            $defaults = [];
+            $opciones = [];
+    
+            foreach ($campos as $campo => $meta) {
+                $labels[$campo] = $meta['label_custom'] ?? ucfirst(str_replace('_', ' ', $campo));
+                $defaults[$campo] = $registro->$campo ?? $meta['default'] ?? '';
+    
+                if (
+                    ($meta['input_type'] ?? null) === 'select' &&
+                    !empty($meta['referenced_table']) &&
+                    !empty($meta['referenced_column']) &&
+                    !empty($meta['referenced_label'])
+                ) {
+                    $tabla = $meta['referenced_table'];
+                    $columna = $meta['referenced_column'];
+                    $label = $meta['referenced_label'];
+    
+                    try {
+                        $opciones["{$campo}_opciones"] = DB::table($tabla)
+                            ->select($columna, $label)
+                            ->orderBy($label)
+                            ->get();
+                    } catch (\Throwable $e) {
+                        $opciones["{$campo}_opciones"] = collect();
+                        logger()->error("Error al cargar opciones para $campo desde $tabla: " . $e->getMessage());
+                    }
+                }
+            }
+    
+            return view('produccion/abms/marcas.edit', compact(
+                'registro', 'campos', 'modelo', 'labels', 'defaults', 'siguiente', 'opciones','primaryKey'
+            ));
+        }
 
     public function store(Request $request)
     {
-        $modeloNombre = 'Marca'; // ← Nombre del modelo (se reemplaza dinámicamente)
-        $modelo = "\\App\\Models\\{$modeloNombre}"; // ← Namespace real del modelo
-    
+        $modeloNombre = 'Marca';
+        $modelo = "\\App\\Models\\{$modeloNombre}";
+        $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
+
+        // 📄 Cargar configuración
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-    
+
+        // 🔁 Procesar campos
         $camposRaw = $config['campos'] ?? [];
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
         $usaTimestamps = $config['timestamps'] ?? false;
-    
+
         $datos = [];
-    
         foreach ($campos as $campo => $meta) {
             $valor = $request->input($campo);
-    
             if (($meta['input_type'] ?? null) === 'autonumerico') {
                 $valor = $modelo::max($campo) + 1;
             } elseif (($meta['input_type'] ?? null) === 'checkbox') {
                 $valor = $request->has($campo) ? 'S' : 'N';
             }
-    
             $datos[$campo] = $valor;
         }
-    
-        // 🧠 Si usa clave 'id' y no es autoincremental, generarla
-        if (!isset($datos['id']) && in_array('id', $modelo::$primaryKeySql ?? [])) {
-            $datos['id'] = \App\Models\Sql\FamiliasProducto::max('id') + 1;
-        }
-        
-    
-        // ⏱️ Timestamps manuales
+
+        // 🕒 Timestamps manuales
         if ($usaTimestamps) {
             $datos['created_at'] = now();
             $datos['updated_at'] = now();
         }
-    
-        // 🟡 Marcar como nuevo
+
         $datos = $this->aplicarSyncStatus($datos, 'create');
-    
-        // 🔁 Sincronizar primero con SQL Server
+
+        // 🔄 Sincronización con SQL Server
         if ($config['sincronizable'] ?? false) {
             $syncService = new \App\Services\SincronizadorService;
             $datosSql = $syncService->formatearParaSqlServer($datos, $modeloNombre);
-            $conexionSql = (new $modeloSql)->getConnectionName();
 
-            $ok = $syncService->syncCreate($modeloNombre, $datosSql,  $conexionSql);
-    
+            $conexionSql = (new $modeloSql)->getConnectionName();
+            $ok = $syncService->syncCreate($modeloNombre, $datosSql, $conexionSql);
+
             if (!$ok) {
                 \Log::error("❌ No se pudo sincronizar con SQL Server. ABORTANDO.");
                 return redirect()->back()->withInput()->with('error', '❌ No se pudo crear el registro porque la sincronización con SQL Server falló.');
             }
-             // ✅ Si todo salió bien, marcamos como sincronizado
+
             $datos['sync_status'] = 'S';
-    
             \Log::info("✅ Registro sincronizado correctamente con SQL Server.");
         }
-    
-        // 🟢 Guardar en MySQL
+
+        // ✅ Guardar en MySQL
         $registro = $modelo::create($datos);
-    
         return redirect()->route('produccion.abms.marcas.index')->with('success', '✅ Registro creado y sincronizado.');
     }
-    
-    
 
-    
-public function update(Request $request, $id)
-{
-    $modeloNombre = 'Marca';
-    $modeloClase = "\\App\\Models\\{$modeloNombre}";
-    $rutaNombre = 'produccion.abms.marcas';
+    public function update(Request $request, $id)
+    {
+        $modeloNombre = 'Marca';
+        $modeloClase = "\\App\\Models\\{$modeloNombre}";
+        $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
+        $rutaNombre = 'produccion.abms.marcas';
 
-    $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
-    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
+        $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
+        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
-    if (!isset($config['primary_key'])) {
-        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
-    }
-
-    $primaryKey = $config['primary_key'];
-    $registro = $modeloClase::where($primaryKey, $id)->firstOrFail();
-
-    $camposRaw = $config['campos'] ?? [];
-    $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-    $usaTimestamps = $config['timestamps'] ?? false;
-
-    $datos = [];
-
-    foreach ($campos as $campo => $meta) {
-        $valor = $request->input($campo);
-        $datos[$campo] = $valor;
-    }
-
-    // ⏱️ Timestamps manuales
-    if ($usaTimestamps) {
-        $datos['updated_at'] = now();
-    }
-
-    // 🔄 Marcar para sincronización
-    $datos = $this->aplicarSyncStatus($datos, 'update');
-
-    // ⚠️ Asegurar que la clave real SQL esté incluida
-    $primaryKeySql = $modeloClase::$primaryKeySql ?? [];
-    foreach ($primaryKeySql as $clave) {
-        if (!isset($datos[$clave])) {
-            $datos[$clave] = $registro->$clave;
+        if (!isset($config['primary_key'])) {
+            abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
         }
-    }
 
-    // Guardar en MySQL
-    $registro->update($datos);
+        $primaryKey = $config['primary_key'];
+        $registro = $modeloClase::where($primaryKey, $id)->firstOrFail();
 
-    // Sincronizar con SQL Server si corresponde
-    $mensaje = 'Actualizado correctamente.';
-    if ($config['sincronizable'] ?? false) {
-        $syncService = new \App\Services\SincronizadorService;
-        $claveReal = $primaryKeySql[0] ?? $primaryKey; // fallback
-        $conexionSql = (new $modeloSql)->getConnectionName();
-        $ok = $syncService->syncUpdate($modeloNombre, $datos, $claveReal, $conexionSql);
+        $camposRaw = $config['campos'] ?? [];
+        $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
+        $usaTimestamps = $config['timestamps'] ?? false;
 
-        if ($ok) {
-            \Log::info("✅ UPDATE sincronizado con éxito: {$datos[$claveReal]}");
-            $mensaje .= ' (✅ sincronizado)';
-        } else {
-            \Log::warning("⚠️ UPDATE guardado pero no sincronizado: {$datos[$claveReal]}");
-            $mensaje .= ' (⚠️ no sincronizado)';
+        $datos = [];
+        foreach ($campos as $campo => $meta) {
+            $valor = $request->input($campo);
+            $datos[$campo] = $valor;
         }
-    }
 
-    return $this->redirectToParent($request, $modeloNombre) ?? redirect()->route("{$rutaNombre}.index")->with('success', $mensaje);
-}
+        if ($usaTimestamps) {
+            $datos['updated_at'] = now();
+        }
 
+        $datos = $this->aplicarSyncStatus($datos, 'update');
 
-public function destroy(Request $request, $id)
-{
-    $configPath = resource_path("meta_abms/config_form_Marca.json");
-    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-
-    if (!isset($config['primary_key'])) {
-        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
-    }
-
-    $primaryKey = $config['primary_key'];
-    $registro = Marca::where($primaryKey, $id)->firstOrFail();
-
-    // ✅ Marcar como eliminado
-    $registro->sync_status = 'D';
-
-    if ($config['timestamps'] ?? false) {
-        $registro->updated_at = now();
-    }
-
-    $registro->save();
-
-    // 🔁 Sincronizar si corresponde
-    if ($config['sincronizable'] ?? false) {
-        $syncService = new \App\Services\SincronizadorService;
-
-        // ✅ Usar siempre la clave primaria real del modelo SQL
-        $primaryKeySql = $registro::$primaryKeySql[0] ?? null;
-
-        if (!$primaryKeySql || !isset($registro->{$primaryKeySql})) {
-            \Log::error("❌ No se encontró valor para la clave primaria real ($primaryKeySql) en delete.");
-            \Log::warning("⚠️ Eliminación local, pero no sincronizada: " . json_encode($registro->toArray()));
-            $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
-        } else {
-            $conexionSql = (new $modeloSql)->getConnectionName();
-            $ok = $syncService->syncDelete('Marca', $registro->toArray(), $primaryKeySql, $conexionSql);
-
-            if ($ok) {
-                \Log::info("✅ Eliminación sincronizada: {$registro->{$primaryKeySql}}");
-                $mensaje = 'Registro eliminado y sincronizado correctamente.';
-            } else {
-                \Log::warning("⚠️ Eliminación local, pero no sincronizada: {$registro->{$primaryKeySql}}");
-                $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
+        $primaryKeySql = $modeloClase::$primaryKeySql ?? [];
+        foreach ($primaryKeySql as $clave) {
+            if (!isset($datos[$clave])) {
+                $datos[$clave] = $registro->$clave;
             }
         }
-    } else {
-        $mensaje = 'Registro marcado como eliminado.';
+
+        $registro->update($datos);
+
+        $mensaje = 'Actualizado correctamente.';
+        if ($config['sincronizable'] ?? false) {
+            $syncService = new \App\Services\SincronizadorService;
+            $claveReal = $primaryKeySql[0] ?? $primaryKey;
+            $conexionSql = (new $modeloSql)->getConnectionName();
+
+            $ok = $syncService->syncUpdate($modeloNombre, $datos, $claveReal, $conexionSql);
+
+            if ($ok) {
+                \Log::info("✅ UPDATE sincronizado con éxito: {$datos[$claveReal]}");
+                $mensaje .= ' (✅ sincronizado)';
+            } else {
+                \Log::warning("⚠️ UPDATE guardado pero no sincronizado: {$datos[$claveReal]}");
+                $mensaje .= ' (⚠️ no sincronizado)';
+            }
+        }
+
+        return $this->redirectToParent($request, $modeloNombre) ?? redirect()->route("{$rutaNombre}.index")->with('success', $mensaje);
     }
 
-    return $this->redirectToParent($request->merge($registro->toArray()), 'Marca')
-        ?? redirect()->route('produccion.abms.marcas.index')->with('success', $mensaje);
-}
+    public function destroy(Request $request, $id)
+    {
+        $modeloNombre = 'Marca';
+        $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
 
+        $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
+        $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
+        if (!isset($config['primary_key'])) {
+            abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+        }
 
+        $primaryKey = $config['primary_key'];
+        $registro = Marca::where($primaryKey, $id)->firstOrFail();
 
-   // 📦 Redirección automática al padre (si es subformulario)
+        $registro->sync_status = 'D';
+        if ($config['timestamps'] ?? false) {
+            $registro->updated_at = now();
+        }
+        $registro->save();
+
+        if ($config['sincronizable'] ?? false) {
+            $syncService = new \App\Services\SincronizadorService;
+            $primaryKeySql = $registro::$primaryKeySql[0] ?? null;
+
+            if (!$primaryKeySql || !isset($registro->{$primaryKeySql})) {
+                \Log::error("❌ No se encontró valor para la clave primaria real ($primaryKeySql) en delete.");
+                \Log::warning("⚠️ Eliminación local, pero no sincronizada: " . json_encode($registro->toArray()));
+                $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
+            } else {
+                $conexionSql = (new $modeloSql)->getConnectionName();
+                $ok = $syncService->syncDelete($modeloNombre, $registro->toArray(), $primaryKeySql, $conexionSql);
+
+                if ($ok) {
+                    \Log::info("✅ Eliminación sincronizada: {$registro->{$primaryKeySql}}");
+                    $mensaje = 'Registro eliminado y sincronizado correctamente.';
+                } else {
+                    \Log::warning("⚠️ Eliminación local, pero no sincronizada: {$registro->{$primaryKeySql}}");
+                    $mensaje = 'Registro marcado como eliminado. (⚠️ no sincronizado)';
+                }
+            }
+        } else {
+            $mensaje = 'Registro marcado como eliminado.';
+        }
+
+        return $this->redirectToParent($request->merge($registro->toArray()), $modeloNombre)
+            ?? redirect()->route('produccion.abms.marcas.index')->with('success', $mensaje);
+    }
+    // 📦 Redirección automática al padre (si es subformulario)
     protected function redirectToParent(Request $request, string $modeloNombre)
     {
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
@@ -462,32 +429,6 @@ public function destroy(Request $request, $id)
         return view('produccion/abms/marcas.show', compact('registro', 'campos'));
     }
 
-    public function restaurar($id)
-{
-    $configPath = resource_path("meta_abms/config_form_Marca.json");
-    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
-
-    if (!isset($config['primary_key'])) {
-        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
-    }
-
-    $primaryKey = $config['primary_key'];
-
-    // 🧠 Buscar registro por clave primaria real
-    $registro = Marca::where($primaryKey, $id)->firstOrFail();
-
-    // ✅ Restaurar marcando como actualizado
-    $registro->sync_status = 'U';
-    if ($config['timestamps'] ?? false) {
-        $registro->updated_at = now();
-    }
-
-    $registro->save();
-
-    return redirect()->route('produccion.abms.marcas.index')->with('success', 'Registro restaurado correctamente.');
-}
-
-
     /**
  * 🧠 Aplica el estado de sincronización y timestamps manuales.
  *
@@ -517,6 +458,28 @@ private function aplicarSyncStatus(array $datos, string $modo): array
     return $datos; // Devolvemos los datos con los valores correctos
 }
 
+public function restaurar($id)
+{
+    $configPath = resource_path("meta_abms/config_form_Marca.json");
+    $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
+    if (!isset($config['primary_key'])) {
+        abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
+    }
 
+    $primaryKey = $config['primary_key'];
+
+    // 🧠 Buscar registro por clave primaria real
+    $registro = Marca::where($primaryKey, $id)->firstOrFail();
+
+    // ✅ Restaurar marcando como actualizado
+    $registro->sync_status = 'U';
+    if ($config['timestamps'] ?? false) {
+        $registro->updated_at = now();
+    }
+
+    $registro->save();
+
+    return redirect()->route('produccion.abms.marcas.index')->with('success', 'Registro restaurado correctamente.');
+}
 }

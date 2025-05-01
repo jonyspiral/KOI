@@ -355,7 +355,6 @@
         Reemplazar controlador existente
     </label>
 </div>
-      
 
         <div class="mt-3">
             <label><input type="checkbox" name="timestamps" value="1" @checked(session('timestamps', true))> Usar timestamps</label><br>

@@ -1,0 +1,70 @@
+{
+    "modelo": "RangoTalle",
+    "namespace": "Produccion",
+    "carpeta_vistas": "produccion\/abms\/marcas",
+    "timestamps": true,
+    "sincronizable": true,
+    "force_controlador": true,
+    "primary_key": "id",
+    "primary_key_sql": [
+        "cod_rango"
+    ],
+    "indices": {
+        "idx_unico_cod_rango": {
+            "columns": [
+                "cod_rango"
+            ],
+            "unique": true
+        }
+    },
+    "campos": {
+        "cod_rango": {
+            "label": "Cod Rango",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
+        },
+        "id": {
+            "label": "Id",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
+        }
+    },
+    "form_config": {
+        "form_name": "RangoTalle",
+        "form_route": "produccion\/abms\/rango_talle",
+        "tipo_formulario": "default",
+        "usa_paginador": true,
+        "per_page": 100,
+        "form_view_type": "default",
+        "index_view_type": "default"
+    },
+    "subformularios": [],
+    "menu": [
+        {
+            "mostrar": true,
+            "label": "RangoTalle",
+            "icon": "📄",
+            "modulo": "produccion",
+            "grupo": "Produccion",
+            "posicion": 99
+        }
+    ]
+}

@@ -20,7 +20,7 @@ use App\Http\Controllers\Produccion\ColoresPorArticuloController;
 
 Route::prefix('sistemas/abms')->group(function () {
     Route::get('/crear', [AbmCreatorController::class, 'index'])->name('sistemas.abms.crear');   
-    Route::post('/crearjson', [AbmCreatorController::class, 'crearJson'])->name('sistemas.abms.crearjson');
+    
     Route::get('/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
     Route::post('/configurar', [AbmCreatorController::class, 'configurar'])->name('sistemas.abms.configurar');
 });

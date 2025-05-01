@@ -93,16 +93,18 @@
         "vigente": {
             "label": "Vigente",
             "default": null,
-            "input_type": "text",
+            "input_type": "checkbox",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
-            "is_boolean": false,
+            "is_boolean": true,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": "1",
+            "checkbox_checked_value": "S",
+            "checkbox_unchecked_value": "N"
         },
         "fecha_de_baja": {
             "label": "Fecha de baja",
@@ -177,7 +179,7 @@
         "precio_mayorista_usd": {
             "label": "Precio mayor",
             "default": null,
-            "input_type": "text",
+            "input_type": "decimal",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
@@ -191,7 +193,7 @@
         "precio_distrib": {
             "label": "Precio distrib",
             "default": null,
-            "input_type": "text",
+            "input_type": "moneda",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
@@ -527,7 +529,7 @@
         "stock_temp_ecommerce": {
             "label": "Stock eshop",
             "default": null,
-            "input_type": "text",
+            "input_type": "number",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
@@ -1059,16 +1061,18 @@
         "ecommerce_existe": {
             "label": "Ecommerce existe",
             "default": null,
-            "input_type": "text",
+            "input_type": "checkbox",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
-            "is_boolean": false,
+            "is_boolean": true,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": "1",
+            "checkbox_checked_value": "S",
+            "checkbox_unchecked_value": "N"
         },
         "ecommerce_fecha_ultima_sinc": {
             "label": "Ecommerce fecha ultima sinc",

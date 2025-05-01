@@ -11,7 +11,7 @@ class ColoresPorArticulo extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_articulo', 'cod_color_articulo'];
-         protected $fillable = ['cod_articulo', 'cod_color_articulo', 'vigente', 'precio_mayorista_usd', 'precio_distrib', 'fotografia', 'id_tipo_producto_stock', 'stock_temp_ecommerce', 'stock_temp', 'prod_trim_temp', 'ecommerce_existe', 'ecommerce_price1', 'ecommerce_cod_category', 'mlibre_precio', 'ecomm_especific_price_reduction', 'ecomm_especific_price_from', 'ecomm_especific_price_to', 'ecomm_especific_price_identifier', 'ecommerce_reference', 'ecommerce_name', 'ecommerce_description', 'ml_description', 'ml_name', 'ml_reference', 'composition', 'updated_at', 'id'];
+             protected $fillable = ['cod_articulo', 'cod_color_articulo', 'vigente', 'precio_mayorista_usd', 'precio_distrib', 'fotografia', 'id_tipo_producto_stock', 'stock_temp_ecommerce', 'stock_temp', 'prod_trim_temp', 'ecommerce_existe', 'ecommerce_price1', 'ecommerce_cod_category', 'mlibre_precio', 'ecomm_especific_price_reduction', 'ecomm_especific_price_from', 'ecomm_especific_price_to', 'ecomm_especific_price_identifier', 'ecommerce_reference', 'ecommerce_name', 'ecommerce_description', 'ml_description', 'ml_name', 'ml_reference', 'composition', 'updated_at', 'id'];
 
     public static function fieldsMeta()
     {

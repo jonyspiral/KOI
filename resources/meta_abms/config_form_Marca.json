@@ -2,8 +2,8 @@
     "modelo": "Marca",
     "namespace": "Produccion",
     "carpeta_vistas": "produccion\/abms\/marcas",
-    "timestamps": "1",
-    "sincronizable": "1",
+    "timestamps": true,
+    "sincronizable": true,
     "force_controlador": true,
     "primary_key": "id",
     "primary_key_sql": [
@@ -177,7 +177,7 @@
         "created_at": {
             "label": "Created at",
             "default": null,
-            "input_type": "text",
+            "input_type": "date",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
@@ -191,7 +191,7 @@
         "updated_at": {
             "label": "Updated at",
             "default": null,
-            "input_type": "text",
+            "input_type": "date",
             "incluir": true,
             "nullable": false,
             "select_list_data": null,
@@ -244,10 +244,10 @@
     "menu": [
         {
             "mostrar": true,
-            "label": "Marcas",
+            "label": "Marca",
             "icon": "📄",
-            "modulo": "Produccion",
-            "grupo": "Abms",
+            "modulo": "produccion",
+            "grupo": "Produccion",
             "posicion": 99
         }
     ]

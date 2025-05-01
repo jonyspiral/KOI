@@ -29,7 +29,7 @@ public function index(Request $request)
 {
     $modelos = [];
 
-    // 🔍 Escanear modelos válidos
+    // 🔍 Buscar modelos válidos (sin subcarpeta Sql/)
     foreach ([app_path('Models')] as $path) {
         if (!File::exists($path)) continue;
 
@@ -38,29 +38,56 @@ public function index(Request $request)
             if (Str::startsWith($relativePath, 'Sql/')) continue;
 
             $class = "App\\Models\\" . str_replace(['/', '.php'], ['\\', ''], $relativePath);
-
             if (class_exists($class) && method_exists($class, 'fieldsMeta')) {
                 $modelos[] = class_basename($class);
             }
         }
     }
-
+  
     $modeloSeleccionado = $request->modelo;
     $namespaceSeleccionado = $request->namespace;
     $carpetaSeleccionada = $request->carpeta_vistas;
     $configJson = [];
-    $jsonExiste = false;
 
-    if ($modeloSeleccionado && $namespaceSeleccionado && $carpetaSeleccionada) {
+    if ($modeloSeleccionado) {
+        
         $jsonPath = resource_path("meta_abms/config_form_{$modeloSeleccionado}.json");
 
-        // ✅ Intentar cargar JSON si existe
         if (File::exists($jsonPath)) {
-         
+            // ✅ JSON existente → cargarlo
             $configJson = json_decode(File::get($jsonPath), true);
             $namespaceSeleccionado = $configJson['namespace'] ?? $namespaceSeleccionado;
             $carpetaSeleccionada = $configJson['carpeta_vistas'] ?? $carpetaSeleccionada;
-            $jsonExiste = true;
+
+        } else {
+            // 🧠 Generar config mínima con datos del modelo
+            $claseModelo = "App\\Models\\{$modeloSeleccionado}";
+
+            if (class_exists($claseModelo) && method_exists($claseModelo, 'fieldsMeta')) {
+                $instancia = new $claseModelo;
+
+                $dataInicial = [
+                    'modelo' => $modeloSeleccionado,
+                    'namespace' => $namespaceSeleccionado ?? 'App',
+                    'carpeta_vistas' => $carpetaSeleccionada ?? 'abms',
+                    'timestamps' => property_exists($instancia, 'timestamps') ? $instancia->timestamps : true,
+                    'sincronizable' => property_exists($claseModelo, 'sincronizable') ? $claseModelo::$sincronizable : true,
+                    'campos' => array_fill_keys($instancia->getFillable(), [
+                        'input_type' => 'text',
+                        'incluir' => true
+                    ]),
+                    'form_config' => [],
+                    'subformularios' => [],
+                    'menu_json' => '',
+                ];
+
+                $configJson = $this->generarJsonAbm($dataInicial);
+
+                // 🧾 Guardar JSON generado
+                File::put($jsonPath, json_encode($configJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            } else {
+                return back()->withErrors("❌ El modelo {$modeloSeleccionado} no es válido o no tiene fieldsMeta().");
+            }
         }
     }
 
@@ -69,52 +96,15 @@ public function index(Request $request)
         'modeloSeleccionado' => $modeloSeleccionado,
         'namespaceSeleccionado' => $namespaceSeleccionado,
         'carpetaSeleccionada' => $carpetaSeleccionada,
+        'campos' => $configJson['campos'] ?? [],
         'configJson' => $configJson,
-        'jsonExiste' => $jsonExiste,
     ]);
 }
-public function crearJson(Request $request)
-{
-    $request->validate([
-        'modelo' => 'required|string',
-        'namespace' => 'required|string',
-        'carpeta_vistas' => 'required|string',
-    ]);
-
-    $data = [
-        'modelo' => $request->modelo,
-        'namespace' => $request->namespace,
-        'carpeta_vistas' => $request->carpeta_vistas,
-        'timestamps' => true,
-        'sincronizable' => true,
-        'campos' => [], // Se llenarán en el generarJsonAbm()
-        'form_config' => [],
-        'subformularios' => [],
-        'menu_json' => '',
-    ];
-
-    $json = $this->generarJsonAbm($data);
-    $modeloSnake = Str::snake($request->modelo);
-    $ruta = resource_path("meta_abms/config_form_{$modeloSnake}.json");
-
-    File::ensureDirectoryExists(resource_path('meta_abms'));
-    File::put($ruta, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-    return redirect()->route('sistemas.abms.crear', [
-        'modelo' => $request->modelo,
-        'namespace' => $request->namespace,
-        'carpeta_vistas' => $request->carpeta_vistas,
-    ])->with('success', '✅ Configuración generada correctamente.');
-}
-
-
-
-
 public function preview($modelo)
 {
    $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
-
-    if (!File::exists($jsonPath)) {
+   {
+    if (!File::exists($jsonPath)) 
         return redirect()->route('sistemas.abms.crear')->withErrors("❌ No existe configuración para el modelo {$modelo}. Primero generá el ABM.");
     }
 
@@ -174,7 +164,7 @@ public function configurar(Request $request)
     $viewsPath = resource_path("views/{$carpeta_vistas}");
 
     // 🧱 3. Crear carpetas si no existen
-    if (!file_exists(dirname($controllerPath))) { dd("entro");
+    if (!file_exists(dirname($controllerPath))) { 
         mkdir(dirname($controllerPath), 0755, true);
     }
     if (!file_exists($viewsPath)) {
@@ -432,8 +422,8 @@ private function generarJsonAbm(array $data): array
 // 📦 Nuevo método centralizado para armar el JSON del ABM
 protected function guardarJsonAbm(string $modelo, array $config): void
 {
-    $modeloSnake = Str::snake($modelo);
-    $jsonPath = resource_path("meta_abms/config_form_{$modeloSnake}.json");
+   
+    $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
 
     if (!File::exists(dirname($jsonPath))) {
         File::makeDirectory(dirname($jsonPath), 0755, true);

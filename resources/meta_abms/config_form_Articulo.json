@@ -2,8 +2,8 @@
     "modelo": "Articulo",
     "namespace": "Produccion",
     "carpeta_vistas": "produccion\/abms\/articulos",
-    "timestamps": "1",
-    "sincronizable": "1",
+    "timestamps": true,
+    "sincronizable": false,
     "force_controlador": true,
     "primary_key": "id",
     "primary_key_sql": [
@@ -30,7 +30,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "cod_variante": {
             "label": "Cod variante",
@@ -86,7 +86,7 @@
             "referenced_label": "denom_ruta",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "cod_linea": {
             "label": "Cod linea",
@@ -100,7 +100,7 @@
             "referenced_label": "denom_linea",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "cod_marca": {
             "label": "Cod marca",
@@ -114,7 +114,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "cod_rango": {
             "label": "Cod rango",
@@ -128,7 +128,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "cod_cliente": {
             "label": "Cod cliente",
@@ -170,7 +170,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "material_predomina": {
             "label": "Material predomina",
@@ -212,7 +212,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "vigente": {
             "label": "Vigente",
@@ -226,7 +226,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "fecha_de_baja": {
             "label": "Fecha de baja",
@@ -254,7 +254,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "fecha_ultima_modificacion": {
             "label": "Fecha ultima modificacion",
@@ -548,7 +548,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "categoria": {
             "label": "Categoria",
@@ -968,7 +968,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "reventa": {
             "label": "Reventa",
@@ -1220,7 +1220,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "utiliza_codigo_barra_cliente": {
             "label": "Utiliza codigo barra cliente",
@@ -1248,7 +1248,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "ml_denominacion": {
             "label": "Ml denominacion",
@@ -1304,13 +1304,13 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "indices": {
             "label": "Indices",
             "default": null,
             "input_type": "text",
-            "incluir": true,
+            "incluir": false,
             "nullable": false,
             "select_list_data": null,
             "referenced_table": null,
@@ -1324,7 +1324,7 @@
             "label": "Created at",
             "default": null,
             "input_type": "text",
-            "incluir": true,
+            "incluir": false,
             "nullable": false,
             "select_list_data": null,
             "referenced_table": null,
@@ -1346,7 +1346,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "sync_status": {
             "label": "Sync status",
@@ -1360,7 +1360,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         },
         "id": {
             "label": "Id",
@@ -1374,7 +1374,7 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": "1"
         }
     },
     "form_config": {
@@ -1383,10 +1383,20 @@
         "tipo_formulario": "default",
         "usa_paginador": "1",
         "per_page": "100",
-        "form_view_type": "default",
-        "index_view_type": "default"
+        "form_view_type": "modal",
+        "index_view_type": "inline"
     },
-    "subformularios": [],
+    "subformularios": [
+        {
+            "modelo": "ColoresPorArticulo",
+            "tabla": "colores_por_articulo",
+            "foreign_key": "cod_articulo",
+            "modo": "inline",
+            "titulo": null,
+            "carpeta_vistas": "produccion\/abms\/colores_por_articulo",
+            "ruta": "colores_por_articulo"
+        }
+    ],
     "menu": [
         {
             "mostrar": true,

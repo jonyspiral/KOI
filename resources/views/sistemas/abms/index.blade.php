@@ -2,9 +2,9 @@
 
 {{-- 
   Archivo: index.blade.php
-  Versión: 2.2.0
-  Última actualización: 2025-04-29
-  Descripción: Formulario para seleccionar modelo y carpeta de vistas y previsualizar configuración ABM.
+  Versión: 2.3.0
+  Última actualización: 2025-04-30
+  Descripción: Crea y visualiza automáticamente la configuración del ABM en un solo paso.
 --}}
 
 @section('content')
@@ -51,55 +51,37 @@
   </form>
 
   {{-- 📋 Previsualización --}}
-  @php
-    $modeloSnake = $modeloSeleccionado ? Str::snake($modeloSeleccionado) : null;
-    $jsonPath = $modeloSnake ? resource_path("meta_abms/config_form_{$modeloSnake}.json") : null;
-    $jsonExiste = $jsonPath && File::exists($jsonPath);
-  @endphp
-
-  @if ($modeloSeleccionado)
-    @if (!$jsonExiste)
-      <form action="{{ route('sistemas.abms.crearjson') }}" method="POST" class="mt-4">
-        @csrf
-        <input type="hidden" name="modelo" value="{{ $modeloSeleccionado }}">
-        <input type="hidden" name="namespace" value="{{ $namespaceSeleccionado }}">
-        <input type="hidden" name="carpeta_vistas" value="{{ $carpetaSeleccionada }}">
-        <button type="submit" class="btn btn-warning">
-          ⚙️ Crear configuración mínima de ABM
-        </button>
-      </form>
-    @else
-      <div class="mt-5">
-        <h4>📋 Configuración Detectada:</h4>
-        <table class="table table-sm table-bordered">
-          <thead>
+  @if ($modeloSeleccionado && !empty($configJson))
+    <div class="mt-5">
+      <h4>📋 Configuración Detectada:</h4>
+      <table class="table table-sm table-bordered">
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Label</th>
+            <th>Incluir</th>
+            <th>Readonly</th>
+            <th>Orden</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach ($configJson['campos'] ?? [] as $campo => $meta)
             <tr>
-              <th>Campo</th>
-              <th>Label</th>
-              <th>Incluir</th>
-              <th>Readonly</th>
-              <th>Orden</th>
+              <td><code>{{ $campo }}</code></td>
+              <td>{{ $meta['label_custom'] ?? ucfirst($campo) }}</td>
+              <td>{{ !empty($meta['incluir']) ? '✔️' : '❌' }}</td>
+              <td>{{ !empty($meta['readonly']) ? '✔️' : '❌' }}</td>
+              <td>{{ $meta['orden'] ?? 0 }}</td>
             </tr>
-          </thead>
-          <tbody>
-            @foreach ($configJson['campos'] ?? [] as $campo => $meta)
-              <tr>
-                <td><code>{{ $campo }}</code></td>
-                <td>{{ $meta['label_custom'] ?? ucfirst($campo) }}</td>
-                <td>{{ !empty($meta['incluir']) ? '✔️' : '❌' }}</td>
-                <td>{{ !empty($meta['readonly']) ? '✔️' : '❌' }}</td>
-                <td>{{ $meta['orden'] ?? 0 }}</td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
-        <div class="mt-4">
-          <a href="{{ route('sistemas.abms.preview', ['modelo' => $modeloSeleccionado]) }}" class="btn btn-success">
-            🚀 Continuar a Previsualizar ABM
-          </a>
-        </div>
+          @endforeach
+        </tbody>
+      </table>
+      <div class="mt-4">
+        <a href="{{ route('sistemas.abms.preview', ['modelo' => $modeloSeleccionado]) }}" class="btn btn-success">
+          🚀 Continuar a Previsualizar ABM
+        </a>
       </div>
-    @endif
+    </div>
   @endif
 </div>
 @endsection

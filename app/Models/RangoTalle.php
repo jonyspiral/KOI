@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class RangoTalle extends Model
 {
     protected $table = 'rango_talles';
-    public $timestamps = false;
+    protected $primaryKey = 'id';
+    public $timestamps = true;
+    public static $sincronizable = true;
+    public static array $primaryKeySql = ['cod_rango'];
     protected $fillable = ['cod_rango', 'id'];
 
     public static function fieldsMeta()
@@ -299,6 +302,45 @@ class RangoTalle extends Model
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
+  ),
+  'indices' => 
+  array (
+    'idx_unico_cod_rango' => 
+    array (
+      'columns' => 
+      array (
+        0 => 'cod_rango',
+      ),
+      'unique' => true,
+    ),
+  ),
+  'created_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'updated_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'sync_status' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'id' => 
+  array (
+    'type' => 'int',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => true,
   ),
 );
     }

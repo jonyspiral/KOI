@@ -11,7 +11,7 @@ class Marca extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_marca'];
-        protected $fillable = ['cod_marca', 'cod_cliente', 'denom_marca', 'anulado', 'logo', 'created_at', 'updated_at', 'sync_status', 'id'];
+                protected $fillable = ['cod_marca', 'cod_cliente', 'denom_marca', 'anulado', 'logo', 'created_at', 'updated_at', 'sync_status', 'id'];
 
     public static function fieldsMeta()
     {

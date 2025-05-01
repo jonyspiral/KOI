@@ -54,20 +54,21 @@
                    min="1" max="500" value="{{ old('form_config.per_page', $form_config['per_page'] ?? 100) }}">
         </div>
         <div class="mb-3">
+
+        
+
+
+
     <label for="form_name" class="form-label">Nombre del Formulario</label>
 
 </div>
 
         <div class="col-md-6">
             <label for="form_name" class="form-label">🆔 Nombre del Formulario</label>
-               <input 
-        type="text" 
-        name="form_name" 
-        id="form_name" 
-        class="form-control"
-        value="{{ old('form_name', $form_name ?? '') }}"
-        placeholder="Nombre técnico del formulario"
-    >
+            <input type="text" name="form_config[form_name]" class="form-control"
+       value="{{ old('form_config.form_name', $form_config['form_name'] ?? $modelo) }}"
+       placeholder="Nombre técnico del formulario">
+       
             <small class="text-muted">Nombre técnico o identificador del formulario para uso interno.</small>
         </div>
 

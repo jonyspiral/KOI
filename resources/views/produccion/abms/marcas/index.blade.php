@@ -68,7 +68,17 @@
         <td class="text-end">
             <div class="d-flex gap-1 justify-content-end">
                 @if (!$eliminado)
-                    <a href="{{ route('produccion.abms.marcas.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
+
+                <button 
+                    type="button" 
+                    class="btn btn-sm btn-primary" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalEdit_{{ $registro[$primaryKey] }}">
+                    ✏️
+                </button>
+
+                
+               
                     <form action="{{ route('produccion.abms.marcas.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
                         @csrf
                         @method('DELETE')
@@ -138,5 +148,11 @@
     @if ($formViewType === 'modal')
         @include('produccion/abms/marcas.create-modal', ['registro' => []])
     @endif
+    @if ($formViewType === 'modal')
+    @foreach ($registros as $registro)
+        @include('produccion/abms/marcas.edit-modal', ['registro' => $registro])
+    @endforeach
+    @endif
+
 </div>
 @endsection

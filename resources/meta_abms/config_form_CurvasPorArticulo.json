@@ -1,0 +1,102 @@
+{
+    "modelo": "CurvasPorArticulo",
+    "namespace": "Produccion",
+    "carpeta_vistas": "produccion\/abms\/articulos",
+    "timestamps": true,
+    "sincronizable": true,
+    "force_controlador": true,
+    "primary_key": "id",
+    "primary_key_sql": [
+        "cod_articulo",
+        "cod_color_articulo",
+        "cod_curva"
+    ],
+    "indices": {
+        "idx_unico_cod_articulo_cod_color_articulo_cod_curva": {
+            "columns": [
+                "cod_articulo",
+                "cod_color_articulo",
+                "cod_curva"
+            ],
+            "unique": true
+        }
+    },
+    "campos": {
+        "cod_articulo": {
+            "label": "Cod Articulo",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
+        },
+        "cod_color_articulo": {
+            "label": "Cod Color Articulo",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
+        },
+        "cod_curva": {
+            "label": "Cod Curva",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
+        },
+        "id": {
+            "label": "Id",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": false,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
+        }
+    },
+    "form_config": {
+        "form_name": "CurvasPorArticulo",
+        "form_route": "produccion\/abms\/curvas_por_articulo",
+        "tipo_formulario": "default",
+        "usa_paginador": true,
+        "per_page": 100,
+        "form_view_type": "default",
+        "index_view_type": "default"
+    },
+    "subformularios": [],
+    "menu": [
+        {
+            "mostrar": true,
+            "label": "CurvasPorArticulo",
+            "icon": "📄",
+            "modulo": "produccion",
+            "grupo": "Produccion",
+            "posicion": 99
+        }
+    ]
+}
