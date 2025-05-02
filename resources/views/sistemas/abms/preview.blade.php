@@ -17,7 +17,8 @@
         <div class="table-responsive">
             <table class="table table-bordered table-sm">
                 <thead class="table-light">
-                    <tr>
+                    <tr>    
+                        <th>Orden</th>
                         <th>Campo</th>
                         <th>Tipo SQL</th>
                         <th>Label</th>
@@ -29,6 +30,7 @@
                         </th>
                         <th class="text-center">Sync</th>
                         <th class="text-center">Nullable</th>
+                        <th class="text-center">Readonly</th>
                         <th>Tabla FK</th>
                         <th>Columna FK</th>
                         <th>Label FK</th>
@@ -45,6 +47,10 @@
                             $label = $meta['label'] ?? ucfirst(str_replace('_', ' ', $campo));
                         @endphp
                         <tr>
+                            <td>
+                                <input type="number" name="campos[{{ $campo }}][orden]" class="form-control form-control-sm"
+                                    value="{{ $meta['orden'] ?? 0 }}" style="width: 60px;">
+                            </td>
                             <td>{{ $campo }}</td>
                             <td class="text-muted">{{ $fieldsMeta[$campo]['type'] ?? 'n/a' }}</td>
                             <td><input type="text" name="campos[{{ $campo }}][label]" class="form-control form-control-sm" value="{{ $label }}"></td>
@@ -62,6 +68,10 @@
                                 <input type="checkbox" name="campos[{{ $campo }}][sync]" value="1" @checked(!empty($meta['sync']))>
                             </td>
                             <td class="text-center"><input type="checkbox" name="campos[{{ $campo }}][nullable]" value="1" @checked(!empty($meta['nullable']))></td>
+                            <td class="text-center">
+                            <input type="checkbox" name="campos[{{ $campo }}][readonly]" value="1" @checked(!empty($meta['readonly']))>
+                            </td>
+
                             <td><input type="text" name="campos[{{ $campo }}][referenced_table]" class="form-control form-control-sm" value="{{ $meta['referenced_table'] ?? '' }}"></td>
                             <td><input type="text" name="campos[{{ $campo }}][referenced_column]" class="form-control form-control-sm" value="{{ $meta['referenced_column'] ?? 'id' }}"></td>
                             <td><input type="text" name="campos[{{ $campo }}][referenced_label]" class="form-control form-control-sm" value="{{ $meta['referenced_label'] ?? 'nombre' }}"></td>

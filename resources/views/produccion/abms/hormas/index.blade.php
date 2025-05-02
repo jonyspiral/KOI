@@ -5,6 +5,12 @@
     <h2 class="mb-4">Listado de Horma</h2>
 
     @php
+
+    $columnasOrdenadas = collect($columnas)
+        ->filter(fn($col) => !empty($campos[$col]['incluir']) && ($campos[$col]['input_type'] ?? '') !== 'hidden')
+        ->sortBy(fn($col) => $campos[$col]['orden'] ?? 0)
+        ->toArray();
+
         $formViewType = 'modal';
     @endphp
 
@@ -31,7 +37,7 @@
         <table class="table table-striped table-sm">
             <thead>
                 <tr>
-                    @foreach ($columnas as $col)
+                    @foreach ($columnasOrdenadas as $col)
                         @php $tipo = $campos[$col]['input_type'] ?? 'text'; @endphp
                         @if (!empty($campos[$col]['incluir']) && $tipo !== 'hidden')
                             <th>{{ $campos[$col]['label'] ?? ucfirst(str_replace('_', ' ', $col)) }}</th>
@@ -48,7 +54,8 @@
     @endphp
 
     <tr x-data="{ showSubform: false }" class="{{ $eliminado ? 'fila-eliminada' : '' }}">
-        @foreach ($columnas as $col)
+    @foreach ($columnasOrdenadas as $col)
+
             @php
                 $meta = $campos[$col] ?? [];
                 $tipo = $meta['input_type'] ?? 'text';
@@ -129,7 +136,11 @@
             {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
         </div>
     </div>
+
     @php
+
+
+    
     $defaults = [];
 
     foreach ($campos as $campo => $meta) {
@@ -150,6 +161,13 @@
     @endif
     @if ($formViewType === 'modal')
     @foreach ($registros as $registro)
+    @php
+        foreach ($campos as $campo => $meta) {
+            if (($meta['input_type'] ?? '') === 'date' && !empty($registro->$campo)) {
+                $registro->$campo = \Carbon\Carbon::parse($registro->$campo)->format('Y-m-d');
+            }
+        }
+    @endphp
         @include('produccion/abms/hormas.edit-modal', ['registro' => $registro])
     @endforeach
     @endif

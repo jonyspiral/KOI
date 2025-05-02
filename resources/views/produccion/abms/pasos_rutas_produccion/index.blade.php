@@ -2,24 +2,30 @@
 
 @section('content')
 <div class="container-fluid px-0">
-    <h2 class="mb-4">Listado de PasosRutasProduccion</h2>
+    <h2 class="mb-4">Listado de Horma</h2>
 
     @php
+
+    $columnasOrdenadas = collect($columnas)
+        ->filter(fn($col) => !empty($campos[$col]['incluir']) && ($campos[$col]['input_type'] ?? '') !== 'hidden')
+        ->sortBy(fn($col) => $campos[$col]['orden'] ?? 0)
+        ->toArray();
+
         $formViewType = 'modal';
     @endphp
 
     @if ($formViewType === 'modal')
         <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCreate">➕ Nuevo</button>
     @else
-        <a href="{{ route('produccion.abms.pasos_rutas_produccion.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+        <a href="{{ route('produccion.abms.hormas.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
     @endif
 
-    <form action="{{ route('produccion.abms.pasos_rutas_produccion.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
+    <form action="{{ route('produccion.abms.hormas.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
         <div class="input-group">
             <input type="text" name="buscar" value="{{ request('buscar') }}" class="form-control" placeholder="Buscar...">
             <button type="submit" class="btn btn-outline-primary">Buscar</button>
             @if(request('buscar'))
-                <a href="{{ route('produccion.abms.pasos_rutas_produccion.index') }}" class="btn btn-outline-secondary">Limpiar</a>
+                <a href="{{ route('produccion.abms.hormas.index') }}" class="btn btn-outline-secondary">Limpiar</a>
             @endif
         </div>
         <div class="input-group" style="max-width: 160px;">
@@ -31,7 +37,7 @@
         <table class="table table-striped table-sm">
             <thead>
                 <tr>
-                    @foreach ($columnas as $col)
+                    @foreach ($columnasOrdenadas as $col)
                         @php $tipo = $campos[$col]['input_type'] ?? 'text'; @endphp
                         @if (!empty($campos[$col]['incluir']) && $tipo !== 'hidden')
                             <th>{{ $campos[$col]['label'] ?? ucfirst(str_replace('_', ' ', $col)) }}</th>
@@ -48,7 +54,8 @@
     @endphp
 
     <tr x-data="{ showSubform: false }" class="{{ $eliminado ? 'fila-eliminada' : '' }}">
-        @foreach ($columnas as $col)
+    @foreach ($columnasOrdenadas as $col)
+
             @php
                 $meta = $campos[$col] ?? [];
                 $tipo = $meta['input_type'] ?? 'text';
@@ -79,7 +86,7 @@
 
                 
                
-                    <form action="{{ route('produccion.abms.pasos_rutas_produccion.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                    <form action="{{ route('produccion.abms.hormas.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
@@ -87,7 +94,7 @@
                 @endif
 
                 @if ($eliminado)
-                <form action="{{ route('produccion.abms.pasos_rutas_produccion.restaurar', $registro->{$primaryKey}) }}" method="POST" style="display:inline">
+                <form action="{{ route('produccion.abms.hormas.restaurar', $registro->{$primaryKey}) }}" method="POST" style="display:inline">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-success">♻️ Restaurar</button>
                 </form>
@@ -129,7 +136,11 @@
             {{ $registros->firstItem() }} a {{ $registros->lastItem() }} de {{ $registros->total() }} resultados
         </div>
     </div>
+
     @php
+
+
+    
     $defaults = [];
 
     foreach ($campos as $campo => $meta) {
@@ -150,6 +161,13 @@
     @endif
     @if ($formViewType === 'modal')
     @foreach ($registros as $registro)
+    @php
+        foreach ($campos as $campo => $meta) {
+            if (($meta['input_type'] ?? '') === 'date' && !empty($registro->$campo)) {
+                $registro->$campo = \Carbon\Carbon::parse($registro->$campo)->format('Y-m-d');
+            }
+        }
+    @endphp
         @include('produccion/abms/pasos_rutas_produccion.edit-modal', ['registro' => $registro])
     @endforeach
     @endif

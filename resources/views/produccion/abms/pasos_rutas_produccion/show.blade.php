@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h2 class="mb-4">👁️ Detalle de PasosRutasProduccion</h2>
+    <h2 class="mb-4">👁️ Detalle de Horma</h2>
 
     <div class="card mb-4">
         <div class="card-body">
@@ -47,7 +47,7 @@
         </div>
     </div>
 
-    <a href="{{ route('produccion.abms.pasos_rutas_produccion.index') }}" class="btn btn-secondary">⬅️ Volver</a>
-    <a href="{{ route('produccion.abms.pasos_rutas_produccion.edit', $registro[$primaryKey]) }}" class="btn btn-primary">✏️ Editar</a>
+    <a href="{{ route('produccion.abms.hormas.index') }}" class="btn btn-secondary">⬅️ Volver</a>
+    <a href="{{ route('produccion.abms.hormas.edit', $registro[$primaryKey]) }}" class="btn btn-primary">✏️ Editar</a>
 </div>
 @endsection

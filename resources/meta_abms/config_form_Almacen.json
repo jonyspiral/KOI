@@ -1,25 +1,59 @@
 {
-    "modelo": "ArticulosNew",
+    "modelo": "Almacen",
     "namespace": "Produccion",
-    "carpeta_vistas": "produccion\/abms\/articulos_new",
-    "timestamps": "1",
-    "sincronizable": "1",
+    "carpeta_vistas": "produccion\/abms\/hormas",
+    "timestamps": true,
+    "sincronizable": true,
     "force_controlador": true,
     "primary_key": "id",
     "primary_key_sql": [
-        "cod_articulo"
+        "cod_almacen"
     ],
     "indices": {
-        "idx_unico_cod_articulo": {
+        "idx_unico_denom_almacen": {
             "columns": [
-                "cod_articulo"
+                "denom_almacen"
+            ],
+            "unique": true
+        },
+        "idx_unico_cod_almacen": {
+            "columns": [
+                "cod_almacen"
             ],
             "unique": true
         }
     },
     "campos": {
-        "cod_articulo": {
-            "label": "Code",
+        "cod_empresa": {
+            "label": "Cod empresa",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": true,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
+        },
+        "cod_sucursal": {
+            "label": "Cod sucursal",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": true,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
+        },
+        "cod_almacen": {
+            "label": "Cod almacen",
             "default": null,
             "input_type": "text",
             "incluir": true,
@@ -30,197 +64,167 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
-        "denom_articulo": {
-            "label": "nombre",
+        "denom_almacen": {
+            "label": "Denom almacen",
             "default": null,
             "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
-        "descripcion_larga": {
-            "label": "Descripcion",
+        "denom_almacen_mp": {
+            "label": "Denom almacen mp",
             "default": null,
-            "input_type": "textarea",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
-        "precio_unitario": {
-            "label": "Precio",
+        "anulado": {
+            "label": "Anulado",
             "default": null,
-            "input_type": "moneda",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
-        "cantidad_stock": {
-            "label": "stock",
+        "fecha_baja": {
+            "label": "Fecha baja",
             "default": null,
-            "input_type": "number",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
-        "disponible": {
-            "label": "Disponible",
+        "centro_costos": {
+            "label": "Centro costos",
             "default": null,
-            "input_type": "checkbox",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
-            "select_list_data": "Si=S,No=N",
-            "referenced_table": null,
-            "referenced_column": "id",
-            "referenced_label": "nombre",
-            "is_boolean": true,
-            "auto_increment_plus": false,
-            "sync": "1",
-            "checkbox_checked_value": "S",
-            "checkbox_unchecked_value": "N"
-        },
-        "tipo_articulo": {
-            "label": "Tipo articulo",
-            "default": null,
-            "input_type": "select",
-            "incluir": true,
-            "nullable": false,
-            "select_list_data": null,
-            "referenced_table": "familias_producto",
-            "referenced_column": "id",
-            "referenced_label": "nombre",
-            "is_boolean": false,
-            "auto_increment_plus": false,
-            "sync": "1"
-        },
-        "categoria_id": {
-            "label": "Categoria",
-            "default": null,
-            "input_type": "select_list",
-            "incluir": true,
-            "nullable": false,
-            "select_list_data": "Mprima=1, producto=2,Otros=3",
-            "referenced_table": null,
-            "referenced_column": "id",
-            "referenced_label": "nombre",
-            "is_boolean": false,
-            "auto_increment_plus": false,
-            "sync": "1"
-        },
-        "fecha_lanzamiento": {
-            "label": "lanzamiento",
-            "default": null,
-            "input_type": "date",
-            "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
-        "email_contacto": {
-            "label": "Email",
+        "horario": {
+            "label": "Horario",
             "default": null,
-            "input_type": "email",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
-        "url_manual": {
-            "label": "Url manual",
+        "direccion": {
+            "label": "Direccion",
             "default": null,
-            "input_type": "url",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
-        "color_preferido": {
-            "label": "Color preferido",
+        "fecha_ultima_modificacion": {
+            "label": "Fecha ultima modificacion",
             "default": null,
-            "input_type": "select_list",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
-            "select_list_data": "gris,negro,rojo",
-            "referenced_table": null,
-            "referenced_column": "id",
-            "referenced_label": "nombre",
-            "is_boolean": false,
-            "auto_increment_plus": false,
-            "sync": "1"
-        },
-        "telefono_fabrica": {
-            "label": "Telefono fabrica",
-            "default": null,
-            "input_type": "tel",
-            "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
-        "archivo_manual": {
-            "label": "Archivo manual",
+        "autor_ultima_modificacion": {
+            "label": "Autor ultima modificacion",
             "default": null,
-            "input_type": "file",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
+        },
+        "denom_abrev": {
+            "label": "Denom abrev",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": true,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
+        },
+        "almacen_mp": {
+            "label": "Almacen mp",
+            "default": null,
+            "input_type": "text",
+            "incluir": true,
+            "nullable": true,
+            "select_list_data": null,
+            "referenced_table": null,
+            "referenced_column": "id",
+            "referenced_label": "nombre",
+            "is_boolean": false,
+            "auto_increment_plus": false,
+            "sync": true
         },
         "indices": {
             "label": "Indices",
             "default": null,
             "input_type": "text",
-            "incluir": false,
+            "incluir": true,
             "nullable": false,
             "select_list_data": null,
             "referenced_table": null,
@@ -228,49 +232,49 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": true
         },
         "created_at": {
             "label": "Created at",
             "default": null,
-            "input_type": "date",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
         "updated_at": {
             "label": "Updated at",
             "default": null,
-            "input_type": "date",
+            "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
         "sync_status": {
             "label": "Sync status",
             "default": null,
             "input_type": "text",
             "incluir": true,
-            "nullable": false,
+            "nullable": true,
             "select_list_data": null,
             "referenced_table": null,
             "referenced_column": "id",
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "1"
+            "sync": true
         },
         "id": {
             "label": "Id",
@@ -284,17 +288,27 @@
             "referenced_label": "nombre",
             "is_boolean": false,
             "auto_increment_plus": false,
-            "sync": "0"
+            "sync": true
         }
     },
     "form_config": {
-        "form_name": "ArticulosNew",
-        "form_route": "produccion\/abms\/articulos_new",
+        "form_name": "Almacen",
+        "form_route": "produccion\/abms\/almacen",
         "tipo_formulario": "default",
-        "usa_paginador": "1",
-        "per_page": "100",
-        "form_view_type": "modal",
-        "index_view_type": "inline"
+        "usa_paginador": true,
+        "per_page": 100,
+        "form_view_type": "default",
+        "index_view_type": "default"
     },
-    "subformularios": []
+    "subformularios": [],
+    "menu": [
+        {
+            "mostrar": true,
+            "label": "Almacen",
+            "icon": "📄",
+            "modulo": "produccion",
+            "grupo": "Produccion",
+            "posicion": 99
+        }
+    ]
 }

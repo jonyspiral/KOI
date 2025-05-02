@@ -65,6 +65,24 @@ public function index(Request $request)
 
             if (class_exists($claseModelo) && method_exists($claseModelo, 'fieldsMeta')) {
                 $instancia = new $claseModelo;
+                    // ✅ Obtener metadata completa del modelo
+                    $fieldsMeta = $claseModelo::fieldsMeta();
+
+                    $camposIniciales = [];
+                    foreach ($fieldsMeta as $campo => $meta) {
+                        $camposIniciales[$campo] = [
+                            'label' => ucfirst(str_replace('_', ' ', $campo)),
+                            'input_type' => $meta['input_type'] ?? 'text',
+                            'incluir' => true,
+                            'nullable' => $meta['nullable'] ?? false,
+                            'readonly' => $meta['readonly'] ?? false,
+                            'orden' => 0,
+                            'sync' => true,
+                        ];
+                    }
+
+
+
 
                 $dataInicial = [
                     'modelo' => $modeloSeleccionado,
@@ -72,10 +90,7 @@ public function index(Request $request)
                     'carpeta_vistas' => $carpetaSeleccionada ?? 'abms',
                     'timestamps' => property_exists($instancia, 'timestamps') ? $instancia->timestamps : true,
                     'sincronizable' => property_exists($claseModelo, 'sincronizable') ? $claseModelo::$sincronizable : true,
-                    'campos' => array_fill_keys($instancia->getFillable(), [
-                        'input_type' => 'text',
-                        'incluir' => true
-                    ]),
+                    'campos' => $camposIniciales,
                     'form_config' => [],
                     'subformularios' => [],
                     'menu_json' => '',
@@ -444,67 +459,66 @@ protected function guardarJsonAbm(string $modelo, array $config): void
  */
 protected function generarVistasAbm(string $modelo, string $namespace, string $carpeta_vistas, string $routeName, array $config, array $replacements): void
 {
-    // 🧱 Crear la carpeta de vistas si no existe
+    // 🧱 Crear la carpeta si no existe
     $viewsPath = resource_path("views/{$carpeta_vistas}");
     if (!file_exists($viewsPath)) {
         mkdir($viewsPath, 0755, true);
     }
 
-    // 🧠 Obtener preferencias del formulario
+    // 🧠 Preferencias del formulario
     $formViewType = $config['form_config']['form_view_type'] ?? 'default';
     $indexViewType = $config['form_config']['index_view_type'] ?? 'default';
     $campos = $config['campos'] ?? [];
 
-    // 🧩 Agrupar campos por pestañas (tabs) si corresponde
+    // 🧩 Preparar tabs y labels para los stubs avanzados
     $tabs = collect($campos)->groupBy(fn($meta) => $meta['tab'] ?? 'general');
     $fieldLabels = collect($campos)->mapWithKeys(fn($meta, $campo) => [$campo => $meta['label'] ?? Str::headline($campo)]);
-
-    // 🔁 Inyectar agrupaciones como constantes de reemplazo
     $replacements['__TABS__'] = var_export($tabs->toArray(), true);
     $replacements['__FIELD_LABELS__'] = var_export($fieldLabels->toArray(), true);
 
-    // 📁 Tipos de vistas a generar
-    foreach (['index', 'create', 'edit', 'show'] as $vista) {
-        if ($vista === 'index') {
-            $subformularios = $config['subformularios'] ?? [];
-            $tieneSubformInline = collect($subformularios)->contains(fn($s) => ($s['modo'] ?? null) === 'inline');
+    // 🧾 Vista INDEX (con lógica condicional)
+    $subformularios = $config['subformularios'] ?? [];
+    $tieneSubformInline = collect($subformularios)->contains(fn($s) => ($s['modo'] ?? null) === 'inline');
 
-            $stubFilename = match ($indexViewType) {
-                'inline-tab' => 'index-inline-tab.stub.blade.php',
-                'inline'     => 'index-inline.stub.blade.php',
-                'tab'        => 'index-tab.stub.blade.php',
-                default      => $tieneSubformInline ? 'index-inline.stub.blade.php' : 'index.stub.blade.php',
-            };
-        } elseif (in_array($vista, ['create', 'edit'])) {
-            $stubFilename = match ($formViewType) {
-                'modal'   => "{$vista}-modal.stub.blade.php",
-                default   => "{$vista}.stub.blade.php",
-            };
-        } else {
-            $stubFilename = "{$vista}.stub.blade.php";
+    $indexStub = match ($indexViewType) {
+        'inline-tab' => 'index-inline-tab.stub.blade.php',
+        'inline'     => 'index-inline.stub.blade.php',
+        'tab'        => 'index-tab.stub.blade.php',
+        default      => $tieneSubformInline ? 'index-inline.stub.blade.php' : 'index.stub.blade.php',
+    };
+
+    $this->copiarVistaDesdeStub($indexStub, "{$viewsPath}/index.blade.php", $replacements);
+
+    // 🧾 Vistas CREATE / EDIT
+    if ($formViewType === 'modal') {
+        // Usamos modal.stub y también generamos los archivos individuales
+        foreach (['create', 'edit'] as $tipo) {
+            $stub = "{$tipo}-modal.stub.blade.php";
+            $this->copiarVistaDesdeStub($stub, "{$viewsPath}/{$tipo}-modal.blade.php", $replacements);
         }
-
-        $stubPath = resource_path("stubs/abm/{$stubFilename}");
-        $outputPath = "{$viewsPath}/{$vista}.blade.php";
-
-        // ✨ Generar archivo
-        if (file_exists($stubPath)) {
-            $contenido = str_replace(array_keys($replacements), array_values($replacements), file_get_contents($stubPath));
-            file_put_contents($outputPath, $contenido);
+    } else {
+        // En formulario clásico: create.blade.php y edit.blade.php
+        foreach (['create', 'edit'] as $tipo) {
+            $stub = "{$tipo}.stub.blade.php";
+            $this->copiarVistaDesdeStub($stub, "{$viewsPath}/{$tipo}.blade.php", $replacements);
         }
     }
 
-    // 🔁 Si es formulario modal, asegurarse de que create/edit también tengan sus archivos individuales
-    if ($formViewType === 'modal') {
-        foreach (['create', 'edit'] as $tipo) {
-            $modalStubPath = resource_path("stubs/abm/{$tipo}-modal.stub.blade.php");
-            if (file_exists($modalStubPath)) {
-                $contenido = str_replace(array_keys($replacements), array_values($replacements), file_get_contents($modalStubPath));
-                file_put_contents("{$viewsPath}/{$tipo}-modal.blade.php", $contenido);
-            }
-        }
+    // 📄 Vista SHOW (siempre)
+    $this->copiarVistaDesdeStub('show.stub.blade.php', "{$viewsPath}/show.blade.php", $replacements);
+}
+
+protected function copiarVistaDesdeStub(string $stub, string $destino, array $replacements): void
+{
+    $stubPath = resource_path("stubs/abm/{$stub}");
+    if (file_exists($stubPath)) {
+        $contenido = file_get_contents($stubPath);
+        $contenido = str_replace(array_keys($replacements), array_values($replacements), $contenido);
+        file_put_contents($destino, $contenido);
     }
 }
+
+
 
 
 

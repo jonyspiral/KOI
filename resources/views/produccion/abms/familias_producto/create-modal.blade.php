@@ -2,7 +2,7 @@
 
 
 <div class="container-fluid px-0">
-    <!-- <h2 class="mb-4">Listado de FamiliasProducto</h2>
+    <!-- <h2 class="mb-4">Listado de Horma</h2>
 
     {{-- Botón para abrir el modal --}}
     <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCreate">
@@ -15,11 +15,11 @@
     <div class="modal fade" id="modalCreate" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <form action="{{ route('produccion.abms.familias_producto.store') }}" method="POST">
+                <form action="{{ route('produccion.abms.hormas.store') }}" method="POST">
                     @csrf
 
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modalCreateLabel">Nuevo FamiliasProducto</h5>
+                        <h5 class="modal-title" id="modalCreateLabel">Nuevo Horma</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
 

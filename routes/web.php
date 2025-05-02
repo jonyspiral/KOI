@@ -221,3 +221,27 @@ Route::prefix('produccion/abms/pasos_rutas_produccion')->name('produccion.abms.p
     
     Route::post('{id}/restaurar', [PasosRutasProduccionController::class, 'restaurar'])->name('restaurar');
 });
+
+
+
+
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Horma - Generado el 2025-05-02 03:46:08
+
+
+Route::prefix('produccion/abms/horma')->name('produccion.abms.horma.')->group(function () {
+    Route::resource('', HormaController::class)
+        ->parameters(['' => 'id'])
+        ->names([
+            'index'   => 'index',
+            'create'  => 'create',
+            'store'   => 'store',
+            'show'    => 'show',
+            'edit'    => 'edit',
+            'update'  => 'update',
+            'destroy' => 'destroy',
+        ]);
+
+    Route::post('{id}/restaurar', [HormaController::class, 'restaurar'])->name('restaurar');
+});

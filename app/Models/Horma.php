@@ -11,7 +11,7 @@ class Horma extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_horma'];
-                                                                                                                                    protected $fillable = ['cod_horma', 'denom_horma', 'talles_desde', 'talles_hasta', 'punto', 'observaciones', 'created_at', 'updated_at', 'sync_status', 'id'];
+                                                                                                                                                                                                                protected $fillable = ['cod_horma', 'denom_horma', 'talles_desde', 'talles_hasta', 'punto', 'observaciones', 'created_at', 'updated_at', 'sync_status', 'id'];
 
     public static function fieldsMeta()
     {
