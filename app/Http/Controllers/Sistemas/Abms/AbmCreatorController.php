@@ -209,7 +209,7 @@ public function configurar(Request $request)
 
     // 🧩 6. Generar estructura final del JSON usando helper
     $config = $this->generarJsonAbm($data);
-
+  
     // 💾 7. Guardar JSON en disco
     $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
     if (!file_exists(dirname($jsonPath))) {
@@ -330,6 +330,8 @@ private function generarJsonAbm(array $data): array
             'input_type' => $inputType,
             'incluir' => !empty($meta['incluir']) || $campo === $primaryKey,
             'nullable' => !empty($meta['nullable']),
+            'readonly' => $meta['readonly'] ?? false,
+            'orden' => $meta['orden'] ?? 0,
             'select_list_data' => $meta['select_list_data'] ?? null,
             'referenced_table' => $meta['referenced_table'] ?? null,
             'referenced_column' => $meta['referenced_column'] ?? 'id',

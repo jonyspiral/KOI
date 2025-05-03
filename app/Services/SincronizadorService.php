@@ -13,47 +13,45 @@ class SincronizadorService
     protected string $conexion = 'sqlsrv_koi'; // conexión fija por ahora
 
     public function syncCreate(string $modeloNombre, array $data, string $destino = 'default', bool $debug = false): bool
-{
-    $modelo = "\\App\\Models\\Sql\\{$modeloNombre}";
-    $tabla = (new $modelo)->getTable();
-
-    // 🔍 Formatear datos para SQL Server
-    $datos = $this->formatearParaSqlServer($data, $modeloNombre);
-
-    // 🧱 Armar SQL dinámico
-    $campos = array_keys($datos);
-    $valores = array_values($datos);
-
-    $camposStr = implode(', ', $campos);
-    $valoresStr = implode(', ', array_map(function ($v) {
-        return ($v instanceof \Illuminate\Database\Query\Expression || str_starts_with($v, 'CAST('))
-            ? $v instanceof \Illuminate\Database\Query\Expression
-                ? $v->getValue(\DB::connection()->getQueryGrammar())
-                : $v
-            : (is_null($v) ? 'NULL' : "'$v'");
-    }, $valores));
-
-    $sql = "INSERT INTO {$tabla} ({$camposStr}) VALUES ({$valoresStr})";
-
-    // 🔍 Mostrar si estás debugueando
-    if ($debug) {
-        dd([
-            '🧪 SQL generado' => $sql,
-            '📦 Datos originales' => $data,
-            '🧱 Formateado para SQL Server' => $datos,
-        ]);
+    {
+        $modelo = "\\App\\Models\\Sql\\{$modeloNombre}";
+        $tabla = (new $modelo)->getTable();
+    
+        // 🔍 Formatear datos para SQL Server
+        $datos = $this->formatearParaSqlServer($data, $modeloNombre);
+    
+        // 🧱 Armar SQL dinámico
+        $campos = array_keys($datos);
+        $valores = array_values($datos);
+    
+        $camposStr = implode(', ', $campos);
+        $valoresStr = implode(', ', array_map(function ($v) {
+            return ($v instanceof \Illuminate\Database\Query\Expression)
+                ? $v->getValue(DB::connection()->getQueryGrammar())
+                : (is_null($v) ? 'NULL' : "'$v'");
+        }, $valores));
+    
+        $sql = "INSERT INTO {$tabla} ({$camposStr}) VALUES ({$valoresStr})";
+    
+        if ($debug) {
+            dd([
+                '🧪 SQL generado' => $sql,
+                '📦 Datos originales' => $data,
+                '🧱 Formateado para SQL Server' => $datos,
+            ]);
+        }
+    
+        try {
+            DB::connection($this->getConexionDestino($destino))->statement($sql);
+            Log::info("✅ Sincronización (create) con SQL Server exitosa: " . $sql);
+            return true;
+        } catch (\Throwable $e) {
+            Log::debug("🧪 SQL generado: {$sql}");
+            Log::error("❌ Error al sincronizar (create) con SQL Server: " . $e->getMessage());
+            return false;
+        }
     }
-
-    try {
-        DB::connection($this->getConexionDestino($destino))->statement($sql);
-        \Log::info("✅ Sincronización (create) con SQL Server exitosa: " . $sql);
-        return true;
-    } catch (\Throwable $e) {
-        \Log::debug("🧪 SQL generado: {$sql}");
-        \Log::error("❌ Error al sincronizar (create) con SQL Server: " . $e->getMessage());
-        return false;
-    }
-}
+    
 public function syncUpdate(string $modeloNombre, array $data, string $campoClave, string $destino = 'default'): bool
 {
     $modelo = "\\App\\Models\\Sql\\{$modeloNombre}";
@@ -77,12 +75,13 @@ public function syncUpdate(string $modeloNombre, array $data, string $campoClave
         if ($valor instanceof \Illuminate\Database\Query\Expression) {
             $sets[] = "{$campo} = " . $valor->getValue(\DB::connection()->getQueryGrammar());
         } else {
-            $sets[] = "{$campo} = " . (is_null($valor) ? 'NULL' : "'$valor'");
+            $valorEscapado = str_replace("'", "''", (string) $valor);
+            $sets[] = "{$campo} = " . (is_null($valor) ? 'NULL' : "'{$valorEscapado}'");
         }
     }
 
-    // Escapar valor clave si es string
-    $valorClaveSql = is_numeric($valorClave) ? $valorClave : "'" . str_replace("'", "''", $valorClave) . "'";
+    // 🔐 Escapar valor clave como string siempre (para evitar errores por tipos CHAR/VARCHAR)
+    $valorClaveSql = "'" . str_replace("'", "''", (string) $valorClave) . "'";
 
     $sql = "UPDATE {$tabla} SET " . implode(', ', $sets) . " WHERE {$campoClave} = {$valorClaveSql}";
 
@@ -103,6 +102,7 @@ public function syncUpdate(string $modeloNombre, array $data, string $campoClave
         return false;
     }
 }
+
 
 
 
@@ -168,7 +168,6 @@ public function formatearParaSqlServer(array $data, string $modeloNombre): array
 
         switch ($tipo) {
             case 'date':
-                
                 if (!empty($valor)) {
                     if ($valor instanceof \Carbon\Carbon) {
                         $valor = $valor->format('Y-m-d H:i:s');
@@ -200,10 +199,12 @@ public function formatearParaSqlServer(array $data, string $modeloNombre): array
 
             case 'checkbox':
                 $valor = in_array($valor, ['S', 'N']) ? $valor : 'N';
-                $datos[$campo] = DB::raw("'" . str_replace("'", "''", $valor) . "'");
+                $datos[$campo] = $this->wrapStr($valor);
                 break;
 
+            // Casos que usan strings
             case 'text':
+            case 'textarea':
             case 'select_list':
             case 'email':
             case 'tel':
@@ -211,25 +212,12 @@ public function formatearParaSqlServer(array $data, string $modeloNombre): array
             case 'color':
             case 'url':
             case 'file':
-                if ($valor instanceof \Illuminate\Database\Query\Expression) {
-                    $datos[$campo] = $valor; // ya viene formateado
-                } else {
-                    $datos[$campo] = is_null($valor)
-                        ? DB::raw("NULL")
-                        : DB::raw("'" . str_replace("'", "''", (string) $valor) . "'");
-                }
+                $datos[$campo] = is_null($valor) ? DB::raw("NULL") : $this->wrapStr($valor);
                 break;
 
-                default:
-                if ($valor instanceof \Illuminate\Database\Query\Expression) {
-                    $datos[$campo] = $valor;
-                } else {
-                    $datos[$campo] = is_null($valor)
-                        ? DB::raw("NULL")
-                        : DB::raw("'" . str_replace("'", "''", $valor) . "'");
-                }
+            default:
+                $datos[$campo] = is_null($valor) ? DB::raw("NULL") : $this->wrapStr($valor);
                 break;
-            
         }
     }
 
@@ -241,6 +229,15 @@ public function formatearParaSqlServer(array $data, string $modeloNombre): array
 
     return $datos;
 }
+protected function wrapStr($valor): \Illuminate\Database\Query\Expression
+{
+    if ($valor instanceof \Illuminate\Database\Query\Expression) {
+        return $valor;
+    }
+
+    return DB::raw("'" . str_replace("'", "''", (string) $valor) . "'");
+}
+
 
 
 
