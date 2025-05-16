@@ -310,13 +310,13 @@
         }
     },
     "form_config": {
-        "form_name": "Horma",
-        "form_route": "produccion\/abms\/hormas",
-        "tipo_formulario": "default",
+        "index_view_type": "inline",
+        "form_view_type": "modal",
         "usa_paginador": "1",
         "per_page": "100",
-        "form_view_type": "modal",
-        "index_view_type": "inline"
+        "form_name": "Horma",
+        "form_route": "produccion\/abms\/hormas",
+        "tipo_formulario": "default"
     },
     "subformularios": [],
     "menu": [

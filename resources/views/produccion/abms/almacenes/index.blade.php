@@ -2,15 +2,15 @@
 
 @section('content')
 <div class="container-fluid px-0">
-    <h2 class="mb-4">Listado de ColoresPorArticulo</h2>
+    <h2 class="mb-4">Listado de Almacen</h2>
 
     {{-- 🔍 Formulario de búsqueda y cantidad por página --}}
-    <form action="{{ route('produccion.abms.colores_por_articulo.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
+    <form action="{{ route('produccion.abms.almacenes.index') }}" method="GET" class="mb-3 d-flex flex-wrap gap-2">
         <div class="input-group">
             <input type="text" name="buscar" value="{{ request('buscar') }}" class="form-control" placeholder="Buscar...">
             <button type="submit" class="btn btn-outline-primary">Buscar</button>
             @if(request('buscar'))
-                <a href="{{ route('produccion.abms.colores_por_articulo.index') }}" class="btn btn-outline-secondary">Limpiar</a>
+                <a href="{{ route('produccion.abms.almacenes.index') }}" class="btn btn-outline-secondary">Limpiar</a>
             @endif
         </div>
 
@@ -29,12 +29,12 @@
     <div class="modal fade" id="modalCreate" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            @include('produccion/abms/colores_por_articulo.create')
+            @include('produccion/abms/almacenes.create')
         </div>
     </div>
 </div>
 @else
-    <a href="{{ route('produccion.abms.colores_por_articulo.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
+    <a href="{{ route('produccion.abms.almacenes.create') }}" class="btn btn-success mb-3">➕ Nuevo</a>
 @endif
 
     {{-- 📋 Tabla --}}
@@ -74,9 +74,9 @@
 
                     {{-- Acciones --}}
                     <td class="text-end">
-                        <a href="{{ route('produccion.abms.colores_por_articulo.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
+                        <a href="{{ route('produccion.abms.almacenes.edit', $registro[$primaryKey]) }}" class="btn btn-sm btn-primary">✏️</a>
 
-                        <form action="{{ route('produccion.abms.colores_por_articulo.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
+                        <form action="{{ route('produccion.abms.almacenes.destroy', $registro[$primaryKey]) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este registro?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-danger">🗑️</button>

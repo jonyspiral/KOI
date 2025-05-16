@@ -14,61 +14,54 @@ class ColoresPorArticuloController extends Controller
 {
     public function index(Request $request)
     {
+        // 🧩 Cargar configuración JSON del formulario
         $modelo = 'ColoresPorArticulo';
         $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
     
+        // 🔐 Validación obligatoria de clave primaria
         if (!isset($config['primary_key'])) {
             abort(500, "El archivo de configuración no tiene definida la clave 'primary_key'.");
         }
+    
         $primaryKey = $config['primary_key'];
         $camposRaw = $config['campos'] ?? [];
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
         $columnas = array_keys($campos);
-    
         $subformularios = $config['subformularios'] ?? [];
         $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/colores_por_articulos';
+        $formConfig = $config['form_config'] ?? [];
     
-        $query = ColoresPorArticulo::query();
-    
-        // 🔍 Búsqueda simple sobre columnas visibles
-        if ($request->filled('buscar')) {
-            $search = $request->input('buscar');
-            $query->where(function ($q) use ($columnas, $search) {
-                foreach ($columnas as $col) {
-                    $q->orWhere($col, 'LIKE', "%{$search}%");
-                }
-            });
-        }
-    
-        // 📦 Paginación configurable desde JSON o input, valor por defecto: 100
-    
-       $formConfig = $config['form_config'] ?? [];
         $defaultPerPage = (int) ($formConfig['per_page'] ?? 100);
         $perPage = (int) $request->input('por_pagina', $defaultPerPage);
     
-       // $perPage = max(10, min($perPage, 500));
+        $query = ColoresPorArticulo::query();
     
+        if ($request->filled('buscar') && $request->filled('buscar_campo')) {
+            $campo = $request->input('buscar_campo');
+            $valor = $request->input('buscar');
         
-    
-        // 🔁 Reemplazar campos tipo select con valor mostrado usando cache persistente
+            if (in_array($campo, $columnas)) {
+                $query->where($campo, 'LIKE', "%{$valor}%");
+            }
+        }
+       // 💡 Asegura que los parámetros del filtro persistan al avanzar página
+       $registros = $query->paginate($perPage);
+        // 🧠 Cacheo de labels para campos tipo select
         $selectCache = [];
-    
         foreach ($campos as $campo => $meta) {
             if (($meta['input_type'] ?? null) === 'select' &&
                 !empty($meta['referenced_table']) &&
                 !empty($meta['referenced_column']) &&
-                !empty($meta['referenced_label'])
-            ) {
+                !empty($meta['referenced_label'])) {
+    
                 $tabla = $meta['referenced_table'];
                 $columna = $meta['referenced_column'];
                 $label = $meta['referenced_label'];
     
                 $selectCache[$tabla] = \Cache::remember("select_cache_{$tabla}", 3600, function () use ($tabla, $columna, $label) {
                     try {
-                        return DB::table($tabla)
-                            ->pluck($label, $columna)
-                            ->toArray();
+                        return DB::table($tabla)->pluck($label, $columna)->toArray();
                     } catch (\Throwable $e) {
                         logger()->warning("Error precargando '$tabla': " . $e->getMessage());
                         return [];
@@ -76,25 +69,73 @@ class ColoresPorArticuloController extends Controller
                 });
             }
         }
+        // 🧾 Para todos los demás tipos de index
         $registros = $query->paginate($perPage);
+    
         foreach ($registros as $registro) {
             foreach ($campos as $campo => $meta) {
-                if (($meta['input_type'] ?? null) === 'select' &&
-                    !empty($meta['referenced_table']) &&
-                    !empty($meta['referenced_column']) &&
-                    !empty($meta['referenced_label'])
-                ) {
+                if (($meta['input_type'] ?? null) === 'select' && !empty($meta['referenced_table'])) {
                     $tabla = $meta['referenced_table'];
                     $valor = $registro->$campo;
                     $registro->$campo = $selectCache[$tabla][$valor] ?? $valor;
                 }
             }
         }
+     
+
+        // 🧷 Selección dinámica de la vista según el tipo de index
+        $indexViewType = $formConfig['index_view_type'] ?? 'default';
+        $viewName = match ($indexViewType) {
+            'inline' => "{$carpeta_vistas}.index-inline",
+            'tab'    => "{$carpeta_vistas}.index-tab",
+            'ficha'  => "{$carpeta_vistas}.index-ficha",
+            default  => "{$carpeta_vistas}.index",
+        };
     
-       
+        if (!view()->exists($viewName)) {
+            logger()->warning("Vista '{$viewName}' no encontrada. Usando fallback a 'index'.");
+            $viewName = "{$carpeta_vistas}.index";
+        }
     
-        return view("{$carpeta_vistas}.index", compact(
-            'registros', 'campos', 'columnas', 'modelo', 'subformularios', 'carpeta_vistas','primaryKey', 'perPage'
+        // 🎯 Cargar variables dinámicas según el tipo de vista
+        if ($indexViewType === 'ficha') {
+            $registro = $query->first();
+    
+            if ($registro) {
+                foreach ($campos as $campo => $meta) {
+                    if (($meta['input_type'] ?? null) === 'select' && !empty($meta['referenced_table'])) {
+                        $tabla = $meta['referenced_table'];
+                        $valor = $registro->$campo;
+                        $registro->$campo = $selectCache[$tabla][$valor] ?? $valor;
+                    }
+                }
+            }
+    
+            return view($viewName, compact(
+                'registro',
+                'campos',
+                'columnas',
+                'modelo',
+                'subformularios',
+                'carpeta_vistas',
+                'primaryKey',
+                'formConfig',
+                'perPage',
+                'registros'
+            ));
+        }
+    
+    
+        return view($viewName, compact(
+            'registros',
+            'campos',
+            'columnas',
+            'modelo',
+            'subformularios',
+            'carpeta_vistas',
+            'primaryKey',
+            'perPage',
+            'formConfig'
         ));
     }
     

@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h2 class="mb-4">➕ Crear Articulo</h2>
+    <h2 class="mb-4">➕ Crear Almacen</h2>
 
     @include('components.partials.form-create-inner')
 </div>

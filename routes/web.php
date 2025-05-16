@@ -20,11 +20,15 @@ use App\Http\Controllers\Produccion\ColoresPorArticuloController;
 
 Route::prefix('sistemas/abms')->group(function () {
     Route::get('/crear', [AbmCreatorController::class, 'index'])->name('sistemas.abms.crear');   
-    
+   
+
     Route::get('/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
     Route::post('/configurar', [AbmCreatorController::class, 'configurar'])->name('sistemas.abms.configurar');
+// ✅ Vista de preview (GET y POST para permitir carga y subform)
+Route::match(['get', 'post'], '/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
+    
 });
-
+Route::post('/abmcreator/campos-subformulario', [AbmController::class, 'cargarCamposSubformulario'])->name('abmcreator.campos_subformulario');
 //importar tablas koi ABMs  
 Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function () {
     Route::get('/form', [ImportarController::class, 'form'])->name('form');
@@ -244,4 +248,23 @@ Route::prefix('produccion/abms/horma')->name('produccion.abms.horma.')->group(fu
         ]);
 
     Route::post('{id}/restaurar', [HormaController::class, 'restaurar'])->name('restaurar');
+});
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Almacen - Generado el 2025-05-04 14:37:36
+
+
+Route::prefix('produccion/abms/almacenes')->name('produccion.abms.almacenes.')->group(function () {
+    Route::resource('', AlmacenController::class)
+        ->parameters(['' => 'id'])
+        ->names([
+            'index'   => 'index',
+            'create'  => 'create',
+            'store'   => 'store',
+            'show'    => 'show',
+            'edit'    => 'edit',
+            'update'  => 'update',
+            'destroy' => 'destroy',
+        ]);
+
+    Route::post('{id}/restaurar', [AlmacenController::class, 'restaurar'])->name('restaurar');
 });

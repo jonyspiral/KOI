@@ -11,7 +11,7 @@ class Almacen extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_almacen'];
-                                            protected $fillable = ['cod_almacen', 'denom_almacen', 'denom_almacen_mp', 'created_at', 'updated_at', 'sync_status', 'id'];
+                                                        protected $fillable = ['cod_empresa', 'cod_sucursal', 'cod_almacen', 'denom_almacen', 'denom_almacen_mp', 'anulado', 'denom_abrev', 'almacen_mp', 'indices', 'created_at', 'updated_at', 'sync_status', 'id'];
 
     public static function fieldsMeta()
     {

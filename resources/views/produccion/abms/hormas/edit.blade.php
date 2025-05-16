@@ -4,7 +4,7 @@
 <div class="container">
     <h2 class="mb-4">✏️ Editar registro de {{ $modelo }}</h2>
 
-    <form action="{{ route('produccion.abms.articulos.update', $registro[$primaryKey]) }}" method="POST">
+    <form action="{{ route('produccion.abms.almacenes.update', $registro[$primaryKey]) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -102,7 +102,7 @@
 
         <div class="mt-4">
             <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Actualizar</button>
-            <a href="{{ route('produccion.abms.articulos.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Cancelar</a>
+            <a href="{{ route('produccion.abms.almacenes.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Cancelar</a>
         </div>
     </form>
 </div>
