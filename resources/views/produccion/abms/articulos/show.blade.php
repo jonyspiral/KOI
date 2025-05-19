@@ -47,7 +47,7 @@
         </div>
     </div>
 
-    <a href="{{ route('produccion.abms.articulos.index') }}" class="btn btn-secondary">⬅️ Volver</a>
-    <a href="{{ route('produccion.abms.articulos.edit', $registro[$primaryKey]) }}" class="btn btn-primary">✏️ Editar</a>
+    <a href="{{ route('produccion.abms.articulo.index') }}" class="btn btn-secondary">⬅️ Volver</a>
+    <a href="{{ route('produccion.abms.articulo.edit', $registro[$primaryKey]) }}" class="btn btn-primary">✏️ Editar</a>
 </div>
 @endsection

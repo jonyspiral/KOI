@@ -1,6 +1,7 @@
 <?php
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
+use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Sistemas\Importar\ImportarController;
 use App\Http\Controllers\Produccion\MarcaController;
 use App\Http\Controllers\Produccion\HormaController;
@@ -15,19 +16,17 @@ use App\Http\Controllers\Produccion\PasosRutasProduccionController;
 use App\Http\Controllers\Produccion\ProductController;
 use App\Http\Controllers\Produccion\AlmacenController;
 use App\Http\Controllers\Produccion\ColoresPorArticuloController;
-//creador ABMs  
 
-
+// Creador ABMs
 Route::prefix('sistemas/abms')->group(function () {
-    Route::get('/crear', [AbmCreatorController::class, 'index'])->name('sistemas.abms.crear');   
-   
+    Route::get('/crear', [AbmCreatorController::class, 'index'])->name('sistemas.abms.crear');
 
-    Route::get('/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
-    Route::post('/configurar', [AbmCreatorController::class, 'configurar'])->name('sistemas.abms.configurar');
-// ✅ Vista de preview (GET y POST para permitir carga y subform)
-Route::match(['get', 'post'], '/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
+    // ✅ Agregar soporte para GET y POST en preview
+    Route::match(['get', 'post'], '/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
     
+    Route::post('/configurar', [AbmCreatorController::class, 'configurar'])->name('sistemas.abms.configurar');
 });
+
 Route::post('/abmcreator/campos-subformulario', [AbmController::class, 'cargarCamposSubformulario'])->name('abmcreator.campos_subformulario');
 //importar tablas koi ABMs  
 Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function () {
@@ -267,4 +266,23 @@ Route::prefix('produccion/abms/almacenes')->name('produccion.abms.almacenes.')->
         ]);
 
     Route::post('{id}/restaurar', [AlmacenController::class, 'restaurar'])->name('restaurar');
+});
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: Articulo - Generado el 2025-05-16 18:39:36
+
+
+Route::prefix('produccion/abms/articulo')->name('produccion.abms.articulo.')->group(function () {
+    Route::resource('', ArticuloController::class)
+        ->parameters(['' => 'id'])
+        ->names([
+            'index'   => 'index',
+            'create'  => 'create',
+            'store'   => 'store',
+            'show'    => 'show',
+            'edit'    => 'edit',
+            'update'  => 'update',
+            'destroy' => 'destroy',
+        ]);
+
+    Route::post('{id}/restaurar', [ArticuloController::class, 'restaurar'])->name('restaurar');
 });

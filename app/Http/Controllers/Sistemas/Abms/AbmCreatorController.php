@@ -148,6 +148,13 @@ public function preview(Request $request, string $modelo)
     $camposSubform = null;
 
     if ($modeloHijo && is_numeric($subformIndex) && isset($json['subformularios'][$subformIndex])) {
+    $subformExistente = $json['subformularios'][$subformIndex];
+
+    if (!empty($subformExistente['campos'])) {
+        // ✅ Ya existen campos definidos → NO sobreescribas
+        $camposSubform = $subformExistente['campos'];
+    } else {
+        // 🔁 No hay campos → Cargar desde fieldsMeta()
         $clase = "\\App\\Models\\Sql\\$modeloHijo";
         if (class_exists($clase) && method_exists($clase, 'fieldsMeta')) {
             $camposSubform = [];
@@ -165,6 +172,8 @@ public function preview(Request $request, string $modelo)
             }
         }
     }
+}
+
 
     // 🧾 Cargar metadatos del JSON
     $campos = $json['campos'] ?? [];
@@ -208,15 +217,14 @@ public function preview(Request $request, string $modelo)
 }
 
 
-
-/**
- * Configura el ABM y genera el controlador, vistas y JSON de configuración
- *
- * @param Request $request
- * @return \Illuminate\View\View
- */
 public function configurar(Request $request)
-{ 
+
+{  dd([
+    'modo_guardado' => $request->input('modo_guardado'),
+    'subform_index' => $request->input('subform_index'),
+    'modelo_hijo' => $request->input('modelo_hijo'),
+]);
+
     // 🧠 1. Recuperar datos base desde el formulario
     $modelo = $request->input('modelo');
     $namespace = $request->input('namespace');
@@ -235,82 +243,96 @@ public function configurar(Request $request)
     if (!file_exists($viewsPath)) {
         mkdir($viewsPath, 0755, true);
     }
-    
+
     // ⛔ 4. Prevenir sobreescritura de controlador si no se indicó "force"
-    if (file_exists($controllerPath) && !$force) {
-        return back()->withErrors("El controlador ya existe. Activá 'Reemplazar controlador' para sobreescribirlo.");
+   if (!$request->boolean('force_controlador') && file_exists($controllerPath)) {
+    return back()->withErrors("El controlador ya existe. Activá 'Reemplazar controlador' para sobreescribirlo.");
+}
+
+
+    // 🧾 5. Cargar configuración anterior si existe (para no romper JSON en acciones parciales)
+    $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
+    $configAnterior = File::exists($jsonPath) ? json_decode(File::get($jsonPath), true) : [];
+
+    // 🔁 Si viene un subform_index, asegurar su integración con los demás subformularios
+    $subformIndex = $request->input('subform_index');
+    if ($subformIndex !== null) {
+        $subform = [
+            'modelo' => $request->input("subformularios.{$subformIndex}.modelo"),
+            'foreign_key' => $request->input("subformularios.{$subformIndex}.foreign_key"),
+            'nombre' => $request->input("subformularios.{$subformIndex}.nombre"),
+            'titulo' => $request->input("subformularios.{$subformIndex}.titulo"),
+            'view_type' => $request->input("subformularios.{$subformIndex}.view_type"),
+            'modo' => $request->input("subformularios.{$subformIndex}.modo"),
+            'carpeta_vistas' => $request->input("subformularios.{$subformIndex}.carpeta_vistas"),
+            'campos' => $request->input("subformularios.{$subformIndex}.campos", []),
+        ];
+
+        $todos = $request->input('subformularios', []);
+        $todos[$subformIndex] = $subform;
+        $request->merge(['subformularios' => $todos]);
     }
-   
-   
-// 🧠 5. Armar estructura del JSON de configuración desde el request
 
-$subformulariosConCampos = collect($request->input('subformularios', []))->map(function ($sub, $i) use ($request) {
-    // Intentar obtener los campos enviados por formulario
-    $camposRecibidos = data_get($sub, 'campos', []);
+    // 🧩 6. Procesar subformularios y autocompletar campos si es necesario
+    $subformulariosConCampos = collect($request->input('subformularios', []))->map(function ($sub, $i) use ($request) {
+        $camposRecibidos = data_get($sub, 'campos', []);
 
-    // Si no vienen campos, intentar autocompletar desde el modelo hijo
-    if (empty($camposRecibidos)) {
-        $modeloSub = $sub['modelo'] ?? null;
-        if ($modeloSub) {
-            $modeloSql = "\\App\\Models\\Sql\\{$modeloSub}";
-            if (class_exists($modeloSql) && method_exists($modeloSql, 'fieldsMeta')) {
-                $fieldsMeta = $modeloSql::fieldsMeta();
-                $camposRecibidos = collect($fieldsMeta)->map(function ($meta, $campo) {
-                    return [
-                        'label' => ucfirst(str_replace('_', ' ', $campo)),
-                        'input_type' => 'text',
-                        'incluir' => true,
-                        'nullable' => $meta['nullable'] ?? false,
-                        'readonly' => $meta['readonly'] ?? false,
-                        'sync' => true,
-                        'orden' => 0,
-                    ];
-                })->toArray();
+        if (empty($camposRecibidos)) {
+            $modeloSub = $sub['modelo'] ?? null;
+            if ($modeloSub) {
+                $modeloSql = "\\App\\Models\\Sql\\{$modeloSub}";
+                if (class_exists($modeloSql) && method_exists($modeloSql, 'fieldsMeta')) {
+                    $fieldsMeta = $modeloSql::fieldsMeta();
+                    $camposRecibidos = collect($fieldsMeta)->map(function ($meta, $campo) {
+                        return [
+                            'label' => ucfirst(str_replace('_', ' ', $campo)),
+                            'input_type' => 'text',
+                            'incluir' => true,
+                            'nullable' => $meta['nullable'] ?? false,
+                            'readonly' => $meta['readonly'] ?? false,
+                            'sync' => true,
+                            'orden' => 0,
+                        ];
+                    })->toArray();
+                }
             }
         }
-    }
 
-    $sub['campos'] = $camposRecibidos;
-    return $sub;
-})->toArray();
+        $sub['campos'] = $camposRecibidos;
+        return $sub;
+    })->toArray();
 
+    // 🧱 7. Preparar datos para generar el JSON (restaurando campos si no se recibieron)
+    $data = [
+        'modelo' => $modelo,
+        'namespace' => $namespace,
+        'carpeta_vistas' => $carpeta_vistas,
+        'timestamps' => $request->boolean('timestamps'),
+        'sincronizable' => $request->boolean('sincronizable'),
+        'force_controlador' => $request->boolean('force_controlador'),
+        'primary_key' => $request->input('primary_key'),
+        'primary_key_sql' => explode(',', $request->input('primary_key_sql', '')),
+        'campos' => $request->has('campos') ? $request->input('campos') : ($configAnterior['campos'] ?? []),
+        'form_config' => $request->input('form_config', []),
+        'subformularios' => $subformulariosConCampos,
+        'menu_json' => $request->input('menu_json', ''),
+    ];
 
-$data = [
-    'modelo' => $modelo,
-    'namespace' => $namespace,
-    'carpeta_vistas' => $carpeta_vistas,
-    'timestamps' => $request->boolean('timestamps'),
-    'sincronizable' => $request->boolean('sincronizable'),
-    'force_controlador' => $request->boolean('force_controlador'),
-    'primary_key' => $request->input('primary_key'),
-    'primary_key_sql' => explode(',', $request->input('primary_key_sql', '')),
-    'campos' => $request->input('campos', []),
-    'form_config' => $request->input('form_config', []),
-    'subformularios' => $subformulariosConCampos,
-    'menu_json' => $request->input('menu_json', ''),
-];
-
-    // 🧩 6. Generar estructura final del JSON usando helper
+    // 🧩 8. Generar el nuevo JSON completo
     $config = $this->generarJsonAbm($data);
-  
-    // 💾 7. Guardar JSON en disco
-    $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
+
+    // 💾 9. Guardar el archivo JSON en disco
     if (!file_exists(dirname($jsonPath))) {
         mkdir(dirname($jsonPath), 0755, true);
     }
-
-
-    logger()->info("🧩 Subformularios recibidos:", $subformulariosConCampos);
-
-
     file_put_contents($jsonPath, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    logger('📄 JSON generado:', $config);
+    logger()->info("📄 JSON generado:", $config);
 
-    // 🧠 8. Actualizar $fillable en el modelo
+    // 🧠 10. Actualizar el $fillable del modelo con campos marcados como 'incluir'
     $camposIncluir = array_keys(array_filter($config['campos'], fn($c) => !empty($c['incluir'])));
     $this->actualizarFillableModelo($modelo, $namespace, $camposIncluir);
 
-    // 📦 9. Variables comunes para reemplazo en stubs
+    // 🛠️ 11. Variables para reemplazos en los stubs
     $nombres = Str::snake(Str::pluralStudly($modelo));
     $snakeModel = Str::snake($modelo);
     $formRoute = $config['form_config']['form_route'] ?? strtolower("produccion/abms/{$snakeModel}");
@@ -325,15 +347,15 @@ $data = [
         '__FORM_VIEW_TYPE__' => $config['form_config']['form_view_type'] ?? 'default',
     ];
 
-    // 🧩 10. Generar el controlador usando stub
+    // 🧩 12. Generar el controlador usando stub
     $controllerStub = file_get_contents(resource_path("stubs/abm/controller.stub.php"));
     $controllerContent = str_replace(array_keys($replacements), array_values($replacements), $controllerStub);
     file_put_contents($controllerPath, $controllerContent);
 
-    // 🧩 11. Generar vistas desde stubs
+    // 🧩 13. Generar vistas desde stubs
     $this->generarVistasAbm($modelo, $namespace, $carpeta_vistas, $routeName, $config, $replacements);
 
-    // 📥 12. (Opcional) Generar FormRequest si fue activado
+    // 📥 14. Crear FormRequest si fue indicado
     if ($request->filled('generar_request')) {
         $requestPath = app_path("Http/Requests/{$modelo}Request.php");
         if (!file_exists(dirname($requestPath))) {
@@ -344,11 +366,18 @@ $data = [
         file_put_contents($requestPath, $requestContent);
     }
 
-    // 🧭 13. Agregar automáticamente la ruta en web.php
+    // 🔗 15. Agregar la ruta automáticamente al archivo web.php
     $this->agregarRutaWeb($modelo, $carpeta_vistas, $namespace);
 
-    
-    // ✅ 14. Mostrar vista final de confirmación
+    // ✅ 16. Redirección según modo de guardado
+$modoGuardado = $request->input('modo_guardado');
+
+if ($modoGuardado === 'subform') {
+    return redirect()
+        ->route('sistemas.abms.preview', ['modelo' => $modelo])
+        ->with('success', '✅ Subformulario actualizado correctamente');
+}
+
     return view('sistemas.abms.resultado', [
         'modelo' => $modelo,
         'carpeta_vistas' => $carpeta_vistas,
@@ -357,6 +386,8 @@ $data = [
         'ruta_logica' => $formRoute,
     ]);
 }
+
+
 
 
 /**

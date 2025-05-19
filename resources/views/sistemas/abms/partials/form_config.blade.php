@@ -4,6 +4,9 @@
     <legend class="w-auto px-2">🧾 Configuración del Formulario Principal</legend>
 
     {{-- Checkbox visible --}}
+
+
+
     <div class="form-check mt-3">
         <input type="hidden" name="force_controlador" value="0">
         <input class="form-check-input" type="checkbox" name="force_controlador" id="force_controlador" value="1" {{ old('force_controlador') ? 'checked' : '' }}>
