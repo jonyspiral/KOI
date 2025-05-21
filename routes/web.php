@@ -25,9 +25,11 @@ Route::prefix('sistemas/abms')->group(function () {
     Route::match(['get', 'post'], '/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
     
     Route::post('/configurar', [AbmCreatorController::class, 'configurar'])->name('sistemas.abms.configurar');
+    Route::post('/guardar-subformulario', [AbmCreatorController::class, 'guardarSubformulario'])->name('sistemas.abms.guardar_subformulario');
+
 });
 
-Route::post('/abmcreator/campos-subformulario', [AbmController::class, 'cargarCamposSubformulario'])->name('abmcreator.campos_subformulario');
+Route::post('/abmcreator/campos-subformulario', [AbmCreatorController::class, 'cargarCamposSubformulario'])->name('abmcreator.campos_subformulario');
 //importar tablas koi ABMs  
 Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function () {
     Route::get('/form', [ImportarController::class, 'form'])->name('form');
@@ -267,8 +269,12 @@ Route::prefix('produccion/abms/almacenes')->name('produccion.abms.almacenes.')->
 
     Route::post('{id}/restaurar', [AlmacenController::class, 'restaurar'])->name('restaurar');
 });
+
+
+
+
 // 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Articulo - Generado el 2025-05-16 18:39:36
+// Modelo: Articulo - Generado el 2025-05-20 18:09:06
 
 
 Route::prefix('produccion/abms/articulo')->name('produccion.abms.articulo.')->group(function () {

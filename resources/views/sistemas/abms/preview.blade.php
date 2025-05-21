@@ -54,6 +54,15 @@
                             <td><input type="number" name="subformularios[{{ $index }}][orden]" value="{{ $sub['orden'] ?? $index }}" class="form-control form-control-sm" style="width: 70px;"></td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-secondary" onclick="window.location.href='{{ $subformUrlBase }}?subform_index={{ $index }}&modelo_hijo={{ $sub['modelo'] }}'">🔄</button>
+
+                                {{-- Hidden fields necesarios para persistencia --}}
+                                <input type="hidden" name="subformularios[{{ $index }}][modelo]" value="{{ $sub['modelo'] }}">
+                                <input type="hidden" name="subformularios[{{ $index }}][foreign_key]" value="{{ $sub['foreign_key'] }}">
+                                <input type="hidden" name="subformularios[{{ $index }}][nombre]" value="{{ $sub['nombre'] }}">
+                                <input type="hidden" name="subformularios[{{ $index }}][titulo]" value="{{ $sub['titulo'] }}">
+                                <input type="hidden" name="subformularios[{{ $index }}][view_type]" value="{{ $sub['view_type'] }}">
+                                <input type="hidden" name="subformularios[{{ $index }}][modo]" value="{{ $sub['modo'] }}">
+                                <input type="hidden" name="subformularios[{{ $index }}][carpeta_vistas]" value="{{ str_replace('\\', '/', $sub['carpeta_vistas'] ?? $carpeta_vistas) }}">
                             </td>
                         </tr>
                     @endforeach
@@ -86,31 +95,50 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($camposSubform as $campo => $meta)
-                            <tr>
-                                <td>{{ $campo }}</td>
-                                <td><input name="subformularios[{{ $subformIndex }}][campos][{{ $campo }}][label]" class="form-control form-control-sm" value="{{ $meta['label'] }}"></td>
-                                <td><input name="subformularios[{{ $subformIndex }}][campos][{{ $campo }}][input_type]" class="form-control form-control-sm" value="{{ $meta['input_type'] }}"></td>
-                                @foreach (['incluir', 'sync', 'nullable', 'readonly'] as $prop)
-                                    <td class="text-center">
-                                        <input type="hidden" name="subformularios[{{ $subformIndex }}][campos][{{ $campo }}][{{ $prop }}]" value="0">
-                                        <input type="checkbox" class="toggle-{{ $prop }}" name="subformularios[{{ $subformIndex }}][campos][{{ $campo }}][{{ $prop }}]" value="1" {{ !empty($meta[$prop]) ? 'checked' : '' }}>
+                        @if (is_iterable($camposSubform) && count($camposSubform))
+                            @foreach ($camposSubform as $campo => $meta)
+                                <tr>
+                                    <td>{{ $campo }}</td>
+                                    <td>
+                                        <input name="subformularios[{{ $subformIndex }}][campos][{{ $campo }}][label]"
+                                               class="form-control form-control-sm"
+                                               value="{{ data_get($meta, 'label', ucfirst(str_replace('_', ' ', $campo))) }}">
                                     </td>
-                                @endforeach
+                                    <td>
+                                        <input name="subformularios[{{ $subformIndex }}][campos][{{ $campo }}][input_type]"
+                                               class="form-control form-control-sm"
+                                               value="{{ data_get($meta, 'input_type', 'text') }}">
+                                    </td>
+                                    @foreach (['incluir', 'sync', 'nullable', 'readonly'] as $prop)
+                                        <td class="text-center">
+                                            <input type="hidden" name="subformularios[{{ $subformIndex }}][campos][{{ $campo }}][{{ $prop }}]" value="0">
+                                            <input type="checkbox"
+                                                   class="toggle-{{ $prop }}"
+                                                   name="subformularios[{{ $subformIndex }}][campos][{{ $campo }}][{{ $prop }}]"
+                                                   value="1"
+                                                 {{ (isset($meta[$prop]) && ($meta[$prop] === true || $meta[$prop] === '1' || $meta[$prop] === 1)) ? 'checked' : '' }}>
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        @else
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">⚠ No se cargaron campos del subformulario. Usá el botón 🔄 para cargarlos.</td>
                             </tr>
-                        @endforeach
+                        @endif
                     </tbody>
                 </table>
             </div>
-            {{-- Botón para guardar subformulario sin salir --}}
+
+            {{-- Nuevo botón con ruta específica para subformularios --}}
             <div class="mt-3">
-                 <button type="submit" name="modo_guardado" value="subform" class="btn btn-success">📂 Guardar subformulario</button>
+                <button formaction="{{ route('sistemas.abms.guardar_subformulario') }}" formmethod="POST" class="btn btn-success">📂 Guardar subformulario</button>
             </div>
         @endif
 
         {{-- Botón de guardado general (modelo y subformulario incluidos) --}}
         <div class="mt-4">
-            <button type="submit" name="modo_guardado" value="general" class="btn btn-primary">🗓 Guardar todo y generar archivos</button>
+            <button type="submit" class="btn btn-primary">🗓 Guardar todo y generar archivos</button>
         </div>
     </form>
 </div>

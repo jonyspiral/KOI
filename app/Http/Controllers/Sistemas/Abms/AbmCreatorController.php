@@ -125,7 +125,7 @@ public function preview(Request $request, string $modelo)
 
     $json = json_decode(File::get($jsonPath), true);
 
-    // 🆕 Si se está agregando un nuevo subformulario por formulario HTML
+    // 🆕 Agregar nuevo subformulario (desde formulario superior)
     if ($request->input('accion') === 'agregar_subform') {
         $nuevoSubform = $request->input('nuevo_subform', []);
         if (!empty($nuevoSubform['modelo']) && !empty($nuevoSubform['foreign_key']) && !empty($nuevoSubform['nombre'])) {
@@ -142,40 +142,40 @@ public function preview(Request $request, string $modelo)
         return redirect()->route('sistemas.abms.preview', ['modelo' => $modelo]);
     }
 
-    // 🧩 Si se pidió cargar campos de un subform existente
+    // 🧩 Cargar campos de subformulario existente y hacer MERGE si ya hay campos definidos
     $subformIndex = $request->input('subform_index');
     $modeloHijo = $request->input('modelo_hijo');
     $camposSubform = null;
 
     if ($modeloHijo && is_numeric($subformIndex) && isset($json['subformularios'][$subformIndex])) {
-    $subformExistente = $json['subformularios'][$subformIndex];
+        $subformExistente = $json['subformularios'][$subformIndex];
+        $camposSubform = $subformExistente['campos'] ?? [];
 
-    if (!empty($subformExistente['campos'])) {
-        // ✅ Ya existen campos definidos → NO sobreescribas
-        $camposSubform = $subformExistente['campos'];
-    } else {
-        // 🔁 No hay campos → Cargar desde fieldsMeta()
-        $clase = "\\App\\Models\\Sql\\$modeloHijo";
+        // Si faltan campos, cargar de fieldsMeta y mergear
+        $clase = "App\\Models\\Sql\\$modeloHijo";
         if (class_exists($clase) && method_exists($clase, 'fieldsMeta')) {
-            $camposSubform = [];
-            $rawFields = $clase::fieldsMeta();
-            foreach ($rawFields as $campo => $meta) {
-                $camposSubform[$campo] = [
-                    'label' => ucfirst(str_replace('_', ' ', $campo)),
-                    'input_type' => $meta['input_type'] ?? 'text',
-                    'incluir' => true,
-                    'nullable' => $meta['nullable'] ?? false,
-                    'readonly' => $meta['readonly'] ?? false,
-                    'sync' => true,
-                    'orden' => 0,
-                ];
+            $nuevosCampos = $clase::fieldsMeta();
+            foreach ($nuevosCampos as $campo => $meta) {
+                if (!isset($camposSubform[$campo])) {
+                    $camposSubform[$campo] = [
+                        'label' => ucfirst(str_replace('_', ' ', $campo)),
+                        'input_type' => $meta['input_type'] ?? 'text',
+                        'incluir' => true,
+                        'nullable' => $meta['nullable'] ?? false,
+                        'readonly' => $meta['readonly'] ?? false,
+                        'sync' => true,
+                        'orden' => 0,
+                    ];
+                }
             }
         }
+
+        // Actualizar el JSON con los campos mergeados
+        $json['subformularios'][$subformIndex]['campos'] = $camposSubform;
+        File::put($jsonPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     }
-}
 
-
-    // 🧾 Cargar metadatos del JSON
+    // 🧾 Datos base
     $campos = $json['campos'] ?? [];
     $form_config = $json['form_config'] ?? [];
     $namespace = $json['namespace'] ?? 'App';
@@ -184,7 +184,7 @@ public function preview(Request $request, string $modelo)
     $primaryKeySql = $json['primary_key_sql'] ?? [$primaryKey];
     $subformularios = $json['subformularios'] ?? [];
 
-    // 🎨 Normalizar campos principales
+    // 🎨 Normalizar campos padre
     foreach ($campos as $campo => &$meta) {
         $meta['input_type'] = $meta['input_type'] ?? 'text';
         $meta['label_custom'] = $meta['label_custom'] ?? ucwords(str_replace('_', ' ', $campo));
@@ -199,7 +199,6 @@ public function preview(Request $request, string $modelo)
         $meta['orden'] = $meta['orden'] ?? 0;
     }
 
-    // 🧩 Vista
     return view('sistemas.abms.preview', [
         'modelo' => $modelo,
         'fields' => $campos,
@@ -217,13 +216,10 @@ public function preview(Request $request, string $modelo)
 }
 
 
+
 public function configurar(Request $request)
 
-{  dd([
-    'modo_guardado' => $request->input('modo_guardado'),
-    'subform_index' => $request->input('subform_index'),
-    'modelo_hijo' => $request->input('modelo_hijo'),
-]);
+{ 
 
     // 🧠 1. Recuperar datos base desde el formulario
     $modelo = $request->input('modelo');
@@ -274,34 +270,36 @@ public function configurar(Request $request)
     }
 
     // 🧩 6. Procesar subformularios y autocompletar campos si es necesario
-    $subformulariosConCampos = collect($request->input('subformularios', []))->map(function ($sub, $i) use ($request) {
-        $camposRecibidos = data_get($sub, 'campos', []);
+$subformulariosConCampos = collect($request->input('subformularios', []))->map(function ($sub, $i) use ($configAnterior) {
+    $camposRecibidos = data_get($sub, 'campos', []);
 
-        if (empty($camposRecibidos)) {
-            $modeloSub = $sub['modelo'] ?? null;
-            if ($modeloSub) {
-                $modeloSql = "\\App\\Models\\Sql\\{$modeloSub}";
-                if (class_exists($modeloSql) && method_exists($modeloSql, 'fieldsMeta')) {
-                    $fieldsMeta = $modeloSql::fieldsMeta();
-                    $camposRecibidos = collect($fieldsMeta)->map(function ($meta, $campo) {
-                        return [
-                            'label' => ucfirst(str_replace('_', ' ', $campo)),
-                            'input_type' => 'text',
-                            'incluir' => true,
-                            'nullable' => $meta['nullable'] ?? false,
-                            'readonly' => $meta['readonly'] ?? false,
-                            'sync' => true,
-                            'orden' => 0,
-                        ];
-                    })->toArray();
-                }
+    // 🧠 Si no se enviaron campos desde el request, usá los guardados en el JSON anterior
+    if (empty($camposRecibidos) && isset($configAnterior['subformularios'][$i]['campos'])) {
+        $camposRecibidos = $configAnterior['subformularios'][$i]['campos'];
+    }
+
+    // 🧩 Asegurar metadata base del subform
+    // 🔧 Normalizar valores booleanos
+    $sub['campos'] = collect($camposRecibidos)->map(function ($meta) {
+        foreach (['incluir', 'nullable', 'readonly', 'sync'] as $clave) {
+            if (isset($meta[$clave])) {
+                $meta[$clave] = filter_var($meta[$clave], FILTER_VALIDATE_BOOLEAN);
             }
         }
-
-        $sub['campos'] = $camposRecibidos;
-        return $sub;
+        return $meta;
     })->toArray();
 
+
+    $sub['modelo'] = $sub['modelo'] ?? $configAnterior['subformularios'][$i]['modelo'] ?? null;
+    $sub['foreign_key'] = $sub['foreign_key'] ?? $configAnterior['subformularios'][$i]['foreign_key'] ?? null;
+    $sub['nombre'] = $sub['nombre'] ?? $configAnterior['subformularios'][$i]['nombre'] ?? "subform_{$i}";
+    $sub['titulo'] = $sub['titulo'] ?? $sub['nombre'];
+    $sub['view_type'] = $sub['view_type'] ?? 'inline';
+    $sub['modo'] = $sub['modo'] ?? 'inline';
+    $sub['carpeta_vistas'] = $sub['carpeta_vistas'] ?? $configAnterior['subformularios'][$i]['carpeta_vistas'] ?? 'abms';
+
+    return $sub;
+})->toArray();
     // 🧱 7. Preparar datos para generar el JSON (restaurando campos si no se recibieron)
     $data = [
         'modelo' => $modelo,
@@ -594,6 +592,57 @@ foreach ($subformularios as $i => &$subform) {
         'menu' => $menu,
     ];
 }
+public function guardarSubformulario(Request $request)
+{
+    $modelo = $request->input('modelo');
+    $subformIndex = $request->input('subform_index');
+    $jsonPath = resource_path("meta_abms/config_form_{$modelo}.json");
+
+    if (!File::exists($jsonPath)) {
+        return back()->withErrors("❌ No existe archivo de configuración JSON para el modelo {$modelo}.");
+    }
+
+    $json = json_decode(File::get($jsonPath), true);
+
+    // 🧩 Normalizar campos del subformulario
+    $campos = $request->input("subformularios.{$subformIndex}.campos", []);
+    $camposNormalizados = [];
+
+    foreach ($campos as $campo => $meta) {
+        $camposNormalizados[$campo] = [
+            'label' => $meta['label'] ?? '',
+            'input_type' => $meta['input_type'] ?? 'text',
+            'incluir' => filter_var($meta['incluir'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'nullable' => filter_var($meta['nullable'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'readonly' => filter_var($meta['readonly'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'sync' => filter_var($meta['sync'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'orden' => intval($meta['orden'] ?? 0),
+        ];
+    }
+
+    // 🧩 Guardar el subformulario con campos normalizados
+    $json['subformularios'][$subformIndex] = [
+        'modelo' => $request->input("subformularios.{$subformIndex}.modelo"),
+        'foreign_key' => $request->input("subformularios.{$subformIndex}.foreign_key"),
+        'nombre' => $request->input("subformularios.{$subformIndex}.nombre"),
+        'titulo' => $request->input("subformularios.{$subformIndex}.titulo"),
+        'view_type' => $request->input("subformularios.{$subformIndex}.view_type"),
+        'modo' => $request->input("subformularios.{$subformIndex}.modo"),
+        'carpeta_vistas' => $request->input("subformularios.{$subformIndex}.carpeta_vistas"),
+        'campos' => $camposNormalizados,
+    ];
+
+    File::put($jsonPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+    return redirect()
+        ->route('sistemas.abms.preview', ['modelo' => $modelo])
+        ->with('success', '✅ Subformulario guardado correctamente.');
+}
+
+
+
+
+
 
 /**
  * 🧩 Genera automáticamente las vistas blade para un ABM

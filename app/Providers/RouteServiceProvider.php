@@ -2,29 +2,24 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
 class RouteServiceProvider extends ServiceProvider
 {
     /**
-     * Define el espacio de nombres del controlador
+     * Define your route model bindings, pattern filters, etc.
      */
-    protected $namespace = 'App\Http\Controllers';
-
-    /**
-     * Definir las rutas del sistema
-     */
-    public function boot()
+    public function boot(): void
     {
         $this->routes(function () {
+            // Rutas API
             Route::prefix('api')
                 ->middleware('api')
-                ->namespace($this->namespace)
                 ->group(base_path('routes/api.php'));
 
+            // Rutas WEB (Laravel resolverá automáticamente los controladores vía ::class)
             Route::middleware('web')
-                ->namespace($this->namespace)
                 ->group(base_path('routes/web.php'));
         });
     }

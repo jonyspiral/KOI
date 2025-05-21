@@ -294,7 +294,7 @@ class ArticuloController extends Controller
 
         // ✅ Guardar en MySQL
         $registro = $modelo::create($datos);
-        return redirect()->route('produccion.abms.articulo.index')->with('success', '✅ Registro creado y sincronizado.');
+        return redirect()->route('produccion.abms.articulos.index')->with('success', '✅ Registro creado y sincronizado.');
     }
 
     public function update(Request $request, $id)
@@ -302,7 +302,7 @@ class ArticuloController extends Controller
         $modeloNombre = 'Articulo';
         $modeloClase = "\\App\\Models\\{$modeloNombre}";
         $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
-        $rutaNombre = 'produccion.abms.articulo';
+        $rutaNombre = 'produccion.abms.articulos';
 
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
@@ -405,7 +405,7 @@ class ArticuloController extends Controller
         }
 
         return $this->redirectToParent($request->merge($registro->toArray()), $modeloNombre)
-            ?? redirect()->route('produccion.abms.articulo.index')->with('success', $mensaje);
+            ?? redirect()->route('produccion.abms.articulos.index')->with('success', $mensaje);
     }
     // 📦 Redirección automática al padre (si es subformulario)
     protected function redirectToParent(Request $request, string $modeloNombre)
@@ -521,6 +521,6 @@ public function restaurar($id)
 
     $registro->save();
 
-    return redirect()->route('produccion.abms.articulo.index')->with('success', 'Registro restaurado correctamente.');
+    return redirect()->route('produccion.abms.articulos.index')->with('success', 'Registro restaurado correctamente.');
 }
 }
