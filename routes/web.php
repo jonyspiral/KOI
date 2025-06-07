@@ -1,8 +1,9 @@
 <?php
+use App\Http\Controllers\Sistemas\Importar\ImportarController;
 use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\App;
 
-use App\Http\Controllers\Sistemas\Importar\ImportarController;
 use App\Http\Controllers\Produccion\MarcaController;
 use App\Http\Controllers\Produccion\HormaController;
 use App\Http\Controllers\Produccion\RangoTalleController;
@@ -16,6 +17,48 @@ use App\Http\Controllers\Produccion\PasosRutasProduccionController;
 use App\Http\Controllers\Produccion\ProductController;
 use App\Http\Controllers\Produccion\AlmacenController;
 use App\Http\Controllers\Produccion\ColoresPorArticuloController;
+use App\Http\Controllers\MlibreController;
+
+use App\Http\Controllers\Mlibre\MlibreItemsController;
+
+
+Route::get('/mlibre/publicar', [MlibreItemsController::class, 'formPublicar'])->name('mlibre.publicar');
+Route::post('/mlibre/publicar', [MlibreItemsController::class, 'generarPublicaciones'])->name('mlibre.publicar.enviar');
+Route::get('/mlibre/test-publicar-pow', [MlibreItemsController::class, 'testPowSkateb']);
+Route::prefix('meli/items')->group(function () {
+    Route::get('/', [MlibreItemsController::class, 'listar']);
+    Route::get('{id}', [MlibreItemsController::class, 'ver']);
+    Route::put('{id}/activar', [MlibreItemsController::class, 'activar']);
+    Route::put('{id}/pausar', [MlibreItemsController::class, 'pausar']);
+    Route::post('{id}/actualizar', [MlibreItemsController::class, 'actualizar']);
+});
+Route::get('/mlibre/test-publicar-pow', [MlibreItemsController::class, 'testPowSkateb']);
+
+
+
+if (App::environment('development')) {
+    Route::get('/', function () {
+        return 'KOI2 Desarrollo Activo';
+    });
+} elseif (App::environment('production')) {
+    Route::get('/', function () {
+        return view('welcome');
+    });
+}
+//Route::get('/meli/items', [MlibreController::class, 'index'])->name('meli.items.index');
+Route::get('/meli/callback', [MlibreController::class, 'callback']);
+
+if (App::environment('development')) {
+    Route::get('/meli/publicar-test', [MlibreController::class, 'publicarTest']);
+}
+Route::get('/meli/test-categoria', [MlibreController::class, 'testCategoria']);
+Route::get('/mlibre/variantes/{sku}', [MlibreItemsController::class, 'verVariantes'])->name('mlibre.publicar.variantes');
+
+Route::post('/mlibre/variantes/{sku}/publicar', [MlibreItemsController::class, 'publicarVariantes'])->name('mlibre.publicar.variantes.enviar');
+Route::get('/mlibre/variantes', [\App\Http\Controllers\Mlibre\MlibreItemsController::class, 'formPublicarVariantes'])->name('mlibre.variantes');
+
+
+
 
 // Creador ABMs
 Route::prefix('sistemas/abms')->group(function () {
@@ -38,7 +81,9 @@ Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function (
 Route::post('sistemas/importar/eliminar-config', [ImportarController::class, 'eliminarConfig'])
     ->name('sistemas.importar.eliminar_config');
     
-
+Route::get('/test-importar', function () {
+    return route('sistemas.importar.form');
+});
 
 // 🧩 Ruta generada automáticamente por ABM Creator
 // Modelo: RutasProduccion - Generado el 2025-03-30 08:11:41
@@ -70,12 +115,6 @@ Route::put('products/{id}', function () {
     return redirect()->back()->with('status', 'Guardado de prueba.');
 })->name('products.update');
 
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: PasosRutasProduccion - Generado el 2025-04-04 18:05:35
-
-Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
-    Route::resource('pasos_rutas_produccion', PasosRutasProduccionController::class)->names('pasos_rutas_produccion');
-});
 
 
 // 🧩 Ruta generada automáticamente por ABM Creator
@@ -87,12 +126,6 @@ Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
 });
 
 
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Almacen - Generado el 2025-04-17 18:57:50
-
-
-Route::resource('produccion/abms/almacenes', AlmacenController::class)
-    ->names('produccion.abms.almacenes');
 
 
 // 🧩 Ruta generada automáticamente por ABM Creator

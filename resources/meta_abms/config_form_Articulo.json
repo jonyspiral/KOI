@@ -1584,6 +1584,7 @@
     },
     "subformularios": [
         {
+            "orden": "0",
             "modelo": "ColoresPorArticulo",
             "foreign_key": "cod_articulo",
             "nombre": "colores_subform",

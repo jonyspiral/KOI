@@ -1,8 +1,4 @@
 <?php
-
-// KOI - ImportarController v1.2
-// Ejecuta el comando Artisan 'importar:tabla' desde la interfaz web con soporte para todos los flags
-
 namespace App\Http\Controllers\Sistemas\Importar;
 
 use Illuminate\Http\Request;

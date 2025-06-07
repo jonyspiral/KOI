@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
 
     protected $commands = [
         \App\Console\Commands\ImportarTablaKoi::class,
+       \App\Console\Commands\SyncTablaCommand::class,
     ];
     
     protected $commands = [
@@ -27,3 +28,4 @@ class Kernel extends ConsoleKernel
     
 
 }
+

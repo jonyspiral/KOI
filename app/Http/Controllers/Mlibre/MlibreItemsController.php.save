@@ -1,0 +1,31 @@
+use App\Services\Integraciones\PublicadorMercadoLibre;
+
+public function testPowSkateb()
+{
+    $datos = [
+        [
+            'cod_articulo' => '869',
+            'cod_color_articulo' => '01',
+            'nombre_color' => 'BLACK',
+            'curva_talle' => '35–39',
+            'stock_total' => 25,
+            'precio' => 49000,
+            'agrupador' => 'pow_skateb',
+            'imagen_1_url' => 'https://spiralshoes.com/images/pow_869_01_a.jpg',
+        ],
+        [
+            'cod_articulo' => '3062',
+            'cod_color_articulo' => '01',
+            'nombre_color' => 'BLACK',
+            'curva_talle' => '40–45',
+            'stock_total' => 30,
+            'precio' => 49000,
+            'agrupador' => 'pow_skateb',
+            'imagen_1_url' => 'https://spiralshoes.com/images/pow_3062_01_a.jpg',
+        ],
+    ];
+
+    $publicador = new PublicadorMercadoLibre();    $resultado = $publicador->publicarLote($datos);
+
+    return response()->json($resultado);
+}
