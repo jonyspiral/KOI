@@ -17,14 +17,19 @@ use App\Http\Controllers\Produccion\PasosRutasProduccionController;
 use App\Http\Controllers\Produccion\ProductController;
 use App\Http\Controllers\Produccion\AlmacenController;
 use App\Http\Controllers\Produccion\ColoresPorArticuloController;
-use App\Http\Controllers\MlibreController;
-
 use App\Http\Controllers\Mlibre\MlibreItemsController;
+use App\Http\Controllers\Mlibre\MeliAuthController;
+
+Route::prefix('mlibre')->group(function () {
+    Route::get('/auth', [MeliAuthController::class, 'redirect'])->name('mlibre.auth');
+    Route::get('/callback', [MeliAuthController::class, 'callback'])->name('mlibre.callback');
+});
 
 
 Route::get('/mlibre/publicar', [MlibreItemsController::class, 'formPublicar'])->name('mlibre.publicar');
 Route::post('/mlibre/publicar', [MlibreItemsController::class, 'generarPublicaciones'])->name('mlibre.publicar.enviar');
 Route::get('/mlibre/test-publicar-pow', [MlibreItemsController::class, 'testPowSkateb']);
+
 Route::prefix('meli/items')->group(function () {
     Route::get('/', [MlibreItemsController::class, 'listar']);
     Route::get('{id}', [MlibreItemsController::class, 'ver']);
@@ -45,13 +50,15 @@ if (App::environment('development')) {
         return view('welcome');
     });
 }
-//Route::get('/meli/items', [MlibreController::class, 'index'])->name('meli.items.index');
-Route::get('/meli/callback', [MlibreController::class, 'callback']);
 
+
+Route::get('/meli/callback', [MeliAuthController::class, 'callback']);
 if (App::environment('development')) {
-    Route::get('/meli/publicar-test', [MlibreController::class, 'publicarTest']);
+    Route::get('/meli/publicar-test', [MeliAuthController::class, 'publicarTest']);
 }
-Route::get('/meli/test-categoria', [MlibreController::class, 'testCategoria']);
+Route::get('/meli/test-categoria', [MeliAuthController::class, 'testCategoria']);
+
+
 Route::get('/mlibre/variantes/{sku}', [MlibreItemsController::class, 'verVariantes'])->name('mlibre.publicar.variantes');
 
 Route::post('/mlibre/variantes/{sku}/publicar', [MlibreItemsController::class, 'publicarVariantes'])->name('mlibre.publicar.variantes.enviar');

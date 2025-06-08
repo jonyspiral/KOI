@@ -4,37 +4,23 @@ use Illuminate\Support\Str;
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Default Database Connection Name
-    |--------------------------------------------------------------------------
-    | Esta conexión se usa por defecto si no se especifica otra en los modelos
-    | o en los llamados a DB::connection(). Por convención, usamos 'mysql'.
-    */
     'default' => env('DB_CONNECTION', 'mysql'),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Database Connections
-    |--------------------------------------------------------------------------
-    | Acá se definen todas las conexiones que usa KOI.
-    */
     'connections' => [
 
-        // 🔌 Conexión ODBC genérica (fallback, no se recomienda para producción)
+        // 🔌 Fallback ODBC genérica (no usar en producción)
         'odbc' => [
             'driver' => 'odbc',
-            'dsn' => env('DB_DSN', 'MiSQLServer'),
-            'database' => env('DB_DATABASE', 'koi2'),
-            'username' => env('DB_USERNAME', 'Koi'),
-            'password' => env('DB_PASSWORD', 'koisys'),
+            'dsn' => env('DB_KOI_DSN', 'sqlsrv_spiral'),
+            'database' => env('DB_KOI_DATABASE', 'spiral'),
+            'username' => env('DB_KOI_USERNAME', 'Koi'),
+            'password' => env('DB_KOI_PASSWORD', 'koisys'),
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
         ],
 
-        // 🐬 Conexión principal a MySQL (es la conexión por defecto del sistema)
-  // 🐬 Conexión principal a MySQL (por defecto)
+        // 🐬 MySQL (Laravel, KOI2, Ecomexperts, etc.)
         'mysql' => [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '127.0.0.1'),
@@ -50,19 +36,18 @@ return [
             'engine' => null,
         ],
 
-        // 🧠 Conexión SQL Server 2000 (usada por el importador KOI)
-// 🧠 Conexión a SQL Server 2000 vía FreeTDS/ODBC
+        // 🧠 SQL Server KOI (usa variables genéricas)
         'sqlsrv_koi' => [
-            'driver'   => 'odbc',
-            'dsn'      => env('DB_KOI_DSN', 'MiSQLServer'),
-            'database' => env('DB_KOI_DATABASE', 'desarrollo'),
+            'driver' => 'odbc',
+            'dsn' => env('DB_KOI_DSN', 'sqlsrv_spiral'),
+            'database' => env('DB_KOI_DATABASE', 'spiral'),
             'username' => env('DB_KOI_USERNAME', 'Koi'),
             'password' => env('DB_KOI_PASSWORD', 'koisys'),
-            'charset'  => 'utf8',
-            'prefix'   => '',
+            'charset' => 'utf8',
+            'prefix' => '',
         ],
 
-        // 🏢 Conexión a Encinitas (otra base del sistema)
+        // 🏢 Encinitas (consulta ocasional)
         'sqlsrv_encinitas' => [
             'driver' => 'odbc',
             'dsn' => 'ENCINITAS_DSN',
@@ -73,18 +58,7 @@ return [
             'prefix' => '',
         ],
 
-        // 🏭 Conexión a Spiral (segunda base opcional)
-        'sqlsrv_spiral' => [
-            'driver' => 'odbc',
-            'dsn' => 'SPIRAL_DSN',
-            'database' => 'spiral',
-            'username' => env('DB_KOI_USERNAME', 'Koi'),
-            'password' => env('DB_KOI_PASSWORD', 'koisys'),
-            'charset' => 'utf8',
-            'prefix' => '',
-        ],
-
-        // 🧪 Conexión SQL Server alternativa con driver nativo (no se usa en producción)
+        // 🧪 (no se usa, solo para pruebas)
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),
@@ -97,36 +71,20 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
         ],
-
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Migration Repository Table
-    |--------------------------------------------------------------------------
-    | Laravel guarda un historial de migraciones en esta tabla.
-    */
     'migrations' => [
         'table' => 'migrations',
         'update_date_on_publish' => true,
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Redis Databases
-    |--------------------------------------------------------------------------
-    | Configuración de Redis (se usa opcionalmente para cache o colas).
-    */
     'redis' => [
-
         'client' => env('REDIS_CLIENT', 'phpredis'),
-
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
             'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
-
         'default' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
@@ -135,7 +93,6 @@ return [
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
         ],
-
         'cache' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
@@ -144,7 +101,6 @@ return [
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
         ],
-
     ],
 
 ];

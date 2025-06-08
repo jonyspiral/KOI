@@ -3,7 +3,7 @@
     "namespace": "Produccion",
     "carpeta_vistas": "produccion\/abms\/articulos",
     "timestamps": true,
-    "sincronizable": true,
+    "sincronizable": false,
     "force_controlador": true,
     "primary_key": "id",
     "primary_key_sql": [
@@ -1477,7 +1477,7 @@
             "sync": "0"
         },
         "denom_articulo_largo": {
-            "label": "Denom articulo largo",
+            "label": "Descripcion",
             "default": null,
             "input_type": "text",
             "incluir": true,
