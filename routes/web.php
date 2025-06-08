@@ -19,6 +19,13 @@ use App\Http\Controllers\Produccion\AlmacenController;
 use App\Http\Controllers\Produccion\ColoresPorArticuloController;
 use App\Http\Controllers\Mlibre\MlibreItemsController;
 use App\Http\Controllers\Mlibre\MeliAuthController;
+use App\Http\Controllers\Mlibre\PublicacionesController;
+
+Route::prefix('mlibre/publicaciones')->group(function () {
+    Route::get('/', [PublicacionesController::class, 'index'])->name('mlibre.publicaciones.index');
+    Route::get('/{id}/edit', [PublicacionesController::class, 'edit'])->name('mlibre.publicaciones.edit');
+    Route::put('/{id}', [PublicacionesController::class, 'update'])->name('mlibre.publicaciones.update');
+});
 
 Route::prefix('mlibre')->group(function () {
     Route::get('/auth', [MeliAuthController::class, 'redirect'])->name('mlibre.auth');

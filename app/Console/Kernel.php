@@ -18,13 +18,18 @@ class Kernel extends ConsoleKernel
     }
 
     protected $commands = [
+          \App\Console\Commands\DescargarPublicacionesML::class,
         \App\Console\Commands\ImportarTablaKoi::class,
        \App\Console\Commands\SyncTablaCommand::class,
+       \App\Console\Commands\SetupAbmStubs::class,
+        \App\Console\Commands\ImportarPublicacionesML::class,
+        \App\Console\Commands\MlibreTestVariations::class,
+         \App\Console\Commands\VerSkusMlibreCommand::class,
+         \App\Console\Commands\MlibreActualizarSku::class,
+        
     ];
     
-    protected $commands = [
-        \App\Console\Commands\SetupAbmStubs::class,
-    ];
+   
     
 
 }
