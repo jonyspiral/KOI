@@ -20,6 +20,22 @@ use App\Http\Controllers\Produccion\ColoresPorArticuloController;
 use App\Http\Controllers\Mlibre\MlibreItemsController;
 use App\Http\Controllers\Mlibre\MeliAuthController;
 use App\Http\Controllers\Mlibre\PublicacionesController;
+use App\Http\Controllers\Sku\SkuVarianteController;
+use App\Http\Controllers\Mlibre\MlibreVariantesController;
+// Ruta para listar variantes SKU
+
+
+Route::prefix('sku')->name('sku.')->group(function () {
+    Route::get('sku_variantes', [SkuVarianteController::class, 'index'])->name('sku_variantes.index');
+    Route::get('sku_variantes/{id}', [SkuVarianteController::class, 'show'])->name('sku_variantes.show');
+});
+
+Route::get('/mlibre/variantes', [MlibreVariantesController::class, 'index'])->name('mlibre.variantes.index');
+Route::post('/mlibre/variantes/guardar', [MlibreVariantesController::class, 'guardar'])->name('mlibre.variantes.guardar');
+Route::post('/mlibre/variantes/{id}/publicar-scf', [MlibreVariantesController::class, 'publicarSCF'])
+    ->name('mlibre.variantes.publicar_scf');
+
+
 
 Route::prefix('mlibre/publicaciones')->group(function () {
     Route::get('/', [PublicacionesController::class, 'index'])->name('mlibre.publicaciones.index');
@@ -66,10 +82,6 @@ if (App::environment('development')) {
 Route::get('/meli/test-categoria', [MeliAuthController::class, 'testCategoria']);
 
 
-Route::get('/mlibre/variantes/{sku}', [MlibreItemsController::class, 'verVariantes'])->name('mlibre.publicar.variantes');
-
-Route::post('/mlibre/variantes/{sku}/publicar', [MlibreItemsController::class, 'publicarVariantes'])->name('mlibre.publicar.variantes.enviar');
-Route::get('/mlibre/variantes', [\App\Http\Controllers\Mlibre\MlibreItemsController::class, 'formPublicarVariantes'])->name('mlibre.variantes');
 
 
 

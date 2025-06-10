@@ -25,7 +25,7 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'koi2'),
+            'database' => env('DB_DATABASE'),
             'username' => env('DB_USERNAME', 'jony'),
             'password' => env('DB_PASSWORD', 'Route667'),
             'unix_socket' => env('DB_SOCKET', ''),

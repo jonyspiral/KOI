@@ -9,11 +9,19 @@ class MlVariante extends Model
     protected $table = 'ml_variantes';
 
     protected $fillable = [
-        'ml_publicacion_id',
-        'sku_',
+         'ml_id',
+        'variation_id',
+        
+        'modelo',
+        'seller_sku',
+        'color',
         'talle',
         'precio',
         'stock',
+        'seller_custom_field_actual',
+        'var_sku_sugerido',
+        'nuevo_seller_custom_field',
+        'sincronizado',
         'raw_json',
     ];
 
@@ -23,6 +31,13 @@ class MlVariante extends Model
 
     public function publicacion()
     {
-        return $this->belongsTo(MlPublicacion::class, 'ml_publicacion_id');
+        return $this->hasOne(MlPublicacion::class, 'ml_id', 'ml_id');
     }
 }
+
+
+
+
+
+   
+

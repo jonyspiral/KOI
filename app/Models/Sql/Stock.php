@@ -11,8 +11,8 @@ class Stock extends Model
     public static array $primaryKeySql = ['cod_almacen', 'cod_articulo', 'cod_color_articulo'];
     public $timestamps = false;
     public $incrementing = false;
-    protected $connection = 'sqlsrv_koi';
-    protected $fillable = ['cod_almacen', 'cod_articulo', 'cod_color_articulo'];
+    protected $connection = 'sqlsrv_encinitas';
+    protected $fillable = ['cod_almacen', 'cod_articulo', 'cod_color_articulo', 'cantidad', 'cant_1', 'cant_2', 'cant_3', 'cant_4', 'cant_5', 'cant_6', 'cant_7', 'cant_8', 'cant_9', 'cant_10', 'indices', 'created_at', 'updated_at', 'sync_status', 'id'];
 
     public static function fieldsMeta()
     {

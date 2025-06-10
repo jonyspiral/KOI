@@ -7,6 +7,13 @@
     {{-- ✅ Formulario principal de importación --}}
     <form action="{{ route('sistemas.importar.importar') }}" method="POST">
         @csrf
+<div class="form-group">
+    <label for="connection">🔌 Conexión SQL Server</label>
+    <select name="connection" id="connection" class="form-control">
+        <option value="sqlsrv_koi" {{ $conexion === 'sqlsrv_koi' ? 'selected' : '' }}>sqlsrv_koi</option>
+        <option value="sqlsrv_encinitas" {{ $conexion === 'sqlsrv_encinitas' ? 'selected' : '' }}>sqlsrv_encinitas</option>
+    </select>
+</div>
 
         <div class="form-group">
             <label for="tabla">📋 Seleccioná la tabla:</label>

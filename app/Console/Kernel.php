@@ -26,6 +26,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\MlibreTestVariations::class,
          \App\Console\Commands\VerSkusMlibreCommand::class,
          \App\Console\Commands\MlibreActualizarSku::class,
+          \App\Console\Commands\SyncStockDesdeSql::class,
+          \App\Console\Commands\MlibreParsearJsonVariantes::class,
         
     ];
     

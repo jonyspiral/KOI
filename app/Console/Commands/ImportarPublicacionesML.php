@@ -11,73 +11,82 @@ use Illuminate\Support\Str;
 class ImportarPublicacionesML extends Command
 {
     protected $signature = 'mlibre:importar-json';
-    protected $description = 'Importa publicaciones ML desde archivos JSON almacenados localmente con validaciones mejoradas';
+    protected $description = 'Importa publicaciones ML desde archivos JSON almacenados localmente';
 
-    public function handle()
-    {
-        $path = 'mlibre/items';
-        $files = Storage::files($path);
+   public function handle()
+{
+    $this->info('Importando publicaciones desde JSON...');
 
-        $this->info("\n📁 Archivos JSON detectados: " . count($files));
+    $folder = storage_path('app/private/mlibre/items');
+    $archivos = glob($folder . '/*.json');
 
-        foreach ($files as $file) {
-            $json = Storage::get($file);
-            $data = json_decode($json, true);
+    foreach ($archivos as $path) {
+        $json = file_get_contents($path);
+        $data = json_decode($json, true);
 
-            if (!isset($data['id'])) {
-                $this->warn("❌ Archivo sin ID de publicación: {$file}");
-                continue;
-            }
+        if (!$data || empty($data['id'])) {
+            $this->error("Archivo inválido: " . basename($path));
+            continue;
+        }
 
-            $ml_id = $data['id'];
-            $this->line("\n🟢 Procesando publicación: {$ml_id}");
+        $itemId     = $data['id'];
+        $variations = $data['variations'] ?? [];
+        $precio     = $this->extraerPrecio($data);
+        $stock      = $this->extraerStock($data);
 
-            $variations = $data['variations'] ?? [];
+        if (empty($variations)) {
+            $attrs      = collect($data['attributes'] ?? []);
+            $modelo     = $attrs->firstWhere('id', 'MODEL')['value_name'] ?? null;
+            $sellerSku  = $attrs->firstWhere('id', 'SELLER_SKU')['value_name'] ?? null;
 
-            if (empty($variations)) {
-                $this->warn("⚠️ Publicación {$ml_id} no tiene variantes. Se guarda sin variantes.");
-            }
-
-            $ml_reference = $this->inferirMlReference($variations);
-
-            $publicacion = MlPublicacion::updateOrCreate(
-                ['ml_id' => $ml_id],
+            MlVariante::updateOrCreate(
+                ['ml_id' => $itemId, 'variation_id' => null],
                 [
-                    'ml_reference'    => $ml_reference,
-                    'ml_name'         => $data['title'] ?? null,
-                    'ml_description'  => null,
-                    'mlibre_precio'   => $this->extraerPrecio($data),
-                    'mlibre_stock'    => $this->extraerStock($data),
-                    'status'          => $data['status'] ?? null,
-                    'raw_json'        => $data,
+                    'sku_'       => null,
+                    'talle'      => null,
+                    'color'      => null,
+                    'modelo'     => $modelo,
+                    'seller_sku' => $sellerSku,
+                    'precio'     => $precio,
+                    'stock'      => $stock,
                 ]
             );
 
-            $publicacion->variantes()->delete();
-
-            foreach ($variations as $v) {
-                $sku = $v['seller_custom_field'] ?? null;
-
-                if (!$sku) {
-                    $this->warn("❌ Variante sin SKU en publicación {$ml_id}. Omitida.");
-                    continue;
-                }
-
-                MlVariante::create([
-                    'ml_publicacion_id' => $publicacion->id,
-                    'sku_'              => $sku,
-                    'talle'             => $this->extraerTalle($v),
-                    'precio'            => $v['price'] ?? null,
-                    'stock'             => $v['available_quantity'] ?? null,
-                    'raw_json'          => $v,
-                ]);
-            }
-
-            $this->info("✅ Publicación {$ml_id} importada con " . count($variations) . " variantes.");
+            $this->info("Publicación simple importada: $itemId");
+            continue;
         }
 
-        $this->info("\n🎉 Proceso finalizado.");
+        foreach ($variations as $variation) {
+            $variationId = $variation['id'] ?? null;
+            $sku         = $variation['seller_custom_field'] ?? null;
+            $talle       = $this->extraerTalle($variation);
+            $color       = $this->extraerColor($variation);
+            $attrs       = collect($variation['attributes'] ?? []);
+            $modelo      = $attrs->firstWhere('id', 'MODEL')['value_name'] ?? null;
+            $sellerSku   = $attrs->firstWhere('id', 'SELLER_SKU')['value_name'] ?? null;
+            $stockVar    = $variation['available_quantity'] ?? null;
+            $precioVar   = $variation['price'] ?? $precio;
+
+            MlVariante::updateOrCreate(
+                ['ml_id' => $itemId] + (is_null($variationId) ? ['variation_id' => null] : ['variation_id' => $variationId]),
+                [
+                    'sku_'       => $sku,
+                    'talle'      => $talle,
+                    'color'      => $color,
+                    'modelo'     => $modelo,
+                    'seller_sku' => $sellerSku,
+                    'precio'     => $precioVar,
+                    'stock'      => $stockVar,
+                ]
+            );
+
+            $this->info("Variación importada: $itemId / $variationId");
+        }
     }
+
+    $this->info('Importación finalizada.');
+}
+
 
     private function extraerPrecio(array $data): ?float
     {
@@ -87,9 +96,7 @@ class ImportarPublicacionesML extends Command
     private function extraerStock(array $data): ?int
     {
         if (!empty($data['variations'])) {
-            return collect($data['variations'])->sum(function ($v) {
-                return $v['available_quantity'] ?? 0;
-            });
+            return collect($data['variations'])->sum(fn($v) => $v['available_quantity'] ?? 0);
         }
         return $data['available_quantity'] ?? null;
     }
@@ -98,6 +105,16 @@ class ImportarPublicacionesML extends Command
     {
         foreach ($variation['attribute_combinations'] ?? [] as $attr) {
             if (Str::contains(strtolower($attr['name']), 'talle')) {
+                return $attr['value_name'] ?? null;
+            }
+        }
+        return null;
+    }
+
+    private function extraerColor(array $variation): ?string
+    {
+        foreach ($variation['attribute_combinations'] ?? [] as $attr) {
+            if (Str::contains(strtolower($attr['name']), 'color')) {
                 return $attr['value_name'] ?? null;
             }
         }

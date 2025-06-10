@@ -22,9 +22,10 @@ class MlPublicacion extends Model
     protected $casts = [
         'raw_json' => 'array',
     ];
+
     public function variantes()
-{
-    return $this->hasMany(MlVariante::class, 'ml_publicacion_id');
+    {
+        return $this->hasMany(MlVariante::class, 'ml_id', 'ml_id');
+    }
 }
 
-}

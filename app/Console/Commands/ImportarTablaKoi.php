@@ -10,7 +10,7 @@ use Illuminate\Database\Schema\Blueprint;
 
 class ImportarTablaKoi extends Command
 {
-    protected $signature = 'importar:tabla {nombre_tabla} {--force-models} {--force-table} {--with-sql-model} {--fill-all} {--skip-data} {--insert-simple}';
+    protected $signature = 'importar:tabla {--connection=sqlsrv_koi} {nombre_tabla} {--force-models} {--force-table} {--with-sql-model} {--fill-all} {--skip-data} {--insert-simple}';
     protected $description = 'Importa una tabla desde SQL Server 2000 a MySQL y genera sus modelos Eloquent (MySQL y opcionalmente SQL Server) - v2.1';
 
     public function handle()
@@ -20,7 +20,9 @@ class ImportarTablaKoi extends Command
 
 
         $tabla = $this->argument('nombre_tabla');
-        $this->info("📦 Importando tabla: $tabla");
+$conexion = $this->option('connection') ?? 'sqlsrv_koi';
+
+$this->info("📦 Importando tabla: $tabla desde conexión [$conexion]");
 
         $forceModels = $this->option('force-models');
         $forceTable = $this->option('force-table');
@@ -29,12 +31,12 @@ class ImportarTablaKoi extends Command
         $skipData = $this->option('skip-data');
         $insertSimple = $this->option('insert-simple');
 
-        $pkeys = DB::connection('sqlsrv_koi')->select("exec sp_pkeys '$tabla'");
+        $pkeys = DB::connection($conexion)->select("exec sp_pkeys '$tabla'");
         $uniqueFields = !empty($pkeys)
             ? array_map(fn($r) => $r->COLUMN_NAME, $pkeys)
             : [];
 
-        $columnas = DB::connection('sqlsrv_koi')->select("exec sp_columns '$tabla'");
+        $columnas = DB::connection($conexion)->select("exec sp_columns '$tabla'");
         $this->info("🔹 Paso 2: Columnas obtenidas desde SQL Server.");
 
 
@@ -63,7 +65,8 @@ class ImportarTablaKoi extends Command
 
         $this->info("🔹 Paso 4: Verificando si existe tabla para crearla...");
         if (!Schema::hasTable($tabla)) {
-            Schema::create($tabla, function (Blueprint $table) use ($columnas, $uniqueFields, $tabla) {
+            Schema::create($tabla, function (Blueprint $table) use ($columnas, $uniqueFields, $tabla, $conexion) {
+
 
                 $tieneIdSQL = false;
 
@@ -116,7 +119,8 @@ class ImportarTablaKoi extends Command
                 $table->string('sync_status')->nullable();
 
                 // 🧠 Traer todos los índices únicos amigables generados
-                    $indicesFieldsMeta = $this->generarFieldsMeta($tabla, $columnas, $uniqueFields)['indices'] ?? [];
+                    $indicesFieldsMeta = $this->generarFieldsMeta($tabla, $columnas, $uniqueFields, $conexion)['indices'] ?? [];
+
 
                     foreach ($indicesFieldsMeta as $nombre => $indexData) {
                         if (!empty($indexData['unique'])) {
@@ -134,7 +138,7 @@ class ImportarTablaKoi extends Command
         }
 
         if (!$skipData) {
-            $datos = DB::connection('sqlsrv_koi')->table($tabla)->get();
+            $datos = DB::connection($conexion)->table($tabla)->get();
             $this->info("📄 {$datos->count()} registros obtenidos desde SQL Server.");
 
             $batchSize = 500;
@@ -185,7 +189,8 @@ class ImportarTablaKoi extends Command
             $this->warn("⚠️ Flag --skip-data activado. No se importaron registros desde SQL Server.");
         }
        // 🧠 Construir metadata de campos + índices únicos amigables
-            $fieldsMeta = $this->generarFieldsMeta($tabla, $columnas, $uniqueFields);
+           $fieldsMeta = $this->generarFieldsMeta($tabla, $columnas, $uniqueFields, $conexion);
+
 
             // 🧠 Generar método fieldsMeta() para insertarlo en el modelo
             $metaCode = "    public static function fieldsMeta()\n    {\n        return " . var_export($fieldsMeta, true) . ";\n    }";
@@ -206,7 +211,8 @@ $modelPath    = app_path("Models/{$modelName}.php");
 if ($withSqlModel) {
     $sqlFields = $fillAll ? array_keys($fieldsMeta) : $uniqueFields;
 
-    $modeloSQL = $this->generarModeloSQLSeguro($modelName, $tabla, $sqlFields, $uniqueFields, $metaCode);
+$modeloSQL = $this->generarModeloSQLSeguro($modelName, $tabla, $sqlFields, $uniqueFields, $metaCode, $conexion);
+
 
     if ($forceModels || !File::exists($modelSqlPath)) {
         File::ensureDirectoryExists(app_path('Models/Sql'));
@@ -265,8 +271,8 @@ protected function generarModeloSeguro(string $modelName, string $tabla, array $
 }
 
 
-    
-protected function generarModeloSQLSeguro(string $modelName, string $tabla, array $sqlFields, array $uniqueFields, string $metaCode): string
+ protected function generarModeloSQLSeguro(string $modelName, string $tabla, array $sqlFields, array $uniqueFields, string $metaCode, string $conexion): string
+   
 {
     $modelo = "<?php\n\n";
     $modelo .= "namespace App\\Models\\Sql;\n\n";
@@ -278,7 +284,7 @@ protected function generarModeloSQLSeguro(string $modelName, string $tabla, arra
     $modelo .= "    public static array \$primaryKeySql = " . $this->formatArray($uniqueFields) . ";\n";
     $modelo .= "    public \$timestamps = false;\n";
     $modelo .= "    public \$incrementing = false;\n";
-    $modelo .= "    protected \$connection = 'sqlsrv_koi';\n";
+    $modelo .= "    protected \$connection = '{$conexion}';\n";
     $modelo .= "    protected \$fillable = " . $this->formatArray(array_unique($sqlFields)) . ";\n\n";
     $modelo .= $metaCode . "\n";
     $modelo .= "}\n";
@@ -300,7 +306,8 @@ protected function generarModeloSQLSeguro(string $modelName, string $tabla, arra
  * @param array $uniqueFields Claves primarias reales detectadas desde sp_pkeys
  * @return array fieldsMeta listo para insertarse en el modelo
  */
-protected function generarFieldsMeta(string $tabla, array $columnas, array $uniqueFields): array
+protected function generarFieldsMeta(string $tabla, array $columnas, array $uniqueFields, string $conexion): array
+
 {
     $fieldsMeta = [];
 
@@ -317,7 +324,7 @@ protected function generarFieldsMeta(string $tabla, array $columnas, array $uniq
     }
 
     // 🧩 Obtener índices únicos desde SQL Server 2000 usando sp_helpindex
-    $indexRows = DB::connection('sqlsrv_koi')->select("exec sp_helpindex '$tabla'");
+    $indexRows = DB::connection($conexion)->select("exec sp_helpindex '$tabla'");
 
     $indices = [];
     foreach ($indexRows as $row) {
