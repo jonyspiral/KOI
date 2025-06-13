@@ -22,7 +22,11 @@ use App\Http\Controllers\Mlibre\MeliAuthController;
 use App\Http\Controllers\Mlibre\PublicacionesController;
 use App\Http\Controllers\Sku\SkuVarianteController;
 use App\Http\Controllers\Mlibre\MlibreVariantesController;
-// Ruta para listar variantes SKU
+use App\Http\Controllers\Mlibre\MlibreSyncController;
+
+
+Route::post('/mlibre/sync-scfs', [MlibreSyncController::class, 'sincronizar'])->name('mlibre.sync-scfs');
+
 
 
 Route::prefix('sku')->name('sku.')->group(function () {
@@ -34,6 +38,7 @@ Route::get('/mlibre/variantes', [MlibreVariantesController::class, 'index'])->na
 Route::post('/mlibre/variantes/guardar', [MlibreVariantesController::class, 'guardar'])->name('mlibre.variantes.guardar');
 Route::post('/mlibre/variantes/{id}/publicar-scf', [MlibreVariantesController::class, 'publicarSCF'])
     ->name('mlibre.variantes.publicar_scf');
+Route::get('/mlibre/variantes/exportar', [MlibreVariantesController::class, 'exportar'])->name('mlibre.variantes.exportar');
 
 
 

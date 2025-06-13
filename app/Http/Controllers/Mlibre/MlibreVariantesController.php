@@ -7,56 +7,74 @@ use Illuminate\Http\Request;
 use App\Models\MlVariante;
 use App\Services\MlibreTokenService;
 use Illuminate\Support\Facades\Http;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\MlVariantesExport;
 
 class MlibreVariantesController extends Controller
 {
-    public function index(Request $request)
-    {
-        $sort = $request->get('sort');
-        $dir  = $request->get('dir', 'asc');
+   public function index(Request $request)
+{
+    $sort = $request->get('sort');
+    $dir  = $request->get('dir', 'asc');
 
-        $query = MlVariante::query()
-            ->with('publicacion')
-            ->join('ml_publicaciones', 'ml_publicaciones.ml_id', '=', 'ml_variantes.ml_id')
-            ->select('ml_variantes.*');
+    $query = MlVariante::query()
+        ->with('publicacion')
+        ->join('ml_publicaciones', 'ml_publicaciones.ml_id', '=', 'ml_variantes.ml_id')
+        ->select('ml_variantes.*');
 
-        if ($request->filled('ml_id')) {
-            $query->where('ml_variantes.ml_id', 'like', '%' . $request->ml_id . '%');
-        }
-
-        if ($request->filled('color')) {
-            $query->where('ml_variantes.color', 'like', '%' . $request->color . '%');
-        }
-
-        if ($request->filled('talle')) {
-            $query->where('ml_variantes.talle', $request->talle);
-        }
-
-        if ($request->filled('modelo')) {
-            $query->where('ml_variantes.modelo', 'like', '%' . $request->modelo . '%');
-        }
-        if ($request->filled('seller_sku')) {
-                $query->where('seller_sku', 'like', '%' . $request->seller_sku . '%');
-            }
-
-
-        if ($request->filled('titulo')) {
-            $query->where('ml_publicaciones.ml_name', 'like', '%' . $request->titulo . '%');
-        }
-
-        // Orden dinámico o por defecto en 3 campos
-        if ($sort) {
-            $query->orderBy($sort, $dir);
-        } else {
-            $query->orderBy('ml_variantes.color')
-                  ->orderBy('ml_variantes.talle')
-                  ->orderByDesc('ml_variantes.stock');
-        }
-
-        $variantes = $query->get();
-
-        return view('mlibre.variantes', compact('variantes'));
+    // Filtros disponibles
+    if ($request->filled('ml_id')) {
+        $query->where('ml_variantes.ml_id', 'like', '%' . $request->ml_id . '%');
     }
+
+    if ($request->filled('color')) {
+        $query->where('ml_variantes.color', 'like', '%' . $request->color . '%');
+    }
+
+    if ($request->filled('talle')) {
+        $query->where('ml_variantes.talle', $request->talle);
+    }
+
+    if ($request->filled('modelo')) {
+        $query->where('ml_variantes.modelo', 'like', '%' . $request->modelo . '%');
+    }
+
+    if ($request->filled('seller_sku')) {
+        $query->where('ml_variantes.seller_sku', 'like', '%' . $request->seller_sku . '%');
+    }
+
+    if ($request->filled('titulo')) {
+        $query->where('ml_publicaciones.ml_name', 'like', '%' . $request->titulo . '%');
+    }
+
+    if ($request->filled('variation_id')) {
+        $query->where('ml_variantes.variation_id', $request->variation_id);
+    }
+
+    if ($request->filled('product_number')) {
+        $query->where('ml_variantes.product_number', 'like', '%' . $request->product_number . '%');
+    }
+
+    if ($request->filled('seller_custom_field')) {
+        $query->where('ml_variantes.seller_custom_field', 'like', '%' . $request->seller_custom_field . '%');
+    }
+
+    // Orden dinámico o por defecto
+    if ($sort) {
+        $query->orderBy($sort, $dir);
+    } else {
+        $query->orderBy('ml_variantes.color')
+              ->orderBy('ml_variantes.talle')
+              ->orderByDesc('ml_variantes.stock');
+    }
+
+    // ✅ Paginar correctamente
+    $variantes = $query->paginate(50)->appends($request->except('page'));
+
+    return view('mlibre.variantes', compact('variantes'));
+}
+
+
 
     public function guardar(Request $request)
     {
@@ -102,5 +120,8 @@ class MlibreVariantesController extends Controller
         return back()->with('error', 'Error al obtener token o enviar petición: ' . $e->getMessage());
     }
 }
-
+public function exportar()
+{
+    return Excel::download(new MlVariantesExport, 'ml_variantes.xlsx');
+}
 }

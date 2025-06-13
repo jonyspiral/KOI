@@ -15,7 +15,7 @@ class ImportarPublicacionesML extends Command
 
    public function handle()
 {
-    $this->info('Importando publicaciones desde JSON...');
+    $this->info('📦 Importando publicaciones desde JSON...');
 
     $folder = storage_path('app/private/mlibre/items');
     $archivos = glob($folder . '/*.json');
@@ -25,7 +25,7 @@ class ImportarPublicacionesML extends Command
         $data = json_decode($json, true);
 
         if (!$data || empty($data['id'])) {
-            $this->error("Archivo inválido: " . basename($path));
+            $this->error("❌ Archivo inválido: " . basename($path));
             continue;
         }
 
@@ -34,58 +34,86 @@ class ImportarPublicacionesML extends Command
         $precio     = $this->extraerPrecio($data);
         $stock      = $this->extraerStock($data);
 
-        if (empty($variations)) {
-            $attrs      = collect($data['attributes'] ?? []);
-            $modelo     = $attrs->firstWhere('id', 'MODEL')['value_name'] ?? null;
-            $sellerSku  = $attrs->firstWhere('id', 'SELLER_SKU')['value_name'] ?? null;
+        // Atributos del nivel raíz
+        $attrs = collect($data['attributes'] ?? []);
+        $modelo     = $attrs->firstWhere('id', 'MODEL')['value_name'] ?? null;
+        $sellerSku  = $attrs->firstWhere('id', 'SELLER_SKU')['value_name'] ?? null;
 
+        // Manejo de identificadores raíz (solo si no hay variaciones)
+        $productNumber = $data['product_number'] ?? $data['user_product_id'] ?? null;
+        $sellerCustomField = $data['seller_custom_field'] ?? null;
+
+        // Guardar la publicación
+MlPublicacion::updateOrCreate(
+    ['ml_id' => $itemId],
+    [
+        'ml_name'        => $data['title'] ?? null,
+        'ml_reference'   => $this->inferirMlReference($variations),
+        'ml_description' => $data['description'] ?? null,
+        'status'         => $data['status'] ?? null,
+        'category_id'    => $data['category_id'] ?? null,
+        'logistic_type'  => $data['shipping']['logistic_type'] ?? null,
+        'family_id'      => $data['family']['id'] ?? null,
+        'family_name'    => $data['family']['name'] ?? null,
+        'raw_json'       => $data,
+    ]
+);
+
+        // Si no hay variaciones, crear una única variante
+        if (empty($variations)) {
             MlVariante::updateOrCreate(
                 ['ml_id' => $itemId, 'variation_id' => null],
                 [
-                    'sku_'       => null,
-                    'talle'      => null,
-                    'color'      => null,
-                    'modelo'     => $modelo,
-                    'seller_sku' => $sellerSku,
-                    'precio'     => $precio,
-                    'stock'      => $stock,
+                    'product_number'      => $productNumber,
+                    'seller_custom_field' => $sellerCustomField,
+                    'talle'               => $this->extraerTalle($data),
+                    'color'               => $this->extraerColor($data),
+                    'modelo'              => $modelo,
+                    'seller_sku'          => $sellerSku,
+                    'precio'              => $precio,
+                    'stock'               => $stock,
+                    'family_id'           => $data['family']['id'] ?? null,
+                    'titulo'              => $data['title'] ?? null,
                 ]
             );
 
-            $this->info("Publicación simple importada: $itemId");
+            $this->info("✅ Publicación simple importada: $itemId");
             continue;
         }
 
+        // Si hay variaciones, recorrerlas
         foreach ($variations as $variation) {
-            $variationId = $variation['id'] ?? null;
-            $sku         = $variation['seller_custom_field'] ?? null;
-            $talle       = $this->extraerTalle($variation);
-            $color       = $this->extraerColor($variation);
-            $attrs       = collect($variation['attributes'] ?? []);
-            $modelo      = $attrs->firstWhere('id', 'MODEL')['value_name'] ?? null;
-            $sellerSku   = $attrs->firstWhere('id', 'SELLER_SKU')['value_name'] ?? null;
-            $stockVar    = $variation['available_quantity'] ?? null;
-            $precioVar   = $variation['price'] ?? $precio;
+            $variationId     = $variation['id'] ?? null;
+            $sku             = $variation['seller_custom_field'] ?? null;
+            $productNumber   = $variation['product_number'] ?? $variation['user_product_id'] ?? null;
+
+            $attrs = collect($variation['attributes'] ?? []);
+            $modelo     = $attrs->firstWhere('id', 'MODEL')['value_name'] ?? $modelo;
+            $sellerSku  = $attrs->firstWhere('id', 'SELLER_SKU')['value_name'] ?? null;
 
             MlVariante::updateOrCreate(
-                ['ml_id' => $itemId] + (is_null($variationId) ? ['variation_id' => null] : ['variation_id' => $variationId]),
+                ['ml_id' => $itemId, 'variation_id' => $variationId],
                 [
-                    'sku_'       => $sku,
-                    'talle'      => $talle,
-                    'color'      => $color,
-                    'modelo'     => $modelo,
-                    'seller_sku' => $sellerSku,
-                    'precio'     => $precioVar,
-                    'stock'      => $stockVar,
+                    'product_number'      => $productNumber,
+                    'seller_custom_field' => $sku,
+                    'talle'               => $this->extraerTalle($variation),
+                    'color'               => $this->extraerColor($variation),
+                    'modelo'              => $modelo,
+                    'seller_sku'          => $sellerSku,
+                    'precio'              => $variation['price'] ?? $precio,
+                    'stock'               => $variation['available_quantity'] ?? null,
+                    'family_id'           => $data['family']['id'] ?? null,
+                    'titulo'              => $data['title'] ?? null,
                 ]
             );
-
-            $this->info("Variación importada: $itemId / $variationId");
         }
+
+        $this->info("✅ Publicación con variaciones importada: $itemId");
     }
 
-    $this->info('Importación finalizada.');
+    $this->info('✅ Importación finalizada.');
 }
+
 
 
     private function extraerPrecio(array $data): ?float
@@ -101,25 +129,43 @@ class ImportarPublicacionesML extends Command
         return $data['available_quantity'] ?? null;
     }
 
-    private function extraerTalle(array $variation): ?string
-    {
-        foreach ($variation['attribute_combinations'] ?? [] as $attr) {
-            if (Str::contains(strtolower($attr['name']), 'talle')) {
-                return $attr['value_name'] ?? null;
-            }
+   private function extraerTalle(array $data): ?string
+{
+    // Buscar primero en attribute_combinations
+    foreach ($data['attribute_combinations'] ?? [] as $attr) {
+        if (Str::contains(strtolower($attr['name']), 'talle')) {
+            return $attr['value_name'] ?? null;
         }
-        return null;
     }
 
-    private function extraerColor(array $variation): ?string
-    {
-        foreach ($variation['attribute_combinations'] ?? [] as $attr) {
-            if (Str::contains(strtolower($attr['name']), 'color')) {
-                return $attr['value_name'] ?? null;
-            }
+    // Si no está, buscar en attributes
+    foreach ($data['attributes'] ?? [] as $attr) {
+        if (Str::contains(strtolower($attr['name']), 'talle')) {
+            return $attr['value_name'] ?? null;
         }
-        return null;
     }
+
+    return null;
+}
+
+private function extraerColor(array $data): ?string
+{
+    // Buscar primero en attribute_combinations
+    foreach ($data['attribute_combinations'] ?? [] as $attr) {
+        if (Str::contains(strtolower($attr['name']), 'color')) {
+            return $attr['value_name'] ?? null;
+        }
+    }
+
+    // Si no está, buscar en attributes
+    foreach ($data['attributes'] ?? [] as $attr) {
+        if (Str::contains(strtolower($attr['name']), 'color')) {
+            return $attr['value_name'] ?? null;
+        }
+    }
+
+    return null;
+}
 
     private function inferirMlReference(array $variations): ?string
     {

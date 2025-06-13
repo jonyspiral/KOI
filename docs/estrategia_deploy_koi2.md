@@ -68,4 +68,79 @@ mysql -u jony -pRoute667 -e "SHOW TABLES FROM koi2 LIKE 'ml_%';"
 ---
 
 ## 🧾 Última revisión
-Junio 2025
+# 🚀 Estrategia de Deploy KOI2 a Producción
+
+## 🧾 Descripción
+
+Este procedimiento automatiza el paso de la aplicación Laravel desde el entorno de desarrollo (`/var/www/koi2_v1`) al entorno de producción (`/var/www/koi2`), garantizando una transición limpia y sin errores manuales.
+
+---
+
+## 🧰 Comando Artisan
+
+```bash
+php artisan deploy:koi2
+```
+
+---
+
+## ⚙️ Funcionalidad del Comando
+
+1. **Sincronización de Archivos**
+   - Usa `rsync` para copiar todos los archivos desde `koi2_v1` a `koi2`.
+   - Excluye el archivo `.env` para no sobreescribir la configuración de producción.
+
+2. **Limpieza de Cachés**
+   - Ejecuta automáticamente:
+     - `php artisan config:clear`
+     - `php artisan cache:clear`
+     - `php artisan view:clear`
+     - `php artisan route:clear`
+     - `php artisan optimize`
+
+3. **Reinicio de Apache**
+   - Ejecuta: `sudo systemctl restart apache2`
+   - Reinicia el servidor web para aplicar los cambios.
+
+---
+
+## 📁 Ubicación del Comando
+
+El archivo del comando se encuentra en:
+
+```
+app/Console/Commands/DeployKoi2.php
+```
+
+Y debe estar registrado en `app/Console/Kernel.php`:
+
+```php
+protected $commands = [
+    \App\Console\Commands\DeployKoi2::class,
+];
+```
+
+---
+
+## ✅ Requisitos
+
+- Tener configurado `sudo` para el usuario actual (para usar `rsync` y reiniciar Apache).
+- Tener permisos de escritura sobre `/var/www/koi2/`.
+- `rsync` y `systemctl` disponibles en el sistema.
+
+---
+
+## 🔐 Seguridad
+
+Este comando solo debe ser ejecutado por usuarios autorizados. Se recomienda proteger el servidor con acceso restringido vía SSH.
+
+---
+
+## 📦 Resultado Esperado
+
+Una vez ejecutado:
+
+- Los archivos de desarrollo se copian a producción.
+- La aplicación queda lista para uso en `https://koi2.spiralshoes.com`.
+- Mercado Libre puede conectarse al entorno de producción sin errores.
+

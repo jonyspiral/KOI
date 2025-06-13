@@ -28,7 +28,12 @@ class Kernel extends ConsoleKernel
          \App\Console\Commands\MlibreActualizarSku::class,
           \App\Console\Commands\SyncStockDesdeSql::class,
           \App\Console\Commands\MlibreParsearJsonVariantes::class,
-        
+         \App\Console\Commands\RenovarTokenMl::class,
+         \App\Console\Commands\DeployKoi2::class,
+          \App\Console\Commands\DescargarPublicacionML::class,
+          \App\Console\Commands\MlibreActualizarStockSeguro::class,
+          \App\Console\Commands\LimpiarKoi::class, 
+          \App\Console\Commands\MlibreActualizarPublicacion::class,
     ];
     
    

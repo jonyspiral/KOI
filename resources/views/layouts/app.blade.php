@@ -5,10 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KOI - @yield('title', 'Producción')</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
@@ -19,13 +18,15 @@
             width: 100%;
             overflow-x: hidden;
         }
+
         svg.w-5.h-5 {
-            .fila-eliminada {
-    background-color: #f8f9fa !important;
-    color: #6c757d;
-}        
-    display: none !important;
-}
+            display: none !important;
+        }
+
+        .fila-eliminada {
+            background-color: #f8f9fa !important;
+            color: #6c757d;
+        }
 
         .container-fluid {
             padding-left: 2% !important;
@@ -35,10 +36,12 @@
         table {
             width: 100% !important;
         }
+
         .tr-nuevo-registro {
-    background-color: #f4f8fb;
-    border-top: 2px solid #0d6efd;
+            background-color: #f4f8fb;
+            border-top: 2px solid #0d6efd;
         }
+
         .tr-nuevo-registro input,
         .tr-nuevo-registro select {
             height: 32px;
@@ -46,55 +49,47 @@
             padding: 2px 6px;
         }
 
-/* <!-- FIX PARA MOSTRAR TR CON x-show -->
+        [x-cloak] {
+            display: none !important;
+        }
 
-    [x-cloak] {
-        display: none !important;
-    }
-
-    tr[x-show] {
-        display: table-row !important;
-    }
- */</style>
-
+        tr[x-show] {
+            display: table-row !important;
+        }
+    </style>
 </head>
 <body>
-<x-koi-menu />
+    <x-koi-menu />
 
     <main class="container-fluid px-0">
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
         @yield('content')
     </main>
 
-
-
-
-
-
-    <!-- jQuery debe ir primero -->
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- Bootstrap Bundle JS (con Popper) -->
+    <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    <!-- Alpine.js -->
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-<!-- Alpine.js -->
-<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script defer>
+        document.addEventListener('alpine:init', () => {
+            console.log('✅ AlpineJS cargado');
+        });
 
-   <!-- Confirmación de carga de AlpineJS -->
-<script defer>
-    document.addEventListener('alpine:init', () => {
-        console.log('✅ AlpineJS cargado');
-    });
-</script>
-    <!-- Inicializar Select2 -->
-    <script>
         document.addEventListener("DOMContentLoaded", function () {
             $('.select2').select2({
                 theme: 'bootstrap-5',
@@ -103,16 +98,17 @@
             });
         });
     </script>
-        @stack('scripts')
-        @livewireScripts
+
+    @stack('scripts')
+    @livewireScripts
+
+    @if (app()->environment('production'))
+        <div class="alert alert-danger" style="position: fixed; top: 0; width: 100%; z-index: 9999;">🛑 PRODUCCIÓN</div>
+    @else
+        <div class="alert alert-info" style="position: fixed; top: 0; width: 100%; z-index: 9999;">⚙️ DESARROLLO</div>
+    @endif
+
+    <!-- Espacio para evitar que la alerta tape contenido -->
+    <div style="height: 30px;"></div>
 </body>
-@if (app()->environment('production'))
-    <div class="alert alert-danger"style="position: fixed; top: 0; width: 100%; z-index: 9999;">🛑 PRODUCCIÓN</div>
-@else
-    <div class="alert alert-info"style="position: fixed; top: 0; width: 100%; z-index: 9999;">⚙️ DESARROLL</div>
-@endif
-
-
-<!-- opcional: espacio extra para que no tape la barra superior -->
-<div style="height: 30px;"></div>
 </html>

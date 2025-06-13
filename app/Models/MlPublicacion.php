@@ -8,14 +8,18 @@ class MlPublicacion extends Model
 {
     protected $table = 'ml_publicaciones';
 
-    protected $fillable = [
+protected $fillable = [
         'ml_id',
-        'ml_reference',
         'ml_name',
+        'ml_reference',
         'ml_description',
-        'mlibre_precio',
-        'mlibre_stock',
+        'precio',
+        'stock',
         'status',
+        'category_id',
+        'logistic_type',
+        'family_id',
+        'family_name',
         'raw_json',
     ];
 
