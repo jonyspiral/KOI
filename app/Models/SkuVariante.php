@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SkuVariante extends Model
 {
-    protected $table = 'view_sku_variantes';
+    protected $table = 'sku_variantes';
 
     public $incrementing = false;
     public $timestamps = false;
@@ -18,15 +18,23 @@ class SkuVariante extends Model
     public static $sincronizable = false;
 
     protected $fillable = [
-        'cod_articulo',
-        'cod_color_articulo',
+
+        'id',
         'sku',
         'var_sku',
         'ml_name',
+        'cod_articulo',
+        'cod_color_articulo',
+        'familia',
         'color',
         'talle',
         'precio',
         'stock',
+        'stock_ecommerce',
+           'stock_2da',
+        'stock_fulfillment',
+         'sync_status',
+        'sync_log' ,  
         'created_at',
         'updated_at',
     ];

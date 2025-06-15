@@ -11,6 +11,7 @@ class MlibreTokenService
     public function getValidAccessToken(int $userId = null): string
 {
     $userId = $userId ?? env('MLIBRE_USER_ID');
+    \Log::info('MLIBRE_USER_ID cargado: ' . ($userId ?? 'null'));
 
     if (!$userId) {
         throw new \Exception('MLIBRE_USER_ID no está definido en el archivo .env ni se pasó manualmente.');

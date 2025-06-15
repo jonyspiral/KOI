@@ -34,6 +34,7 @@ class Kernel extends ConsoleKernel
           \App\Console\Commands\MlibreActualizarStockSeguro::class,
           \App\Console\Commands\LimpiarKoi::class, 
           \App\Console\Commands\MlibreActualizarPublicacion::class,
+          \App\Console\Commands\SyncMlVariantes::class,
     ];
     
    

@@ -26,10 +26,8 @@ use App\Http\Controllers\Mlibre\MlibreSyncController;
 
 
 Route::post('/mlibre/sync-scfs', [MlibreSyncController::class, 'sincronizar'])->name('mlibre.sync-scfs');
-
-
-
-Route::prefix('sku')->name('sku.')->group(function () {
+Route::post('mlibre/variantes/guardar-individual/{id}', [MlibreVariantesController::class, 'guardarIndividual'])->name('mlibre.variantes.guardar_individual');
+Route::get('mlibre/variantes/verificar-scf/{id}', [MlibreVariantesController::class, 'verificarSCF'])->name('mlibre.variantes.verificar_scf');Route::prefix('sku')->name('sku.')->group(function () {
     Route::get('sku_variantes', [SkuVarianteController::class, 'index'])->name('sku_variantes.index');
     Route::get('sku_variantes/{id}', [SkuVarianteController::class, 'show'])->name('sku_variantes.show');
 });

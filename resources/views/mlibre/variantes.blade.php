@@ -61,10 +61,12 @@
                     <th>{!! sort_link('Talle', 'ml_variantes.talle') !!}</th>
                     <th>{!! sort_link('Precio', 'ml_variantes.precio') !!}</th>
                     <th>{!! sort_link('Stock', 'ml_variantes.stock') !!}</th>
-                    <th>{!! sort_link('Stock Flex', 'ml_variantes.stock_flex') !!}</th>
-                    <th>{!! sort_link('Stock Full', 'ml_variantes.stock_full') !!}</th>
-                    <th>Nuevo SCF</th>
-                    <th>Publicar</th>
+                    <th class="d-none">{!! sort_link('Stock Flex', 'ml_variantes.stock_flex') !!}</th>
+                    <th class="d-none">{!! sort_link('Stock Full', 'ml_variantes.stock_full') !!}</th>
+                    <th>{!! sort_link('Status', 'ml_publicaciones.status') !!}</th>
+                    <th>{!! sort_link('Logística', 'ml_publicaciones.logistic_type') !!}</th>
+                    <th>SCF</th>
+                    <th>Estado</th>
                 </tr>
             </thead>
             <tbody>
@@ -83,23 +85,36 @@
                     <td>{{ $v->stock ?? '-' }}</td>
                     <td>{{ $v->stock_flex ?? '-' }}</td>
                     <td>{{ $v->stock_full ?? '-' }}</td>
+                    <td>{{ $v->publicacion->status ?? '-' }}</td>
+                    <td>{{ $v->publicacion->logistic_type ?? '-' }}</td>
                     <td>
-                        <input type="text" name="variantes[{{ $v->id }}][nuevo_seller_custom_field]"
-                               value="{{ $v->nuevo_seller_custom_field }}"
-                               class="form-control form-control-sm">
+                        <input type="text" name="variantes[{{ $v->id }}][seller_custom_field]"
+                               value="{{ $v->seller_custom_field }}"
+                               class="form-control form-control-sm w-auto"size="10">
                         <input type="hidden" name="variantes[{{ $v->id }}][id]" value="{{ $v->id }}">
                     </td>
                     <td class="text-center">
-                        @if ($v->sincronizado == 1)
+                        @php
+                            $pendiente = $v->seller_custom_field && $v->seller_custom_field !== $v->seller_custom_field_actual;
+                        @endphp
+
+                        @if ($v->sincronizado == 1 && !$pendiente)
                             ✅
+                        @elseif ($pendiente)
+                            🟡
                         @else
                             ⏳
                         @endif
 
-                        <form method="POST" action="{{ route('mlibre.variantes.publicar_scf', $v->id) }}" class="d-inline m-0 p-0">
-                            @csrf
-                            <button class="btn btn-success btn-sm" title="Publicar SCF">🔁</button>
+                        <form method="GET" action="{{ route('mlibre.variantes.verificar_scf', $v->id) }}" class="d-inline m-0 p-0">
+                            <button class="btn btn-sm btn-info" title="Verificar SCF">🔍</button>
                         </form>
+                        <!-- Botón Guardar Individual -->
+                                <form method="POST" action="{{ route('mlibre.variantes.guardar_individual', $v->id) }}" class="d-inline m-0 p-0 guardar-individual-form">
+                                @csrf
+                                <input type="hidden" name="seller_custom_field" value="{{ old('seller_custom_field', $v->seller_custom_field) }}">
+                                <button type="submit" class="btn btn-sm btn-primary" title="Guardar Variante">💾</button>
+                            </form>
                     </td>
                 </tr>
                 @endforeach
@@ -107,7 +122,7 @@
         </table>
 
         <div class="text-end mb-3">
-            <button type="submit" class="btn btn-primary">💾 Guardar cambios</button>
+            <button type="submit" class="btn btn-primary">💾 Guardar y Publicar</button>
         </div>
 
         <div class="d-flex justify-content-center">

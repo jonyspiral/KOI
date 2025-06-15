@@ -14,6 +14,16 @@ class Stock extends Model
     protected $connection = 'sqlsrv_encinitas';
     protected $fillable = ['cod_almacen', 'cod_articulo', 'cod_color_articulo', 'cantidad', 'cant_1', 'cant_2', 'cant_3', 'cant_4', 'cant_5', 'cant_6', 'cant_7', 'cant_8', 'cant_9', 'cant_10', 'indices', 'created_at', 'updated_at', 'sync_status', 'id'];
 
+    public static function obtenerCantidadPorPosicion($codArticulo, $codColor, $posicion, $codAlmacen = '01')
+{
+    $stock = self::whereRaw("CAST(cod_articulo AS VARCHAR) = '$codArticulo'")
+        ->whereRaw("CAST(cod_color_articulo AS VARCHAR) = '$codColor'")
+        ->whereRaw("CAST(cod_almacen AS VARCHAR) = '$codAlmacen'")
+        ->first();
+
+    return $stock ? $stock["cant_{$posicion}"] ?? 0 : 0;
+}
+
     public static function fieldsMeta()
     {
         return array (

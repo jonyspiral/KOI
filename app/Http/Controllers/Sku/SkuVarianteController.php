@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Sku;
 
 use App\Http\Controllers\Controller;
-use App\Models\SkuVariante;
 use Illuminate\Http\Request;
+use App\Models\SkuVariante;
+use Illuminate\Support\Facades\Schema;
 
 class SkuVarianteController extends Controller
 {
@@ -12,41 +13,28 @@ class SkuVarianteController extends Controller
     {
         $query = SkuVariante::query();
 
-        // Filtros por campo
-        if ($request->filled('sku')) {
-            $query->where('sku', 'like', '%' . $request->sku . '%');
+        // Campos que se pueden filtrar
+        $camposFiltrables = [
+            'sku', 'var_sku', 'ml_name', 'cod_articulo', 'cod_color_articulo',
+            'familia', 'color', 'talle', 'precio'
+        ];
+
+        foreach ($camposFiltrables as $campo) {
+            if ($request->filled($campo)) {
+                $query->where($campo, 'like', '%' . $request->$campo . '%');
+            }
         }
 
-        if ($request->filled('var_sku')) {
-            $query->where('var_sku', 'like', '%' . $request->var_sku . '%');
+        // Ordenamiento dinámico
+        $sort = $request->get('sort', 'sku');
+        $dir  = $request->get('dir', 'asc');
+
+        if (Schema::hasColumn('sku_variantes', $sort)) {
+            $query->orderBy($sort, $dir);
         }
 
-        if ($request->filled('cod_articulo')) {
-            $query->where('cod_articulo', 'like', '%' . $request->cod_articulo . '%');
-        }
-
-        if ($request->filled('cod_color_articulo')) {
-            $query->where('cod_color_articulo', 'like', '%' . $request->cod_color_articulo . '%');
-        }
-
-        if ($request->filled('ml_name')) {
-            $query->where('ml_name', 'like', '%' . $request->ml_name . '%');
-        }
-
-        if ($request->filled('color')) {
-            $query->where('color', 'like', '%' . $request->color . '%');
-        }
-
-        if ($request->filled('talle')) {
-            $query->where('talle', $request->talle);
-        }
-
-        if ($request->filled('precio')) {
-            $query->where('precio', $request->precio);
-        }
-
-        // Orden y paginación
-        $registros = $query->orderBy('var_sku')->paginate(100)->appends($request->all());
+        // Paginación con preservación de filtros
+        $registros = $query->paginate(30)->appends($request->query());
 
         return view('sku.sku_variantes.index', compact('registros'));
     }
