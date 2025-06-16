@@ -86,8 +86,8 @@ public function index(Request $request)
 
                 $dataInicial = [
                     'modelo' => $modeloSeleccionado,
-                    'namespace' => $namespaceSeleccionado ?? 'App',
-                    'carpeta_vistas' => $carpetaSeleccionada ?? 'abms',
+                    'namespace' => $namespaceSeleccionado,
+                    'carpeta_vistas' => $carpetaSeleccionada,
                     'timestamps' => property_exists($instancia, 'timestamps') ? $instancia->timestamps : true,
                     'sincronizable' => property_exists($claseModelo, 'sincronizable') ? $claseModelo::$sincronizable : true,
                     'campos' => $camposIniciales,
@@ -178,7 +178,7 @@ public function preview(Request $request, string $modelo)
     // 🧾 Datos base
     $campos = $json['campos'] ?? [];
     $form_config = $json['form_config'] ?? [];
-    $namespace = $json['namespace'] ?? 'App';
+    $namespace = $json['namespace'];
     $carpeta_vistas = $json['carpeta_vistas'] ?? '';
     $primaryKey = $json['primary_key'] ?? 'id';
     $primaryKeySql = $json['primary_key_sql'] ?? [$primaryKey];
@@ -336,14 +336,16 @@ $subformulariosConCampos = collect($request->input('subformularios', []))->map(f
     $formRoute = $config['form_config']['form_route'] ?? strtolower("produccion/abms/{$snakeModel}");
     $routeName = str_replace('/', '.', strtolower($formRoute));
 
-    $replacements = [
-        '__MODELO__' => $modelo,
-        '__NOMBRE_RUTA__' => $routeName,
-        '__NOMBRES__' => $nombres,
-        '__NAMESPACE__' => $namespace,
-        '__CARPETA_VISTAS__' => $carpeta_vistas,
-        '__FORM_VIEW_TYPE__' => $config['form_config']['form_view_type'] ?? 'default',
-    ];
+    $namespaceCompleto = "App\\Http\\Controllers\\" . trim($namespace, '\\');
+
+$replacements = [
+    '__MODELO__' => $modelo,
+    '__NOMBRE_RUTA__' => $routeName,
+    '__NOMBRES__' => $nombres,
+    '__NAMESPACE__' => $namespaceCompleto,
+    '__CARPETA_VISTAS__' => $carpeta_vistas,
+    '__FORM_VIEW_TYPE__' => $config['form_config']['form_view_type'] ?? 'default',
+];
 
     // 🧩 12. Generar el controlador usando stub
     $controllerStub = file_get_contents(resource_path("stubs/abm/controller.stub.php"));
@@ -864,10 +866,12 @@ protected function agregarRutaWeb(string $modelo, string $carpeta_vistas, string
     $modeloSnake = basename($formRoute); // ej: marcas
     $nombreGrupo = str_replace('/', '.', $prefix); // ej: produccion.abms.marcas
 
-    // 👮 Controlador completo
-    $controladorCompleto = "App\\Http\\Controllers\\{$namespace}\\{$modelo}Controller";
-    $uso = "use {$controladorCompleto};";
-    $usoFinal = Str::contains($contenidoActual, $uso) ? '' : $uso;
+ // 👮 Controlador completo
+$namespaceSanitizado = trim(str_replace(['/', '\\'], '\\', $namespace), '\\');
+$controladorCompleto = "App\\Http\\Controllers\\{$namespaceSanitizado}\\{$modelo}Controller";
+$uso = "use {$controladorCompleto};";
+$usoFinal = Str::contains($contenidoActual, $uso) ? '' : $uso;
+
 
     // 🛑 Evitar duplicados
     if (!Str::contains($contenidoActual, "Route::prefix('{$prefix}')->name('{$nombreGrupo}.')->group")) {

@@ -11,7 +11,7 @@ class LineasProducto extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_linea'];
-    protected $fillable = ['cod_linea', 'id'];
+        protected $fillable = ['cod_linea', 'denom_linea', 'cod_linea_nro', 'titulo_catalogo', 'titulo_ecommerce', 'created_at', 'updated_at', 'sync_status', 'id'];
 
     public static function fieldsMeta()
     {
@@ -132,6 +132,34 @@ class LineasProducto extends Model
       ),
       'unique' => true,
     ),
+  ),
+  'created_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'updated_at' => 
+  array (
+    'type' => 'datetime',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'sync_status' => 
+  array (
+    'type' => 'varchar',
+    'nullable' => true,
+    'default' => NULL,
+    'primary' => false,
+  ),
+  'id' => 
+  array (
+    'type' => 'int',
+    'nullable' => false,
+    'default' => NULL,
+    'primary' => true,
   ),
 );
     }

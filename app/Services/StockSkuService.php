@@ -5,11 +5,12 @@ namespace App\Services;
 use App\Models\Sql\Articulo;
 use App\Models\Sql\RangoTalle;
 use App\Models\Sql\Stock;
+use Illuminate\Support\Facades\Log;
 
 class StockSkuService
 {
     /**
-     * Obtiene la cantidad total de stock para un SKU específico, sumando los almacenes indicados.
+     * Devuelve el stock total de un SKU para los almacenes dados, según el talle.
      *
      * @param string $codArticulo
      * @param string $codColor
@@ -18,28 +19,37 @@ class StockSkuService
      * @return int
      */
     public static function obtenerStockSKU($codArticulo, $codColor, $talle, array $almacenes = ['01'])
-    {
-        // 1. Buscar el artículo para conocer su rango de talle
-        $articulo = Articulo::whereRaw("CAST(cod_articulo AS VARCHAR) = '$codArticulo'")->first();
-        if (!$articulo || !$articulo->cod_rango_talle) {
-            return 0;
-        }
+{
+    $articulo = \App\Models\Sql\Articulo::whereRaw("CAST(cod_articulo AS VARCHAR) = '$codArticulo'")->first();
 
-        // 2. Obtener el rango de talle asociado
-        $rango = RangoTalle::whereRaw("CAST(cod_rango_talle AS VARCHAR) = '{$articulo->cod_rango_talle}'")->first();
-        if (!$rango) {
-            return 0;
-        }
-
-        // 3. Buscar la posición dentro del rango que coincida con el talle
-        for ($i = 1; $i <= 10; $i++) {
-            $campoTalle = "talle_$i";
-            if (trim($rango->$campoTalle) === $talle) {
-                // 4. Obtener la cantidad desde el stock por posición y almacenes
-                return Stock::obtenerCantidadPorPosicion($codArticulo, $codColor, $i, $almacenes);
-            }
-        }
-
+    if (!$articulo) {
+        echo "❌ Artículo no encontrado: $codArticulo\n";
         return 0;
     }
+
+    $codRango = $articulo->cod_rango;
+    if (!$codRango) {
+        echo "❌ El artículo no tiene cod_rango\n";
+        return 0;
+    }
+
+    $rango = \App\Models\Sql\RangoTalle::whereRaw("CAST(cod_rango AS VARCHAR) = '$codRango'")->first();
+
+    if (!$rango) {
+        echo "❌ Rango no encontrado para $codRango\n";
+        return 0;
+    }
+
+    for ($i = 1; $i <= 10; $i++) {
+        $campo = "posic_$i";
+        if (trim((string) $rango->$campo) === $talle) {
+            echo "✅ Talle $talle encontrado en posición $i\n";
+            return \App\Models\Sql\Stock::obtenerCantidadPorPosicion($codArticulo, $codColor, $i, $almacenes);
+        }
+    }
+
+    echo "❌ Talle $talle no encontrado en el rango\n";
+    return 0;
+}
+
 }

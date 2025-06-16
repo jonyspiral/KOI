@@ -109,12 +109,7 @@
                         <form method="GET" action="{{ route('mlibre.variantes.verificar_scf', $v->id) }}" class="d-inline m-0 p-0">
                             <button class="btn btn-sm btn-info" title="Verificar SCF">🔍</button>
                         </form>
-                        <!-- Botón Guardar Individual -->
-                                <form method="POST" action="{{ route('mlibre.variantes.guardar_individual', $v->id) }}" class="d-inline m-0 p-0 guardar-individual-form">
-                                @csrf
-                                <input type="hidden" name="seller_custom_field" value="{{ old('seller_custom_field', $v->seller_custom_field) }}">
-                                <button type="submit" class="btn btn-sm btn-primary" title="Guardar Variante">💾</button>
-                            </form>
+                       
                     </td>
                 </tr>
                 @endforeach

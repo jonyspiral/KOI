@@ -29,10 +29,11 @@ class MlPublicacion extends Model
         'raw_json' => 'array',
     ];
 
-    public function variantes()
-    {
-        return $this->hasMany(MlVariante::class, 'ml_id', 'ml_id');
-    }
+  public function variantes()
+{
+    return $this->hasMany(MlVariante::class, 'ml_id', 'ml_id');
+}
+
     public function mlVariantes()
     {
         return $this->hasMany(MlVariante::class, 'ml_id', 'ml_id');

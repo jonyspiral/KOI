@@ -1,21 +1,21 @@
 <?php
 
-namespace __NAMESPACE__;
+namespace App\Http\Controllers\Produccion;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\__MODELO__;
+use App\Models\LineasProducto;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\SubformManager;
 
-class __MODELO__Controller extends Controller
+class LineasProductoController extends Controller
 {
     public function index(Request $request)
     {
         // 🧩 Cargar configuración JSON del formulario
-        $modelo = '__MODELO__';
+        $modelo = 'LineasProducto';
         $configPath = resource_path("meta_abms/config_form_{$modelo}.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
     
@@ -29,13 +29,13 @@ class __MODELO__Controller extends Controller
         $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
         $columnas = array_keys($campos);
         $subformularios = $config['subformularios'] ?? [];
-        $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/__NOMBRES__';
+        $carpeta_vistas = $config['carpeta_vistas'] ?? 'produccion/abms/lineas_productos';
         $formConfig = $config['form_config'] ?? [];
     
         $defaultPerPage = (int) ($formConfig['per_page'] ?? 100);
         $perPage = (int) $request->input('por_pagina', $defaultPerPage);
     
-        $query = __MODELO__::query();
+        $query = LineasProducto::query();
     
         if ($request->filled('buscar') && $request->filled('buscar_campo')) {
             $campo = $request->input('buscar_campo');
@@ -143,11 +143,11 @@ class __MODELO__Controller extends Controller
     
         public function create()
         {
-            $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+            $configPath = resource_path("meta_abms/config_form_LineasProducto.json");
             $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
             $camposRaw = $config['campos'] ?? [];
             $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-            $modelo = '__MODELO__';
+            $modelo = 'LineasProducto';
     
             $siguiente = [];
             $labels = [];
@@ -159,7 +159,7 @@ class __MODELO__Controller extends Controller
                 $defaults[$campo] = $meta['default'] ?? '';
     
                 if (($meta['input_type'] ?? null) === 'autonumerico') {
-                    $siguiente[$campo] = __MODELO__::max($campo) + 1;
+                    $siguiente[$campo] = LineasProducto::max($campo) + 1;
                 }
     
                 if (
@@ -184,14 +184,14 @@ class __MODELO__Controller extends Controller
                 }
             }
     
-            return view('__CARPETA_VISTAS__.create', compact(
+            return view('produccion/abms/lineas_productos.create', compact(
                 'campos', 'siguiente', 'modelo', 'labels', 'defaults', 'opciones'
             ));
         }
     
         public function edit($id)
         {
-            $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+            $configPath = resource_path("meta_abms/config_form_LineasProducto.json");
             $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
             if (!isset($config['primary_key'])) {
                 abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
@@ -199,11 +199,11 @@ class __MODELO__Controller extends Controller
             $primaryKey = $config['primary_key'];
     
             
-            $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
+            $registro = LineasProducto::where($primaryKey, $id)->firstOrFail();
     
             $camposRaw = $config['campos'] ?? [];
             $campos = array_filter($camposRaw, fn($cfg) => !empty($cfg['incluir']));
-            $modelo = '__MODELO__';
+            $modelo = 'LineasProducto';
     
             $siguiente = [];
             $labels = [];
@@ -236,14 +236,14 @@ class __MODELO__Controller extends Controller
                 }
             }
     
-            return view('__CARPETA_VISTAS__.edit', compact(
+            return view('produccion/abms/lineas_productos.edit', compact(
                 'registro', 'campos', 'modelo', 'labels', 'defaults', 'siguiente', 'opciones','primaryKey'
             ));
         }
 
     public function store(Request $request)
     {
-        $modeloNombre = '__MODELO__';
+        $modeloNombre = 'LineasProducto';
         $modelo = "\\App\\Models\\{$modeloNombre}";
         $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
 
@@ -294,15 +294,15 @@ class __MODELO__Controller extends Controller
 
         // ✅ Guardar en MySQL
         $registro = $modelo::create($datos);
-        return redirect()->route('__NOMBRE_RUTA__.index')->with('success', '✅ Registro creado y sincronizado.');
+        return redirect()->route('produccion.abms.lineas_producto.index')->with('success', '✅ Registro creado y sincronizado.');
     }
 
     public function update(Request $request, $id)
     {
-        $modeloNombre = '__MODELO__';
+        $modeloNombre = 'LineasProducto';
         $modeloClase = "\\App\\Models\\{$modeloNombre}";
         $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
-        $rutaNombre = '__NOMBRE_RUTA__';
+        $rutaNombre = 'produccion.abms.lineas_producto';
 
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
@@ -361,7 +361,7 @@ class __MODELO__Controller extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $modeloNombre = '__MODELO__';
+        $modeloNombre = 'LineasProducto';
         $modeloSql = "\\App\\Models\\Sql\\{$modeloNombre}";
 
         $configPath = resource_path("meta_abms/config_form_{$modeloNombre}.json");
@@ -372,7 +372,7 @@ class __MODELO__Controller extends Controller
         }
 
         $primaryKey = $config['primary_key'];
-        $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
+        $registro = LineasProducto::where($primaryKey, $id)->firstOrFail();
 
         $registro->sync_status = 'D';
         if ($config['timestamps'] ?? false) {
@@ -405,7 +405,7 @@ class __MODELO__Controller extends Controller
         }
 
         return $this->redirectToParent($request->merge($registro->toArray()), $modeloNombre)
-            ?? redirect()->route('__NOMBRE_RUTA__.index')->with('success', $mensaje);
+            ?? redirect()->route('produccion.abms.lineas_producto.index')->with('success', $mensaje);
     }
     // 📦 Redirección automática al padre (si es subformulario)
     protected function redirectToParent(Request $request, string $modeloNombre)
@@ -456,18 +456,18 @@ class __MODELO__Controller extends Controller
     }
     public function show($id)
     {
-        $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+        $configPath = resource_path("meta_abms/config_form_LineasProducto.json");
         $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
         if (!isset($config['primary_key'])) {
             abort(500, "El archivo de configuración del modelo no tiene definida la clave 'primary_key'.");
         }
         $primaryKey = $config['primary_key'];
     
-        $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
+        $registro = LineasProducto::where($primaryKey, $id)->firstOrFail();
     
         $campos = array_filter($config['campos'] ?? [], fn($cfg) => !empty($cfg['incluir']));
     
-        return view('__CARPETA_VISTAS__.show', compact('registro', 'campos'));
+        return view('produccion/abms/lineas_productos.show', compact('registro', 'campos'));
     }
 
     /**
@@ -501,7 +501,7 @@ private function aplicarSyncStatus(array $datos, string $modo): array
 
 public function restaurar($id)
 {
-    $configPath = resource_path("meta_abms/config_form___MODELO__.json");
+    $configPath = resource_path("meta_abms/config_form_LineasProducto.json");
     $config = File::exists($configPath) ? json_decode(File::get($configPath), true) : [];
 
     if (!isset($config['primary_key'])) {
@@ -511,7 +511,7 @@ public function restaurar($id)
     $primaryKey = $config['primary_key'];
 
     // 🧠 Buscar registro por clave primaria real
-    $registro = __MODELO__::where($primaryKey, $id)->firstOrFail();
+    $registro = LineasProducto::where($primaryKey, $id)->firstOrFail();
 
     // ✅ Restaurar marcando como actualizado
     $registro->sync_status = 'U';
@@ -521,6 +521,6 @@ public function restaurar($id)
 
     $registro->save();
 
-    return redirect()->route('__NOMBRE_RUTA__.index')->with('success', 'Registro restaurado correctamente.');
+    return redirect()->route('produccion.abms.lineas_producto.index')->with('success', 'Registro restaurado correctamente.');
 }
 }

@@ -25,14 +25,27 @@ use App\Http\Controllers\Mlibre\MlibreVariantesController;
 use App\Http\Controllers\Mlibre\MlibreSyncController;
 
 
+Route::get('/sku/variantes/exportar', [SkuVarianteController::class, 'exportar'])->name('sku.sku_variantes.exportar');
+
+
 Route::post('/mlibre/sync-scfs', [MlibreSyncController::class, 'sincronizar'])->name('mlibre.sync-scfs');
 Route::post('mlibre/variantes/guardar-individual/{id}', [MlibreVariantesController::class, 'guardarIndividual'])->name('mlibre.variantes.guardar_individual');
 Route::get('mlibre/variantes/verificar-scf/{id}', [MlibreVariantesController::class, 'verificarSCF'])->name('mlibre.variantes.verificar_scf');Route::prefix('sku')->name('sku.')->group(function () {
     Route::get('sku_variantes', [SkuVarianteController::class, 'index'])->name('sku_variantes.index');
     Route::get('sku_variantes/{id}', [SkuVarianteController::class, 'show'])->name('sku_variantes.show');
 });
+//Nuevas
 
-Route::get('/mlibre/variantes', [MlibreVariantesController::class, 'index'])->name('mlibre.variantes.index');
+Route::post('/mlibre/variantes/{id}/sync', [\App\Http\Controllers\Mlibre\MlibreVariantesController::class, 'syncIndividual'])->name('mlibre.variantes.sync');
+Route::post('/mlibre/publicaciones/{ml_id}/sync', [\App\Http\Controllers\Mlibre\MlibreVariantesController::class, 'syncPublicacion'])->name('mlibre.publicacion.sync');
+
+Route::prefix('mlibre/variantes')->name('mlibre.variantes.')->group(function () {
+    Route::get('/', [MlibreVariantesController::class, 'index'])->name('index');
+       Route::post('sync-seleccionados', [MlibreVariantesController::class, 'sincronizarSeleccionados'])->name('sync-seleccionados');
+    Route::get('/exportar', [MlibreVariantesController::class, 'exportar'])->name('exportar');
+});
+
+
 Route::post('/mlibre/variantes/guardar', [MlibreVariantesController::class, 'guardar'])->name('mlibre.variantes.guardar');
 Route::post('/mlibre/variantes/{id}/publicar-scf', [MlibreVariantesController::class, 'publicarSCF'])
     ->name('mlibre.variantes.publicar_scf');
@@ -353,4 +366,45 @@ Route::prefix('produccion/abms/articulo')->name('produccion.abms.articulo.')->gr
         ]);
 
     Route::post('{id}/restaurar', [ArticuloController::class, 'restaurar'])->name('restaurar');
+});
+
+
+
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: TipoProductoStock - Generado el 2025-06-15 22:27:37
+use App\Http\Controllers\Produccion\TipoProductoStockController;
+
+Route::prefix('produccion/abms/tipo_producto_stock')->name('produccion.abms.tipo_producto_stock.')->group(function () {
+    Route::resource('', TipoProductoStockController::class)
+        ->parameters(['' => 'id'])
+        ->names([
+            'index'   => 'index',
+            'create'  => 'create',
+            'store'   => 'store',
+            'show'    => 'show',
+            'edit'    => 'edit',
+            'update'  => 'update',
+            'destroy' => 'destroy',
+        ]);
+
+    Route::post('{id}/restaurar', [TipoProductoStockController::class, 'restaurar'])->name('restaurar');
+});
+// 🧩 Ruta generada automáticamente por ABM Creator
+// Modelo: LineasProducto - Generado el 2025-06-15 22:58:17
+use App\Http\Controllers\Produccion\LineasProductoController;
+
+Route::prefix('produccion/abms/lineas_producto')->name('produccion.abms.lineas_producto.')->group(function () {
+    Route::resource('', LineasProductoController::class)
+        ->parameters(['' => 'id'])
+        ->names([
+            'index'   => 'index',
+            'create'  => 'create',
+            'store'   => 'store',
+            'show'    => 'show',
+            'edit'    => 'edit',
+            'update'  => 'update',
+            'destroy' => 'destroy',
+        ]);
+
+    Route::post('{id}/restaurar', [LineasProductoController::class, 'restaurar'])->name('restaurar');
 });

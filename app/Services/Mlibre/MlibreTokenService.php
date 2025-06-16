@@ -8,29 +8,36 @@ use Carbon\Carbon;
 
 class MlibreTokenService
 {
-    public function getValidAccessToken(int $userId = null): string
+   public function getValidAccessToken(int $userId = null): string
 {
-    $userId = $userId ?? env('MLIBRE_USER_ID');
-    \Log::info('MLIBRE_USER_ID cargado: ' . ($userId ?? 'null'));
+    // ⚠️ Cargar desde config/mlibre,php solo si no viene por parámetro
+  $userId = $userId ?? config('mlibre.user_id');
 
-    if (!$userId) {
+
+    // Log para depuración
+    \Log::info('MLIBRE_USER_ID cargado: ' . var_export($userId, true));
+
+    // Validación explícita
+    if (empty($userId)) {
         throw new \Exception('MLIBRE_USER_ID no está definido en el archivo .env ni se pasó manualmente.');
     }
 
+    // Buscar token actual
     $token = DB::table('mlibre_tokens')->where('user_id', $userId)->first();
 
     if (!$token) {
         throw new \Exception("No hay token guardado para el usuario $userId.");
     }
 
+    // Si el token no expiró, lo devolvemos
     if (Carbon::parse($token->expires_at)->isFuture()) {
         return $token->access_token;
     }
 
-    // Renovar token
+    // Si expiró, renovamos token
     $response = Http::asForm()->post('https://api.mercadolibre.com/oauth/token', [
-        'grant_type' => 'refresh_token',
-        'client_id' => env('MLIBRE_APP_ID'),
+        'grant_type'    => 'refresh_token',
+        'client_id'     => env('MLIBRE_APP_ID'),
         'client_secret' => env('MLIBRE_SECRET'),
         'refresh_token' => $token->refresh_token,
     ]);
@@ -41,13 +48,15 @@ class MlibreTokenService
 
     $data = $response->json();
 
+    // Actualizamos en la base
     DB::table('mlibre_tokens')->where('user_id', $userId)->update([
-        'access_token' => $data['access_token'],
+        'access_token'  => $data['access_token'],
         'refresh_token' => $data['refresh_token'],
-        'expires_at' => now()->addSeconds($data['expires_in']),
-        'updated_at' => now(),
+        'expires_at'    => now()->addSeconds($data['expires_in']),
+        'updated_at'    => now(),
     ]);
 
     return $data['access_token'];
 }
+
 }

@@ -42,9 +42,9 @@
             ↩️ Volver al inicio
         </a>
         {{-- ✅ Ir al ABM recién creado --}}
-        <a href="{{ url(Str::of($carpeta_vistas)->start('/')) }}" class="btn btn-success">
-            📋 Ir al ABM generado
-        </a>
+     <a href="{{ url($ruta_logica) }}" class="btn btn-success">
+    📋 Ir al ABM generado
+</a>
     </div>
 </div>
 @endsection
