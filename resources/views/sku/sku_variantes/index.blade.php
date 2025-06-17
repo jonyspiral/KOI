@@ -87,7 +87,7 @@
                     <td>{{ $r->talle }}</td>
                     <td>${{ number_format($r->precio, 2) }}</td>
                     <td>{{ $r->stock }}</td>
-                    <td>{{ $r->stock_ecommerce }}</td>
+                    <td>{{ $r->stock }}</td>
                     <td>{{ $r->stock_2da }}</td>
                     <td>{{ $r->stock_fulfillment }}</td>
                   <td>{{ $r->id_tipo_producto_stock }}</td>
@@ -102,7 +102,7 @@
     <tr>
         <td colspan="9">Totales:</td>
         <td>{{ $totales->stock_total ?? 0 }}</td>
-        <td>{{ $totales->stock_ecommerce_total ?? 0 }}</td>
+        <td>{{ $totales->stock_total ?? 0 }}</td>
         <td>{{ $totales->stock_2da_total ?? 0 }}</td>
         <td>{{ $totales->stock_fulfillment_total ?? 0 }}</td>
         <td colspan="4"></td> {{-- para completar columnas si agregaste nuevas --}}

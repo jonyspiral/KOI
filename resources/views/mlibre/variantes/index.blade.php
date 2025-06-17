@@ -12,16 +12,16 @@
     {{-- FILTROS --}}
     <form method="GET" action="{{ route('mlibre.variantes.index') }}" class="row g-2 mb-3">
         @foreach(['ml_id', 'variation_id', 'product_number', 'seller_custom_field', 'color', 'talle', 'modelo', 'titulo', 'seller_sku', 'sync_status', 'status', 'family_id'] as $campo)
-        <div class="col-md-3">
-            <select name="{{ $campo }}[]" multiple class="form-select select2" onchange="this.form.submit()">
-                <option value="">Filtrar por {{ ucfirst(str_replace('_', ' ', $campo)) }}</option>
-                @foreach($filtros[$campo] ?? [] as $valor)
-                    <option value="{{ $valor }}" {{ collect(request($campo, []))->contains($valor) ? 'selected' : '' }}>
-                        {{ $valor }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+            <div class="col-md-3">
+                <select name="{{ $campo }}[]" multiple class="form-select select2" onchange="this.form.submit()">
+                    <option value="">Filtrar por {{ ucfirst(str_replace('_', ' ', $campo)) }}</option>
+                    @foreach($filtros[$campo] ?? [] as $valor)
+                        <option value="{{ $valor }}" {{ collect(request($campo, []))->contains($valor) ? 'selected' : '' }}>
+                            {{ $valor }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         @endforeach
         <div class="col-md-12">
             <a href="{{ route('mlibre.variantes.index') }}" class="btn btn-outline-secondary">❌ Limpiar filtros</a>
@@ -59,13 +59,20 @@
             <thead>
                 <tr>
                     <th><input type="checkbox" id="select-all"></th>
-                    @foreach(['ml_id', 'variation_id', 'seller_custom_field', 'color', 'talle', 'modelo', 'titulo', 'precio', 'stock','STOCK KOI', 'status', 'family_id'] as $columna)
-                        <th>
-                            <a href="{{ route('mlibre.variantes.index', array_merge(request()->all(), ['sort' => $columna, 'dir' => $sort == $columna && $dir == 'asc' ? 'desc' : 'asc'])) }}">
-                                {{ ucfirst(str_replace('_', ' ', $columna)) }} {!! $sort == $columna ? ($dir == 'asc' ? ' 🔼' : ' 🔽') : '' !!}
-                            </a>
-                        </th>
-                    @endforeach
+                    <th>ML ID</th>
+                    <th>Var ID</th>
+                    <th>SCF</th>
+                    <th>Color</th>
+                    <th>Talle</th>
+                    <th>Modelo</th>
+                    <th>Título</th>
+                    <th>Precio</th>
+                    <th>Override Precio</th>
+                    <th>Stock</th>
+                    <th>Override Stock</th>
+                    <th>Stock KOI</th>
+                    <th>Status</th>
+                    <th>Family</th>
                     <th>Sync</th>
                 </tr>
             </thead>
@@ -73,8 +80,7 @@
                 @forelse($variantes as $v)
                 <tr>
                     <td><input type="checkbox" name="ids[]" value="{{ $v->id }}"></td>
-                    <td><a href="https://articulo.mercadolibre.com.ar/MLA-{{ Str::after($v->ml_id, 'MLA') }}" target="_blank">{{ $v->ml_id }}</a>
-                    </td>
+                    <td><a href="https://articulo.mercadolibre.com.ar/MLA-{{ Str::after($v->ml_id, 'MLA') }}" target="_blank">{{ $v->ml_id }}</a></td>
                     <td>{{ $v->variation_id }}</td>
                     <td>
                         <input type="text" name="scf[{{ $v->id }}]" value="{{ $v->seller_custom_field }}" class="form-control form-control-sm" maxlength="15">
@@ -86,22 +92,30 @@
                     <td>
                         <input type="number" step="0.01" name="precio[{{ $v->id }}]" value="{{ $v->precio }}" class="form-control form-control-sm" style="width: 80px;">
                     </td>
+                    <td class="text-center">
+                        <input type="checkbox" name="manual_price[{{ $v->id }}]" value="1" {{ $v->manual_price ? 'checked' : '' }}>
+                    </td>
                     <td>
                         <input type="number" name="stock[{{ $v->id }}]" value="{{ $v->stock }}" class="form-control form-control-sm" style="width: 60px;">
                     </td>
+                    <td class="text-center">
+                        <input type="checkbox" name="manual_stock[{{ $v->id }}]" value="1" {{ $v->manual_stock ? 'checked' : '' }}>
+                    </td>
                     <td @if(isset($v->skuVariante) && $v->skuVariante->stock != $v->stock) class="table-warning" @endif>{{ $v->skuVariante->stock ?? '-' }}</td>
-                    <td>{{ $v->status }}</td>
-                    <td>{{ $v->family_id }}</td>
-                   <td title="{{ $v->sync_log }}">
-                    @if ($v->sync_status == 'S') ✅
-                    @elseif ($v->sync_status == 'N') 🕓
-                    @elseif ($v->sync_status == 'U') 🟡
-                    @else ❌
-                    @endif
-                </td>
+                    <td>{{ $v->publicacion->status ?? '-' }}</td>
+                    <td>{{ $v->publicacion->family_id ?? '-' }}</td>
+                    <td title="{{ $v->sync_log }}">
+                        @if ($v->sync_status == 'S') ✅
+                        @elseif ($v->sync_status == 'N') 🕓
+                        @elseif ($v->sync_status == 'U') 🟡
+                        @else ❌
+                        @endif
+                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="13" class="text-center">No hay resultados</td></tr>
+                <tr>
+                    <td colspan="16" class="text-center">No hay resultados</td>
+                </tr>
                 @endforelse
             </tbody>
         </table>

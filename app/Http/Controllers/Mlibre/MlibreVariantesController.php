@@ -1,111 +1,263 @@
 <?php
 
 namespace App\Http\Controllers\Mlibre;
-use App\Services\Mlibre\MlibreTokenService;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\MlVariante;
+use App\Services\Mlibre\MlibreTokenService;
+use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\MlVariantesExport;
-use Illuminate\Support\Facades\Http;
-use App\Models\SkuVariante;
 
 class MlibreVariantesController extends Controller
 {
     public function index(Request $request)
-{
-    $sort = $request->get('sort', 'ml_id');
-    $dir  = $request->get('dir', 'asc');
+    {
+        $sort = $request->get('sort', 'ml_id');
+        $dir  = $request->get('dir', 'asc');
 
-  $query = MlVariante::query()->with(['publicacion', 'skuVariante']);
+        $query = MlVariante::query()->with(['publicacion', 'skuVariante']);
 
-    // Campos filtrables
-    $campos = ['ml_id', 'variation_id', 'product_number', 'seller_custom_field', 'color', 'talle', 'modelo', 'titulo', 'seller_sku', 'sync_status', 'family_id'];
+        // Campos filtrables
+        $campos = [
+            'ml_id', 'variation_id', 'product_number', 'seller_custom_field',
+            'color', 'talle', 'modelo', 'titulo', 'seller_sku',
+            'sync_status', 'family_id'
+        ];
 
-    foreach ($campos as $campo) {
-        $valores = $request->input($campo);
-        if (!empty($valores)) {
-            $query->whereIn($campo, (array) $valores);
+        foreach ($campos as $campo) {
+            $valores = $request->input($campo);
+            if (!empty($valores)) {
+                $query->whereIn($campo, (array) $valores);
+            }
         }
-    }
 
-    // Filtro adicional desde ml_publicaciones.status
-    if ($request->filled('status')) {
-        $query->whereHas('publicacion', function ($q) use ($request) {
-            $q->whereIn('status', (array) $request->input('status'));
-        });
-    }
+        if ($request->filled('status')) {
+            $query->whereHas('publicacion', function ($q) use ($request) {
+                $q->whereIn('status', (array) $request->input('status'));
+            });
+        }
 
-    // Filtros numéricos
-    if ($request->filled('stock_min')) {
-        $query->where('stock', '>=', $request->stock_min);
-    }
+        $query->orderBy($sort, $dir);
 
-    if ($request->filled('stock_max')) {
-        $query->where('stock', '<=', $request->stock_max);
-    }
+        $variantes = $query->paginate(50)->appends($request->all());
 
-    if ($request->filled('precio_min')) {
-        $query->where('precio', '>=', $request->precio_min);
-    }
+        $filtros = [];
+        foreach ($campos as $campo) {
+            $filtros[$campo] = MlVariante::select($campo)
+                ->distinct()
+                ->whereNotNull($campo)
+                ->orderBy($campo)
+                ->pluck($campo)
+                ->filter()
+                ->unique()
+                ->values();
+        }
 
-    if ($request->filled('precio_max')) {
-        $query->where('precio', '<=', $request->precio_max);
-    }
-
-    // Ordenamiento
-    $query->orderBy($sort, $dir);
-
-    // Paginación
-    $variantes = $query->paginate(50)->appends($request->all());
-
-    // Generar filtros para selects de MlVariante
-    $filtros = [];
-    foreach ($campos as $campo) {
-        $filtros[$campo] = MlVariante::select($campo)
+        $filtros['status'] = \App\Models\MlPublicacion::select('status')
             ->distinct()
-            ->whereNotNull($campo)
-            ->orderBy($campo)
-            ->pluck($campo)
+            ->whereNotNull('status')
+            ->orderBy('status')
+            ->pluck('status')
             ->filter()
             ->unique()
             ->values();
+
+        return view('mlibre.variantes.index', compact('variantes', 'filtros', 'sort', 'dir'));
     }
 
-    // Filtro para status desde MlPublicacion
-    $filtros['status'] = \App\Models\MlPublicacion::select('status')
-        ->distinct()
-        ->whereNotNull('status')
-        ->orderBy('status')
-        ->pluck('status')
-        ->filter()
-        ->unique()
-        ->values();
+    public function guardar(Request $request)
+    {
+        foreach ($request->input('variantes', []) as $id => $datos) {
+            $v = MlVariante::find($id);
+            if (!$v) continue;
 
-    return view('mlibre.variantes.index', compact('variantes', 'filtros', 'sort', 'dir'));
-}
+            $v->seller_custom_field = $datos['seller_custom_field'] ?? $v->seller_custom_field;
+            $v->precio = $datos['precio'] ?? $v->precio;
+            $v->stock = $datos['stock'] ?? $v->stock;
 
+            $v->manual_price = isset($datos['manual_price']) ? 1 : 0;
+            $v->manual_stock = isset($datos['manual_stock']) ? 1 : 0;
 
-public function guardar(Request $request)
-{
-    foreach ($request->input('variantes', []) as $id => $datos) {
-        $v = MlVariante::find($id);
-        if (!$v) continue;
+            $v->sync_status = 'U';
+            $v->save();
+        }
 
-        $v->seller_custom_field = $datos['seller_custom_field'] ?? $v->seller_custom_field;
-        $v->stock = $datos['stock'] ?? $v->stock;
-        $v->precio = $datos['precio'] ?? $v->precio;
-        $v->sync_status = 'U';
-        $v->save();
+        return back()->with('success', '✅ Variantes actualizadas correctamente');
     }
-
-    return back()->with('success', '✅ Variantes actualizadas correctamente');
-}
 
     public function exportar(Request $request)
     {
         return Excel::download(new MlVariantesExport($request), 'variantes-ml.xlsx');
     }
+
+    public function sincronizarSeleccionados(Request $request)
+    {
+        $ids     = $request->input('ids', []);
+        $scfs    = $request->input('scf', []);
+        $stocks  = $request->input('stock', []);
+        $precios = $request->input('precio', []);
+        $overridesStock = $request->input('manual_stock', []);
+        $overridesPrecio = $request->input('manual_price', []);
+
+        if (empty($ids)) {
+            return back()->with('error', 'No seleccionaste ninguna variante.');
+        }
+
+        $token = app(MlibreTokenService::class)->getValidAccessToken();
+        $ok = 0;
+        $errors = 0;
+
+        foreach ($ids as $id) {
+            $v = MlVariante::find($id);
+            if (!$v) {
+                $errors++;
+                continue;
+            }
+
+            $modificado = false;
+
+            if (isset($scfs[$id]) && $scfs[$id] !== $v->seller_custom_field) {
+                $v->seller_custom_field = $scfs[$id];
+                $modificado = true;
+            }
+
+           if (!$v->manual_stock && $v->skuVariante) {
+            $stockNuevo = $v->skuVariante->stock;
+            } else {
+                $stockNuevo = $stocks[$id] ?? $v->stock;
+            }
+
+            if ($stockNuevo != $v->stock) {
+                $v->stock = $stockNuevo;
+                $modificado = true;
+            }
+
+            
+
+            if (isset($precios[$id]) && $precios[$id] != $v->precio) {
+                $v->precio = $precios[$id];
+                $modificado = true;
+            }
+
+            $v->manual_stock = isset($overridesStock[$id]) ? 1 : 0;
+            $v->manual_price = isset($overridesPrecio[$id]) ? 1 : 0;
+
+            if ($modificado) {
+                $v->sync_status = 'U';
+                $v->save();
+            }
+
+            if (!$v->ml_id) {
+                $v->markAsError('Falta ml_id');
+                $errors++;
+                continue;
+            }
+
+            $itemRes = Http::withToken($token)->get("https://api.mercadolibre.com/items/{$v->ml_id}?attributes=variations");
+
+            if (!$itemRes->ok()) {
+                $v->markAsError("Error al obtener item ML ({$itemRes->status()})");
+                $errors++;
+                continue;
+            }
+
+            $item = $itemRes->json();
+            $hasVariants = !empty($item['variations']);
+
+            try {
+                if ($hasVariants) {
+                    if (!$v->variation_id) {
+                        $v->markAsError('Falta variation_id');
+                        $errors++;
+                        continue;
+                    }
+
+                    $variacion = collect($item['variations'])->firstWhere('id', $v->variation_id);
+
+                    if (!$variacion) {
+                        $v->markAsError('Variación no encontrada en ML');
+                        $errors++;
+                        continue;
+                    }
+
+                    if (!empty($variacion['inventory_id'])) {
+                        $v->markAsError('Stock FULL (no editable)');
+                        $errors++;
+                        continue;
+                    }
+
+                    $put = Http::withToken($token)->put(
+                        "https://api.mercadolibre.com/items/{$v->ml_id}/variations/{$v->variation_id}",
+                        ['available_quantity' => (int) $v->stock]
+                    );
+                } else {
+                    $put = Http::withToken($token)->put(
+                        "https://api.mercadolibre.com/items/{$v->ml_id}",
+                        ['available_quantity' => (int) $v->stock]
+                    );
+                }
+
+                if ($put->ok()) {
+                    $v->markAsSynced();
+                    $ok++;
+                } else {
+                    $v->markAsError("Error PUT: " . $put->status() . " - " . $put->body());
+                    $errors++;
+                }
+            } catch (\Exception $e) {
+                $v->markAsError("Excepción: " . $e->getMessage());
+                $errors++;
+            }
+        }
+
+        return back()->with('sync_result', [
+            'ok' => $ok,
+            'errors' => $errors,
+            'total' => count($ids),
+        ]);
+    }
+
+public function syncFromSku(): bool
+{
+    if (!$this->skuVariante) {
+        $this->sync_status = 'E';
+        $this->sync_log = 'SKU no encontrado en view_sku_variantes';
+        return false;
+    }
+
+    $updated = false;
+    $log = [];
+
+    // PRECIO
+    if ($this->manual_price) {
+        $log[] = 'Precio override manual';
+    } elseif ($this->precio != $this->skuVariante->precio) {
+        $this->precio = $this->skuVariante->precio;
+        $updated = true;
+        $log[] = 'Precio actualizado desde SKU';
+    }
+
+    // STOCK
+    if ($this->manual_stock) {
+        $log[] = 'Stock override manual';
+    } elseif ($this->stock != $this->skuVariante->stock) {
+        $this->stock = $this->skuVariante->stock;
+        $updated = true;
+        $log[] = 'Stock actualizado desde SKU';
+    }
+
+    if ($updated) {
+        $this->sync_status = 'U';
+    } else {
+        $this->sync_status = 'S';
+    }
+
+    $this->sync_log = implode('; ', $log) ?: 'Sin cambios desde SKU';
+    return $updated;
+}
+
 
 
 public function syncIndividual($id)
@@ -152,94 +304,6 @@ public function syncPublicacion($ml_id)
     }
 
     return back()->with('info', "🔄 Sincronización completada: $procesadas OK, $errores errores.");
-}
-public function sincronizarSeleccionados(Request $request)
-{
-    $ids     = $request->input('ids', []);
-    $scfs    = $request->input('scf', []);
-    $stocks  = $request->input('stock', []);
-    $precios = $request->input('precio', []);
-
-    if (empty($ids)) {
-        return back()->with('error', 'No seleccionaste ninguna variante.');
-    }
-
-    $token = app(MlibreTokenService::class)->getValidAccessToken();
-    $ok = 0;
-    $errors = 0;
-
-    foreach ($ids as $id) {
-        $v = MlVariante::find($id);
-        if (!$v) {
-            $errors++;
-            continue;
-        }
-
-        // 🔧 GUARDAR CAMBIOS (SCF, stock, precio)
-        $modificado = false;
-
-        if (isset($scfs[$id]) && $scfs[$id] !== $v->seller_custom_field) {
-            $v->seller_custom_field = $scfs[$id];
-            $modificado = true;
-        }
-
-        if (isset($stocks[$id]) && $stocks[$id] != $v->stock) {
-            $v->stock = $stocks[$id];
-            $modificado = true;
-        }
-
-        if (isset($precios[$id]) && $precios[$id] != $v->precio) {
-            $v->precio = $precios[$id];
-            $modificado = true;
-        }
-
-        if ($modificado) {
-            $v->sync_status = 'U';
-            $v->save();
-        }
-
-        // 🔁 SYNC CON MERCADO LIBRE
-        if (!$v->ml_id || !$v->variation_id || !$v->product_number) {
-            $v->markAsError('Datos incompletos para sincronizar');
-            $errors++;
-            continue;
-        }
-
-        $itemRes = Http::withToken($token)->get("https://api.mercadolibre.com/items/{$v->ml_id}?attributes=variations");
-
-        if (!$itemRes->ok()) {
-            $v->markAsError("Error al obtener item ML ({$itemRes->status()})");
-            $errors++;
-            continue;
-        }
-
-        $variacion = collect($itemRes->json()['variations'] ?? [])->firstWhere('id', $v->variation_id);
-
-        if (!$variacion || !empty($variacion['inventory_id'])) {
-            $v->markAsError('Variación FULL o no encontrada');
-            $errors++;
-            continue;
-        }
-
-        $put = Http::withToken($token)->put(
-            "https://api.mercadolibre.com/items/{$v->ml_id}/variations/{$v->variation_id}",
-            ['available_quantity' => (int) $v->stock]
-        );
-
-        if ($put->ok()) {
-            $v->markAsSynced();
-            $ok++;
-        } else {
-            $v->markAsError('Error PUT: ' . $put->status());
-            $errors++;
-        }
-    }
-
-    return back()->with('sync_result', [
-        'ok' => $ok,
-        'errors' => $errors,
-        'total' => count($ids),
-    ]);
 }
 
 

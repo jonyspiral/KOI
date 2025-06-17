@@ -43,7 +43,7 @@ class StockSkuService
     for ($i = 1; $i <= 10; $i++) {
         $campo = "posic_$i";
         if (trim((string) $rango->$campo) === $talle) {
-            echo "✅ Talle $talle encontrado en posición $i\n";
+            //echo "✅ Talle $talle encontrado en posición $i\n";
             return \App\Models\Sql\Stock::obtenerCantidadPorPosicion($codArticulo, $codColor, $i, $almacenes);
         }
     }

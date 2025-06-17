@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Services\StockSkuService;
 
 
 class SkuVariante extends Model
@@ -64,6 +64,9 @@ class SkuVariante extends Model
             'updated_at'             => ['type' => 'timestamp', 'primary' => false],
         ];
     }
+
+
+
     public function tipoProductoStock()
 {
     return $this->belongsTo(\App\Models\TipoProductoStock::class, 'id_tipo_producto_stock', 'id_tipo_producto_stock');
@@ -73,5 +76,46 @@ public function lineaProducto()
 {
     return $this->belongsTo(\App\Models\LineasProducto::class, 'cod_linea', 'cod_linea');
 }
+public function getTipoProductoAttribute()
+{
+    return $this->tipoProductoStock?->denom_tipo_producto;
+}
+
+
+public function getStockAttribute()
+    {
+        return StockSkuService::obtenerStockSKU(
+            $this->cod_articulo,
+            $this->cod_color_articulo,
+            $this->talle,
+            ['01', '14']
+        );
+    }
+
+    /**
+     * Devuelve el stock de 2da selección (almacén 02).
+     */
+    public function getStock2daAttribute()
+    {
+        return StockSkuService::obtenerStockSKU(
+            $this->cod_articulo,
+            $this->cod_color_articulo,
+            $this->talle,
+            ['02']
+        );
+    }
+    /**
+     * Devuelve el stock de FULL si tenés almacén definido como 20 o similar.
+     * Podés comentar o ajustar según el uso real.
+     */
+    public function getStockFullAttribute()
+    {
+        return StockSkuService::obtenerStockSKU(
+            $this->cod_articulo,
+            $this->cod_color_articulo,
+            $this->talle,
+            ['20'] // solo si usás almacén 20 para FULL
+        );
+    }
 
 }
