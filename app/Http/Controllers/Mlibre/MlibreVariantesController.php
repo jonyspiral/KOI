@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Mlibre;
 
+use App\Traits\PersisteFiltrosTrait;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\MlVariante;
@@ -12,60 +13,85 @@ use App\Exports\MlVariantesExport;
 
 class MlibreVariantesController extends Controller
 {
+
+   use PersisteFiltrosTrait;
+
     public function index(Request $request)
     {
-        $sort = $request->get('sort', 'ml_id');
-        $dir  = $request->get('dir', 'asc');
-
-        $query = MlVariante::query()->with(['publicacion', 'skuVariante']);
-
-        // Campos filtrables
-        $campos = [
+        // 🎯 Campos de filtro válidos
+        $camposFiltrables = [
             'ml_id', 'variation_id', 'product_number', 'seller_custom_field',
             'color', 'talle', 'modelo', 'titulo', 'seller_sku',
-            'sync_status', 'family_id'
+            'sync_status', 'status', 'family_id',
+            'sort', 'dir', 'page'
         ];
 
-        foreach ($campos as $campo) {
-            $valores = $request->input($campo);
-            if (!empty($valores)) {
-                $query->whereIn($campo, (array) $valores);
+      $requestFiltrado = $this->manejarFiltros($request, 'ml_variantes_filtros', $camposFiltrables);
+
+// Si manejarFiltros devolvió un redirect, lo devolvemos directamente:
+if ($requestFiltrado instanceof \Illuminate\Http\RedirectResponse) {
+    return $requestFiltrado;
+}
+
+// Sino, usamos el Request filtrado
+$request = $requestFiltrado;
+
+        // 🧱 Armar query base
+       
+$query = MlVariante::query();
+
+foreach ($camposFiltrables as $campo) {
+    if (!in_array($campo, ['sort', 'dir', 'page']) && $request->filled($campo)) {
+        $valores = collect($request->$campo);
+
+        if ($valores->isNotEmpty()) {
+            if (is_array($request->$campo)) {
+                // ✅ Soporta valores normales + "__NULL__"
+                $normales = $valores->filter(fn($v) => $v !== '__NULL__');
+                $incluyeNull = $valores->contains('__NULL__');
+
+                $query->where(function ($q) use ($campo, $normales, $incluyeNull) {
+                    if ($normales->isNotEmpty()) {
+                        $q->whereIn($campo, $normales);
+                    }
+                    if ($incluyeNull) {
+                        $q->orWhereNull($campo);
+                    }
+                });
+            } else {
+                // Para inputs de texto
+                $query->where($campo, 'like', '%' . $request->$campo . '%');
             }
         }
-
-        if ($request->filled('status')) {
-            $query->whereHas('publicacion', function ($q) use ($request) {
-                $q->whereIn('status', (array) $request->input('status'));
-            });
-        }
-
-        $query->orderBy($sort, $dir);
-
-        $variantes = $query->paginate(50)->appends($request->all());
-
-        $filtros = [];
-        foreach ($campos as $campo) {
-            $filtros[$campo] = MlVariante::select($campo)
-                ->distinct()
-                ->whereNotNull($campo)
-                ->orderBy($campo)
-                ->pluck($campo)
-                ->filter()
-                ->unique()
-                ->values();
-        }
-
-        $filtros['status'] = \App\Models\MlPublicacion::select('status')
-            ->distinct()
-            ->whereNotNull('status')
-            ->orderBy('status')
-            ->pluck('status')
-            ->filter()
-            ->unique()
-            ->values();
-
-        return view('mlibre.variantes.index', compact('variantes', 'filtros', 'sort', 'dir'));
     }
+}
+
+// 📊 Ordenamiento
+$sort = $request->get('sort', 'ml_id');
+$dir  = $request->get('dir', 'asc');
+if (\Schema::hasColumn('ml_variantes', $sort)) {
+    $query->orderBy($sort, $dir);
+}
+
+// 📄 Paginación
+$variantes = $query->paginate(50)->appends($request->query());
+
+// 🔄 Filtros únicos para Select2s (sin __NULL__ aquí)
+$filtros = [];
+foreach ($camposFiltrables as $campo) {
+    if (!in_array($campo, ['sort', 'dir', 'page']) && \Schema::hasColumn('ml_variantes', $campo)) {
+        $filtros[$campo] = MlVariante::select($campo)
+            ->distinct()
+            ->whereNotNull($campo)
+            ->pluck($campo)
+            ->sort()
+            ->values();
+    }
+}
+
+return view('mlibre.variantes.index', compact('variantes', 'filtros', 'sort', 'dir'));
+    }
+
 
     public function guardar(Request $request)
     {

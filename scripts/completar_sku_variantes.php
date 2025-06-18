@@ -1,14 +1,13 @@
 <?php
 
-use App\Models\SkuVariante;
-use App\Models\Articulo;
-use App\Models\ColoresPorArticulo;
 use Illuminate\Support\Facades\DB;
+use App\Models\MlVariante;
+use Maatwebsite\Excel\Facades\Excel;
 
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-
+require __DIR__ . '/vendor/autoload.php';
+$app = require_once __DIR__ . '/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 echo "🔍 Buscando SKU Variantes con campos incompletos...\n";
 
 SkuVariante::whereNull('id_tipo_producto_stock')

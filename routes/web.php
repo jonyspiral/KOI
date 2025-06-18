@@ -23,7 +23,13 @@ use App\Http\Controllers\Mlibre\PublicacionesController;
 use App\Http\Controllers\Sku\SkuVarianteController;
 use App\Http\Controllers\Mlibre\MlibreVariantesController;
 use App\Http\Controllers\Mlibre\MlibreSyncController;
+use App\Http\Controllers\Sistemas\MenuController;
 
+Route::get('/', function () {
+    return view('home');
+});
+
+Route::get('/menu', [MenuController::class, 'index'])->name('menu');
 
 Route::get('/sku/variantes/exportar', [SkuVarianteController::class, 'exportar'])->name('sku.sku_variantes.exportar');
 
@@ -80,15 +86,6 @@ Route::get('/mlibre/test-publicar-pow', [MlibreItemsController::class, 'testPowS
 
 
 
-if (App::environment('development')) {
-    Route::get('/', function () {
-        return 'KOI2 Desarrollo Activo';
-    });
-} elseif (App::environment('production')) {
-    Route::get('/', function () {
-        return view('welcome');
-    });
-}
 
 
 Route::get('/meli/callback', [MeliAuthController::class, 'callback']);

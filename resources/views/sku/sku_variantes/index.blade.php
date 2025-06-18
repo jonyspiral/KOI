@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <h2 class="mb-4">🔍 Filtro de SKU Variantes</h2>
 
     <form method="GET" action="{{ route('sku.sku_variantes.index') }}" class="row g-3 mb-4">
@@ -40,6 +40,9 @@
     <div class="col-md-2">
         <a href="{{ route('sku.sku_variantes.index') }}" class="btn btn-secondary w-100">🧹 Limpiar</a>
     </div>
+    <div class="col-md-2">
+    <a href="{{ route('sku.sku_variantes.index', ['reset' => 1]) }}" class="btn btn-danger w-100">❌ Borrar filtros guardados</a>
+</div>
 </form>
 <form method="GET" action="{{ route('sku.sku_variantes.exportar') }}">
     @foreach(request()->all() as $key => $value)
