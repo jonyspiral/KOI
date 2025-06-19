@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\UserKoi; // Modelo Eloquent que apunta a la tabla `users`
+use App\Models\User; // Modelo Eloquent que apunta a la tabla `users`
 
 class KoiSessionMiddleware
 {
@@ -23,7 +23,7 @@ class KoiSessionMiddleware
                 if ($row) {
                     // Buscar al usuario en la tabla `users`
                     // Ajusta 'cod_usuario' si es la PK
-                    $user = UserKoi::find($row->user_id);
+                    $user = User::find($row->user_id);
                     if ($user) {
                         Auth::login($user);
                     }

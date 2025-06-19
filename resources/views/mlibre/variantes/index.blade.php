@@ -10,9 +10,30 @@
     </h2>
 
     {{-- FILTROS --}}
+   
+
     
     <form method="GET" action="{{ route('mlibre.variantes.index') }}" class="row g-2 mb-3">
-       @foreach(['ml_id', 'variation_id', 'product_number', 'seller_custom_field', 'color', 'talle', 'modelo', 'titulo', 'seller_sku', 'sync_status', 'status', 'family_id'] as $campo)
+         @php
+    $syncLabels = [
+        'S' => '✅ Sincronizado',
+        'U' => '🟡 Actualizado',
+        'N' => '🕓 Nuevo',
+        'E' => '❌ Error',
+    ];
+@endphp
+
+<div class="col-md-3">
+    <label class="form-label fw-light text-muted small mb-1">Sync Status</label>
+    <select name="sync_status[]" multiple class="form-select select2" onchange="this.form.submit()">
+        @foreach($syncLabels as $valor => $texto)
+            <option value="{{ $valor }}" {{ collect(request('sync_status', []))->contains($valor) ? 'selected' : '' }}>
+                {{ $texto }}
+            </option>
+        @endforeach
+    </select>
+</div>
+       @foreach(['ml_id', 'variation_id', 'product_number', 'seller_custom_field', 'color', 'talle', 'modelo', 'titulo', 'seller_sku', 'status', 'family_id','logistic_type'] as $campo)
     <div class="col-md-3">
         <label class="form-label fw-light text-muted small mb-1">
             {{ ucfirst(str_replace('_', ' ', $campo)) }}
@@ -79,11 +100,12 @@
                 'titulo' => 'Título',
                 'precio' => 'Precio',
                 'manual_price' => 'Override Precio',
-                'stock' => 'Stock KOI',
+                'stock' => 'Stock ML',
                 'manual_stock' => 'Override Stock',
-                'stock_fisico' => 'Stock Físico',
+                'stock_fisico' => 'Stock SKU',
                 'status' => 'Status',
                 'family_id' => 'Family',
+                 'logistic_type' => 'Logística',
                 'sync_status' => 'Sync'
             ];
         @endphp
@@ -128,6 +150,7 @@
         </td>
         <td>{{ $v->publicacion->status ?? '-' }}</td>
         <td>{{ $v->publicacion->family_id ?? '-' }}</td>
+        <td>{{ $v->publicacion->logistic_type ?? '-' }}</td>
         <td title="{{ $v->sync_log }}">
             @if ($v->sync_status == 'S') ✅
             @elseif ($v->sync_status == 'N') 🕓
@@ -149,7 +172,21 @@
         <div class="mb-4">
             <button type="submit" class="btn btn-warning">🔄 Sincronizar seleccionados</button>
         </div>
+        
     </form>
+<form method="POST" action="{{ route('mlibre.variantes.sincronizar-filtrados') }}" class="d-inline mt-2">
+    @csrf
+    @foreach(request()->all() as $key => $value)
+        @if(is_array($value))
+            @foreach($value as $val)
+                <input type="hidden" name="{{ $key }}[]" value="{{ $val }}">
+            @endforeach
+        @else
+            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+        @endif
+    @endforeach
+    <button type="submit" class="btn btn-outline-success">💰 Sincronizar precios filtrados</button>
+</form>
 
     {{-- PAGINACIÓN --}}
     {{ $variantes->appends(request()->all())->links() }}

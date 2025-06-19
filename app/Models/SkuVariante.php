@@ -117,5 +117,24 @@ public function getStockAttribute()
             ['20'] // solo si usás almacén 20 para FULL
         );
     }
+    public static function crearDesdeColores(array $atributos): self
+{
+    $sku = new self($atributos);
+
+    $cpa = \App\Models\ColoresPorArticulo::where('cod_articulo', $sku->cod_articulo)
+        ->where('cod_color_articulo', $sku->cod_color_articulo)
+        ->first();
+
+    if ($cpa) {
+        $sku->ml_price = $cpa->mlibre_precio;
+        $sku->eshop_price = $cpa->ecommerce_price1;
+        $sku->segunda_price = $cpa->precio_mayorista_usd;
+    }
+
+    $sku->save();
+
+    return $sku;
+}
+
 
 }

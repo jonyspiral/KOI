@@ -56,6 +56,78 @@ use App\Services\StockSkuService;
     {
         return $this->belongsTo(MlPublicacion::class, 'ml_id', 'ml_id');
     }
+
+
+    // En MlVariante.php
+public function sincronizarVariante(string $token): bool
+{
+    if (!$this->seller_custom_field) {
+        $this->markAsError('SCF vacío o nulo');
+        return false;
+    }
+
+    if (!$this->skuVariante) {
+        $this->markAsError('SKU Variante no encontrado');
+        return false;
+    }
+
+    if (!$this->ml_id) {
+        $this->markAsError('Falta ml_id');
+        return false;
+    }
+
+    $itemRes = Http::withToken($token)->get("https://api.mercadolibre.com/items/{$this->ml_id}?attributes=variations");
+
+    if (!$itemRes->ok()) {
+        $this->markAsError("Error al obtener item ML ({$itemRes->status()})");
+        return false;
+    }
+
+    $item = $itemRes->json();
+    $hasVariants = !empty($item['variations']);
+
+    try {
+        if ($hasVariants) {
+            if (!$this->variation_id) {
+                $this->markAsError('Falta variation_id');
+                return false;
+            }
+
+            $variacion = collect($item['variations'])->firstWhere('id', $this->variation_id);
+            if (!$variacion) {
+                $this->markAsError('Variación no encontrada en ML');
+                return false;
+            }
+
+            if (!empty($variacion['inventory_id'])) {
+                $this->markAsError('Stock FULL (no editable)');
+                return false;
+            }
+
+            $put = Http::withToken($token)->put(
+                "https://api.mercadolibre.com/items/{$this->ml_id}/variations/{$this->variation_id}",
+                ['available_quantity' => (int) $this->stock]
+            );
+        } else {
+            $put = Http::withToken($token)->put(
+                "https://api.mercadolibre.com/items/{$this->ml_id}",
+                ['available_quantity' => (int) $this->stock]
+            );
+        }
+
+        if ($put->ok()) {
+            $this->markAsSynced();
+            return true;
+        } else {
+            $this->markAsError("Error PUT: " . $put->status() . " - " . $put->body());
+            return false;
+        }
+    } catch (\Exception $e) {
+        $this->markAsError("Excepción: " . $e->getMessage());
+        return false;
+    }
+}
+
  /**
      * Envía el stock de esta variante a Mercado Libre.
      * Actualiza sync_status y sync_log según el resultado.

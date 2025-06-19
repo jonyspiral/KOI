@@ -35,6 +35,7 @@ class Kernel extends ConsoleKernel
           \App\Console\Commands\LimpiarKoi::class, 
           \App\Console\Commands\MlibreActualizarPublicacion::class,
           \App\Console\Commands\SyncMlVariantes::class,
+           \App\Console\Commands\PoblarPreciosSku::class,
     ];
     
    

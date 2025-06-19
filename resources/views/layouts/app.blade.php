@@ -99,6 +99,13 @@
                     </li>
                 @endforeach
             </ul>
+            @auth
+    <form method="POST" action="{{ route('logout') }}" class="d-flex align-items-center ms-auto" style="margin-left: auto;">
+        @csrf
+        <span class="text-white me-2">{{ Auth::user()->name }}</span>
+        <button type="submit" class="btn btn-sm btn-outline-light">Cerrar sesión</button>
+    </form>
+@endauth
         </div>
     </nav>
 

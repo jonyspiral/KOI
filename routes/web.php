@@ -1,314 +1,153 @@
 <?php
-use App\Http\Controllers\Sistemas\Importar\ImportarController;
-use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 
-use App\Http\Controllers\Produccion\MarcaController;
-use App\Http\Controllers\Produccion\HormaController;
-use App\Http\Controllers\Produccion\RangoTalleController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Sistemas\MenuController;
+use App\Http\Controllers\Sistemas\Importar\ImportarController;
+use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
 use App\Http\Controllers\Produccion\RutasProduccionController;
-use App\Http\Controllers\Produccion\ArticulosNewController;
-use App\Http\Controllers\Produccion\SeccionesProduccionController;
-use App\Http\Controllers\Produccion\ArticuloController;
-use App\Http\Controllers\Produccion\FamiliasProductoController;
 use App\Http\Controllers\Produccion\CurvaController;
-use App\Http\Controllers\Produccion\PasosRutasProduccionController;
-use App\Http\Controllers\Produccion\ProductController;
-use App\Http\Controllers\Produccion\AlmacenController;
+use App\Http\Controllers\Produccion\SeccionesProduccionController;
+use App\Http\Controllers\Produccion\FamiliasProductoController;
+use App\Http\Controllers\Produccion\HormaController;
+use App\Http\Controllers\Produccion\MarcaController;
 use App\Http\Controllers\Produccion\ColoresPorArticuloController;
+use App\Http\Controllers\Produccion\ArticuloController;
+use App\Http\Controllers\Produccion\PasosRutasProduccionController;
+use App\Http\Controllers\Produccion\AlmacenController;
+use App\Http\Controllers\Produccion\TipoProductoStockController;
+use App\Http\Controllers\Produccion\LineasProductoController;
+use App\Http\Controllers\Produccion\ProductController;
+use App\Http\Controllers\Produccion\ArticulosNewController;
+use App\Http\Controllers\Mlibre\MlibreVariantesController;
+use App\Http\Controllers\Mlibre\MlibreSyncController;
 use App\Http\Controllers\Mlibre\MlibreItemsController;
 use App\Http\Controllers\Mlibre\MeliAuthController;
 use App\Http\Controllers\Mlibre\PublicacionesController;
 use App\Http\Controllers\Sku\SkuVarianteController;
-use App\Http\Controllers\Mlibre\MlibreVariantesController;
-use App\Http\Controllers\Mlibre\MlibreSyncController;
-use App\Http\Controllers\Sistemas\MenuController;
+use App\Http\Controllers\Mlibre\MlSyncController;
+require __DIR__.'/auth.php';
 
-Route::get('/', function () {
-    return view('home');
+// Rutas públicas necesarias
+Route::middleware(['auth'])->group(function () {
+
+    Route::view('/', 'home');
+    Route::view('/home', 'home')->name('home');
+    Route::view('/profile/edit', 'Editar perfil (en construcción)')->name('profile.edit');
+
+    Route::get('/menu', [MenuController::class, 'index'])->name('menu');
+
+
+ 
+Route::prefix('mlibre/sync')->name('mlibre.sync.')->group(function () {
+    Route::post('/sync-filtrados', [MlSyncController::class, 'sincronizarFiltrados'])->name('sync-filtrados');
+    Route::post('filtrados', [MlSyncController::class, 'syncFiltrados'])->name('filtrados');
+    Route::post('seleccionados', [MlSyncController::class, 'syncSeleccionados'])->name('seleccionados');
+    Route::post('pendientes', [MlSyncController::class, 'syncPendientes'])->name('pendientes');
 });
-
-Route::get('/menu', [MenuController::class, 'index'])->name('menu');
-
-Route::get('/sku/variantes/exportar', [SkuVarianteController::class, 'exportar'])->name('sku.sku_variantes.exportar');
-
-
-Route::post('/mlibre/sync-scfs', [MlibreSyncController::class, 'sincronizar'])->name('mlibre.sync-scfs');
-Route::post('mlibre/variantes/guardar-individual/{id}', [MlibreVariantesController::class, 'guardarIndividual'])->name('mlibre.variantes.guardar_individual');
-Route::get('mlibre/variantes/verificar-scf/{id}', [MlibreVariantesController::class, 'verificarSCF'])->name('mlibre.variantes.verificar_scf');Route::prefix('sku')->name('sku.')->group(function () {
+Route::prefix('sku')->name('sku.')->group(function () {
     Route::get('sku_variantes', [SkuVarianteController::class, 'index'])->name('sku_variantes.index');
     Route::get('sku_variantes/{id}', [SkuVarianteController::class, 'show'])->name('sku_variantes.show');
-});
-//Nuevas
-
-Route::post('/mlibre/variantes/{id}/sync', [\App\Http\Controllers\Mlibre\MlibreVariantesController::class, 'syncIndividual'])->name('mlibre.variantes.sync');
-Route::post('/mlibre/publicaciones/{ml_id}/sync', [\App\Http\Controllers\Mlibre\MlibreVariantesController::class, 'syncPublicacion'])->name('mlibre.publicacion.sync');
-
-Route::prefix('mlibre/variantes')->name('mlibre.variantes.')->group(function () {
-    Route::get('/', [MlibreVariantesController::class, 'index'])->name('index');
-       Route::post('sync-seleccionados', [MlibreVariantesController::class, 'sincronizarSeleccionados'])->name('sync-seleccionados');
-    Route::get('/exportar', [MlibreVariantesController::class, 'exportar'])->name('exportar');
+    Route::get('sku_variantes/exportar', [SkuVarianteController::class, 'exportar'])->name('sku_variantes.exportar');
 });
 
+    Route::prefix('mlibre')->group(function () {
+        Route::get('/auth', [MeliAuthController::class, 'redirect'])->name('mlibre.auth');
+        Route::get('/callback', [MeliAuthController::class, 'callback'])->name('mlibre.callback');
+        Route::get('/test-publicar-pow', [MlibreItemsController::class, 'testPowSkateb']);
 
-Route::post('/mlibre/variantes/guardar', [MlibreVariantesController::class, 'guardar'])->name('mlibre.variantes.guardar');
-Route::post('/mlibre/variantes/{id}/publicar-scf', [MlibreVariantesController::class, 'publicarSCF'])
-    ->name('mlibre.variantes.publicar_scf');
-Route::get('/mlibre/variantes/exportar', [MlibreVariantesController::class, 'exportar'])->name('mlibre.variantes.exportar');
+     
 
-
-
-Route::prefix('mlibre/publicaciones')->group(function () {
-    Route::get('/', [PublicacionesController::class, 'index'])->name('mlibre.publicaciones.index');
-    Route::get('/{id}/edit', [PublicacionesController::class, 'edit'])->name('mlibre.publicaciones.edit');
-    Route::put('/{id}', [PublicacionesController::class, 'update'])->name('mlibre.publicaciones.update');
-});
-
-Route::prefix('mlibre')->group(function () {
-    Route::get('/auth', [MeliAuthController::class, 'redirect'])->name('mlibre.auth');
-    Route::get('/callback', [MeliAuthController::class, 'callback'])->name('mlibre.callback');
-});
-
-
-Route::get('/mlibre/publicar', [MlibreItemsController::class, 'formPublicar'])->name('mlibre.publicar');
-Route::post('/mlibre/publicar', [MlibreItemsController::class, 'generarPublicaciones'])->name('mlibre.publicar.enviar');
-Route::get('/mlibre/test-publicar-pow', [MlibreItemsController::class, 'testPowSkateb']);
-
-Route::prefix('meli/items')->group(function () {
-    Route::get('/', [MlibreItemsController::class, 'listar']);
-    Route::get('{id}', [MlibreItemsController::class, 'ver']);
-    Route::put('{id}/activar', [MlibreItemsController::class, 'activar']);
-    Route::put('{id}/pausar', [MlibreItemsController::class, 'pausar']);
-    Route::post('{id}/actualizar', [MlibreItemsController::class, 'actualizar']);
-});
-Route::get('/mlibre/test-publicar-pow', [MlibreItemsController::class, 'testPowSkateb']);
+        Route::prefix('variantes')->name('mlibre.variantes.')->group(function () {
 
 
 
 
+            Route::get('/', [MlibreVariantesController::class, 'index'])->name('index');
+          Route::post('sincronizar-filtrados', [MlibreVariantesController::class, 'sincronizarFiltrados'])->name('sincronizar-filtrados');
+            Route::post('sync-seleccionados', [MlibreVariantesController::class, 'sincronizarSeleccionados'])->name('sync-seleccionados');
+            Route::get('/exportar', [MlibreVariantesController::class, 'exportar'])->name('exportar');
+            Route::post('/guardar-individual/{id}', [MlibreVariantesController::class, 'guardarIndividual'])->name('guardar_individual');
+            Route::post('/{id}/sync', [MlibreVariantesController::class, 'syncIndividual'])->name('sync');
+            Route::post('/{id}/publicar-scf', [MlibreVariantesController::class, 'publicarSCF'])->name('publicar_scf');
+            Route::post('/guardar', [MlibreVariantesController::class, 'guardar'])->name('guardar');
+            Route::get('/verificar-scf/{id}', [MlibreVariantesController::class, 'verificarSCF'])->name('verificar_scf');
+        });
 
-Route::get('/meli/callback', [MeliAuthController::class, 'callback']);
-if (App::environment('development')) {
-    Route::get('/meli/publicar-test', [MeliAuthController::class, 'publicarTest']);
-}
-Route::get('/meli/test-categoria', [MeliAuthController::class, 'testCategoria']);
+        Route::prefix('publicaciones')->group(function () {
+            Route::get('/', [PublicacionesController::class, 'index'])->name('mlibre.publicaciones.index');
+            Route::get('/{id}/edit', [PublicacionesController::class, 'edit'])->name('mlibre.publicaciones.edit');
+            Route::put('/{id}', [PublicacionesController::class, 'update'])->name('mlibre.publicaciones.update');
+            Route::post('/{ml_id}/sync', [MlibreVariantesController::class, 'syncPublicacion'])->name('mlibre.publicacion.sync');
+        });
 
+        Route::get('/publicar', [MlibreItemsController::class, 'formPublicar'])->name('mlibre.publicar');
+        Route::post('/publicar', [MlibreItemsController::class, 'generarPublicaciones'])->name('mlibre.publicar.enviar');
+    });
 
+    Route::prefix('meli/items')->group(function () {
+        Route::get('/', [MlibreItemsController::class, 'listar']);
+        Route::get('{id}', [MlibreItemsController::class, 'ver']);
+        Route::put('{id}/activar', [MlibreItemsController::class, 'activar']);
+        Route::put('{id}/pausar', [MlibreItemsController::class, 'pausar']);
+        Route::post('{id}/actualizar', [MlibreItemsController::class, 'actualizar']);
+    });
 
-
-
-
-// Creador ABMs
-Route::prefix('sistemas/abms')->group(function () {
-    Route::get('/crear', [AbmCreatorController::class, 'index'])->name('sistemas.abms.crear');
-
-    // ✅ Agregar soporte para GET y POST en preview
-    Route::match(['get', 'post'], '/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
-    
-    Route::post('/configurar', [AbmCreatorController::class, 'configurar'])->name('sistemas.abms.configurar');
-    Route::post('/guardar-subformulario', [AbmCreatorController::class, 'guardarSubformulario'])->name('sistemas.abms.guardar_subformulario');
-
-});
-
-Route::post('/abmcreator/campos-subformulario', [AbmCreatorController::class, 'cargarCamposSubformulario'])->name('abmcreator.campos_subformulario');
-//importar tablas koi ABMs  
-Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function () {
-    Route::get('/form', [ImportarController::class, 'form'])->name('form');
-    Route::post('/importar', [ImportarController::class, 'importar'])->name('importar');
-});
-Route::post('sistemas/importar/eliminar-config', [ImportarController::class, 'eliminarConfig'])
-    ->name('sistemas.importar.eliminar_config');
-    
-Route::get('/test-importar', function () {
-    return route('sistemas.importar.form');
-});
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: RutasProduccion - Generado el 2025-03-30 08:11:41
-Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
-    Route::resource('rutas_produccion', RutasProduccionController::class)->names('rutas_produccion');
-});
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Curva - Generado el 2025-04-02 00:56:03
-
-
-Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
-    Route::resource('curvas', CurvaController::class)->names('curvas');
-});
-
-
-
-// 🧩 Ruta de prueba para el layout Master-Detail Livewire
-// Muestra un producto con sus colores relacionados (cabecera + subform)
-
-
-Route::get('products/{id}/with-colors', [ProductController::class, 'showWithColors'])
-    ->name('products.showWithColors');
-
-    
-
-Route::put('products/{id}', function () {
-    return redirect()->back()->with('status', 'Guardado de prueba.');
-})->name('products.update');
-
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: SeccionesProduccion - Generado el 2025-04-12 11:01:31
-
-
-Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
-    Route::resource('secciones_produccion', SeccionesProduccionController::class)->names('secciones_produccion');
-});
-
-
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: ArticulosNew - Generado el 2025-04-18 01:59:59
-
-
-Route::resource('produccion/abms/articulos_new', ArticulosNewController::class)
-    ->names('produccion.abms.articulos_new');
-    Route::put('produccion/abms/articulos_new/restaurar/{id}', [\App\Http\Controllers\Produccion\ArticulosNewController::class, 'restaurar'])
-    ->name('produccion.abms.articulos_new.restaurar');
-    
-   
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: FamiliasProducto - Generado el 2025-04-20 15:27:02
-
-
-Route::prefix('produccion/abms/familias_producto')->name('produccion.abms.familias_producto.')->group(function () {
-    Route::resource('', FamiliasProductoController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index' => 'index',
-            'create' => 'create',
-            'store' => 'store',
-            'show' => 'show',
-            'edit' => 'edit',
-            'update' => 'update',
-            'destroy' => 'destroy',
+    Route::prefix('produccion/abms')->name('produccion.abms.')->group(function () {
+        Route::resources([
+            'rutas_produccion' => RutasProduccionController::class,
+            'curvas' => CurvaController::class,
+            'secciones_produccion' => SeccionesProduccionController::class,
+            'familias_producto' => FamiliasProductoController::class,
+            'hormas' => HormaController::class,
+            'marcas' => MarcaController::class,
+            'colores_por_articulo' => ColoresPorArticuloController::class,
+            'articulos' => ArticuloController::class,
+            'pasos_rutas_produccion' => PasosRutasProduccionController::class,
+            'almacenes' => AlmacenController::class,
+            'articulo' => ArticuloController::class,
+            'tipo_producto_stock' => TipoProductoStockController::class,
+            'lineas_producto' => LineasProductoController::class,
         ]);
-    
-    Route::post('{id}/restaurar', [FamiliasProductoController::class, 'restaurar'])->name('restaurar');
+
+        Route::put('articulos_new/restaurar/{id}', [ArticulosNewController::class, 'restaurar'])->name('articulos_new.restaurar');
+        Route::post('familias_producto/{id}/restaurar', [FamiliasProductoController::class, 'restaurar'])->name('familias_producto.restaurar');
+        Route::post('hormas/{id}/restaurar', [HormaController::class, 'restaurar'])->name('hormas.restaurar');
+        Route::post('marcas/{id}/restaurar', [MarcaController::class, 'restaurar'])->name('marcas.restaurar');
+        Route::post('colores_por_articulo/{id}/restaurar', [ColoresPorArticuloController::class, 'restaurar'])->name('colores_por_articulo.restaurar');
+        Route::post('articulos/{id}/restaurar', [ArticuloController::class, 'restaurar'])->name('articulos.restaurar');
+        Route::post('pasos_rutas_produccion/{id}/restaurar', [PasosRutasProduccionController::class, 'restaurar'])->name('pasos_rutas_produccion.restaurar');
+        Route::post('almacenes/{id}/restaurar', [AlmacenController::class, 'restaurar'])->name('almacenes.restaurar');
+        Route::post('tipo_producto_stock/{id}/restaurar', [TipoProductoStockController::class, 'restaurar'])->name('tipo_producto_stock.restaurar');
+        Route::post('lineas_producto/{id}/restaurar', [LineasProductoController::class, 'restaurar'])->name('lineas_producto.restaurar');
+    });
+
+    Route::resource('produccion/abms/articulos_new', ArticulosNewController::class)->names('produccion.abms.articulos_new');
+
+    Route::get('products/{id}/with-colors', [ProductController::class, 'showWithColors'])->name('products.showWithColors');
+    Route::put('products/{id}', fn() => redirect()->back()->with('status', 'Guardado de prueba.'))->name('products.update');
+
+    Route::prefix('sistemas/abms')->group(function () {
+        Route::get('/crear', [AbmCreatorController::class, 'index'])->name('sistemas.abms.crear');
+        Route::match(['get', 'post'], '/preview/{modelo}', [AbmCreatorController::class, 'preview'])->name('sistemas.abms.preview');
+        Route::post('/configurar', [AbmCreatorController::class, 'configurar'])->name('sistemas.abms.configurar');
+        Route::post('/guardar-subformulario', [AbmCreatorController::class, 'guardarSubformulario'])->name('sistemas.abms.guardar_subformulario');
+    });
+
+    Route::prefix('sistemas/importar')->name('sistemas.importar.')->group(function () {
+        Route::get('/form', [ImportarController::class, 'form'])->name('form');
+        Route::post('/importar', [ImportarController::class, 'importar'])->name('importar');
+    });
 });
 
 // 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Horma - Generado el 2025-04-20 15:57:31
+// Modelo: User - Generado el 2025-06-19 04:13:52
+use App\Http\Controllers\Sistemas\UserController;
 
-
-Route::prefix('produccion/abms/hormas')->name('produccion.abms.hormas.')->group(function () {
-    Route::resource('', HormaController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index' => 'index',
-            'create' => 'create',
-            'store' => 'store',
-            'show' => 'show',
-            'edit' => 'edit',
-            'update' => 'update',
-            'destroy' => 'destroy',
-        ]);
-    
-    Route::post('{id}/restaurar', [HormaController::class, 'restaurar'])->name('restaurar');
-});
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Marca - Generado el 2025-04-21 16:35:43
-
-
-Route::prefix('produccion/abms/marcas')->name('produccion.abms.marcas.')->group(function () {
-    Route::resource('', MarcaController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index' => 'index',
-            'create' => 'create',
-            'store' => 'store',
-            'show' => 'show',
-            'edit' => 'edit',
-            'update' => 'update',
-            'destroy' => 'destroy',
-        ]);
-    
-    Route::post('{id}/restaurar', [MarcaController::class, 'restaurar'])->name('restaurar');
-});
-Route::get('exportar-colores-articulo', [\App\Http\Controllers\Produccion\ColoresPorArticuloController::class, 'exportar'])->name('colores.exportar');
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: ColoresPorArticulo - Generado el 2025-04-23 01:50:34
-;
-
-Route::prefix('produccion/abms/colores_por_articulo')->name('produccion.abms.colores_por_articulo.')->group(function () {
-    Route::resource('', ColoresPorArticuloController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index' => 'index',
-            'create' => 'create',
-            'store' => 'store',
-            'show' => 'show',
-            'edit' => 'edit',
-            'update' => 'update',
-            'destroy' => 'destroy',
-        ]);
-    
-    Route::post('{id}/restaurar', [ColoresPorArticuloController::class, 'restaurar'])->name('restaurar');
-});
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Articulo - Generado el 2025-04-25 02:21:00
-
-
-Route::prefix('produccion/abms/articulos')->name('produccion.abms.articulos.')->group(function () {
-    Route::resource('', ArticuloController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index' => 'index',
-            'create' => 'create',
-            'store' => 'store',
-            'show' => 'show',
-            'edit' => 'edit',
-            'update' => 'update',
-            'destroy' => 'destroy',
-        ]);
-    
-    Route::post('{id}/restaurar', [ArticuloController::class, 'restaurar'])->name('restaurar');
-});
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: PasosRutasProduccion - Generado el 2025-04-25 16:29:01
-
-
-Route::prefix('produccion/abms/pasos_rutas_produccion')->name('produccion.abms.pasos_rutas_produccion.')->group(function () {
-    Route::resource('', PasosRutasProduccionController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index' => 'index',
-            'create' => 'create',
-            'store' => 'store',
-            'show' => 'show',
-            'edit' => 'edit',
-            'update' => 'update',
-            'destroy' => 'destroy',
-        ]);
-    
-    Route::post('{id}/restaurar', [PasosRutasProduccionController::class, 'restaurar'])->name('restaurar');
-});
-
-
-
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Horma - Generado el 2025-05-02 03:46:08
-
-
-Route::prefix('produccion/abms/horma')->name('produccion.abms.horma.')->group(function () {
-    Route::resource('', HormaController::class)
+Route::prefix('sistemas/abms/user')->name('sistemas.abms.user.')->group(function () {
+    Route::resource('', UserController::class)
         ->parameters(['' => 'id'])
         ->names([
             'index'   => 'index',
@@ -320,88 +159,5 @@ Route::prefix('produccion/abms/horma')->name('produccion.abms.horma.')->group(fu
             'destroy' => 'destroy',
         ]);
 
-    Route::post('{id}/restaurar', [HormaController::class, 'restaurar'])->name('restaurar');
-});
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Almacen - Generado el 2025-05-04 14:37:36
-
-
-Route::prefix('produccion/abms/almacenes')->name('produccion.abms.almacenes.')->group(function () {
-    Route::resource('', AlmacenController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index'   => 'index',
-            'create'  => 'create',
-            'store'   => 'store',
-            'show'    => 'show',
-            'edit'    => 'edit',
-            'update'  => 'update',
-            'destroy' => 'destroy',
-        ]);
-
-    Route::post('{id}/restaurar', [AlmacenController::class, 'restaurar'])->name('restaurar');
-});
-
-
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: Articulo - Generado el 2025-05-20 18:09:06
-
-
-Route::prefix('produccion/abms/articulo')->name('produccion.abms.articulo.')->group(function () {
-    Route::resource('', ArticuloController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index'   => 'index',
-            'create'  => 'create',
-            'store'   => 'store',
-            'show'    => 'show',
-            'edit'    => 'edit',
-            'update'  => 'update',
-            'destroy' => 'destroy',
-        ]);
-
-    Route::post('{id}/restaurar', [ArticuloController::class, 'restaurar'])->name('restaurar');
-});
-
-
-
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: TipoProductoStock - Generado el 2025-06-15 22:27:37
-use App\Http\Controllers\Produccion\TipoProductoStockController;
-
-Route::prefix('produccion/abms/tipo_producto_stock')->name('produccion.abms.tipo_producto_stock.')->group(function () {
-    Route::resource('', TipoProductoStockController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index'   => 'index',
-            'create'  => 'create',
-            'store'   => 'store',
-            'show'    => 'show',
-            'edit'    => 'edit',
-            'update'  => 'update',
-            'destroy' => 'destroy',
-        ]);
-
-    Route::post('{id}/restaurar', [TipoProductoStockController::class, 'restaurar'])->name('restaurar');
-});
-// 🧩 Ruta generada automáticamente por ABM Creator
-// Modelo: LineasProducto - Generado el 2025-06-15 22:58:17
-use App\Http\Controllers\Produccion\LineasProductoController;
-
-Route::prefix('produccion/abms/lineas_producto')->name('produccion.abms.lineas_producto.')->group(function () {
-    Route::resource('', LineasProductoController::class)
-        ->parameters(['' => 'id'])
-        ->names([
-            'index'   => 'index',
-            'create'  => 'create',
-            'store'   => 'store',
-            'show'    => 'show',
-            'edit'    => 'edit',
-            'update'  => 'update',
-            'destroy' => 'destroy',
-        ]);
-
-    Route::post('{id}/restaurar', [LineasProductoController::class, 'restaurar'])->name('restaurar');
+    Route::post('{id}/restaurar', [UserController::class, 'restaurar'])->name('restaurar');
 });

@@ -17,6 +17,8 @@ return new class extends Migration
     $table->string('var_sku')->index(); // Ej: cod_articulo + cod_color + talle
     $table->json('variation_ids')->nullable(); // Puede haber múltiples variation_id de ML
     $table->timestamps();
+    $table->integer('stock_fulfillment')->default(0);
+
 });
     }
 
