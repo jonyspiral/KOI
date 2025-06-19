@@ -1,0 +1,113 @@
+[90m= [39m[34;4mApp\Models\Sql\Articulo[39;24m {#7142
+    [34mcod_articulo[39m: "[32m3202[39m",
+    [34mcod_variante[39m: [36mnull[39m,
+    [34mcod_matris[39m: [36mnull[39m,
+    [34mcorte[39m: [36mnull[39m,
+    [34mcod_ruta[39m: "[32m95[39m",
+    [34mcod_linea[39m: "[32m01[39m",
+    [34mcod_marca[39m: "[32m0001[39m",
+    [34mcod_rango[39m: "[32m06[39m",
+    [34mcod_cliente[39m: "[32m000259[39m",
+    [34mdenom_articulo_abreviada[39m: [36mnull[39m,
+    [34mdenom_articulo[39m: "[32mG.O.A.T LIMITED EDITION CHUNKY[39m",
+    [34mmaterial_predomina[39m: [36mnull[39m,
+    [34morigen[39m: "[32mN[39m",
+    [34mfabricante[39m: [36mnull[39m,
+    [34mvigente[39m: "[32mS[39m",
+    [34mfecha_de_baja[39m: [36mnull[39m,
+    [34mforma_comercializacion[39m: "[32mM[39m",
+    [34mfecha_ultima_modificacion[39m: "[32m2025-04-09 03:13:03.330[39m",
+    [34mautor_ultima_modificacion[39m: "",
+    [34mdiseño[39m: [36mnull[39m,
+    [34mprecio_lista[39m: "[32m799.00[39m",
+    [34mprecio_lista_mayor[39m: "[32m399.50[39m",
+    [34mprecio_distribuidor[39m: [36mnull[39m,
+    [34mfecha_precio[39m: [36mnull[39m,
+    [34mrubro[39m: [36mnull[39m,
+    [34mfecha_lanzamiento[39m: [36mnull[39m,
+    [34mtamaño[39m: [36mnull[39m,
+    [34mpackaging[39m: [36mnull[39m,
+    [34mcod_tamanio[39m: [36mnull[39m,
+    [34mcod_prov[39m: "[32m96[39m",
+    [34mcod_art_en_proveed[39m: [36mnull[39m,
+    [34mcolores_elenco[39m: "[32mSE                                      [39m",
+    [34mcod_tempo[39m: "[32m1[39m",
+    [34mcod_usuarios[39m: [36mnull[39m,
+    [34mcod_tipo[39m: [36mnull[39m,
+    [34mprecio_recargado[39m: "[32m0.00[39m",
+    [34mcod_mat_predom[39m: [36mnull[39m,
+    [34mcod_horma[39m: [36mnull[39m,
+    [34mcategoria[39m: [36mnull[39m,
+    [34mtrazable[39m: "[32mN[39m",
+    [34mcod_material[39m: [36mnull[39m,
+    [34mcod_color[39m: [36mnull[39m,
+    [34mnaturaleza[39m: "[32mPT[39m",
+    [34mcalidad[39m: [36mnull[39m,
+    [34mprecio_costo[39m: [36mnull[39m,
+    [34mcod_material_articulo[39m: [36mnull[39m,
+    [34mtipo_proceso[39m: [36mnull[39m,
+    [34mcod_variante_proceso[39m: [36mnull[39m,
+    [34mcod_compuesto_articulo[39m: [36mnull[39m,
+    [34mcod_empaque[39m: [36mnull[39m,
+    [34mcombinable[39m: "[32mN[39m",
+    [34mcod_articulo_combinacion[39m: [36mnull[39m,
+    [34mcod_variante_combinacion[39m: [36mnull[39m,
+    [34mcorte_combinacion[39m: [36mnull[39m,
+    [34mtemporada[39m: [36mnull[39m,
+    [34mmercado[39m: [36mnull[39m,
+    [34mestacion[39m: [36mnull[39m,
+    [34mlinea_verano[39m: [36mnull[39m,
+    [34mlinea_invierno[39m: [36mnull[39m,
+    [34mlinea_indistinta[39m: [36mnull[39m,
+    [34mtarget[39m: [36mnull[39m,
+    [34mplantilla[39m: [36mnull[39m,
+    [34mfidelidad[39m: [36mnull[39m,
+    [34mcod_linea_combina[39m: [36mnull[39m,
+    [34marticulo_de_origen[39m: [36mnull[39m,
+    [34mmadurez[39m: [36mnull[39m,
+    [34mcod_articulo_largo[39m: [36mnull[39m,
+    [34munidad[39m: [36mnull[39m,
+    [34mreventa[39m: [36mnull[39m,
+    [34maprob_disenio[39m: [36mnull[39m,
+    [34maprob_produccion[39m: [36mnull[39m,
+    [34mfecha_nacimiento[39m: [36mnull[39m,
+    [34mcod_matris1[39m: [36mnull[39m,
+    [34mvend_1[39m: [36mnull[39m,
+    [34mvend_2[39m: [36mnull[39m,
+    [34mvend_3[39m: [36mnull[39m,
+    [34mvend_4[39m: [36mnull[39m,
+    [34mvend_5[39m: [36mnull[39m,
+    [34mvend_6[39m: [36mnull[39m,
+    [34mvend_7[39m: [36mnull[39m,
+    [34mcontribucion_marginal[39m: [36mnull[39m,
+    [34mdificultad_produccion[39m: [36mnull[39m,
+    [34mprecio_mano_obra[39m: [36mnull[39m,
+    [34mprecio_lista_aumento[39m: [36mnull[39m,
+    [34mfechaAlta[39m: [36mnull[39m,
+    [34mcod_rubro_iva[39m: "[32m1[39m",
+    [34mutiliza_codigo_barra_cliente[39m: [36mnull[39m,
+    [34mcod_familia_producto[39m: "[32m143[39m",
+    [34mml_denominacion[39m: "[32mOFFSET LIMITED[39m",
+    [34mecommerce_reference[39m: "[32mG.O.A.T LIMITED[39m",
+    [34mecommerce_name[39m: "[32mGOAT  LE[39m",
+    [34mdenom_articulo_largo[39m: """
+      [32mGOAT OFFSET LE - Edictada[39m\n
+      [32m?? Asimetría que rompe con lo clásico.[39m\n
+      \n
+      [32mEl GOAT OFFSET LE redefine lo que significa destacar. Con un diseño que no respeta la simetría, cada lado cuenta su propia historia de estilo. Es para quienes entienden que la perfección está en lo inesperado y que las reglas están para romperse.[39m\n
+      \n
+      [32mCaracterísticas que lo hacen único:[39m\n
+      \n
+      [32mCapellada disruptiva: Cuero y nobuck premium, con lados izquierdo y derecho asimétricos en colores que chocan y sorprenden.[39m\n
+      [32mChunky vibes: Lengua y talón con relleno de 20 mm, ofreciendo un fit cómodo y un look robusto inconfundible.[39m\n
+      [32mCordones duales: Incluye dos pares: unos chunky de 20 mm para destacar y los clásicos skateboarding laces encerados para sesiones intensas.[39m\n
+      [32mTecnología skater: Suela de goma resistente a la abrasión, diseñada para largas jornadas sobre la tabla.[39m\n
+      [32mPlantilla SPIRAL IMPACTLESS: Diseñada para máxima absorción de impactos y comodidad en cada movimiento.[39m\n
+      [32m? GOAT OFFSET LE no busca encajar, busca sobresalir. Edición limitada para riders que no siguen reglas.[39m\n
+      \n
+      [32m?? ¡Te lo mandamos gratis a partir de $60,000![39m\n
+      [32m?? Cambios y devoluciones sin drama.[39m\n
+      [32m?? ¡Conseguí el tuyo antes de que se agote![39m
+      """,
+  }
+

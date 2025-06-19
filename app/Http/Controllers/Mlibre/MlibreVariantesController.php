@@ -141,7 +141,12 @@ class MlibreVariantesController extends Controller
 
     public function sincronizarSeleccionados(Request $request)
 {
-    $ids = $request->input('ids', []);
+    $ids     = $request->input('ids', []);
+    $scfs    = $request->input('scf', []);
+    $stocks  = $request->input('stock', []);
+    $precios = $request->input('precio', []);
+    $overridesStock = $request->input('manual_stock', []);
+    $overridesPrecio = $request->input('manual_price', []);
 
     if (empty($ids)) {
         return back()->with('error', 'No seleccionaste ninguna variante.');
@@ -158,15 +163,131 @@ class MlibreVariantesController extends Controller
             continue;
         }
 
-        // 🔁 Tomar datos actualizados desde SKU
-        $v->syncFromSku();
+        $modificado = false;
 
-        // 🔄 Sincronizar con ML
-        $result = $v->sincronizarVariante($token);
+        // ✅ SCF
+        $scfFinal = $scfs[$id] ?? $v->seller_custom_field;
+        if ($scfFinal !== $v->seller_custom_field && !empty($scfFinal)) {
+            $v->seller_custom_field = $scfFinal;
+            $modificado = true;
+        }
 
-        if ($result) {
-            $ok++;
-        } else {
+        // ✅ Overrides manuales
+        $v->manual_stock  = isset($overridesStock[$id]) ? 1 : 0;
+        $v->manual_price  = isset($overridesPrecio[$id]) ? 1 : 0;
+
+        // ✅ STOCK
+        $stockNuevo = $v->manual_stock ? ($stocks[$id] ?? $v->stock) : optional($v->skuVariante)->stock;
+        if ($stockNuevo != $v->stock) {
+            $v->stock = $stockNuevo;
+            $modificado = true;
+        }
+
+        // ✅ PRECIO
+        $precioNuevo = $precios[$id] ?? null;
+        if (isset($precioNuevo) && $precioNuevo != $v->precio) {
+            $v->precio = $precioNuevo;
+            $modificado = true;
+        }
+
+        if ($modificado) {
+            $v->sync_status = 'U';
+            $v->sync_log = '🟡 Modificado local (pendiente sync)';
+        }
+
+        $v->save();
+
+        // Validaciones previas al PUT
+        if (empty($v->seller_custom_field)) {
+            $v->sync_status = 'E';
+            $v->sync_log = '❌ SCF vacío o nulo';
+            $v->save();
+            $errors++;
+            continue;
+        }
+
+        if (!$v->skuVariante) {
+            $v->sync_status = 'E';
+            $v->sync_log = '❌ SKU Variante no encontrado';
+            $v->save();
+            $errors++;
+            continue;
+        }
+
+        if (!$v->ml_id) {
+            $v->sync_status = 'E';
+            $v->sync_log = '❌ Falta ml_id';
+            $v->save();
+            $errors++;
+            continue;
+        }
+
+        $itemRes = Http::withToken($token)->get("https://api.mercadolibre.com/items/{$v->ml_id}?attributes=variations");
+
+        if (!$itemRes->ok()) {
+            $v->sync_status = 'E';
+            $v->sync_log = "❌ Error al obtener item ML ({$itemRes->status()})";
+            $v->save();
+            $errors++;
+            continue;
+        }
+
+        $item = $itemRes->json();
+        $hasVariants = !empty($item['variations']);
+
+        try {
+            if ($hasVariants) {
+                if (!$v->variation_id) {
+                    $v->sync_status = 'E';
+                    $v->sync_log = '❌ Falta variation_id';
+                    $v->save();
+                    $errors++;
+                    continue;
+                }
+
+                $variacion = collect($item['variations'])->firstWhere('id', $v->variation_id);
+                if (!$variacion) {
+                    $v->sync_status = 'E';
+                    $v->sync_log = '❌ Variación no encontrada en ML';
+                    $v->save();
+                    $errors++;
+                    continue;
+                }
+
+                if (!empty($variacion['inventory_id'])) {
+                    $v->sync_status = 'E';
+                    $v->sync_log = '❌ Stock FULL (no editable)';
+                    $v->save();
+                    $errors++;
+                    continue;
+                }
+
+                $put = Http::withToken($token)->put(
+                    "https://api.mercadolibre.com/items/{$v->ml_id}/variations/{$v->variation_id}",
+                    ['available_quantity' => (int) $v->stock]
+                );
+            } else {
+                $put = Http::withToken($token)->put(
+                    "https://api.mercadolibre.com/items/{$v->ml_id}",
+                    ['available_quantity' => (int) $v->stock]
+                );
+            }
+
+            if ($put->ok()) {
+                $v->sync_status = 'S';
+                $v->sync_log = '✅ Sincronizado OK';
+                $v->save();
+                $ok++;
+            } else {
+                $v->sync_status = 'E';
+                $v->sync_log = "❌ Error PUT: " . $put->status() . " - " . $put->body();
+                $v->save();
+                $errors++;
+            }
+        } catch (\Exception $e) {
+            $v->sync_status = 'E';
+            $v->sync_log = "❌ Excepción: " . $e->getMessage();
+            $v->save();
             $errors++;
         }
     }
@@ -179,49 +300,56 @@ class MlibreVariantesController extends Controller
 }
 
 
+
 public function sincronizarFiltrados(Request $request)
-{
-    $camposFiltrables = [
-        'ml_id', 'variation_id', 'product_number', 'seller_custom_field',
-        'color', 'talle', 'modelo', 'titulo', 'seller_sku',
-        'sync_status', 'status', 'family_id', 'logistic_type'
-    ];
+    {
+        $camposFiltrables = [
+            'ml_id', 'variation_id', 'product_number', 'seller_custom_field',
+            'color', 'talle', 'modelo', 'titulo', 'seller_sku',
+            'sync_status', 'status', 'family_id', 'logistic_type'
+        ];
 
-    $query = MlVariante::query()->with('skuVariante');
+        $query = MlVariante::query()->with('skuVariante');
 
-    foreach ($camposFiltrables as $campo) {
-        if ($request->filled($campo)) {
-            $valores = (array) $request->input($campo);
+        foreach ($camposFiltrables as $campo) {
+            if ($request->filled($campo)) {
+                $valores = (array) $request->input($campo);
 
-            if ($campo === 'status') {
-                $query->whereHas('publicacion', function ($q) use ($valores) {
-                    $q->whereIn('status', $valores);
-                });
-            } else {
-                $query->whereIn($campo, $valores);
+                if ($campo === 'status') {
+                    $query->whereHas('publicacion', function ($q) use ($valores) {
+                        $q->whereIn('status', $valores);
+                    });
+                } else {
+                    $query->whereIn($campo, $valores);
+                }
             }
         }
+
+        $variantes = $query->get();
+        $token = app(MlibreTokenService::class)->getValidAccessToken();
+
+        $ok = 0;
+        $errors = 0;
+
+        foreach ($variantes as $v) {
+            try {
+                $v->syncFromSku();
+                $result = $v->sincronizarVariante($token);
+                $result ? $ok++ : $errors++;
+            } catch (\Exception $e) {
+                $v->sync_status = 'E';
+                $v->sync_log = "❌ Excepción: " . $e->getMessage();
+                $v->save();
+                $errors++;
+            }
+        }
+
+        return back()->with('sync_result', [
+            'ok' => $ok,
+            'errors' => $errors,
+            'total' => $variantes->count(),
+        ]);
     }
-
-    $variantes = $query->get();
-    $token = app(MlibreTokenService::class)->getValidAccessToken();
-
-    $ok = 0;
-    $errors = 0;
-
-    foreach ($variantes as $v) {
-        $v->syncFromSku();
-        $result = $v->sincronizarVariante($token);
-        $result ? $ok++ : $errors++;
-    }
-
-    return back()->with('sync_result', [
-        'ok' => $ok,
-        'errors' => $errors,
-        'total' => $variantes->count(),
-    ]);
-}
-
 
 
 public function syncFromSku(): bool
