@@ -24,6 +24,7 @@ class PoblarPreciosSku extends Command
                 ->first();
 
             if ($cpa) {
+                $sku->precio  = $cpa->precio_mayorista_usd;
                 $sku->ml_price       = $cpa->mlibre_precio;
                 $sku->eshop_price    = $cpa->ecommerce_price1;
                 $sku->segunda_price  = $cpa->precio_mayorista_usd;

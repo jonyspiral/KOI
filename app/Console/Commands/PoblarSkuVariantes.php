@@ -62,31 +62,34 @@ class PoblarSkuVariantes extends Command
                         $denomLinea = $linea?->denom_linea;
                     }
 
-                   SkuVariante::updateOrInsert(
-                        ['var_sku' => $variante->var_sku],
-                        [
-                            'cod_articulo'           => $variante->cod_articulo,
-                            'cod_color_articulo'     => $variante->cod_color_articulo,
-                            'familia'                => $variante->familia ?? null,
-                            'sku'                    => $variante->sku ?? null,
-                            'ml_name'                => $variante->ml_name ?? null,
-                            'color'                  => $variante->color ?? null,
-                            'talle'                  => $variante->talle ?? null,
-                            'precio'                 => $variante->precio ?? 0,
-                            'stock'                  => $stockEcom,
-                            'stock_ecommerce'        => $stockEcom,
-                            'stock_2da'              => $stock2da,
-                            'stock_fulfillment'      => 0,
-                            'id_tipo_producto_stock' => $idTipoProducto,
-                            'cod_linea'              => $codLinea,
-                            'sync_status'            => 'N',
-                            'sync_log'               => null,
-                            'updated_at'             => now(),
-                            'created_at'             => now(),
-                        ]
-                    );
+             SkuVariante::updateOrInsert(
+    ['var_sku' => $variante->var_sku],
+    [
+        'cod_articulo'           => $variante->cod_articulo,
+        'cod_color_articulo'     => $variante->cod_color_articulo,
+        'familia'                => $variante->familia ?? null,
+        'sku'                    => $variante->sku ?? null,
+        'ml_name'                => $variante->ml_name ?? null,
+        'color'                  => $variante->color ?? null,
+        'talle'                  => $variante->talle ?? null,
+        'precio'                 => $variante->precio ?? 0,
+        'ml_price'               => $mlPrice,
+        'eshop_price'            => $eshopPrice,
+        'segunda_price'          => $segundaPrice,
+        'stock'                  => $stockEcom,
+        'stock_ecommerce'        => $stockEcom,
+        'stock_2da'              => $stock2da,
+        'stock_fulfillment'      => 0,
+        'id_tipo_producto_stock' => $idTipoProducto,
+        'cod_linea'              => $codLinea,
+        'sync_status'            => 'N',
+        'sync_log'               => null,
+        'updated_at'             => now(),
+        'created_at'             => now(),
+    ]
+);
 
-                    $bar->advance();
+                
                 }
             });
 

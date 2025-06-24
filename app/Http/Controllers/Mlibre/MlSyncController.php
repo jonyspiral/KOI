@@ -4,158 +4,89 @@ namespace App\Http\Controllers\Mlibre;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\Mlibre\MlSyncService;
-use App\Services\Mlibre\SyncPriceService;
 use App\Models\MlVariante;
-use Illuminate\Support\Facades\DB;
+use App\Models\MlSyncLog;
 
 class MlSyncController extends Controller
 {
+    public function syncSeleccionados(Request $request)
+    {
+        $ids = $request->input('ids', []);
 
-    use App\Services\Mlibre\SyncPriceService;
-
-public function sincronizarSeleccionados(Request $request)
-{
-    $ids = $request->input('ids', []);
-    if (empty($ids)) {
-        return back()->with('error', 'No seleccionaste ninguna variante.');
-    }
-
-    $ok = 0;
-    $errors = 0;
-
-    foreach ($ids as $id) {
-        $variante = MlVariante::with('skuVariante')->find($id);
-        if (!$variante || !$variante->skuVariante) {
-            $errors++;
-            continue;
-        }
-
-        $servicio = new SyncPriceService();
-        $resultado = $servicio->sincronizar($variante);
-
-        if ($resultado['success']) {
-            $ok++;
-        } else {
-            $errors++;
-        }
-    }
-
-    return back()->with('sync_result', [
-        'ok' => $ok,
-        'errors' => $errors,
-        'total' => count($ids),
-    ]);
-}
-public function sincronizarFiltrados(Request $request)
-{
-    $query = MlVariante::with('skuVariante');
-
-    $campos = ['ml_id', 'variation_id', 'product_number', 'seller_custom_field',
-               'color', 'talle', 'modelo', 'titulo', 'seller_sku',
-               'sync_status', 'status', 'family_id', 'logistic_type'];
-
-    foreach ($campos as $campo) {
-        if ($request->filled($campo)) {
-            $valores = (array) $request->input($campo);
-            if ($campo === 'status') {
-                $query->whereHas('publicacion', function ($q) use ($valores) {
-                    $q->whereIn('status', $valores);
-                });
-            } elseif ($campo === 'logistic_type') {
-                $query->whereHas('publicacion', function ($q) use ($valores) {
-                    $q->whereIn('logistic_type', $valores);
-                });
-            } else {
-                $query->whereIn($campo, $valores);
+        // 1. Guardar SCFs
+        foreach ($request->input('scf', []) as $id => $valor) {
+            if (!is_null($valor)) {
+                MlVariante::where('id', $id)->update(['seller_custom_field' => $valor]);
             }
         }
-    }
 
-    $variantes = $query->get();
+        // 2. Validación post-guardado: verificar SKU vinculados
+        $variantes = MlVariante::with('skuVariante')->whereIn('id', $ids)->get();
 
-    $ok = 0;
-    $errors = 0;
+        foreach ($variantes as $v) {
+            if (!$v->skuVariante) {
+                MlSyncLog::create([
+                    'ml_variante_id' => $v->id,
+                    'campo'          => 'scf',
+                    'exito'          => 0,
+                    'mensaje'        => '❌ No se encuentra sku_variante para SCF: ' . ($v->seller_custom_field ?? 'NULL'),
+                ]);
 
-    foreach ($variantes as $variante) {
-        $servicio = new SyncPriceService();
-        $resultado = $servicio->sincronizar($variante);
-
-        if ($resultado['success']) {
-            $ok++;
-        } else {
-            $errors++;
+                $v->sync_status = 'E';
+                $v->sync_log = '❌ Sin SKU vinculado por SCF';
+                $v->save();
+            }
         }
-    }
 
-    return back()->with('sync_result', [
-        'ok' => $ok,
-        'errors' => $errors,
-        'total' => $variantes->count(),
-    ]);
-}
+        // 3. Ejecutar sincronización real con el Service
+        $resultado = app(MlSyncService::class)
+            ->setModo('seleccionados')
+            ->setCampo('global')
+            ->setIds($ids)
+            ->sync();
+
+        return back()->with('sync_result', $resultado);
+    }
 
     public function syncFiltrados(Request $request)
     {
-        $campos = $request->input('campos', ['stock']); // ['stock'], ['precio'] o ['stock', 'precio']
-        $query = \App\Models\MlVariante::query()->with('skuVariante');
-
-        // Reaplicar filtros del request
-        foreach ($request->except(['_token', 'campos']) as $campo => $valores) {
-            $valores = (array) $valores;
-
-            // Relaciones con ml_publicaciones
-            if (in_array($campo, ['status', 'logistic_type'])) {
-                $query->whereHas('publicacion', function ($q) use ($campo, $valores) {
-                    $q->whereIn($campo, $valores);
-                });
-            } else {
-                $query->whereIn($campo, $valores);
-            }
-        }
-
-        $variantesFiltradas = $query->pluck('id')->toArray();
-        $resultados = [];
-
-        foreach ($campos as $campo) {
-            $resultados[$campo] = app(MlSyncService::class)
-                ->setModo('seleccionados')
-                ->setCampo($campo)
-                ->setIds($variantesFiltradas)
+        try {
+            $resultado = app(MlSyncService::class)
+                ->setModo('filtrados')
+                ->setCampo('global')
                 ->sync();
+
+            return back()->with('sync_result', $resultado);
+        } catch (\Throwable $e) {
+            \Log::error("Error en syncFiltrados: " . $e->getMessage());
+
+            return back()->with('sync_result', [
+                'total' => 0,
+                'ok' => 0,
+                'errors' => 0,
+                'mensaje' => 'Error al sincronizar variantes filtradas.',
+            ]);
         }
-
-        return back()->with('sync_result', $resultados);
-    }
-
-    public function syncSeleccionados(Request $request)
-    {
-        $campos = $request->input('campos', ['stock']);
-        $ids = $request->input('ids', []);
-        $resultados = [];
-
-        foreach ($campos as $campo) {
-            $resultados[$campo] = app(MlSyncService::class)
-                ->setModo('seleccionados')
-                ->setCampo($campo)
-                ->setIds($ids)
-                ->sync();
-        }
-
-        return back()->with('sync_result', $resultados);
     }
 
     public function syncPendientes(Request $request)
     {
-        $campos = $request->input('campos', ['stock']);
-        $resultados = [];
-
-        foreach ($campos as $campo) {
-            $resultados[$campo] = app(MlSyncService::class)
+        try {
+            $resultado = app(MlSyncService::class)
                 ->setModo('pendientes')
-                ->setCampo($campo)
+                ->setCampo('global')
                 ->sync();
-        }
 
-        return back()->with('sync_result', $resultados);
+            return back()->with('sync_result', $resultado);
+        } catch (\Throwable $e) {
+            \Log::error("Error en syncPendientes: " . $e->getMessage());
+
+            return back()->with('sync_result', [
+                'total' => 0,
+                'ok' => 0,
+                'errors' => 0,
+                'mensaje' => 'Error al sincronizar variantes pendientes.',
+            ]);
+        }
     }
 }

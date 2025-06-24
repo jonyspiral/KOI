@@ -52,6 +52,7 @@ Route::prefix('sku')->name('sku.')->group(function () {
     Route::get('sku_variantes/{id}', [SkuVarianteController::class, 'show'])->name('sku_variantes.show');
     Route::get('sku_variantes/exportar', [SkuVarianteController::class, 'exportar'])->name('sku_variantes.exportar');
 });
+Route::post('mlibre/variantes/guardar-scf', [MlSyncController::class, 'guardarSCFs'])->name('mlibre.variantes.guardar-scf');
 
     Route::prefix('mlibre')->group(function () {
         Route::get('/auth', [MeliAuthController::class, 'redirect'])->name('mlibre.auth');

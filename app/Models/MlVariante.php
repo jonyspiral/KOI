@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Services\Mlibre\MlibreTokenService;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\StockSkuService;
+use Illuminate\Support\Facades\Http;
 
 
   class MlVariante extends Model
@@ -25,8 +27,7 @@ use App\Services\StockSkuService;
         'family_id',
         'seller_custom_field_actual',
         'var_sku_sugerido',
-        'nuevo_seller_custom_field',
-        'sincronizado',
+        'nuevo_seller_custom_field',        
         'raw_json',
         'created_at',
         'updated_at',
@@ -34,6 +35,10 @@ use App\Services\StockSkuService;
         'sync_log',
         'manual_price',
         'manual_stock',
+        'sync_log_stock', 
+        'sync_log_precio',
+         'sync_status_stock',
+          'sync_status_precio'
     ];
 
     protected $casts = [
@@ -132,89 +137,90 @@ public function sincronizarVariante(string $token): bool
      * Envía el stock de esta variante a Mercado Libre.
      * Actualiza sync_status y sync_log según el resultado.
      */
-    public function actualizarStockML(): bool
+   public function actualizarStockML(): bool
 {
     if (!$this->ml_id) {
-        $this->markAsError('Falta ml_id');
+        $this->markAsError('stock', 'Falta ml_id');
         return false;
     }
 
     $ml_id = $this->ml_id;
-    $variation_id = $this->variation_id;
-    $stock = (int) ($this->stock ?? 0);
+$variation_id = $this->variation_id;
 
-    try {
-        $token = app(MlibreTokenService::class)->getValidAccessToken();
+// Usar stock del SKU si no está override manual
+$stock = $this->manual_stock ? (int) $this->stock : (int) optional($this->skuVariante)->stock;
 
-        // Consultar publicación para determinar si tiene variantes
-        $itemRes = Http::withToken($token)->get("https://api.mercadolibre.com/items/{$ml_id}?attributes=variations");
+try {
+    $token = app(\App\Services\Mlibre\MlibreTokenService::class)->getValidAccessToken();
 
-        if (!$itemRes->ok()) {
-            $this->markAsError("Error al obtener item ML: " . $itemRes->status());
-            return false;
-        }
+    // Consultar publicación para determinar si tiene variantes
+    $itemRes = \Illuminate\Support\Facades\Http::withToken($token)->get("https://api.mercadolibre.com/items/{$ml_id}?attributes=variations");
 
-        $item = $itemRes->json();
-        $has_variants = !empty($item['variations']);
-
-        // Publicación SIN variantes
-        if (!$has_variants) {
-            $put = Http::withToken($token)->put("https://api.mercadolibre.com/items/{$ml_id}", [
-                'available_quantity' => $stock
-            ]);
-
-            if ($put->ok()) {
-                $this->markAsSynced();
-                $this->sync_log = "Stock actualizado SIN variantes: $stock";
-                $this->save();
-                return true;
-            } else {
-                $this->markAsError("Error ML (sin variantes): " . $put->status() . " - " . $put->body());
-                return false;
-            }
-        }
-
-        // Publicación CON variantes
-        if (!$variation_id) {
-            $this->markAsError("Falta variation_id para publicación con variantes");
-            return false;
-        }
-
-        $variacion = collect($item['variations'])->firstWhere('id', $variation_id);
-
-        if (!$variacion) {
-            $this->markAsError("Variación {$variation_id} no encontrada en ML");
-            return false;
-        }
-
-        // FULL: no editable
-        if (!empty($variacion['inventory_id'])) {
-            $this->markAsSynced();
-            $this->sync_log = "Stock FULL (no editable)";
-            $this->save();
-            return false;
-        }
-
-        $put = Http::withToken($token)->put(
-            "https://api.mercadolibre.com/items/{$ml_id}/variations/{$variation_id}",
-            ['available_quantity' => $stock]
-        );
-
-        if ($put->ok()) {
-            $this->markAsSynced();
-            $this->sync_log = "Stock actualizado CON variantes: $stock";
-            $this->save();
-            return true;
-        } else {
-            $this->markAsError("Error ML (con variantes): " . $put->status() . " - " . $put->body());
-            return false;
-        }
-
-    } catch (\Throwable $e) {
-        $this->markAsError("Excepción: " . $e->getMessage());
+    if (!$itemRes->ok()) {
+        $this->markAsError('stock', "❌ Error al obtener item ML: " . $itemRes->status());
         return false;
     }
+
+    $item = $itemRes->json();
+    $has_variants = !empty($item['variations']); // ✅ CORRECTAMENTE DEFINIDO
+
+    // Publicación SIN variantes
+    if (!$has_variants) {
+        $put = \Illuminate\Support\Facades\Http::withToken($token)->put("https://api.mercadolibre.com/items/{$ml_id}", [
+            'available_quantity' => $stock
+        ]);
+
+        if ($put->ok()) {
+            $this->stock = $stock;
+            $this->markAsSynced('stock', "✅ Stock actualizado SIN variantes: $stock");
+            return true;
+        } else {
+            $this->markAsError('stock', "❌ Error ML (sin variantes): " . $put->status() . " - " . $put->body());
+            return false;
+        }
+    }
+
+    // Publicación CON variantes
+    if (!$variation_id) {
+        $this->markAsError('stock', "❌ Falta variation_id para publicación con variantes");
+        return false;
+    }
+
+    $variacion = collect($item['variations'])->firstWhere('id', $variation_id);
+
+    if (!$variacion) {
+        $this->markAsError('stock', "❌ Variación {$variation_id} no encontrada en ML");
+        return false;
+    }
+
+    if (!empty($variacion['inventory_id'])) {
+        $this->markAsSynced('stock', "ℹ️ Stock FULL (no editable)");
+        return false;
+    }
+
+    $put = \Illuminate\Support\Facades\Http::withToken($token)->put(
+        "https://api.mercadolibre.com/items/{$ml_id}/variations/{$variation_id}",
+        ['available_quantity' => $stock]
+    );
+
+    if ($put->ok()) {
+        $this->stock = $stock;
+        $this->markAsSynced('stock', "✅ Stock actualizado CON variantes: $stock");
+        return true;
+    } else {
+        $this->markAsError('stock', "❌ Error ML (con variantes): " . $put->status() . " - " . $put->body());
+        return false;
+    }
+
+} catch (\Throwable $e) {
+    $this->markAsError('stock', "❌ Excepción: " . $e->getMessage());
+    return false;
 }
+
+}
+
+
+
 
 
 public function syncFromSku(): bool
@@ -257,23 +263,40 @@ public function has_variants(): bool
 /**
  * Marca la variante como sincronizada correctamente.
  */
-public function markAsSynced(): void
+public function markAsSynced(string $campo = null, string $mensaje = 'Sincronizado correctamente con ML'): void
 {
-    $this->sync_status = 'S';
-    $this->sync_log = 'Sincronizado correctamente con ML';
+    if ($campo === 'stock') {
+        $this->sync_status_stock = 'S';
+        $this->sync_log_stock = "✅ $mensaje";
+    } elseif ($campo === 'precio') {
+        $this->sync_status_precio = 'S';
+        $this->sync_log_precio = "✅ $mensaje";
+    } else {
+        $this->sync_status = 'S';
+        $this->sync_log = $mensaje;
+    }
+
     $this->save();
 }
 
 /**
  * Marca un error de sincronización.
  */
-public function markAsError(string $message): void
+public function markAsError(string $message, string $campo = null): void
 {
-    $this->sync_status = 'E';
-    $this->sync_log = $message;
+    if ($campo === 'stock') {
+        $this->sync_status_stock = 'E';
+        $this->sync_log_stock = $message;
+    } elseif ($campo === 'precio') {
+        $this->sync_status_precio = 'E';
+        $this->sync_log_precio = $message;
+    } else {
+        $this->sync_status = 'E';
+        $this->sync_log = $message;
+    }
+
     $this->save();
 }
-
 }
 
 
