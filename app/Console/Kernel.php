@@ -36,7 +36,13 @@ class Kernel extends ConsoleKernel
           \App\Console\Commands\MlibreActualizarPublicacion::class,
           \App\Console\Commands\SyncMlVariantes::class,
            \App\Console\Commands\PoblarPreciosSku::class,
-    ];
+           \App\Console\Commands\MlibreGenerarPendientes::class, 
+     \App\Console\Commands\SyncCampaignsML::class,
+        \App\Console\Commands\MlibreSincronizarOrdenes::class,
+        \App\Console\Commands\MlibreExportarOrdenes::class,
+        \App\Console\Commands\MlibreActualizarScf::class,
+
+        ];
     
    
     

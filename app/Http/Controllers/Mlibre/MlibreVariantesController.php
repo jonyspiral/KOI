@@ -74,6 +74,9 @@ class MlibreVariantesController extends Controller
             }
         }
     }
+            if ($request->boolean('has_campaign')) {
+            $query->whereHas('campaniaItems');
+        }
 
     $sort = $request->get('sort', 'ml_id');
     $dir  = $request->get('dir', 'asc');

@@ -28,10 +28,15 @@ use App\Http\Controllers\Mlibre\MeliAuthController;
 use App\Http\Controllers\Mlibre\PublicacionesController;
 use App\Http\Controllers\Sku\SkuVarianteController;
 use App\Http\Controllers\Mlibre\MlSyncController;
+use App\Http\Controllers\Mlibre\MlibreCampaignController;
+use App\Http\Controllers\Produccion\ArticuloColorController;
+
 require __DIR__.'/auth.php';
 
 // Rutas públicas necesarias
 Route::middleware(['auth'])->group(function () {
+  
+
 
     Route::view('/', 'home');
     Route::view('/home', 'home')->name('home');
@@ -40,6 +45,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/menu', [MenuController::class, 'index'])->name('menu');
 
 
+
+Route::prefix('produccion/abms')->middleware(['auth'])->group(function () {
+    Route::get('articulocolor', [ArticuloColorController::class, 'index'])->name('articulocolor.index');
+    Route::get('articulocolor/create', [ArticuloColorController::class, 'create'])->name('articulocolor.create');
+    Route::post('articulocolor', [ArticuloColorController::class, 'store'])->name('articulocolor.store');
+    Route::get('articulocolor/{id}/edit', [ArticuloColorController::class, 'edit'])->name('articulocolor.edit');
+    Route::put('articulocolor/{id}', [ArticuloColorController::class, 'update'])->name('articulocolor.update');
+    Route::delete('articulocolor/{id}', [ArticuloColorController::class, 'destroy'])->name('articulocolor.destroy');
+});
+
  
 Route::prefix('mlibre/sync')->name('mlibre.sync.')->group(function () {
     Route::post('/sync-filtrados', [MlSyncController::class, 'sincronizarFiltrados'])->name('sync-filtrados');
@@ -47,6 +62,14 @@ Route::prefix('mlibre/sync')->name('mlibre.sync.')->group(function () {
     Route::post('seleccionados', [MlSyncController::class, 'syncSeleccionados'])->name('seleccionados');
     Route::post('pendientes', [MlSyncController::class, 'syncPendientes'])->name('pendientes');
 });
+
+Route::prefix('mlibre/campaigns')->group(function () {
+    Route::get('/', [MlibreCampaignController::class, 'index']);           // 📋 Vista general de campañas detectadas
+    Route::get('/{id}/items', [MlibreCampaignController::class, 'items']); // 🧩 Items de una campaña puntual
+});
+
+
+
 Route::prefix('sku')->name('sku.')->group(function () {
     Route::get('sku_variantes', [SkuVarianteController::class, 'index'])->name('sku_variantes.index');
     Route::get('sku_variantes/{id}', [SkuVarianteController::class, 'show'])->name('sku_variantes.show');
@@ -62,10 +85,6 @@ Route::post('mlibre/variantes/guardar-scf', [MlSyncController::class, 'guardarSC
      
 
         Route::prefix('variantes')->name('mlibre.variantes.')->group(function () {
-
-
-
-
             Route::get('/', [MlibreVariantesController::class, 'index'])->name('index');
           Route::post('sincronizar-filtrados', [MlibreVariantesController::class, 'sincronizarFiltrados'])->name('sincronizar-filtrados');
             Route::post('sync-seleccionados', [MlibreVariantesController::class, 'sincronizarSeleccionados'])->name('sync-seleccionados');
@@ -145,7 +164,7 @@ Route::post('mlibre/variantes/guardar-scf', [MlSyncController::class, 'guardarSC
 
 // 🧩 Ruta generada automáticamente por ABM Creator
 // Modelo: User - Generado el 2025-06-19 04:13:52
-use App\Http\Controllers\Sistemas\UserController;
+
 
 Route::prefix('sistemas/abms/user')->name('sistemas.abms.user.')->group(function () {
     Route::resource('', UserController::class)

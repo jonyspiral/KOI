@@ -13,6 +13,11 @@ class ColoresPorArticulo extends Model
     public static array $primaryKeySql = ['cod_articulo', 'cod_color_articulo'];
     protected $fillable = ['cod_articulo', 'cod_color_articulo', 'id'];
 
+    public function tipo_producto_stock()
+    {
+        return $this->belongsTo(TipoProductoStock::class, 'id_tipo_producto_stock', 'id_tipo_producto_stock');
+    }
+    
     public static function fieldsMeta()
     {
         return array (

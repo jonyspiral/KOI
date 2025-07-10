@@ -219,6 +219,10 @@ try {
 
 }
 
+public function campaignItems()
+{
+    return $this->hasMany(\App\Models\MlCampaignItem::class, 'ml_variantes_id');
+}
 
 
 

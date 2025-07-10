@@ -11,7 +11,7 @@ class FamiliasProducto extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['id'];
-                                                                                                                                        protected $fillable = ['id', 'nombre', 'descripcion', 'anulado', 'cod_usuario', 'created_at', 'updated_at', 'sync_status'];
+       protected $fillable = ['id', 'nombre', 'descripcion', 'anulado', 'cod_usuario', 'created_at', 'updated_at', 'sync_status'];
 
     public static function fieldsMeta()
     {

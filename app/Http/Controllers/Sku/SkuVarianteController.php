@@ -55,10 +55,10 @@ class SkuVarianteController extends Controller
 
     // 📦 Totales
     $totales = (clone $query)->selectRaw("
-        SUM(stock) as stock_total,
-        SUM(stock_ecommerce) as stock_ecommerce_total,
-        SUM(stock_2da) as stock_2da_total,
-        SUM(stock_fulfillment) as stock_fulfillment_total
+        SUM(stock) as total,
+        SUM(ecommerce) as ecommerce_total,
+        SUM(2da) as 2da_total,
+        SUM(fulfillment) as fulfillment_total
     ")->first();
 
     // 📄 Paginación con filtros aplicados

@@ -11,7 +11,48 @@ class Articulo extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_articulo'];
-    protected $fillable = ['cod_articulo', 'id'];
+    protected $fillable = ['cod_articulo', 'id','cod_linea', 'cod_marca', 'cod_ruta', 'cod_rango', 'cod_cliente', 'denom_articulo', 'fabricante', 'vigente', 'forma_comercializacion', 'rubro', 'cod_prov', 'cod_tipo', 'cod_horma', 'categoria', 'cod_material', 'cod_color', 'naturaleza', 'calidad', 'precio_costo', 'cod_material_articulo', 'cod_articulo_largo', 'unidad', 'aprob_disenio', 'aprob_produccion', 'denom_articulo_largo'];
+
+
+    public function coloresPorArticulo()
+    {
+        return $this->hasMany(\App\Models\ColoresPorArticulo::class, 'cod_articulo', 'cod_articulo');
+    }
+    public function familia()
+    {
+        return $this->belongsTo(\App\Models\FamiliasProducto::class, 'cod_familia_producto', 'id');
+        }
+ public function linea()
+{
+    return $this->belongsTo(\App\Models\LineasProducto::class, 'cod_linea', 'cod_linea');
+}
+
+
+    public function ruta()
+    {
+        return $this->belongsTo(\App\Models\RutasProduccion::class, 'cod_ruta');
+    }
+
+    public function rango()
+    {
+        return $this->belongsTo(\App\Models\RangoTalle::class, 'cod_rango');
+    }
+
+    public function horma()
+    {
+        return $this->belongsTo(\App\Models\Horma::class, 'cod_horma');
+    }
+
+    public function marca()
+    {
+        return $this->belongsTo(\App\Models\Marca::class, 'cod_marca');
+    }
+
+    public function rubroIva()
+    {
+        return $this->belongsTo(\App\Models\RubrosIva::class, 'cod_rubro_iva');
+    }
+
 
     public static function fieldsMeta()
     {
@@ -22,27 +63,6 @@ class Articulo extends Model
     'nullable' => false,
     'default' => NULL,
     'primary' => true,
-  ),
-  'cod_variante' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_matris' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'corte' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
   ),
   'cod_ruta' => 
   array (
@@ -79,28 +99,7 @@ class Articulo extends Model
     'default' => NULL,
     'primary' => false,
   ),
-  'denom_articulo_abreviada' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
   'denom_articulo' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'material_predomina' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'origen' => 
   array (
     'type' => 'varchar',
     'nullable' => true,
@@ -121,13 +120,6 @@ class Articulo extends Model
     'default' => '(\'S\')',
     'primary' => false,
   ),
-  'fecha_de_baja' => 
-  array (
-    'type' => 'smalldatetime',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
   'forma_comercializacion' => 
   array (
     'type' => 'varchar',
@@ -135,119 +127,14 @@ class Articulo extends Model
     'default' => NULL,
     'primary' => false,
   ),
-  'fecha_ultima_modificacion' => 
-  array (
-    'type' => 'smalldatetime',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'autor_ultima_modificacion' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'diseño' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'precio_lista' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'precio_lista_mayor' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'precio_distribuidor' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'fecha_precio' => 
-  array (
-    'type' => 'smalldatetime',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'rubro' => 
+   'rubro' => 
   array (
     'type' => 'nvarchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
   ),
-  'fecha_lanzamiento' => 
-  array (
-    'type' => 'smalldatetime',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'tamaño' => 
-  array (
-    'type' => 'nvarchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'packaging' => 
-  array (
-    'type' => 'nvarchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_tamanio' => 
-  array (
-    'type' => 'nvarchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_prov' => 
-  array (
-    'type' => 'int',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_art_en_proveed' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'colores_elenco' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_tempo' => 
-  array (
-    'type' => 'int',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_usuarios' => 
+    'cod_prov' => 
   array (
     'type' => 'int',
     'nullable' => true,
@@ -261,21 +148,7 @@ class Articulo extends Model
     'default' => NULL,
     'primary' => false,
   ),
-  'precio_recargado' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_mat_predom' => 
-  array (
-    'type' => 'int',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_horma' => 
+    'cod_horma' => 
   array (
     'type' => 'char',
     'nullable' => true,
@@ -289,14 +162,7 @@ class Articulo extends Model
     'default' => NULL,
     'primary' => false,
   ),
-  'trazable' => 
-  array (
-    'type' => 'nvarchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_material' => 
+   'cod_material' => 
   array (
     'type' => 'varchar',
     'nullable' => true,
@@ -338,146 +204,6 @@ class Articulo extends Model
     'default' => NULL,
     'primary' => false,
   ),
-  'tipo_proceso' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_variante_proceso' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_compuesto_articulo' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_empaque' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'combinable' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => '(\'N\')',
-    'primary' => false,
-  ),
-  'cod_articulo_combinacion' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_variante_combinacion' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'corte_combinacion' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'temporada' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'mercado' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'estacion' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'linea_verano' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'linea_invierno' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'linea_indistinta' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'target' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'plantilla' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'fidelidad' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_linea_combina' => 
-  array (
-    'type' => 'int',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'articulo_de_origen' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'madurez' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
   'cod_articulo_largo' => 
   array (
     'type' => 'varchar',
@@ -492,13 +218,6 @@ class Articulo extends Model
     'default' => NULL,
     'primary' => false,
   ),
-  'reventa' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
   'aprob_disenio' => 
   array (
     'type' => 'char',
@@ -509,146 +228,6 @@ class Articulo extends Model
   'aprob_produccion' => 
   array (
     'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'fecha_nacimiento' => 
-  array (
-    'type' => 'smalldatetime',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_matris1' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'vend_1' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'vend_2' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'vend_3' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'vend_4' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'vend_5' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'vend_6' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'vend_7' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'contribucion_marginal' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'dificultad_produccion' => 
-  array (
-    'type' => 'char',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'precio_mano_obra' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'precio_lista_aumento' => 
-  array (
-    'type' => 'real',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'fechaAlta' => 
-  array (
-    'type' => 'datetime',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_rubro_iva' => 
-  array (
-    'type' => 'int',
-    'nullable' => true,
-    'default' => '(1)',
-    'primary' => false,
-  ),
-  'utiliza_codigo_barra_cliente' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'cod_familia_producto' => 
-  array (
-    'type' => 'int',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'ml_denominacion' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'ecommerce_reference' => 
-  array (
-    'type' => 'varchar',
-    'nullable' => true,
-    'default' => NULL,
-    'primary' => false,
-  ),
-  'ecommerce_name' => 
-  array (
-    'type' => 'varchar',
     'nullable' => true,
     'default' => NULL,
     'primary' => false,
@@ -701,4 +280,6 @@ class Articulo extends Model
   ),
 );
     }
+
+
 }

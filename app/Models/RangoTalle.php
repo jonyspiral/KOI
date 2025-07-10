@@ -11,7 +11,7 @@ class RangoTalle extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_rango'];
-    protected $fillable = ['cod_rango', 'id'];
+    protected $fillable = ['cod_rango', 'id', 'denom_rango' ];
 
     public static function fieldsMeta()
     {
