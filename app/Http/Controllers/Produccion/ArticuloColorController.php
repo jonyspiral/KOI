@@ -126,7 +126,8 @@ public function index(Request $request)
     $marcas   = \App\Models\Marca::orderBy('denom_marca')->get();
     $rubros   = \App\Models\RubrosIva::orderBy('nombre')->get();
     $lineas   = \App\Models\LineasProducto::orderBy('denom_linea')->get();
-    $formasComercializacion = Articulo::whereNotNull('forma_comercializacion')
+    $tiposProductoStock = TipoProductoStock::orderBy('denom_tipo_producto')->get();
+    $formasComercializacion = Articulo::whereNotNull('forma_comercializacion')    
     ->select('forma_comercializacion')
     ->distinct()
     ->orderBy('forma_comercializacion')
@@ -136,7 +137,7 @@ public function index(Request $request)
     ->pluck('denom_tipo_producto', 'id_tipo_producto_stock');
 
    return view('produccion.abms.articulocolor.index-inline', compact(
-    'articulos', 'familias', 'rutas', 'rangos', 'hormas', 'marcas',
+    'articulos', 'familias','tiposProductoStock', 'rutas', 'rangos', 'hormas', 'marcas',
     'rubros', 'lineas', 'formasComercializacion', 'tiposProducto'
 ));
 }

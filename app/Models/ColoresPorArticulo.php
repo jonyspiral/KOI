@@ -17,7 +17,14 @@ class ColoresPorArticulo extends Model
     {
         return $this->belongsTo(TipoProductoStock::class, 'id_tipo_producto_stock', 'id_tipo_producto_stock');
     }
-    
+    // app/Models/ColoresPorArticulo.php
+
+public function articulo()
+{
+    return $this->belongsTo(\App\Models\Articulo::class, 'cod_articulo', 'cod_articulo');
+}
+
+
     public static function fieldsMeta()
     {
         return array (

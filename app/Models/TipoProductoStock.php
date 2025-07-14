@@ -11,7 +11,7 @@ class TipoProductoStock extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['id_tipo_producto_stock'];
-                                                                protected $fillable = ['id_tipo_producto_stock', 'denom_tipo_producto', 'id_tipo_producto_stock_nro', 'id'];
+   protected $fillable = ['id_tipo_producto_stock', 'denom_tipo_producto', 'id_tipo_producto_stock_nro', 'id'];
 
     public static function fieldsMeta()
     {

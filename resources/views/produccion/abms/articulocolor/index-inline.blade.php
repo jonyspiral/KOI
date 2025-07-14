@@ -30,6 +30,7 @@
                     <th>@sortableth('rango', 'Rango')</th>
                     <th>@sortableth('horma', 'Horma')</th>
                     <th>@sortableth('marca', 'Marca')</th>
+                      <th>@sortableth('marca', 'Marca')</th>
                     <th>@sortableth('forma_comercializacion', 'Forma Com.')</th>
                     <th>🎯</th>
                 </tr>
@@ -48,6 +49,7 @@
                     <th>@filterInput('horma')</th>
                  
                     <x-filtros.select-multiple campo="marca" :opciones="$marcas->pluck('denom_marca', 'denom_marca')" />
+                     <x-filtros.select-multiple campo="tipo_producto_stock" :opciones="$tiposProductoStock"/>
 
                     <x-filtros.select-multiple campo="forma_comercializacion" :opciones="$formasComercializacion" />
 
@@ -70,7 +72,8 @@
                         <td>{{ $articulo->ruta }}</td>
                         <td>{{ $articulo->rango }}</td>
                         <td>{{ $articulo->horma }}</td>
-                        <td>{{ $articulo->marca }}</td>
+                        <td>{{ $articulo->tipoProducto }}</td>
+                        
                         <td>{{ $articulo->forma_comercializacion }}</td>
                         <td>
                             <a href="{{ route('articulocolor.edit', $articulo->id) }}" class="btn btn-sm btn-warning">✏️</a>

@@ -71,7 +71,6 @@ BLADE;
 Blade::directive('filterInputLike', function ($campo) {
     return "<?php echo view('components.filtros.input-like', ['campo' => $campo]); ?>";
 });
-
     }
 
     public function register()

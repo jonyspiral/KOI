@@ -35,16 +35,18 @@ class StockService
             ->whereIn('cod_almacen', $almacenes)
             ->sum($campo);
     }
-public static function stockTotalPorArticuloColor(string $codArticulo, string $codColor, array $almacenes): int
-{
-    return \App\Models\Sql\Stock::whereRaw("CAST(cod_articulo AS VARCHAR) = CAST(? AS VARCHAR)", [$codArticulo])
-        ->whereRaw("CAST(cod_color_articulo AS VARCHAR) = CAST(? AS VARCHAR)", [$codColor])
-        ->whereIn(
-            \Illuminate\Support\Facades\DB::raw("CAST(cod_almacen AS VARCHAR)"),
-            collect($almacenes)->map(fn($a) => \Illuminate\Support\Facades\DB::raw('CAST(' . "'$a'" . ' AS VARCHAR)'))->toArray()
-        )
-        ->sum('cantidad');
-}
+ public static function stockTotalPorArticuloColor(string $codArticulo, string $codColor, array $almacenes): float
+    {
+        $almacenesFormateados = collect($almacenes)
+            ->map(fn($a) => "CAST('$a' AS VARCHAR)")
+            ->implode(', ');
+
+        return Stock::whereRaw("CAST(cod_articulo AS VARCHAR) = CAST(? AS VARCHAR)", [$codArticulo])
+            ->whereRaw("CAST(cod_color_articulo AS VARCHAR) = CAST(? AS VARCHAR)", [$codColor])
+            ->whereRaw("CAST(cod_almacen AS VARCHAR) IN ($almacenesFormateados)")
+            ->sum('cantidad');
+    }
+
 
 
 
@@ -73,4 +75,51 @@ public static function stockTotalPorArticuloColor(string $codArticulo, string $c
                 ];
             })->toArray();
     }
+    public static function mapRegistroConStock($item, $codAlmacen)
+{
+    $articulo = $item->articulo;
+    $rango = $articulo->rango;
+
+    $cantidades = [];
+    $total = 0;
+
+    for ($i = 1; $i <= 10; $i++) {
+        $campoTalle = 'posic_' . $i;
+        $talle = $rango->$campoTalle ?? null;
+
+        if ($talle !== null && $talle !== '') {
+            $cantidad = \App\Models\Sql\Stock::obtenerCantidadPorPosicion(
+                $item->cod_articulo,
+                $item->cod_color_articulo,
+                $i,
+                [$codAlmacen]
+            );
+            $cantidades[$talle] = $cantidad;
+            $total += $cantidad;
+        }
+    }
+
+    return (object)[
+        'cod_articulo' => $item->cod_articulo,
+        'cod_color_articulo' => $item->cod_color_articulo,
+        'denom_articulo' => $articulo->denom_articulo ?? '—',
+        'cantidades' => $cantidades,
+        'total' => $total
+    ];
+}
+public static function stockPorPosicionIndexada(string $codArticulo, string $codColor, int $pos, array $almacenes = ['01']): int
+{
+    $campo = "cant_$pos";
+
+    $almacenesFormateados = collect($almacenes)
+        ->map(fn($a) => "CAST('$a' AS VARCHAR)")
+        ->implode(', ');
+
+    return Stock::whereRaw("CAST(cod_articulo AS VARCHAR) = CAST(? AS VARCHAR)", [$codArticulo])
+        ->whereRaw("CAST(cod_color_articulo AS VARCHAR) = CAST(? AS VARCHAR)", [$codColor])
+        ->whereRaw("CAST(cod_almacen AS VARCHAR) IN ($almacenesFormateados)")
+        ->sum($campo);
+}
+
+
 }

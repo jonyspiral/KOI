@@ -35,7 +35,7 @@ class Articulo extends Model
 
     public function rango()
     {
-        return $this->belongsTo(\App\Models\RangoTalle::class, 'cod_rango');
+        return $this->belongsTo(\App\Models\RangoTalle::class, 'cod_rango', 'cod_rango');
     }
 
     public function horma()

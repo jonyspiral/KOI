@@ -30,12 +30,18 @@ use App\Http\Controllers\Sku\SkuVarianteController;
 use App\Http\Controllers\Mlibre\MlSyncController;
 use App\Http\Controllers\Mlibre\MlibreCampaignController;
 use App\Http\Controllers\Produccion\ArticuloColorController;
+use App\Http\Controllers\Produccion\AnalisisStockController;
+use App\Http\Controllers\Produccion\AnalisisStockExportController;
 
 require __DIR__.'/auth.php';
 
+Route::prefix('produccion')->middleware(['auth'])->group(function () {
+    Route::get('analisis-stock', [AnalisisStockController::class, 'index'])->name('produccion.analisis-stock.index');
+    Route::get('analisis-stock/exportar', [AnalisisStockController::class, 'exportarExcel'])->name('produccion.analisis-stock.exportar');
+    
+});
 // Rutas públicas necesarias
 Route::middleware(['auth'])->group(function () {
-  
 
 
     Route::view('/', 'home');
@@ -55,6 +61,8 @@ Route::prefix('produccion/abms')->middleware(['auth'])->group(function () {
     Route::delete('articulocolor/{id}', [ArticuloColorController::class, 'destroy'])->name('articulocolor.destroy');
 });
 
+
+    
  
 Route::prefix('mlibre/sync')->name('mlibre.sync.')->group(function () {
     Route::post('/sync-filtrados', [MlSyncController::class, 'sincronizarFiltrados'])->name('sync-filtrados');
