@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid py-5">
     <div class="text-center mb-4">
-        <h1 class="display-5 fw-bold">👋 Bienvenido a KOI2</h1>
+       
         <p class="text-muted">Sistema de gestión y producción de Spiral Shoes</p>
     </div>
 

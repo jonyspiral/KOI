@@ -1,13 +1,10 @@
-@extends('adminlte::page')
 
-@section('title', 'Análisis de Stock')
+@extends('layouts.app')
 
-@section('content_header')
-    <h1 class="mb-0">📦 Análisis de Stock</h1>
-@endsection
+
 
 @section('content')
-
+ <h1 class="mb-3">📦 Análisis de Stock</h1>
 {{-- 🔍 Filtros --}}
 <form method="GET" class="mb-2">
     <input type="hidden" name="aplicar" value="1">

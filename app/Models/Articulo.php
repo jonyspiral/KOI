@@ -13,11 +13,11 @@ class Articulo extends Model
     public static array $primaryKeySql = ['cod_articulo'];
     protected $fillable = ['cod_articulo', 'id','cod_linea', 'cod_marca', 'cod_ruta', 'cod_rango', 'cod_cliente', 'denom_articulo', 'fabricante', 'vigente', 'forma_comercializacion', 'rubro', 'cod_prov', 'cod_tipo', 'cod_horma', 'categoria', 'cod_material', 'cod_color', 'naturaleza', 'calidad', 'precio_costo', 'cod_material_articulo', 'cod_articulo_largo', 'unidad', 'aprob_disenio', 'aprob_produccion', 'denom_articulo_largo'];
 
+public function tipoProductoStock()
+{
+    return $this->belongsTo(\App\Models\TipoProductoStock::class, 'id_tipo_producto_stock', 'id_tipo_producto_stock');
+}
 
-    public function coloresPorArticulo()
-    {
-        return $this->hasMany(\App\Models\ColoresPorArticulo::class, 'cod_articulo', 'cod_articulo');
-    }
     public function familia()
     {
         return $this->belongsTo(\App\Models\FamiliasProducto::class, 'cod_familia_producto', 'id');
@@ -52,6 +52,12 @@ class Articulo extends Model
     {
         return $this->belongsTo(\App\Models\RubrosIva::class, 'cod_rubro_iva');
     }
+
+    public function coloresPorArticulo()
+{
+    return $this->hasMany(ColoresPorArticulo::class, 'cod_articulo', 'cod_articulo')->with('tipo_producto_stock');
+}
+
 
 
     public static function fieldsMeta()

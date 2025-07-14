@@ -1,13 +1,9 @@
-{{-- 📄 index-inline.blade.php (AdminLTE funcional con filtros, sort y subform) --}}
-@extends('adminlte::page')
 
-@section('title', 'Artículos con Colores')
+@extends('layouts.app')
 
-@section('content_header')
-    <h1>🧱 Artículos</h1>
-@stop
 
 @section('content')
+<h1>🧱 Artículos</h1>
 <div class="card">
     <div class="card-header">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoArticulo">➕ Nuevo Artículo</button>
@@ -29,8 +25,8 @@
                     <th>@sortableth('ruta', 'Ruta')</th>
                     <th>@sortableth('rango', 'Rango')</th>
                     <th>@sortableth('horma', 'Horma')</th>
-                    <th>@sortableth('marca', 'Marca')</th>
-                      <th>@sortableth('marca', 'Marca')</th>
+                    <th>@sortableth('marca', 'Marca')</th>  
+                    <th>@sortableth('tiposProducto', 'Tipo')</th>                 
                     <th>@sortableth('forma_comercializacion', 'Forma Com.')</th>
                     <th>🎯</th>
                 </tr>
@@ -49,7 +45,7 @@
                     <th>@filterInput('horma')</th>
                  
                     <x-filtros.select-multiple campo="marca" :opciones="$marcas->pluck('denom_marca', 'denom_marca')" />
-                     <x-filtros.select-multiple campo="tipo_producto_stock" :opciones="$tiposProductoStock"/>
+                     <x-filtros.select-multiple campo="tiposProducto" :opciones="$tiposProducto" />
 
                     <x-filtros.select-multiple campo="forma_comercializacion" :opciones="$formasComercializacion" />
 
@@ -67,13 +63,13 @@
                         <td>{{ $articulo->unidad }}</td>
                         <td>{{ $articulo->linea }}</td>
                         <td>{{ $articulo->vigente === 'S' ? '✅' : '❌' }}</td>
-                        <td><textarea class="form-control form-control-sm" rows="2" readonly>{{ $articulo->descripcion }}</textarea></td>
+                        <td><textarea class="form-control form-control-sm" rows="2" style="resize: none;" readonly>{{ $articulo->descripcion }}</textarea></td>
                         <td>{{ $articulo->familia }}</td>
                         <td>{{ $articulo->ruta }}</td>
                         <td>{{ $articulo->rango }}</td>
                         <td>{{ $articulo->horma }}</td>
-                        <td>{{ $articulo->tipoProducto }}</td>
-                        
+                        <td>{{ $articulo->marca }}</td>
+                        <td>{{ $articulo->tiposProducto }}</td>                        
                         <td>{{ $articulo->forma_comercializacion }}</td>
                         <td>
                             <a href="{{ route('articulocolor.edit', $articulo->id) }}" class="btn btn-sm btn-warning">✏️</a>
@@ -87,7 +83,7 @@
                         </td>
                     </tr>
                     <tr x-ref="colores{{ $articulo->id }}" class="d-none">
-                        <td colspan="13" class="bg-light p-3">
+                        <td colspan="14" class="bg-light p-3">
                             @include('produccion.abms.articulocolor.partials.subform-colores', ['articulo' => $articulo])
                         </td>
                     </tr>

@@ -22,7 +22,7 @@ public function index(Request $request)
 {
     $campos = [
         'cod_articulo', 'denom_articulo', 'unidad', 'linea', 'vigente',
-        'descripcion', 'familia', 'ruta', 'rango', 'horma', 'marca', 'forma_comercializacion',
+        'descripcion', 'familia', 'ruta', 'rango', 'horma', 'marca', 'forma_comercializacion','tiposProducto',
         'sort', 'dir', 'page'
     ];
 
@@ -39,6 +39,7 @@ public function index(Request $request)
         'rango'   => 'rt.denom_rango',
         'horma'   => 'h.denom_horma',
         'marca'   => 'm.denom_marca',
+        'tiposProducto' => 'tps.denom_tipo_producto', 
     ];
 
     // Query con joins y alias en select
@@ -49,6 +50,9 @@ public function index(Request $request)
         ->leftJoin('rango_talles as rt', 'articulos.cod_rango', '=', 'rt.cod_rango')
         ->leftJoin('hormas as h', 'articulos.cod_horma', '=', 'h.cod_horma')
         ->leftJoin('Marcas as m', 'articulos.cod_marca', '=', 'm.cod_marca')
+        ->leftJoin('colores_por_articulo as cpa', 'articulos.cod_articulo', '=', 'cpa.cod_articulo')
+        ->leftJoin('tipo_producto_stock as tps', 'cpa.id_tipo_producto_stock', '=', 'tps.id_tipo_producto_stock')
+        
         ->addSelect([
             'lp.denom_linea as linea',
             'fp.nombre as familia',
@@ -56,8 +60,14 @@ public function index(Request $request)
             'rt.denom_rango as rango',
             'h.denom_horma as horma',
             'm.denom_marca as marca',
+            'tps.denom_tipo_producto as tiposProducto',
+            
         ])
         ->where('articulos.cod_articulo', '!=', '');
+
+
+
+
 
     // Aplicar filtros (incluso multiselección con arrays)
     foreach ($campos as $campo) {
@@ -84,7 +94,8 @@ public function index(Request $request)
         'ruta'                   => 'rp.denom_ruta',
         'rango'                  => 'rt.denom_rango',
         'horma'                  => 'h.denom_horma',
-        'marca'                  => 'm.denom_marca',
+        'marca'                  => 'm.denom_marca', 
+        'tiposProducto' => 'tps.denom_tipo_producto',       
         'forma_comercializacion'=> 'articulos.forma_comercializacion',
     ];
 
@@ -118,28 +129,33 @@ public function index(Request $request)
                 );
             }
         }
-    // Catálogos
-    $familias = \App\Models\FamiliasProducto::orderBy('nombre')->get();
-    $rutas    = \App\Models\RutasProduccion::orderBy('denom_ruta')->get();
-    $rangos   = \App\Models\RangoTalle::orderBy('denom_rango')->get();
-    $hormas   = \App\Models\Horma::orderBy('denom_horma')->get();
-    $marcas   = \App\Models\Marca::orderBy('denom_marca')->get();
-    $rubros   = \App\Models\RubrosIva::orderBy('nombre')->get();
-    $lineas   = \App\Models\LineasProducto::orderBy('denom_linea')->get();
-    $tiposProductoStock = TipoProductoStock::orderBy('denom_tipo_producto')->get();
-    $formasComercializacion = Articulo::whereNotNull('forma_comercializacion')    
+  $familias = \App\Models\FamiliasProducto::orderBy('nombre')->get();
+$rutas    = \App\Models\RutasProduccion::orderBy('denom_ruta')->get();
+$rangos   = \App\Models\RangoTalle::orderBy('denom_rango')->get();
+$hormas   = \App\Models\Horma::orderBy('denom_horma')->get();
+$marcas   = \App\Models\Marca::orderBy('denom_marca')->get();
+$rubros   = \App\Models\RubrosIva::orderBy('nombre')->get();
+$lineas   = \App\Models\LineasProducto::orderBy('denom_linea')->get();
+
+// ✅ Filtro: tipos de producto (como forma comercialización)
+$tiposProducto = \App\Models\TipoProductoStock::whereNotNull('denom_tipo_producto')
+    ->select('denom_tipo_producto')
+    ->distinct()
+    ->orderBy('denom_tipo_producto')
+    ->pluck('denom_tipo_producto', 'denom_tipo_producto');
+
+// ✅ Filtro: forma de comercialización
+$formasComercializacion = \App\Models\Articulo::whereNotNull('forma_comercializacion')    
     ->select('forma_comercializacion')
     ->distinct()
     ->orderBy('forma_comercializacion')
     ->pluck('forma_comercializacion', 'forma_comercializacion');
-    
-    $tiposProducto = TipoProductoStock::orderBy('denom_tipo_producto')
-    ->pluck('denom_tipo_producto', 'id_tipo_producto_stock');
 
-   return view('produccion.abms.articulocolor.index-inline', compact(
-    'articulos', 'familias','tiposProductoStock', 'rutas', 'rangos', 'hormas', 'marcas',
+return view('produccion.abms.articulocolor.index-inline', compact(
+    'articulos', 'familias', 'rutas', 'rangos', 'hormas', 'marcas',
     'rubros', 'lineas', 'formasComercializacion', 'tiposProducto'
 ));
+
 }
 
 

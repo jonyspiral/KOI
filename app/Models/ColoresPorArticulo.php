@@ -11,7 +11,7 @@ class ColoresPorArticulo extends Model
     public $timestamps = true;
     public static $sincronizable = true;
     public static array $primaryKeySql = ['cod_articulo', 'cod_color_articulo'];
-    protected $fillable = ['cod_articulo', 'cod_color_articulo', 'id'];
+    protected $fillable = ['cod_articulo', 'cod_color_articulo', 'id','id_tipo_producto_stock'];
 
     public function tipo_producto_stock()
     {

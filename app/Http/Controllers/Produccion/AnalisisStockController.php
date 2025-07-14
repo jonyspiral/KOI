@@ -18,6 +18,14 @@ use App\Helpers\FilterProvider;
 use App\Services\Produccion\StockExportService;
 use App\Services\StockService;
 
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\StockExport;
+use Illuminate\Support\Facades\Cache;
+
+use App\Helpers\MemCacheHelper;
+
+
+
 class AnalisisStockController extends Controller
 {
     use PersisteFiltrosTrait;
@@ -40,6 +48,9 @@ $almacenesRaw = collect($almacenes)->map(fn($a) => "'$a'")->implode(', ');
 $stockFiltrado = \App\Models\Sql\Stock::whereRaw(
     "CAST(cod_almacen AS VARCHAR) IN ($almacenesRaw)"
 )->get()->groupBy(fn($s) => "{$s->cod_articulo}-{$s->cod_color_articulo}");
+
+Cache::put('stock_filtrado_' . auth()->id(), $stockFiltrado, 300); // 5 minutos
+
 
     $almacenesList = Almacen::orderBy('cod_almacen')->pluck('denom_almacen', 'cod_almacen');
     $tiposProducto = TipoProductoStock::pluck('denom_tipo_producto', 'id_tipo_producto_stock');
@@ -166,12 +177,91 @@ $stockFiltrado = \App\Models\Sql\Stock::whereRaw(
 }
 
 
+private function prepararDatosAnaliticos(Request $request): array
+{
+    $almacenes = explode(',', $request->input('almacenes', '1,2'));
+    $almacenesRaw = collect($almacenes)->map(fn($a) => "'$a'")->implode(', ');
+
+    // Recuperar stock agrupado desde cache persistente
+    $stockFiltrado = Cache::get('stock_filtrado_' . auth()->id());
+
+    if (!$stockFiltrado) {
+        $stock = \App\Models\Sql\Stock::whereRaw("CAST(cod_almacen AS VARCHAR) IN ($almacenesRaw)")->get();
+        $stockFiltrado = $stock->groupBy(fn($r) => $r->cod_articulo . '-' . $r->cod_color_articulo);
+        Cache::put('stock_filtrado_' . auth()->id(), $stockFiltrado, 300); // TTL 5 min
+    }
+
+    // Filtros aplicados al query
+    $query = \App\Models\ColoresPorArticulo::with([
+        'articulo.rango',
+        'articulo.familia',
+        'articulo.linea',
+        'tipo_producto_stock'
+    ])
+        ->when($request->filled('cod_articulo'), fn($q) => $q->where('cod_articulo', 'like', "%{$request->cod_articulo}%"))
+        ->when($request->filled('color'), fn($q) => $q->where('cod_color_articulo', 'like', "%{$request->color}%"))
+        ->when($request->filled('familia'), fn($q) => $q->whereHas('articulo', fn($q2) => $q2->whereIn('cod_familia_producto', (array) $request->familia)))
+        ->when($request->filled('linea'), fn($q) => $q->whereHas('articulo', fn($q2) => $q2->whereIn('cod_linea', (array) $request->linea)))
+        ->when($request->filled('tipo_producto_stock'), fn($q) => $q->whereIn('id_tipo_producto_stock', (array) $request->tipo_producto_stock))
+        ->when($request->filled('forma_comercializacion'), fn($q) => $q->whereIn('comercializacion_libre', (array) $request->forma_comercializacion))
+        ->when($request->filled('vigente'), fn($q) => $q->whereIn('vigente', (array) $request->vigente))
+        ->when($request->filled('denom_articulo'), fn($q) => $q->whereHas('articulo', fn($q2) => $q2->where('denom_articulo', 'like', "%{$request->denom_articulo}%")));
+
+    $stockCache = [];
+
+    $registros = $query->get()->map(function ($registro) use (&$stockCache, $stockFiltrado, $almacenes) {
+        $articulo = $registro->articulo;
+        $rango = $articulo?->rango;
+        $talles = [];
+        $total = 0;
+
+        for ($i = 1; $i <= 10; $i++) {
+            $talleReal = $rango?->{"posic_$i"};
+            if (!$talleReal) continue;
+
+            $key = "{$registro->cod_articulo}-{$registro->cod_color_articulo}-$i-" . implode('-', $almacenes);
+            $cantidad = \App\Helpers\MemCacheHelper::getOrCompute($stockCache, $key, function () use ($stockFiltrado, $registro, $i) {
+                $stockKey = "{$registro->cod_articulo}-{$registro->cod_color_articulo}";
+                $stockGroup = $stockFiltrado[$stockKey] ?? collect();
+                return $stockGroup->sum("cant_$i");
+            });
+
+            $talles["talle_{$talleReal}"] = $cantidad;
+            $total += $cantidad;
+        }
+
+        return array_merge($registro->toArray(), $talles, [
+            'denom_articulo' => $articulo->denom_articulo ?? '—',
+            'familia' => $articulo->familia->nombre ?? '—',
+            'linea' => $articulo->linea->denom_linea ?? '—',
+            'tipo_producto_stock' => $registro->tipo_producto_stock->denom_tipo_producto ?? '—',
+            'forma_comercializacion' => $registro->comercializacion_libre ?? '—',
+            'total' => $total,
+        ]);
+    });
+
+    $registros = collect($registros)->sortBy([
+        ['cod_articulo', SORT_NATURAL],
+        ['cod_color_articulo', SORT_NATURAL],
+        ['denom_articulo', SORT_NATURAL],
+        ['total', SORT_NUMERIC],
+    ])->values();
+
+    return [
+        'registros' => $registros,
+        'almacenes' => $almacenes,
+    ];
+}
+
 
 public function exportarExcel(Request $request)
 {
-    $service = new StockExportService();
-    return $service->export($request);
+    $datos = $this->prepararDatosAnaliticos($request);
+
+   return Excel::download(new StockExport($datos['registros'], $request), 'analisis_stock.xlsx');
+
 }
+
 private function obtenerCantidadConCache(array &$stockCache, string $codArticulo, string $codColor, int $pos, array $almacenes, $stockFiltrado): int
 {
     $cacheKey = "{$codArticulo}-{$codColor}-{$pos}-" . implode('-', $almacenes);

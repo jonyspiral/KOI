@@ -9,7 +9,7 @@ namespace App\Exports;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
 use App\Services\StockService;
-
+use App\Helpers\FilterProvider;
 class StockExport implements FromView
 {
     protected $registros;
@@ -21,56 +21,46 @@ class StockExport implements FromView
         $this->request = $request;
     }
 
-    public function view(): View
-    {
-        $filas = [];
-        $tallesUnicos = [];
+ 
 
-        foreach ($this->registros as $item) {
-            $fila = [
-                'cod_articulo' => $item->cod_articulo,
-                'cod_color_articulo' => $item->cod_color_articulo,
-                'denom_articulo' => $item->articulo->denom_articulo ?? '—',
-            ];
+public function view(): View
+{
+    $filas = [];
+    $tallesUnicos = [];
 
-            $rango = $item->articulo?->rango;
-            $total = 0;
+    foreach ($this->registros as $item) {
+        $fila = [
+            'cod_articulo' => $item['cod_articulo'],
+            'cod_color_articulo' => $item['cod_color_articulo'],
+            'denom_articulo' => $item['denom_articulo'] ?? '—',
+            'familia' => $item['familia'] ?? '—',
+            'linea' => $item['linea'] ?? '—',
+            'tipo_producto_stock' => $item['tipo_producto_stock'] ?? '—',
+            'forma_comercializacion' => $item['forma_comercializacion'] ?? '—',
+        ];
 
-            if ($rango) {
-                for ($i = 1; $i <= 10; $i++) {
-                    $talle = $rango->{'posic_' . $i};
-                    if (!$talle) continue;
+        $total = 0;
 
-                    $cantidad = StockService::stockPorPosicionIndexada(
-                        $item->cod_articulo,
-                        $item->cod_color_articulo,
-                        $i,
-                        (array) ($this->request->almacen ?: ['01'])
-                    );
-
-                    $fila["talle_{$talle}"] = $cantidad;
-                    $tallesUnicos[] = $talle;
-                    $total += $cantidad;
-                }
+        foreach ($item as $key => $valor) {
+            if (str_starts_with($key, 'talle_')) {
+                $fila[$key] = $valor;
+                $talle = str_replace('talle_', '', $key);
+                $tallesUnicos[] = $talle;
+                $total += $valor;
             }
-
-            $fila['total'] = $total;
-
-            // Agregamos los filtros aplicados como columnas
-            foreach ($this->request->all() as $campo => $valor) {
-                if (in_array($campo, ['_token', 'aplicar', 'sort', 'dir', 'page', 'reset'])) continue;
-                $valorTexto = is_array($valor) ? implode(', ', $valor) : $valor;
-                $fila["filtro_{$campo}"] = $valorTexto;
-            }
-
-            $filas[] = $fila;
         }
 
-        $tallesUnicos = collect($tallesUnicos)->unique()->sort()->values();
-
-        return view('exports.stock', [
-            'filas' => $filas,
-            'talles' => $tallesUnicos,
-        ]);
+        $fila['total'] = $total;
+        $filas[] = $fila;
     }
+
+    $tallesUnicos = collect($tallesUnicos)->unique()->sort()->values();
+
+    return view('exports.stock', [
+        'filas' => $filas,
+        'talles' => $tallesUnicos,
+    ]);
+}
+
+
 }
