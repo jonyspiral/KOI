@@ -18,7 +18,7 @@ use App\Helpers\MemCacheHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Sql\Stock;
 use App\Models\RangoTalle;
 
@@ -28,157 +28,114 @@ class MlibreVariantesController extends Controller
 
    use PersisteFiltrosTrait;
 
-   public function index(Request $request)
+   
+
+public function index(Request $request)
 {
     $camposFiltrables = [
         'ml_id', 'variation_id', 'product_number', 'seller_custom_field',
         'color', 'talle', 'modelo', 'titulo', 'seller_sku',
-        'sync_status', 'status', 'family_id', 'logistic_type',
-        'sort', 'dir', 'page'
+        'sync_status', 'status', 'family_id', 'logistic_type', 'has_campaign'
     ];
 
+    // Aplicar filtros persistentes
     $requestFiltrado = $this->manejarFiltros($request, 'ml_variantes_filtros', $camposFiltrables);
     if ($requestFiltrado instanceof \Illuminate\Http\RedirectResponse) {
         return $requestFiltrado;
     }
     $request = $requestFiltrado;
 
-    $query = MlVariante::query()->with(['publicacion', 'skuVariante']);
+    // Cargar variantes con relaciones necesarias
+    $query = MlVariante::with(['publicacion', 'skuVariante']);
 
-    // 🔍 Diferencia de stock real
-   // 🔍 Diferencia de stock real
-if ($request->get('diferencia_stock') === '1') {
-    // Paso 1: cargar stock de SQL Server
-    $stockFiltrado = Stock::whereRaw("CAST(cod_almacen AS VARCHAR) IN ('01','14')")
-        ->get()
-        ->groupBy(fn($s) => "{$s->cod_articulo}-{$s->cod_color_articulo}");
+foreach ($camposFiltrables as $campo) {
+    if ($request->filled($campo)) {
+        $valores = (array) $request->input($campo);
 
-    // Paso 2: reconstruir mapa de cod_talle => posicion
-    $talleAPosicion = [];
-    $rangos = RangoTalle::all();
-    foreach ($rangos as $rango) {
-        for ($i = 1; $i <= 10; $i++) {
-            $campo = "posic_$i";
-            $codTalle = trim($rango->$campo);
-            if ($codTalle) {
-                $talleAPosicion[$codTalle] = $i;
-            }
+        if (in_array($campo, ['status', 'logistic_type', 'family_id', 'has_campaign'])) {
+            $query->whereHas('publicacion', function ($q) use ($campo, $valores) {
+                $q->whereIn($campo, $valores);
+            });
+        } else {
+            $query->whereIn($campo, $valores);
         }
     }
-
-    // Paso 3: cargar variantes para evaluar diferencias (clonado)
-    $variantesTodas = (clone $query)->get();
-
-    // Paso 4: evaluar diferencias
-    $ids = $variantesTodas->filter(function ($v) use ($stockFiltrado, $talleAPosicion) {
-        $sku = $v->skuVariante;
-        if (!$sku) {
-            \Log::info("❌ Sin skuVariante", ['id' => $v->id]);
-            return false;
-        }
-
-        $key = "{$sku->cod_articulo}-{$sku->cod_color_articulo}";
-        if (!isset($stockFiltrado[$key])) {
-            \Log::info("❌ Stock no encontrado", ['id' => $v->id, 'scf' => $v->seller_custom_field, 'key' => $key]);
-            return false;
-        }
-
-        $pos = $talleAPosicion[$sku->cod_talle] ?? null;
-        if (!$pos) {
-            \Log::info("❌ Posición no encontrada para talle", ['talle' => $sku->cod_talle, 'id' => $v->id]);
-            return false;
-        }
-
-        $campo = "cant_$pos";
-        $stockReal = $stockFiltrado[$key]->sum($campo);
-        $stockMl   = (int) $v->stock;
-
-        \Log::info("🔍 Comparando stock", [
-            'id' => $v->id,
-            'scf' => $v->seller_custom_field,
-            'stock_real' => $stockReal,
-            'stock_ml' => $stockMl,
-            'campo' => $campo
-        ]);
-
-        return $stockReal !== $stockMl;
-    })->pluck('id');
-
-    \Log::info("📊 Total variantes con diferencia real de stock: " . $ids->count());
-
-    $query->whereIn('id', $ids);
 }
 
-    // 🎛️ Filtros avanzados
-    foreach ($camposFiltrables as $campo) {
-        if (!in_array($campo, ['sort', 'dir', 'page']) && $request->filled($campo)) {
-            $valores = collect($request->$campo);
+$variantes = $query->get();
 
-            if ($campo === 'sync_status') {
-                $query->whereIn('sync_status', $valores);
-                continue;
+
+    // Si hay filtro de diferencia de stock activado
+    if ($request->filled('diferencia_stock')) {
+        $variantes = $variantes->filter(function ($v) {
+            $sku = $v->skuVariante;
+            $stockReal = $sku?->stock;
+            $stockML = $v->stock;
+
+            if (!is_numeric($stockReal) || !is_numeric($stockML)) return false;
+
+            if ((int) $stockReal !== (int) $stockML) {
+                \Log::info("🔍 Comparando stock", [
+                    'id' => $v->id,
+                    'scf' => $v->seller_custom_field,
+                    'stock_real' => $stockReal,
+                    'stock_ml' => $stockML,
+                ]);
+                return true;
             }
 
-            if (in_array($campo, ['status', 'family_id', 'logistic_type'])) {
-                $query->whereHas('publicacion', function ($q) use ($campo, $valores) {
-                    $normales = $valores->filter(fn($v) => $v !== '__NULL__');
-                    $incluyeNull = $valores->contains('__NULL__');
+            return false;
+        });
 
-                    $q->where(function ($q2) use ($campo, $normales, $incluyeNull) {
-                        if ($normales->isNotEmpty()) $q2->whereIn($campo, $normales);
-                        if ($incluyeNull) $q2->orWhereNull($campo);
-                    });
-                });
-            } else {
-                $normales = $valores->filter(fn($v) => $v !== '__NULL__');
-                $incluyeNull = $valores->contains('__NULL__');
-
-                $query->where(function ($q) use ($campo, $normales, $incluyeNull) {
-                    if ($normales->isNotEmpty()) $q->whereIn($campo, $normales);
-                    if ($incluyeNull) $q->orWhereNull($campo);
-                });
-            }
-        }
+        \Log::info("📊 Total variantes con diferencia real de stock: " . $variantes->count());
     }
 
-    // 🎯 En campaña
-    if ($request->boolean('has_campaign')) {
-        $query->whereHas('campaniaItems');
-    }
-
-    // 🔃 Ordenamiento
-    $sort = $request->get('sort', 'ml_id');
+    // Aplicar orden si existe
+    $sort = $request->get('sort');
     $dir  = $request->get('dir', 'asc');
-    if (\Schema::hasColumn('ml_variantes', $sort)) {
-        $query->orderBy($sort, $dir);
+    if ($sort && $variantes->isNotEmpty() && isset($variantes->first()[$sort])) {
+        $variantes = $dir === 'desc'
+            ? $variantes->sortByDesc($sort)
+            : $variantes->sortBy($sort);
     }
 
-    // 📦 Paginación
-    $variantes = $query->paginate(50)->appends($request->query());
+    // Simular paginación
+    $perPage = 100;
+    $currentPage = LengthAwarePaginator::resolveCurrentPage();
+    $total = $variantes->count();
+    $items = $variantes->slice(($currentPage - 1) * $perPage, $perPage)->values();
+    $paginado = new LengthAwarePaginator($items, $total, $perPage, $currentPage);
+    $paginado->setPath(route('mlibre.variantes.index'));
+    $paginado->appends($request->except('page'));
 
-    // 🎛️ Filtros para selects
+    // Armar filtros para select2
     $filtros = [];
-    foreach ($camposFiltrables as $campo) {
-        if (!in_array($campo, ['sort', 'dir', 'page'])) {
-            if (in_array($campo, ['status', 'family_id', 'logistic_type'])) {
-                $filtros[$campo] = MlPublicacion::select($campo)
-                    ->distinct()->whereNotNull($campo)->pluck($campo)
-                    ->filter()->map(fn($v) => (string) $v)->unique()->sort()->values();
-            } elseif (\Schema::hasColumn('ml_variantes', $campo)) {
-                $filtros[$campo] = MlVariante::select($campo)
-                    ->distinct()->whereNotNull($campo)->pluck($campo)
-                    ->sort()->values();
-            }
-        }
+  foreach ($camposFiltrables as $campo) {
+    if (in_array($campo, ['status', 'logistic_type', 'family_id'])) {
+        $filtros[$campo] = \App\Models\MlPublicacion::distinct()
+            ->whereNotNull($campo)
+            ->pluck($campo)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    } elseif (\Schema::hasColumn('ml_variantes', $campo)) {
+        $filtros[$campo] = MlVariante::distinct()
+            ->whereNotNull($campo)
+            ->pluck($campo)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
-
-    return view('mlibre.variantes.index', compact('variantes', 'filtros', 'sort', 'dir'));
 }
 
 
-
-
-
+    return view('mlibre.variantes.index', [
+        'variantes' => $paginado,
+        'filtros' => $filtros,
+    ]);
+}
 
 
 
