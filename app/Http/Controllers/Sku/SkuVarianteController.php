@@ -7,15 +7,14 @@ use Illuminate\Http\Request;
 use App\Models\SkuVariante;
 use App\Models\TipoProductoStock;
 use App\Models\LineasProducto;
-use Illuminate\Support\Facades\Schema;
 use App\Traits\PersisteFiltrosTrait;
+
 class SkuVarianteController extends Controller
 {
     use PersisteFiltrosTrait;
 
     public function index(Request $request)
 {
-    // 🎯 Campos a guardar en sesión
     $camposFiltrables = [
         'sku', 'var_sku', 'ml_name', 'cod_articulo', 'cod_color_articulo',
         'familia', 'color', 'talle','precio', 
@@ -24,7 +23,6 @@ class SkuVarianteController extends Controller
         'sort', 'dir', 'page',
     ];
 
-    // 💾 Aplicar lógica del Trait
     $requestFiltrado = $this->manejarFiltros($request, 'sku_variantes_filtros', $camposFiltrables);
 
     if ($requestFiltrado instanceof \Illuminate\Http\RedirectResponse) {
@@ -33,7 +31,6 @@ class SkuVarianteController extends Controller
 
     $request = $requestFiltrado;
 
-    // 🧱 Query base
     $query = SkuVariante::with(['tipoProductoStock', 'lineaProducto']);
 
     foreach ($camposFiltrables as $campo) {
@@ -46,25 +43,32 @@ class SkuVarianteController extends Controller
         }
     }
 
-    // 📊 Ordenamiento
     $sort = $request->get('sort', 'sku');
     $dir  = $request->get('dir', 'asc');
     if (\Schema::hasColumn('sku_variantes', $sort)) {
         $query->orderBy($sort, $dir);
     }
 
-    // 📦 Totales
-    $totales = (clone $query)->selectRaw("
-        SUM(stock) as total,
-        SUM(ecommerce) as ecommerce_total,
-        SUM(2da) as 2da_total,
-        SUM(fulfillment) as fulfillment_total
-    ")->first();
+    // 📄 Paginación
+$registros = $query->paginate(30)->appends($request->query());
 
-    // 📄 Paginación con filtros aplicados
-    $registros = $query->paginate(30)->appends($request->query());
+// 📦 Totales virtuales calculados sobre TODO el dataset filtrado
+$totales = [
+    'total'            => 0,
+    'ecommerce_total'  => 0,
+    'segunda_total'    => 0,
+    'fulfillment_total'=> 0,
+];
 
-    // 🎛️ Filtros desplegables
+// Usamos chunk para evitar cargar todo en memoria
+(clone $query)->chunk(200, function ($chunk) use (&$totales) {
+    foreach ($chunk as $sku) {
+        $totales['total']             += $sku->stock;
+        $totales['ecommerce_total']   += $sku->stock_ecommerce;
+        $totales['segunda_total']     += $sku->stock_2da;
+        $totales['fulfillment_total'] += $sku->stock_fulfillment;
+    }
+});
     $tiposProducto = TipoProductoStock::pluck('denom_tipo_producto', 'id_tipo_producto_stock');
     $lineasProducto = LineasProducto::pluck('denom_linea', 'cod_linea');
 
@@ -72,7 +76,6 @@ class SkuVarianteController extends Controller
         'registros', 'tiposProducto', 'lineasProducto', 'totales'
     ));
 }
-
 
 
     public function show($id)

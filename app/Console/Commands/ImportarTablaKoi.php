@@ -20,7 +20,14 @@ class ImportarTablaKoi extends Command
 
 
         $tabla = $this->argument('nombre_tabla');
-$conexion = $this->option('connection') ?? 'sqlsrv_koi';
+
+// 👇 Si es stock, usar conexión especial  ojo!!!!
+if ($tabla === 'stock') {
+    $conexion = 'sqlsrv_encinitas';
+    $this->warn("⚠️ Importando 'stock' desde conexión especial: sqlsrv_encinitas");
+} else {
+    $conexion = $this->option('connection') ?? 'sqlsrv_koi';
+}
 
 $this->info("📦 Importando tabla: $tabla desde conexión [$conexion]");
 

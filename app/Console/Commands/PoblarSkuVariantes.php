@@ -5,96 +5,81 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\SkuVariante;
-use App\Services\StockSkuService;
-use App\Models\TipoProductoStock;
-use App\Models\LineasProducto;
 
 class PoblarSkuVariantes extends Command
 {
     protected $signature = 'sku:poblar-desde-view';
-    protected $description = 'Pobla la tabla sku_variantes a partir de la vista view_sku_variantes';
+    protected $description = 'Pobla la tabla sku_variantes a partir de la vista view_sku_variantes, insertando solo nuevos registros y completando campos faltantes';
 
     public function handle()
     {
         $this->info('🔄 Poblando sku_variantes desde view_sku_variantes...');
 
-        $total = DB::table('view_sku_variantes')->count();
-        $this->info("📦 Total de registros a procesar: $total");
-
-        $bar = $this->output->createProgressBar($total);
-        $bar->start();
+        $insertados = 0;
+        $existentes = 0;
 
         DB::table('view_sku_variantes')
             ->orderBy('var_sku')
-            ->chunk(100, function ($variantes) use ($bar) {
+            ->chunk(100, function ($variantes) use (&$insertados, &$existentes) {
                 foreach ($variantes as $variante) {
-                    $stockEcom = StockSkuService::obtenerStockSKU(
-                        $variante->cod_articulo,
-                        $variante->cod_color_articulo,
-                        $variante->talle,
-                        ['01', '14']
-                    );
+                    // Generar var_sku si falta
+                    $varSku = $variante->var_sku
+                        ?? trim($variante->cod_articulo) . trim($variante->cod_color_articulo) . trim($variante->talle);
 
-                    $stock2da = StockSkuService::obtenerStockSKU(
-                        $variante->cod_articulo,
-                        $variante->cod_color_articulo,
-                        $variante->talle,
-                        ['02']
-                    );
-
-                    // 🧩 Reemplazo: evitar CAST
-                    $art = \App\Models\Sql\Articulo::whereRaw("cod_articulo LIKE ?", [$variante->cod_articulo])->first();
-                    $cpa = \App\Models\Sql\ColoresPorArticulo::whereRaw("cod_articulo LIKE ? AND cod_color_articulo LIKE ?", [
-                        $variante->cod_articulo, $variante->cod_color_articulo
-                    ])->first();
-
-                    $idTipoProducto = $cpa?->id_tipo_producto_stock;
-                    $tipoProducto = null;
-                    if ($idTipoProducto) {
-                        $tipo = TipoProductoStock::where('id_tipo_producto_stock', $idTipoProducto)->first();
-                        $tipoProducto = $tipo?->denom_tipo_producto;
+                    if (empty($varSku)) {
+                        $this->warn("⚠️ Saltado: var_sku no se pudo generar para artículo {$variante->cod_articulo}");
+                        continue;
                     }
 
-                    $codLinea = $art?->cod_linea;
-                    $denomLinea = null;
-                    if ($codLinea) {
-                        $linea = LineasProducto::where('cod_linea', $codLinea)->first();
-                        $denomLinea = $linea?->denom_linea;
+                    // Si ya existe, saltar
+                    if (SkuVariante::where('var_sku', $varSku)->exists()) {
+                        $existentes++;
+                        continue;
                     }
 
-             SkuVariante::updateOrInsert(
-    ['var_sku' => $variante->var_sku],
-    [
-        'cod_articulo'           => $variante->cod_articulo,
-        'cod_color_articulo'     => $variante->cod_color_articulo,
-        'familia'                => $variante->familia ?? null,
-        'sku'                    => $variante->sku ?? null,
-        'ml_name'                => $variante->ml_name ?? null,
-        'color'                  => $variante->color ?? null,
-        'talle'                  => $variante->talle ?? null,
-        'precio'                 => $variante->precio ?? 0,
-        'ml_price'               => $mlPrice,
-        'eshop_price'            => $eshopPrice,
-        'segunda_price'          => $segundaPrice,
-        'stock'                  => $stockEcom,
-        'stock_ecommerce'        => $stockEcom,
-        'stock_2da'              => $stock2da,
-        'stock_fulfillment'      => 0,
-        'id_tipo_producto_stock' => $idTipoProducto,
-        'cod_linea'              => $codLinea,
-        'sync_status'            => 'N',
-        'sync_log'               => null,
-        'updated_at'             => now(),
-        'created_at'             => now(),
-    ]
-);
+                    // 📌 Buscar datos adicionales desde colores_por_articulo
+                    $cpa = DB::table('colores_por_articulo')
+                        ->where('cod_articulo', $variante->cod_articulo)
+                        ->where('cod_color_articulo', $variante->cod_color_articulo)
+                        ->first();
 
-                
+                    // 📌 Buscar línea desde articulos
+                    $articuloInfo = DB::table('articulos')
+                        ->where('cod_articulo', $variante->cod_articulo)
+                        ->first();
+
+                    // Crear el registro
+                    SkuVariante::create([
+                        'var_sku'                => $varSku,
+                        'cod_articulo'           => $variante->cod_articulo,
+                        'cod_color_articulo'     => $variante->cod_color_articulo,
+                        'familia'                => $variante->familia ?? null,
+                        'sku'                    => $variante->sku ?? null,
+                        'ml_name'                => $variante->ml_name ?? null,
+                        'color'                  => $variante->color ?? null,
+                        'talle'                  => $variante->talle ?? null,
+                        'precio'                 => $variante->precio ?? 0,
+
+                      
+                        'ml_price'               => $variante->ml_price ?? $cpa->mlibre_precio ?? null,
+                        'eshop_price'            => $variante->eshop_price ?? $cpa->ecommerce_price1 ?? null,
+                        'segunda_price'          => $variante->segunda_price ?? $cpa->precio_mayorista_usd ?? null,
+                        'id_tipo_producto_stock' => $variante->id_tipo_producto_stock ?? $cpa->id_tipo_producto_stock ?? null,
+                        'cod_linea'               => $variante->cod_linea ?? $articuloInfo->cod_linea ?? null,
+
+                        'sync_status'            => 'N',
+                        'sync_log'               => null,
+                        'created_at'             => now(),
+                        'updated_at'             => now(),
+                    ]);
+
+                    $this->line("➕ Insertado nuevo SKU: {$varSku}");
+                    $insertados++;
                 }
             });
 
-        $bar->finish();
-        $this->newLine(2);
-        $this->info('✅ Poblamiento completo.');
+        $this->info("✅ Poblamiento completo.");
+        $this->info("   ➕ Nuevos insertados: {$insertados}");
+        $this->info("   🔹 Ya existentes: {$existentes}");
     }
 }

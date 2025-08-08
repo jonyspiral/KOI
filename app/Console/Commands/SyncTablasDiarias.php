@@ -18,6 +18,7 @@ class SyncTablasDiarias extends Command
         'lineas_productos',
         'articulos',
         'colores_por_articulo',
+        'stock',
         // Agregá más si querés
     ];
 

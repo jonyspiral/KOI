@@ -1,4 +1,45 @@
 # 🧩 Infraestructura KOI - Producción y Desarrollo
+sERVIDORES FISICOS
+1_ 
+Marca / Modelo	HP DL380 G5 2x(Intel Xeon E5335 @ 2.00GHz) 16GB (8x2GB)
+Hostname	HYPERV01.spiral.local
+SN / Product ID	2UX74604ND / 433525-001 
+Sistema operativo	Windows Server 2012 R2
+Arreglo Discos	
+	
+IP	192.168.2.201
+	
+RDP	192.168.2.201:33201
+Acceso TV	918 894 612 :: Root,350
+Usuario local	administrador :: Root,2317!
+	
+Antivirus 	-
+Funcion	HYPERVISOR
+	
+iLO 2	192.168.2.193 
+	Administrator  ::  Root,2317!
+	Spiral Shoes  ::  SpiralServix
+
+    
+2_	
+Marca / Modelo	HP DL380 G5 2x(Intel Xeon E5335 @ 2.00GHz) 16GB (8x2GB)
+Hostname	HYPERV02.spiral.local
+SN / Product ID	USE842N3RJ / 391835-B21 
+Sistema operativo	Windows Server 2012 R2
+Arreglo Discos	
+	
+IP	192.168.2.202
+RDP	192.168.2.202
+Acceso TV	918 805 848 :: Root,350
+Usuario local	HYPERV02\Administrador :: Root,2317!
+	
+Antivirus 	-
+Funcion	HYPERVISOR
+	
+iLO 2	192.168.2.196
+	Administrator :: Root,2317!
+	ILOHP2
+	
 
 Este documento describe la configuración actual de los entornos **Producción** y **Desarrollo** del sistema KOI, incluyendo servidores, rutas, y recomendaciones de uso.
 

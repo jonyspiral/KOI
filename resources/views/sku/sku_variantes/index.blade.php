@@ -82,7 +82,7 @@
                             'ml_price' => 'ML $',
                             'eshop_price' => 'Eshop $',
                             'segunda_price' => '2da $',
-                            'stock' => 'Stock ML',
+                            'stock' => 'Stock 1ra',
                             'stock_ecommerce' => 'Stock Tienda',
                             'stock_2da' => 'Stock 2da',
                             'stock_fulfillment' => 'Full',
@@ -127,16 +127,16 @@
                 </tr>
                 @endforeach
             </tbody>
-            <tfoot class="table-light fw-bold">
-                <tr>
-                    <td colspan="12">Totales:</td>
-                    <td>{{ $totales->stock_total ?? 0 }}</td>
-                    <td>{{ $totales->stock_ecommerce_total ?? 0 }}</td>
-                    <td>{{ $totales->stock_2da_total ?? 0 }}</td>
-                    <td>{{ $totales->stock_fulfillment_total ?? 0 }}</td>
-                    <td colspan="4"></td>
-                </tr>
-            </tfoot>
+        <tfoot class="table-light fw-bold">
+    <tr>
+        <td colspan="12">Totales:</td>
+        <td>{{ $totales['total'] }}</td>
+        <td>{{ $totales['ecommerce_total'] }}</td>
+        <td>{{ $totales['segunda_total'] }}</td>
+        <td>{{ $totales['fulfillment_total'] }}</td>
+        <td colspan="4"></td>
+    </tr>
+</tfoot>
         </table>
 
         {{ $registros->links() }}

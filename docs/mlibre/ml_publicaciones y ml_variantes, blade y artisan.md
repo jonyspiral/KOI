@@ -62,7 +62,7 @@ Ordenar por:
 - Botón 🔄 para sincronizar todos los SKUs (opcional)
 
 #### 8. Visualización completa
-- Campos: `ml_id`, `variation_id`, `titulo`, `modelo`, `seller_sku`, `product_number`, `color`, `talle`, `precio`, `stock`, `stock_flex`, `stock_full`, `SCF actual`, `nuevo SCF`, `sincronizado`
+- Campos: `ml_id`, `variation_id`, `titulo`, `modelo`, `seller_sku`, `product_number`, `color`, `talle`, `precio`, `stock`, `stock_flex`, `stock_full`, `SCF actual`, `sincronizado`
 
 ---
 

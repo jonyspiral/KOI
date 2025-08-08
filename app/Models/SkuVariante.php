@@ -91,6 +91,15 @@ public function getStockAttribute()
             ['01', '14']
         );
     }
+    public function getStockTiendaAttribute()
+    {
+        return StockSkuService::obtenerStockSKU(
+            $this->cod_articulo,
+            $this->cod_color_articulo,
+            $this->talle,
+            ['14']  
+        );
+    }
 
     /**
      * Devuelve el stock de 2da selección (almacén 02).

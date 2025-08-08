@@ -21,19 +21,14 @@ Implementar una vista en MySQL que consolide todas las variantes (SKU) de produc
 * Se importó automáticamente desde SQL Server (almacenes 01, 14 y 20).
 * Se estableció que la sincronización será siempre **desde SQL Server a MySQL**.
 
-#### 3. **Vista `stock_01_14_20_por_talle_v`**
 
-* Se recreó en MySQL una versión equivalente a la vista original de SQL Server, que devuelve:
-
-  * `cod_articulo`, `cod_color_articulo`, `talle`, `stock`
-* Esta vista permite conocer el stock por variante en tiempo real.
 
 #### 4. **Vista `view_sku_variantes` en MySQL**
 
 * Se construyó una nueva vista consolidada que une:
 
   * `colores_por_articulo` (datos del producto)
-  * `stock_01_14_20_por_talle_v` (stock por talle)
+  rango_talles
 * Campos clave generados:
 
   * `sku`: alias de `colores_por_articulo.ml_reference`
