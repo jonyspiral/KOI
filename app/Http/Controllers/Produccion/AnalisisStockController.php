@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Produccion;
 
-
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Articulo;
@@ -30,7 +30,7 @@ class AnalisisStockController extends Controller
 {
     use PersisteFiltrosTrait;
 
-    public function index(Request $request)
+  public function index(Request $request)
 {
     if ($request->has('reset')) {
         session()->forget('filtros_analisis_stock');
@@ -43,14 +43,13 @@ class AnalisisStockController extends Controller
     ]);
 
     $almacenes = (array) ($request->almacen ?: ['01', '02', '03', '14', '15']);
-$almacenesRaw = collect($almacenes)->map(fn($a) => "'$a'")->implode(', ');
+    $almacenesRaw = collect($almacenes)->map(fn($a) => "'$a'")->implode(', ');
 
-$stockFiltrado = \App\Models\Sql\Stock::whereRaw(
-    "CAST(cod_almacen AS VARCHAR) IN ($almacenesRaw)"
-)->get()->groupBy(fn($s) => "{$s->cod_articulo}-{$s->cod_color_articulo}");
+    $stockFiltrado = \App\Models\Sql\Stock::whereRaw(
+        "CAST(cod_almacen AS VARCHAR) IN ($almacenesRaw)"
+    )->get()->groupBy(fn($s) => "{$s->cod_articulo}-{$s->cod_color_articulo}");
 
-Cache::put('stock_filtrado_' . auth()->id(), $stockFiltrado, 300); // 5 minutos
-
+    Cache::put('stock_filtrado_' . auth()->id(), $stockFiltrado, 300); // 5 minutos
 
     $almacenesList = Almacen::orderBy('cod_almacen')->pluck('denom_almacen', 'cod_almacen');
     $tiposProducto = TipoProductoStock::pluck('denom_tipo_producto', 'id_tipo_producto_stock');
@@ -84,26 +83,19 @@ Cache::put('stock_filtrado_' . auth()->id(), $stockFiltrado, 300); // 5 minutos
         ->when($request->filled('vigente'), fn($q) => $q->whereIn('vigente', (array) $request->vigente))
         ->when($request->filled('denom_articulo'), fn($q) => $q->whereHas('articulo', fn($q2) => $q2->where('denom_articulo', 'like', "%{$request->denom_articulo}%")));
 
-    static $stockCache = [];
+    // ---------- NUEVO: precálculo global (sin paginar) ----------
+   static $stockCache = [];
 
-    $registrosFiltrados = (clone $query)->get();
-    $totalesPorTalle = [];
-    $totalGeneral = 0;
+$registrosFiltrados = (clone $query)->get();
 
-    foreach ($registrosFiltrados as $item) {
-        $rango = $item->articulo?->rango;
-        if (!$rango) continue;
+[$totalesPorTalle, $totalGeneral, $tallesOrdenados] = $this->calcularTotalesDelFiltrado(
+    $registrosFiltrados, // 1) Collection de ColoresPorArticulo (sin paginar)
+    $stockFiltrado,      // 2) Collection agrupada por "articulo-color"
+    $almacenes,          // 3) array de almacenes (ids/ códigos)
+    $stockCache          // 4) cache local (por referencia)
+);
 
-        for ($i = 1; $i <= 10; $i++) {
-            $talle = $rango->{'posic_' . $i} ?? null;
-            if (!$talle) continue;
-
-            $cantidad = $this->obtenerCantidadConCache($stockCache, $item->cod_articulo, $item->cod_color_articulo, $i, $almacenes, $stockFiltrado);
-            $totalesPorTalle[$talle] = ($totalesPorTalle[$talle] ?? 0) + $cantidad;
-            $totalGeneral += $cantidad;
-        }
-    }
-
+    // ---------- paginado + mapeo ----------
     $paginados = $query->paginate(400)->withQueryString();
 
     $registros = $paginados->getCollection()->map(function ($item) use (&$stockCache, $stockFiltrado, $almacenes) {
@@ -146,16 +138,8 @@ Cache::put('stock_filtrado_' . auth()->id(), $stockFiltrado, 300); // 5 minutos
         ])->values();
     }
 
-    $listaTalles = $paginados->getCollection()
-        ->flatMap(function ($item) {
-            $rango = $item->articulo?->rango;
-            return collect(range(1, 10))
-                ->map(fn($i) => $rango->{'posic_' . $i} ?? null)
-                ->filter();
-        })
-        ->unique()
-        ->sort()
-        ->values();
+    // ---------- NUEVO: talles sobre TODO el filtrado ----------
+    $listaTalles = $tallesOrdenados;
 
     return view('produccion.analisis-stock.index', [
         'registros' => new \Illuminate\Pagination\LengthAwarePaginator(
@@ -175,6 +159,7 @@ Cache::put('stock_filtrado_' . auth()->id(), $stockFiltrado, 300); // 5 minutos
         'totalGeneral' => $totalGeneral,
     ]);
 }
+
 
 
 private function prepararDatosAnaliticos(Request $request): array
@@ -275,6 +260,52 @@ private function obtenerCantidadConCache(array &$stockCache, string $codArticulo
 
     return $stockCache[$cacheKey];
 }
+/**
+ * Calcula totales reales del filtrado (sin paginación)
+ *
+ * @param Collection $todoFiltrado   Colección Eloquent completa (clone->get())
+ * @param array      $almacenes      Lista de almacenes filtrados (['01','02',...])
+ * @param \Illuminate\Support\Collection $stockFiltrado  GroupBy articulo-color del SQL Server
+ * @param array      $stockCache     Cache local reutilizable (por referencia)
+ * @return array [array $totalesPorTalle, int $totalGeneral]
+ */
+private function calcularTotalesDelFiltrado(
+    Collection $todoFiltrado,
+    Collection $stockFiltrado,
+    array $almacenesIds,
+    array &$stockCache = []
+): array {
+    $totalesPorTalle = [];
+    $totalGeneral    = 0;
+    $tallesSet       = collect();
 
+    foreach ($todoFiltrado as $item) {
+        $rango = $item->articulo?->rango;
+        if (!$rango) continue;
+
+        for ($i = 1; $i <= 10; $i++) {
+            $talle = $rango->{'posic_' . $i} ?? null;
+            if (!$talle) continue;
+
+            $tallesSet->push($talle);
+
+            $cantidad = $this->obtenerCantidadConCache(
+                $stockCache,
+                $item->cod_articulo,
+                $item->cod_color_articulo,
+                $i,
+                $almacenesIds,
+                $stockFiltrado
+            );
+
+            $totalesPorTalle[$talle] = ($totalesPorTalle[$talle] ?? 0) + (int) $cantidad;
+            $totalGeneral += (int) $cantidad;
+        }
+    }
+
+    $tallesOrdenados = $tallesSet->unique()->sort()->values();
+
+    return [$totalesPorTalle, $totalGeneral, $tallesOrdenados];
+}
 
 }

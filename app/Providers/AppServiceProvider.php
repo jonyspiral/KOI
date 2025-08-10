@@ -6,11 +6,19 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Connection;
 use App\Database\ODBCConnection;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Pagination\Paginator;   // <-- ESTE es el import correcto
+
 
 class AppServiceProvider extends ServiceProvider
 {
     public function boot()
 {
+
+       // AdminLTE 4 = Bootstrap 5
+    Paginator::useBootstrapFive();
+
+    // Si usás AdminLTE 3 (Bootstrap 4), en cambio:
+    // Paginator::useBootstrapFour();
     Blade::component('components.koi-menu', 'koi-menu');
     Connection::resolverFor('odbc', function ($connection, $database, $prefix, $config) {
         $dsn = $config['dsn'];

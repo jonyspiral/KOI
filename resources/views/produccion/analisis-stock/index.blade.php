@@ -1,10 +1,8 @@
-
 @extends('layouts.app')
 
-
-
 @section('content')
- <h1 class="mb-3">📦 Análisis de Stock</h1>
+<h1 class="mb-3">📦 Análisis de Stock</h1>
+
 {{-- 🔍 Filtros --}}
 <form method="GET" class="mb-2">
     <input type="hidden" name="aplicar" value="1">
@@ -27,89 +25,81 @@
                     <th>@filterInput('cod_articulo')</th>
                     <th>@filterInputLike('denom_articulo')</th>
                     <th>@filterInput('color')</th>
+
+                    {{-- Múltiples --}}
                     <x-filtros.select-multiple campo="familia" :opciones="$familias" />
                     <x-filtros.select-multiple campo="linea" :opciones="$lineas" />
                     <x-filtros.select-multiple campo="almacen" :opciones="$almacenes" />
-                    {{-- Filtro tipo producto stock --}}
-                    <x-filtros.select-multiple campo="tipo_producto_stock" :opciones="$tiposProductoStock"/>
 
-                    {{-- Filtro forma de comercialización --}}
-                    <x-filtros.select-multiple  campo="forma_comercializacion" :opciones="$formasComercializacion" />
-                    {{-- Filtro vigente en colores_por_articulo --}}
-                 <th>@filterSelect('vigente', ['S' => 'Sí', 'N' => 'No'])</th>
+                    {{-- Tipo producto stock --}}
+                    <x-filtros.select-multiple campo="tipo_producto_stock" :opciones="$tiposProductoStock" />
+
+                    {{-- Forma de comercialización --}}
+                    <x-filtros.select-multiple campo="forma_comercializacion" :opciones="$formasComercializacion" />
+
+                    {{-- Vigente --}}
+                    <th>@filterSelect('vigente', ['S' => 'Sí', 'N' => 'No'])</th>
+
+                    {{-- Acciones --}}
                     <th class="text-center">
-
-                        <button type="submit" class="btn btn-sm btn-primary">🔍</button>
-                        <a href="{{ route('produccion.analisis-stock.index', ['reset' => 1]) }}" class="btn btn-sm btn-danger">❌</a>
-                        @if($registros->count())
-                            <div class="d-flex justify-content-end mb-3">
-                                <a href="{{ route('produccion.analisis-stock.exportar', request()->query()) }}" class="btn btn-success">
-                                    📥
-                                </a>
-                            </div>
-                        @endif
-
+                        <div class="d-flex gap-1 justify-content-center">
+                            <button type="submit" class="btn btn-sm btn-primary" title="Aplicar filtros">🔍</button>
+                            <a href="{{ route('produccion.analisis-stock.index', ['reset' => 1]) }}" class="btn btn-sm btn-danger" title="Limpiar filtros">❌</a>
+                            @if(($registros instanceof \Illuminate\Pagination\LengthAwarePaginator ? $registros->total() : $registros->count()) > 0)
+                                <a href="{{ route('produccion.analisis-stock.exportar', request()->query()) }}" class="btn btn-sm btn-success" title="Exportar a Excel">📥</a>
+                            @endif
+                        </div>
                     </th>
                 </tr>
             </thead>
         </table>
     </div>
 </form>
-@if(request()->except('page'))
-    <div class="mb-3">
-       {{-- 📋 Active Filters --}}
-       @if(request()->has('aplicar'))
-           @php
-               $activeFilters = \App\Helpers\FilterProvider::getActiveLabels(request()->except('page'));
-           @endphp
 
-           @if(count($activeFilters))
-               <div class="mb-3">
-                   <strong>🧮 Active filters:</strong>
-                   @foreach($activeFilters as $label)
-                       <span class="badge bg-primary me-1" style="font-weight: normal;">{{ $label }}</span>
-                   @endforeach
-               </div>
-           @endif
-       @endif
-    </div>
+{{-- 🎛️ Filtros activos (legibles) --}}
+@if(request()->has('aplicar'))
+    @php($activeFilters = \App\Helpers\FilterProvider::getActiveLabels(request()->except('page')))
+    @if(!empty($activeFilters))
+        <div class="mb-3">
+            <strong>🧮 Filtros activos:</strong>
+            @foreach($activeFilters as $label)
+                <span class="badge bg-primary me-1" style="font-weight: normal;">{{ $label }}</span>
+            @endforeach
+        </div>
+    @endif
 @endif
-
-
-
 
 {{-- 📋 Tabla de resultados --}}
 <div class="table-responsive">
     <table class="table table-bordered table-sm table-hover">
-       <thead class="table-light text-center">
-    {{-- 🧮 Fila de Totales por Talle --}}
-    <tr class="table-warning fw-bold">
-        <td>@sortableth('cod_articulo', 'Artículo')</td>
-        <td>@sortableth('cod_color_articulo', 'Color')</td>
-        <td>@sortableth('denom_articulo', 'Denominación')</td>
+        <thead class="table-light text-center">
 
-        @foreach ($talles as $talle)
-            <td class="text-end">{{ $totalesPorTalle[$talle] ?? 0 }}</td>
-        @endforeach
+            {{-- 🧮 Fila de Totales por Talle (del filtrado completo) --}}
+            <tr class="table-warning fw-bold">
+                <td>@sortableth('cod_articulo', 'Artículo') @ordenIcon('cod_articulo')</td>
+                <td>@sortableth('cod_color_articulo', 'Color') @ordenIcon('cod_color_articulo')</td>
+                <td>@sortableth('denom_articulo', 'Denominación') @ordenIcon('denom_articulo')</td>
 
-        <td class="fw-bold text-end">{{ $totalGeneral }}</td>
-    </tr>
+                @foreach ($talles as $talle)
+                    <td class="text-end">{{ number_format($totalesPorTalle[$talle] ?? 0, 0, ',', '.') }}</td>
+                @endforeach
 
-    {{-- 🧾 Encabezados --}}
-    <tr>
-        <th>@sortableth('cod_articulo', 'Artículo')</th>
-        <th>@sortableth('cod_color_articulo', 'Color')</th>
-        <th>@sortableth('denom_articulo', 'Denominación')</th>
+                <td class="fw-bold text-end">{{ number_format($totalGeneral ?? 0, 0, ',', '.') }}</td>
+            </tr>
 
-        @foreach ($talles as $talle)
-            <th class="text-center">{{ $talle }}</th>
-        @endforeach
+            {{-- 🧾 Encabezados de columnas --}}
+            <tr>
+                <th>@sortableth('cod_articulo', 'Artículo') @ordenIcon('cod_articulo')</th>
+                <th>@sortableth('cod_color_articulo', 'Color') @ordenIcon('cod_color_articulo')</th>
+                <th>@sortableth('denom_articulo', 'Denominación') @ordenIcon('denom_articulo')</th>
 
-        <th>Total</th>
-    </tr>
-</thead>
+                @foreach ($talles as $talle)
+                    <th class="text-center">{{ $talle }}</th>
+                @endforeach
 
-
+                <th>@sortableth('total', 'Total') @ordenIcon('total')</th>
+            </tr>
+        </thead>
 
         <tbody>
             @forelse ($registros as $r)
@@ -117,10 +107,14 @@
                     <td class="text-monospace">{{ $r->cod_articulo }}</td>
                     <td class="text-monospace">{{ $r->cod_color_articulo }}</td>
                     <td>{{ $r->denom_articulo }}</td>
+
                     @foreach ($talles as $talle)
-                        <td class="text-end">{{ $r->cantidades[$talle] ?? '—' }}</td>
+                        <td class="text-end">
+                            {{ number_format($r->cantidades[$talle] ?? 0, 0, ',', '.') }}
+                        </td>
                     @endforeach
-                    <td class="fw-bold text-end">{{ $r->total }}</td>
+
+                    <td class="fw-bold text-end">{{ number_format($r->total ?? 0, 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
@@ -128,14 +122,34 @@
                 </tr>
             @endforelse
         </tbody>
+
+        {{-- 🧮 Repetir totales al pie (opcional) --}}
+        @if(($registros instanceof \Illuminate\Pagination\LengthAwarePaginator ? $registros->total() : $registros->count()) > 0)
+            <tfoot>
+                <tr class="table-warning fw-bold">
+                    <td colspan="3" class="text-end">Totales del filtrado</td>
+                    @foreach ($talles as $talle)
+                        <td class="text-end">{{ number_format($totalesPorTalle[$talle] ?? 0, 0, ',', '.') }}</td>
+                    @endforeach
+                    <td class="text-end">{{ number_format($totalGeneral ?? 0, 0, ',', '.') }}</td>
+                </tr>
+            </tfoot>
+        @endif
     </table>
 </div>
 
 {{-- 📄 Paginación --}}
-<div class="mt-3">
-    @if($registros instanceof \Illuminate\Pagination\Paginator || $registros instanceof \Illuminate\Pagination\LengthAwarePaginator)
-    {{ $registros->links() }}
-@endif
-
+<div class="mt-3 d-flex justify-content-between align-items-center">
+    <div class="small text-muted">
+        @if($registros instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            {{ $registros->total() }} resultados • página {{ $registros->currentPage() }} / {{ $registros->lastPage() }}
+        @endif
+    </div>
+    <div>
+        @if($registros instanceof \Illuminate\Pagination\Paginator || $registros instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            {{ $registros->links() }}
+        @endif
+    </div>
 </div>
 @endsection
+
