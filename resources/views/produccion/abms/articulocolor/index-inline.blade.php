@@ -1,14 +1,12 @@
-
 @extends('layouts.app')
 
-
 @section('content')
-<h1>🧱 Artículos</h1>
-<div class="card">
-    <div class="card-header">
+<div class="container-fluid">
+    <h1 class="mb-3">🧱 Artículos</h1>
+<div class="card-header">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoArticulo">➕ Nuevo Artículo</button>
     </div>
-    <div class="card-body table-responsive p-0" x-data="{}">
+     <div class="card-body table-responsive p-0" x-data="{}">
         <form method="GET" action="{{ route('articulocolor.index') }}">
         <table class="table table-hover table-bordered table-sm text-nowrap align-middle">
  
@@ -41,13 +39,13 @@
                     <th>@filterInputLike('descripcion')</th>
                     <x-filtros.select-multiple campo="familia" :opciones="$familias->pluck('nombre', 'nombre')" />
                     <x-filtros.select-multiple campo="ruta" :opciones="$rutas->pluck('denom_ruta', 'denom_ruta')" />
+                   
                     <th>@filterInput('rango')</th>
+
                     <th>@filterInput('horma')</th>
                  
                     <x-filtros.select-multiple campo="marca" :opciones="$marcas->pluck('denom_marca', 'denom_marca')" />
-                     <x-filtros.select-multiple campo="tiposProducto" :opciones="$tiposProducto" />
-
-                    <x-filtros.select-multiple campo="forma_comercializacion" :opciones="$formasComercializacion" />
+                     
 
                     <th>
                         <button type="submit" class="btn btn-sm btn-primary">🔍</button>
@@ -69,8 +67,7 @@
                         <td>{{ $articulo->rango }}</td>
                         <td>{{ $articulo->horma }}</td>
                         <td>{{ $articulo->marca }}</td>
-                        <td>{{ $articulo->tiposProducto }}</td>                        
-                        <td>{{ $articulo->forma_comercializacion }}</td>
+                        
                         <td>
                             <a href="{{ route('articulocolor.edit', $articulo->id) }}" class="btn btn-sm btn-warning">✏️</a>
                             <form action="{{ route('articulocolor.destroy', $articulo->id) }}" method="POST" class="d-inline">
@@ -97,7 +94,6 @@
         </div>
     </div>
 </div>
-
 @include('produccion.abms.articulocolor.partials.create-modal')
 @push('js')
     <script src="//unpkg.com/alpinejs" defer></script>
@@ -119,4 +115,3 @@
 </script>
 @endpush
 @stop
-

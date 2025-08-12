@@ -11,6 +11,10 @@ use App\Models\TipoProductoStock;
 use App\Services\StockService;
 use App\Traits\PersisteFiltrosTrait;
 
+use App\Models\RangoTalle;
+use App\Models\Horma;
+
+
 class ArticuloColorController extends Controller
 {
 
@@ -22,7 +26,7 @@ public function index(Request $request)
 {
     $campos = [
         'cod_articulo', 'denom_articulo', 'unidad', 'linea', 'vigente',
-        'descripcion', 'familia', 'ruta', 'rango', 'horma', 'marca', 'forma_comercializacion','tiposProducto',
+        'descripcion', 'familia', 'ruta', 'rango', 'horma', 'marca',
         'sort', 'dir', 'page'
     ];
 
@@ -31,7 +35,7 @@ public function index(Request $request)
     if ($requestFiltrado instanceof \Illuminate\Http\RedirectResponse) return $requestFiltrado;
     $request = $requestFiltrado;
 
-    // Alias para joins y filtros
+    // Alias para joins y filtros (solo del PADRE)
     $aliasMap = [
         'linea'   => 'lp.denom_linea',
         'familia' => 'fp.nombre',
@@ -39,10 +43,9 @@ public function index(Request $request)
         'rango'   => 'rt.denom_rango',
         'horma'   => 'h.denom_horma',
         'marca'   => 'm.denom_marca',
-        'tiposProducto' => 'tps.denom_tipo_producto', 
     ];
 
-    // Query con joins y alias en select
+    // Query del PADRE (sin campos del hijo)
     $query = Articulo::select('articulos.*')
         ->leftJoin('lineas_productos as lp', 'articulos.cod_linea', '=', 'lp.cod_linea')
         ->leftJoin('familias_producto as fp', 'articulos.cod_familia_producto', '=', 'fp.id')
@@ -50,9 +53,6 @@ public function index(Request $request)
         ->leftJoin('rango_talles as rt', 'articulos.cod_rango', '=', 'rt.cod_rango')
         ->leftJoin('hormas as h', 'articulos.cod_horma', '=', 'h.cod_horma')
         ->leftJoin('Marcas as m', 'articulos.cod_marca', '=', 'm.cod_marca')
-        ->leftJoin('colores_por_articulo as cpa', 'articulos.cod_articulo', '=', 'cpa.cod_articulo')
-        ->leftJoin('tipo_producto_stock as tps', 'cpa.id_tipo_producto_stock', '=', 'tps.id_tipo_producto_stock')
-        
         ->addSelect([
             'lp.denom_linea as linea',
             'fp.nombre as familia',
@@ -60,20 +60,13 @@ public function index(Request $request)
             'rt.denom_rango as rango',
             'h.denom_horma as horma',
             'm.denom_marca as marca',
-            'tps.denom_tipo_producto as tiposProducto',
-            
         ])
         ->where('articulos.cod_articulo', '!=', '');
 
-
-
-
-
-    // Aplicar filtros (incluso multiselección con arrays)
+    // Filtros (solo campos del PADRE)
     foreach ($campos as $campo) {
         if (!in_array($campo, ['sort', 'dir', 'page']) && $request->filled($campo)) {
             $columna = $aliasMap[$campo] ?? "articulos.$campo";
-
             if (is_array($request->$campo)) {
                 $query->whereIn($columna, $request->$campo);
             } else {
@@ -82,81 +75,70 @@ public function index(Request $request)
         }
     }
 
-    // Ordenamiento
+    // Ordenamiento (sin tiposProducto ni forma_comercializacion)
     $sortMap = [
-        'cod_articulo'           => 'articulos.cod_articulo',
-        'denom_articulo'         => 'articulos.denom_articulo',
-        'unidad'                 => 'articulos.unidad',
-        'linea'                  => 'lp.denom_linea',
-        'vigente'                => 'articulos.vigente',
-        'descripcion'            => 'articulos.descripcion',
-        'familia'                => 'fp.nombre',
-        'ruta'                   => 'rp.denom_ruta',
-        'rango'                  => 'rt.denom_rango',
-        'horma'                  => 'h.denom_horma',
-        'marca'                  => 'm.denom_marca', 
-        'tiposProducto' => 'tps.denom_tipo_producto',       
-        'forma_comercializacion'=> 'articulos.forma_comercializacion',
+        'cod_articulo'   => 'articulos.cod_articulo',
+        'denom_articulo' => 'articulos.denom_articulo',
+        'unidad'         => 'articulos.unidad',
+        'linea'          => 'lp.denom_linea',
+        'vigente'        => 'articulos.vigente',
+        'descripcion'    => 'articulos.descripcion',
+        'familia'        => 'fp.nombre',
+        'ruta'           => 'rp.denom_ruta',
+        'rango'          => 'rt.denom_rango',
+        'horma'          => 'h.denom_horma',
+        'marca'          => 'm.denom_marca',
     ];
 
     $sort = $request->get('sort', 'cod_articulo');
     $dir = $request->get('dir', 'asc');
     $sortColumn = $sortMap[$sort] ?? 'articulos.cod_articulo';
     $query->orderBy($sortColumn, $dir);
+
+    // Eager loading para el SUBFORM (acá sí vienen los campos de hijo)
     $query->with('coloresPorArticulo.tipo_producto_stock');
 
     $articulos = $query->paginate(20)->appends($request->all());
 
-    // Calcular stock por artículo-color agrupado por almacenes
-        foreach ($articulos as $articulo) {
-            foreach ($articulo->coloresPorArticulo as $color) {
-                $color->stock_eshop = \App\Services\StockService::stockTotalPorArticuloColor(
-                    $articulo->cod_articulo,
-                    $color->cod_color_articulo,
-                    ['07', '14', '20']
-                );
-
-                $color->stock_1 = \App\Services\StockService::stockTotalPorArticuloColor(
-                    $articulo->cod_articulo,
-                    $color->cod_color_articulo,
-                    ['01']
-                );
-
-                $color->stock_2 = \App\Services\StockService::stockTotalPorArticuloColor(
-                    $articulo->cod_articulo,
-                    $color->cod_color_articulo,
-                    ['02']
-                );
-            }
+    // Cálculo de stock por color (hijo)
+    foreach ($articulos as $articulo) {
+        foreach ($articulo->coloresPorArticulo as $color) {
+            $color->stock_eshop = \App\Services\StockService::stockTotalPorArticuloColor(
+                $articulo->cod_articulo,
+                $color->cod_color_articulo,
+                ['07', '14', '20']
+            );
+            $color->stock_1 = \App\Services\StockService::stockTotalPorArticuloColor(
+                $articulo->cod_articulo,
+                $color->cod_color_articulo,
+                ['01']
+            );
+            $color->stock_2 = \App\Services\StockService::stockTotalPorArticuloColor(
+                $articulo->cod_articulo,
+                $color->cod_color_articulo,
+                ['02']
+            );
         }
-  $familias = \App\Models\FamiliasProducto::orderBy('nombre')->get();
+    }
+
+    // Catálogos del PADRE (para filtros del thead)
+    $familias = FamiliasProducto::orderBy('nombre')
+    ->get(['id', 'nombre']);
+
 $rutas    = \App\Models\RutasProduccion::orderBy('denom_ruta')->get();
 $rangos   = \App\Models\RangoTalle::orderBy('denom_rango')->get();
-$hormas   = \App\Models\Horma::orderBy('denom_horma')->get();
+
+$hormas   = Horma::orderBy('denom_horma')->get(['cod_horma', 'denom_horma']);
 $marcas   = \App\Models\Marca::orderBy('denom_marca')->get();
-$rubros   = \App\Models\RubrosIva::orderBy('nombre')->get();
+
 $lineas   = \App\Models\LineasProducto::orderBy('denom_linea')->get();
 
-// ✅ Filtro: tipos de producto (como forma comercialización)
-$tiposProducto = \App\Models\TipoProductoStock::whereNotNull('denom_tipo_producto')
-    ->select('denom_tipo_producto')
-    ->distinct()
-    ->orderBy('denom_tipo_producto')
-    ->pluck('denom_tipo_producto', 'denom_tipo_producto');
-
-// ✅ Filtro: forma de comercialización
-$formasComercializacion = \App\Models\Articulo::whereNotNull('forma_comercializacion')    
-    ->select('forma_comercializacion')
-    ->distinct()
-    ->orderBy('forma_comercializacion')
-    ->pluck('forma_comercializacion', 'forma_comercializacion');
-
-return view('produccion.abms.articulocolor.index-inline', compact(
-    'articulos', 'familias', 'rutas', 'rangos', 'hormas', 'marcas',
-    'rubros', 'lineas', 'formasComercializacion', 'tiposProducto'
-));
-
+    return view('produccion.abms.articulocolor.index-inline', compact(
+        'articulos', 'familias', 'rutas', 'rangos', 'hormas', 'marcas',
+    'lineas'
+    ));
 }
+
 
 
 

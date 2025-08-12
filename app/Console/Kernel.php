@@ -41,7 +41,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\MlibreSincronizarOrdenes::class,
         \App\Console\Commands\MlibreExportarOrdenes::class,
         \App\Console\Commands\MlibreActualizarScf::class,
-
+         \App\Console\Commands\MlibreImportarNuevas::class,
         ];
     
    
