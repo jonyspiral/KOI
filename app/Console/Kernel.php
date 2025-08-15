@@ -8,12 +8,24 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule)
-    {
-        // Definir comandos programados si es necesario
-    }
+{
+    // 🟡 1. Importar publicaciones desde ML a las 3:00 AM
+    $schedule->command('mlibre:importar-nuevas')
+        ->dailyAt('03:00')
+        ->appendOutputTo(storage_path('logs/mlibre_import.log'))
+        ->when(fn () => app()->environment('production'));
+
+    // 🟡 2. Sincronizar tablas KOI2 diarias a las 2:00 AM
+    $schedule->command('sync:tablas-diarias')
+        ->dailyAt('02:00')
+        ->appendOutputTo(storage_path('logs/sync.log'))
+        ->when(fn () => app()->environment('production'));
+}
+
 
     protected function commands()
     {
+
         $this->load(__DIR__.'/Commands');
     }
 
@@ -42,6 +54,9 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\MlibreExportarOrdenes::class,
         \App\Console\Commands\MlibreActualizarScf::class,
          \App\Console\Commands\MlibreImportarNuevas::class,
+        \App\Console\Commands\MlibreImportarOrdenes::class,
+
+
         ];
     
    
