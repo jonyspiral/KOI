@@ -55,7 +55,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\MlibreActualizarScf::class,
          \App\Console\Commands\MlibreImportarNuevas::class,
         \App\Console\Commands\MlibreImportarOrdenes::class,
-
+         \App\Console\Commands\ArcaFacturar::class,
 
         ];
     

@@ -1,0 +1,25 @@
+[ req ]
+default_bits       = 2048
+default_md         = sha256
+prompt             = no
+encrypt_key        = no
+distinguished_name = dn
+req_extensions     = req_ext
+
+[ dn ]
+C=AR
+O=ENCINITAS SAS
+CN=KOI2 ARCA HOMO
+serialNumber=CUIT 30718182815
+
+[ req_ext ]
+basicConstraints = CA:FALSE
+keyUsage         = digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth
+# SAN no es obligatorio para client auth, pero lo dejamos por si lo querés usar:
+subjectAltName   = @alt_names
+
+[ alt_names ]
+DNS.1 = koi2.spiralshoes.com
+DNS.2 = devkoi2.spiralshoes.com
+

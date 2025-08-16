@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
 
         return new ODBCConnection($pdo, $database, $prefix, $config);
     });
-      Http::macro('ml', function ($token) {
+/*       Http::macro('ml', function ($token) {
         return Http::withHeaders([
             'Authorization' => "Bearer $token",
             'User-Agent'    => 'KOI2LaravelSync/1.0 (spiralshoessa@gmail.com)',
@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
             'Content-Type'  => 'application/json',
         ]);
     });
-
+ */
 
 }
 
