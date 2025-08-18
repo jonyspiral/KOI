@@ -11,6 +11,7 @@ use Illuminate\Pagination\Paginator;   // <-- ESTE es el import correcto
 
 class AppServiceProvider extends ServiceProvider
 {
+
     public function boot()
 {
 
@@ -29,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
 
         return new ODBCConnection($pdo, $database, $prefix, $config);
     });
+    
 /*       Http::macro('ml', function ($token) {
         return Http::withHeaders([
             'Authorization' => "Bearer $token",

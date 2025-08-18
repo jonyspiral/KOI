@@ -57,7 +57,17 @@ return [
     'Mercado Libre' => [
         [
             'nombre' => 'SKU Variantes',
+            'ruta' => 'sku_variantes.index',
+            'icono' => 'fab fa-whatsapp',
+        ],
+         [
+            'nombre' => 'Mlibre Variantes',
             'ruta' => 'mlibre.variantes.index',
+            'icono' => 'fab fa-whatsapp',
+        ],
+         [
+            'nombre' => 'Ordenes MLibre',
+            'ruta' => 'mlibre.orders.index',
             'icono' => 'fab fa-whatsapp',
         ],
     ],

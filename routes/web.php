@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Sistemas\MenuController;
+use App\Http\Controllers\Sistemas\UserController;
+
 use App\Http\Controllers\Sistemas\Importar\ImportarController;
 use App\Http\Controllers\Sistemas\Abms\AbmCreatorController;
 use App\Http\Controllers\Produccion\RutasProduccionController;
@@ -32,7 +34,7 @@ use App\Http\Controllers\Mlibre\MlibreCampaignController;
 use App\Http\Controllers\Produccion\ArticuloColorController;
 use App\Http\Controllers\Produccion\AnalisisStockController;
 use App\Http\Controllers\Produccion\AnalisisStockExportController;
-
+use App\Http\Controllers\Mlibre\OrdersController;
 require __DIR__.'/auth.php';
 
 Route::prefix('produccion')->middleware(['auth'])->group(function () {
@@ -42,6 +44,12 @@ Route::prefix('produccion')->middleware(['auth'])->group(function () {
 });
 // Rutas públicas necesarias
 Route::middleware(['auth'])->group(function () {
+   
+
+Route::prefix('mlibre')->group(function () {
+    Route::get('/orders', [OrdersController::class, 'index'])->name('mlibre.orders.index');
+    Route::post('/orders/facturar', [OrdersController::class, 'facturarSeleccionados'])->name('mlibre.orders.facturar');
+});
 
 
     Route::view('/', 'home');

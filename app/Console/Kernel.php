@@ -56,6 +56,8 @@ class Kernel extends ConsoleKernel
          \App\Console\Commands\MlibreImportarNuevas::class,
         \App\Console\Commands\MlibreImportarOrdenes::class,
          \App\Console\Commands\ArcaFacturar::class,
+            \App\Console\Commands\MlibreCompletarDocs::class,
+        \App\Console\Commands\MlibreDetectarFacturasMl::class,
 
         ];
     
