@@ -1,0 +1,132 @@
+<?php
+ini_set('session.save_path', '/tmp');
+
+// antes: session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+
+function KD($msg){
+  static $t0 = null;
+  if ($t0 === null) $t0 = microtime(true);
+  error_log(sprintf("[KD] %0.3fs %s", microtime(true)-$t0, $msg));
+}
+
+KD("A master.php ENTER");
+KD("A1 GET=".json_encode($_GET));
+KD("A2 POST=".json_encode($_POST));
+
+$auxPagename = isset($_REQUEST['pagename']) ? $_REQUEST['pagename'] : '';
+KD("B auxPagename='$auxPagename'");
+
+// ... tu login y seteo de sesión ...
+
+// resolver pagename (como definimos en el canvas)
+$prefix = (isset($_SESSION['tipo_usuario']) && $_SESSION['tipo_usuario']==='cliente') ? 'cliente/' : '';
+KD("C prefix='$prefix'");
+
+// Ejemplo de resolver:
+$raw = trim($auxPagename);
+if ($raw === '') $raw = ($prefix==='' ? 'index' : 'cliente/index');
+$pagename = $raw;
+KD("D pagename='$pagename'");
+
+// rutas físicas
+$BASE = __DIR__ . '/content';
+$VIEW_FILE = $BASE . '/' . $pagename . '.php';
+$ALT_FILE  = $BASE . '/' . $pagename . '/index.php';
+
+KD("E try VIEW_FILE=$VIEW_FILE  exists=".(is_file($VIEW_FILE)?'YES':'NO'));
+KD("F try ALT_FILE =$ALT_FILE   exists=".(is_file($ALT_FILE)?'YES':'NO'));
+
+// elegir qué incluirá el shell
+$CONTENT_TO_INCLUDE = is_file($VIEW_FILE) ? $VIEW_FILE : (is_file($ALT_FILE)?$ALT_FILE:null);
+KD("G CONTENT_TO_INCLUDE=".$CONTENT_TO_INCLUDE);
+
+// ahora seguí con tu include de shell/salida normal…
+
+require_once('premaster.php');
+
+function puedeSinLoguear($pagename) {
+	//Esto es para las funcionalidades que no necesitan login
+	$arrayExcepciones = array(
+		'api',
+		'fichaje'
+	);
+	if (in_array($pagename, $arrayExcepciones)) {
+		return true;
+	}
+	return false;
+}
+
+function findRealPath($filename) {
+	if (realpath($filename) == $filename) {
+		return $filename;
+	}
+	$paths = explode(PATH_SEPARATOR, get_include_path());
+	foreach ($paths as $path) {
+		if (substr($path, -1) == DIRECTORY_SEPARATOR) {
+			$fullpath = $path . $filename;
+		} else {
+			$fullpath = $path . DIRECTORY_SEPARATOR . $filename;
+		}
+		if (file_exists($fullpath)) {
+			return $fullpath;
+		}
+	}
+	return false;
+}
+
+$prefix = Usuario::logueado(true)->esCliente() ? 'cliente/' : '';
+$pagename = $prefix . 'index'; //Default
+$auxPagename = Funciones::get('pagename');
+$idBuscar = Funciones::get('buscar');
+
+// var_dump("1_AUXPAGENAME: " . $auxPagename);
+// var_dump("2_PREFIX: " . $prefix);
+// var_dump("3_PAGENAME: " . $pagename);
+// var_dump("4_IDBUSCAR: " . $idBuscar);   
+
+if (Usuario::logueado() || puedeSinLoguear($auxPagename)) {
+// var_dump("5_USER LOGGED or CAN WITHOUT LOGIN");
+	$tit = explode('/', $auxPagename);
+
+	$tit = ucfirst(implode(' ', explode('_', $tit[count($tit) - 1])));
+
+// var_dump("5_tit: " .$tit);
+	if (isset($auxPagename)) {
+// var_dump("6_AUXPAGENAME is set");exit;
+		$pagename = $prefix . Funciones::get('pagename');
+	}
+	if (file_exists($pagename . '.php')) {
+// var_dump("7_FILE EXISTS: " . $pagename . '.php');exit;
+		require_once($pagename . '.php');
+	} else {
+// var_dump("8_FILE NOT EXISTS: " . $pagename . '.php');
+		if (!findRealPath('content/' . $pagename . '.php')) {
+
+            // var_dump("entro en A");exit;
+			if (findRealPath('content/' . $pagename . '/index.php')) {
+                $pagename .= '/index';
+			} else {
+				$pagename = $prefix . 'index';
+			}
+		}
+		if (!Usuario::logueado(true)->puede(substr($pagename, 0, -5))){
+            // var_dump("entro en B");exit;
+			$pagename = $prefix . 'index';
+		}
+
+
+        if (Usuario::logueado(true)->esCliente()) {
+            // var_dump("entro en C");
+            include_once('content/cliente/main.php');
+        } else {
+            include_once('main.php');
+        }
+	}
+} else { //Login
+    include_once('login.php');
+}
+?>

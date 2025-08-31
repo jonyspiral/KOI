@@ -1,0 +1,9 @@
+vendor/
+cache/
+tmp/
+logs/
+*.log
+*.swp
+.DS_Store
+uploads/
+public/uploads/
