@@ -1,0 +1,19 @@
+#table-talles{
+	width: auto;
+}
+
+#table-talles thead tr th{
+	background-color: #e1e1e8;
+}
+
+div.table-talles {
+	position: absolute;
+	bottom: 14px;
+	z-index: 10;
+	background-color: #fff;
+	left: 0;
+}
+
+div.table-talles .table > thead > tr > th{
+	padding: 5px;
+}

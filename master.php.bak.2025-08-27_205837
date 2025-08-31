@@ -1,0 +1,56 @@
+<?php
+require_once('premaster.php');
+try { UsuarioLogin::login(); } catch (Exception $e) { /* no-op */ }
+
+function puedeSinLoguear($pagename) {
+    $arrayExcepciones = array('api','fichaje');
+    return in_array($pagename, $arrayExcepciones);
+}
+function findRealPath($filename) {
+    if (realpath($filename) == $filename) return $filename;
+    $paths = explode(PATH_SEPARATOR, get_include_path());
+    foreach ($paths as $path) {
+        $fullpath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
+        if (file_exists($fullpath)) return $fullpath;
+    }
+    return false;
+}
+$prefix = Usuario::logueado(true)->esCliente() ? 'cliente/' : '';
+
+
+$pagename  = $prefix . 'index'; // default
+$auxPagename = Funciones::get('pagename');
+$idBuscar    = Funciones::get('buscar');
+
+if (Usuario::logueado() || puedeSinLoguear($auxPagename)) {
+    $tit = explode('/', $auxPagename);
+    $tit = ucfirst(implode(' ', explode('_', $tit[count($tit) - 1])));
+    if (isset($auxPagename)) {
+        $pagename = $prefix . Funciones::get('pagename');
+    }
+
+    // >>> ÚNICO CAMBIO: resolver primero dentro de content/
+    $direct = 'content/' . $pagename . '.php';
+    if (findRealPath($direct)) {
+        require_once($direct);
+    } else {
+        if (!findRealPath('content/' . $pagename . '.php')) {
+            if (findRealPath('content/' . $pagename . '/index.php')) {
+                $pagename .= '/index';
+            } else {
+                $pagename = $prefix . 'index';
+            }
+        }
+        if (!Usuario::logueado(true)->puede(substr($pagename, 0, -5))) {
+            $pagename = $prefix . 'index';
+        }
+
+        if (Usuario::logueado(true)->esCliente()) {
+            include_once('content/cliente/main.php');
+        } else {
+            include_once('main.php');
+        }
+    }
+} else { // Login
+    include_once('login.php');
+}
