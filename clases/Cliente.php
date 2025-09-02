@@ -147,6 +147,7 @@ public function getIdNombre($nameField = 'razonSocial', $idField = 'id') {
   return parent::getIdNombre($nameField, $idField);
 }
 
+
 	public function tieneSucursalEntrega() {
 		return isset($this->idSucursalEntrega);
 	}

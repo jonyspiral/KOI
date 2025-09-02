@@ -14,29 +14,33 @@ class DbMysql {
   private $ln;
   private $inTx = false;
 
-  function __construct($cfg){
-  $host = isset($cfg['host']) ? $cfg['host'] : '127.0.0.1';
-  $user = isset($cfg['user']) ? $cfg['user'] : '';
-  $pass = isset($cfg['pass']) ? $cfg['pass'] : '';
-  $db   = isset($cfg['name']) ? $cfg['name'] : '';
+  // factory/drivers/DbMysql.php
+public function __construct($cfg) {
+  $host = $cfg['host'] ?? '127.0.0.1';
+  $user = $cfg['user'] ?? '';
+  $pass = $cfg['pass'] ?? '';
+  $db   = $cfg['name'] ?? '';
   $port = isset($cfg['port']) ? (int)$cfg['port'] : 3306;
   $timeout = isset($cfg['timeout']) ? (int)$cfg['timeout'] : 5;
 
   $this->ln = mysqli_init();
   mysqli_options($this->ln, MYSQLI_OPT_CONNECT_TIMEOUT, $timeout);
-  if (defined('MYSQLI_SET_CHARSET_NAME')) {
-    mysqli_options($this->ln, MYSQLI_SET_CHARSET_NAME, 'utf8mb4');
-  }
 
   if (!@mysqli_real_connect($this->ln, $host, $user, $pass, $db, $port)) {
     throw new Exception('MySQL connect error: '.mysqli_connect_error());
   }
 
-  // Charset/collation: **una sola** configuración coherente
-  mysqli_set_charset($this->ln, 'utf8mb4');
-  mysqli_query($this->ln, "SET collation_connection = 'utf8mb4_0900_as_ci'");
+  // Charset/collation de la CONEXIÓN (clave):
+  if (!mysqli_set_charset($this->ln, 'utf8mb4')) {
+    throw new Exception('mysqli_set_charset failed: '.mysqli_error($this->ln));
+  }
+  if (!mysqli_query($this->ln, "SET NAMES utf8mb4 COLLATE utf8mb4_0900_as_ci")) {
+    throw new Exception('SET NAMES failed: '.mysqli_error($this->ln));
+  }
+  if (!mysqli_query($this->ln, "SET collation_connection='utf8mb4_0900_as_ci'")) {
+    throw new Exception('SET collation_connection failed: '.mysqli_error($this->ln));
+  }
 
-  // NO usar $this->_link, NO hacer luego 'utf8'
   @mysqli_query($this->ln, "SET SESSION sql_mode='NO_AUTO_VALUE_ON_ZERO,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
   @mysqli_query($this->ln, "SET time_zone='-03:00'");
 }
