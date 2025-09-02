@@ -1,5 +1,8 @@
 <?php
-ini_set('display_errors',1); error_reporting(E_ALL);
-session_start();
-header('Content-Type: text/plain; charset=utf-8');
-print_r($_SESSION);
+@session_start();
+header('Content-Type: application/json; charset=UTF-8');
+echo json_encode([
+  'sid'     => session_id(),
+  'keys'    => array_keys($_SESSION),
+  'session' => $_SESSION,
+], JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);

@@ -340,7 +340,7 @@ class Funciones {
 		(!is_null($asignar)) && $_SESSION[$valor] = $asignar;
 		if ((!isset($_SESSION[$valor])) || (($obj = $_SESSION[$valor]) == ''))
 			return null;
-		return HTML::utfDecode($obj);
+		return Html::utfDecode($obj);
 	}
 	static function iIsSet($var, $returnIfNotSet = '') {
 		if (isset($var))

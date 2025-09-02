@@ -42,3 +42,6 @@ register_shutdown_function(function(){
   $e = error_get_last();
   if ($e) T("SHUTDOWN: [{$e['type']}] {$e['message']} @ {$e['file']}:{$e['line']}");
 });
+if (session_status() !== PHP_SESSION_ACTIVE) { @session_start(); }
+// … (usar $_SESSION lo necesario) …
+if (session_status() === PHP_SESSION_ACTIVE) { @session_write_close(); }

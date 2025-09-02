@@ -1,9 +1,13 @@
-<?php   
-    /**
+<?php /* content/index.php */ ?>
+  
+  
+    
+<script>console.log('CONTENT/index: start');</script>
+<?php 
+  /**
      * Función simple para detectar si es un dispositivo móvil.
      * Retorna true si encuentra alguna palabra clave propia de un user-agent móvil.
      */
-    var_dump("entro a cliente index");exit;
     function esDispositivoMovil() {
         $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
         $dispositivosMoviles = array('mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone');
@@ -24,15 +28,15 @@
         $rutaRelativa = '../img/fondos/catalogo_inicio_mobile/';
 
 
-    } else {   var_dump("entro a no es movil");
+    } else {  
                 
                 
                 
         $carpeta = Config::pathBase . 'img/fondos/catalogo_inicio';
-var_dump("carpeta: ".$carpeta);
+
 
         $rutaRelativa = '../img/fondos/catalogo_inicio/';
-        var_dump("ruta relativa: ".$rutaRelativa);
+        
     }
 
     /**

@@ -17,7 +17,7 @@ class Base extends BasePhp {
     /**
      * @var array
      *
-     * Es un array de mappings de los atributos con la DB. Además, tiene cierta inteligencia para reconocer common attributes (usuarios, fechas).
+     * Es un array de mappings de los atributos con la DB. Ademï¿½s, tiene cierta inteligencia para reconocer common attributes (usuarios, fechas).
      * array(
      *   'nombre',
      *   'descripcionArticulo', // Lo transforma solito en descripcion_articulo
@@ -25,7 +25,7 @@ class Base extends BasePhp {
      *   'idFormaDelZapato' => array('db' => 'cod_forma_zapato'),
      *   'fechaAlta',
      *   'unaFechaConOtroFormato' => array('transformer' => array('Funciones::formatearFecha', array(null, 'Y/m/d'))
-     *  // El primer elemento del array transformer es la función, y el 2do un array con los parámetros (los "null" se reemplazan con el valor del campo, en este caso la fecha)
+     *  // El primer elemento del array transformer es la funciï¿½n, y el 2do un array con los parï¿½metros (los "null" se reemplazan con el valor del campo, en este caso la fecha)
      * );
      */
     protected $__dbMappings = array();
@@ -33,10 +33,10 @@ class Base extends BasePhp {
     /**
      * @var array
      *
-     * Es un array de configuracion de las relaciones, para poder guardarlas automáticamente.
+     * Es un array de configuracion de las relaciones, para poder guardarlas automï¿½ticamente.
      * array(
      *   'colores' => array(
-     *     'cascadeDelete' => false // Por defecto NO borramos en cascada todos los items existentes de la relación
+     *     'cascadeDelete' => false // Por defecto NO borramos en cascada todos los items existentes de la relaciï¿½n
      *   )
      * );
      */
@@ -181,7 +181,7 @@ class Base extends BasePhp {
 	public function guardar() {
 		$this->validarGuardar();
 		if ($this->modo != Modos::insert && $this->modo != Modos::update) {
-			throw new FactoryExceptionCustomException('No se puede guardar un objeto que no esté en modo insert o update');
+			throw new FactoryExceptionCustomException('No se puede guardar un objeto que no estï¿½ en modo insert o update');
 		}
 
         if ($this->usesOldFactory()) {
@@ -231,7 +231,7 @@ class Base extends BasePhp {
 	}
 	protected function validarBorrar() {
 		if ($this->anulado()) {
-			throw new FactoryExceptionCustomException('El registro que intentó eliminar no existe');
+			throw new FactoryExceptionCustomException('El registro que intentï¿½ eliminar no existe');
 		}
 	}
 
@@ -239,7 +239,7 @@ class Base extends BasePhp {
         try {
             return Notificacion::accionNotificar($this, $funcionalidad, $usuarios);
         } catch (Exception $ex) {
-            //Si ocurre un error al notificar, no me importa, devuelvo false y si es necesario se manejará desde el controller
+            //Si ocurre un error al notificar, no me importa, devuelvo false y si es necesario se manejarï¿½ desde el controller
         }
         return false;
     }
@@ -251,9 +251,9 @@ class Base extends BasePhp {
 			    continue;
             }
 			if (substr($key, 0, 1) == '_') {
-                //Esta función se usa para listar las variables y pasarlas en el ECHOJSON que está en HTML.
+                //Esta funciï¿½n se usa para listar las variables y pasarlas en el ECHOJSON que estï¿½ en HTML.
                 //Si el atributo empieza con _ es porque es un valor de LazyLoading, y si
-                //es NULL es porque todavía no fue seteado, entonces no lo devuelvo como valor.
+                //es NULL es porque todavï¿½a no fue seteado, entonces no lo devuelvo como valor.
                 //Para que un valor de LazyLoading pase a JSON hay que pedirlo antes (Ej: $notaDePedido->detalle)
                 if (is_null($val)) {
                     continue;
@@ -269,7 +269,7 @@ class Base extends BasePhp {
 	public function getIdNombre($nameField = 'nombre', $idField = 'id') {
 		$this->checkProperty($nameField);
 		$this->checkProperty($idField);
-		return '[' . $this->$idField . '] ' . $this->$nameField;
+		return   '[' . $this->$idField . '] ' . $this->$nameField;
 	}
 
 	public function expand(){
@@ -380,7 +380,7 @@ class Base extends BasePhp {
 
             return $this;
         } catch (Exception $ex) {
-            // TODO: acá deberíamos loggear
+            // TODO: acï¿½ deberï¿½amos loggear
             throw $ex;
         }
     }
@@ -416,7 +416,7 @@ class Base extends BasePhp {
             // Y finalmente aplico el transformer
             if (array_key_exists('transformer', $mapping)) {
 
-                // Si hay parámetros (que seguramente los haya, al menos un null) hay que reemplazar los "null" por el valor
+                // Si hay parï¿½metros (que seguramente los haya, al menos un null) hay que reemplazar los "null" por el valor
                 $currentTransformer = $mapping['transformer'];
 
                 if (count($currentTransformer) > 1 && is_array($currentTransformer[1])) {
@@ -509,15 +509,15 @@ class Base extends BasePhp {
     protected function getNextId() {
         $row = Datos::EjecutarSQLItem($this->getQuery(Modos::id));
         if (count($row) != 1)
-            throw new FactoryException('No se encontró el próximo ID');
+            throw new FactoryException('No se encontrï¿½ el prï¿½ximo ID');
         return $row['computed'];
     }
 
     /**
-     * Este es el método que conviene extender cuando se necesita un comportamiento particular.
-     * Para extender este método, se puede llamar primero al parent::save(); y después hacer el resto de las cosas (como guardar relaciones).
+     * Este es el mï¿½todo que conviene extender cuando se necesita un comportamiento particular.
+     * Para extender este mï¿½todo, se puede llamar primero al parent::save(); y despuï¿½s hacer el resto de las cosas (como guardar relaciones).
      *
-     * TODO: ver si es posible hacer algo genérico para guardar relaciones de forma default
+     * TODO: ver si es posible hacer algo genï¿½rico para guardar relaciones de forma default
      */
     protected function save() {
 
@@ -548,7 +548,7 @@ class Base extends BasePhp {
     // Mapper methods
 
     /**
-     * Devuelve una query SQL según el modo que se le envíe
+     * Devuelve una query SQL segï¿½n el modo que se le envï¿½e
      *
      * @param $modo
      * @return string
@@ -791,7 +791,7 @@ class Base extends BasePhp {
             return 'SELECT IDENT_CURRENT(\'' . $this->table() . '\') + IDENT_INCR(\'' . $this->table() . '\');';
         } else {
             if (!($uniqueId = $this->getUniqueId())) {
-                throw new FactoryException('No se puede calcular el NextId de la clase "' . $this->getClass() . '"" porque no tiene un único ID');
+                throw new FactoryException('No se puede calcular el NextId de la clase "' . $this->getClass() . '"" porque no tiene un ï¿½nico ID');
             }
 
             return 'SELECT ISNULL(MAX(' . $this->__dbMappings[$uniqueId]['db'] . '), 0) + 1 FROM ' . $this->table() . ';';

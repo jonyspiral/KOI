@@ -1,24 +1,10 @@
 <?php
-@session_start();
-error_reporting(E_ALL & ~E_STRICT);
-
-/* --- DEBUG HOOK: quitar luego --- */
-if (isset($_GET['debug']) && $_GET['debug']==='sid') {
-  header('Content-Type: application/json; charset=UTF-8');
-  echo json_encode([
-    'sid'        => session_id(),
-    'pagename'   => isset($_GET['pagename']) ? $_GET['pagename'] : null,
-    'request_uri'=> $_SERVER['REQUEST_URI'],
-    'session'    => array_intersect_key($_SESSION, array_flip([
-                      'usuarioLogueadoUser','usuarioLogueadoPass','empresa','user_type'
-                    ])),
-  ], JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
-  exit;
-}
-/* --- /DEBUG HOOK --- */
+header("Content-Type: text/plain; charset=utf-8");
+var_dump("entro a master");
 
 require_once('premaster.php');
-
+ var_dump("luego del include de premaster ");
+var_dump("user: ".Usuario::logueado());
 function puedeSinLoguear($pagename) {
 	//Esto es para las funcionalidades que no necesitan login
 	$arrayExcepciones = array(

@@ -258,10 +258,21 @@ class ColorPorArticulo extends Base {
 		return Funciones::iIsSet((!is_null($cliente) && $cliente->listaAplicable == 'D') ? $this->precioDistribuidor : $this->precioMayoristaDolar, 0);
 	}
 
-	public function getIdNombre() {
-		return '[' . $this->idArticulo . '-' . $this->id . '] ' . $this->articulo->nombre . ' - ' . $this->nombre;
-	}
+	// clases/ColorPorArticulo.php
+public function getIdNombre($nameField = 'denom_color', $idField = 'id') {
+    // Si tenemos todo lo necesario, construimos: [idArticulo-id] articulo.nombre - denom_color
+    if (
+        isset($this->idArticulo, $this->id, $this->articulo) &&
+        property_exists($this->articulo, 'nombre') &&
+        (property_exists($this, 'denom_color') || property_exists($this, 'nombre'))
+    ) {
+        $colorNombre = property_exists($this, 'denom_color') ? $this->denom_color : $this->nombre;
+        return '[' . $this->idArticulo . '-' . $this->id . '] ' . $this->articulo->nombre . ' - ' . $colorNombre;
+    }
 
+    // Fallback seguro por si en algún flujo faltan props
+    return parent::getIdNombre($nameField, $idField);
+}
 	//GETS y SETS
 	protected function getArticulo() {
 		if (!isset($this->_articulo)){
