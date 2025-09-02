@@ -7,14 +7,16 @@ use Illuminate\Database\Connection;
 use App\Database\ODBCConnection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Pagination\Paginator;   // <-- ESTE es el import correcto
-
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
 
     public function boot()
 {
-
+if (app()->environment('production')) {
+        URL::forceScheme('https');
+    }
        // AdminLTE 4 = Bootstrap 5
     Paginator::useBootstrapFive();
 

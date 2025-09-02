@@ -1,0 +1,99 @@
+# 📋 Canvas Guía – ABM con Subformulario Tipo Tab (`colores_por_articulo`)
+
+🗓️ **Fecha:** 2025-07-07  
+🧠 **Responsable:** Vicente  
+🧹 **Tecnologías:** Laravel 12, PHP 8.2, Blade, Alpine.js, ODBC con SQL Server 2000
+
+---
+
+## 🌟 Objetivo
+
+Implementar un **ABM compuesto** con:
+- Formulario **padre** para artículos.
+- Subformulario **hijo** en pestaña (tab), correspondiente a `colores_por_articulo`.
+- Capacidad de exportar registros reales desde SQL Server 2000.
+- Edición **inline con Alpine.js**, soporte para crear, actualizar y eliminar registros secundarios.
+- ✅ Mostrar los `colores` directamente en el `index` del padre con despliegue dinámico usando Alpine.js.
+
+---
+
+## 🗱 Estructura técnica base
+
+- Modelo padre: `Articulo` (MySQL + SQL Server)
+- Modelo hijo: `ColoresPorArticulo`
+  - Llave primaria real: `cod_articulo` + `cod_color_articulo`
+  - Clave lógica: `id`
+  - Ya cuenta con `fieldsMeta()` y `$primaryKeySql`
+
+---
+
+## ✅ Estado actual
+
+- [x] Modelo `ColoresPorArticulo` creado y validado.
+- [x] Método `fieldsMeta()` completo.
+- [x] ABM Creator funcional con `form_view_type` y `index_view_type`.
+- [x] Documentación de subformularios inline (`koi-subformulario.blade.php`) lista y validada.
+- [x] Infraestructura y conexión a SQL Server estables.
+- [x] Estrategia de importación, generación de modelos y sincronización en marcha.
+- [x] Confirmado: tabs en `edit.blade.php` se implementan con **Alpine.js**.
+- [x] Subformulario de `colores` visible en `edit.blade.php`.
+- [ ] Subformulario aún **no visible** en el `index.blade.php`.
+
+---
+
+## 🛁 Próximos pasos
+
+### 1. 🔧 Crear ABM Padre (`Articulo`)
+- Generar el JSON con `subformularios[]` apuntando a `ColoresPorArticulo`.
+- Asegurar que tenga "index_view_type": "tab" y "form_view_type": "default".
+
+### 2. 🗱 Configurar Subformulario
+- Agregar en `config_form_Articulo.json`:
+```json
+"subformularios": [
+  {
+    "modelo": "ColoresPorArticulo",
+    "label": "Colores",
+    "ruta": "produccion.abms.coloresporarticulo",
+    "form_view_type": "inline",
+    "index_view_type": "tab"
+  }
+]
+```
+
+### 3. 🎨 Crear `edit.blade.php` del padre con tabs (usando Alpine.js)
+- Primera pestaña: `form-campos`
+- Segunda pestaña: include de `index-inline.blade.php` para `ColoresPorArticulo`
+
+### 4. 💪 Crear método `exportar10()` (datos reales)
+- En `ColoresPorArticuloController.php`, método:
+```php
+public function exportar10()
+{
+    $datos = \DB::connection('sqlsrv_koi')
+        ->table('colores_por_articulo')
+        ->limit(10)
+        ->get();
+    return response()->json($datos);
+}
+```
+
+### 5. 🧠 Validar relación en modelo `Articulo.php`
+```php
+public function colores()
+{
+    return $this->hasMany(ColoresPorArticulo::class, 'cod_articulo', 'cod_articulo');
+}
+```
+
+### 6. 🧩 Mostrar Colores Inline en el `index.blade.php`
+- Usar Alpine.js para mostrar/esconder colores por artículo.
+- Agregar una columna con botón `🔽 Ver colores` en cada fila.
+- Cuando se expanda, se cargan dinámicamente (ideal: `@include` del mismo `index-inline` con modo `subform`).
+
+---
+
+## 🚀 Opcional
+
+- Implementar botón “Exportar a Excel” dentro del tab.
+- Agregar controles visuales para mostrar `vigente`, `muestra_vip`, etc.

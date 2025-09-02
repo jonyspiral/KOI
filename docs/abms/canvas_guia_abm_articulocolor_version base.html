@@ -1,0 +1,104 @@
+# 📋 Canvas Guía: ABM Artículos con Subformulario de Colores
+
+## ✅ Objetivo General
+Crear un ABM para Artículos con subformulario `ColoresPorArticulo`, utilizando `index-inline` como vista principal, ocultando los colores por defecto y mejorando la experiencia UX con filtros y ordenamiento personalizados.
+
+---
+
+## 📌 Estado Actual
+- Se visualiza correctamente el `index-inline.blade.php`.
+- Los colores por artículo están ocultos por defecto y se despliegan con botón.
+- Se han incorporado filtros por columna y ordenamiento dinámico vía links.
+- Se solucionaron problemas con ordenamiento de campos relacionados (`linea`, `familia`, `ruta`, etc.).
+- El layout se adapta correctamente a AdminLTE.
+- El `thead` ahora está sincronizado en ancho con el `tbody`.
+- ✅ **Filtros y Sorts funcionando completamente en todos los campos visibles.**
+- ✅ **Subformulario de colores ahora funciona correctamente sin replegarse automáticamente.**
+
+---
+
+## 🔧 Última Mejora Incorporada
+**📦 Estandarización de Directivas Blade via BladeServiceProvider**
+
+- Se decidió **centralizar los helpers de filtros y ordenamiento** en un nuevo Service Provider: `BladeServiceProvider.php`.
+- Este provider se encargará de registrar las directivas Blade:
+  - `@sortableth` → para columnas con orden dinámico.
+  - `@filterInput` → para campos de filtro en los `th`.
+  - `@filterSelect('campo', $opciones)` → para filtros con valores fijos o catálogos (ej. vigente, marca, familia).
+  - `@ordenIcon('campo')` → ícono visual de orden ascendente/descendente en columnas activas.
+- Mejora la legibilidad y mantenibilidad de los blades.
+
+**🔁 Refactor de campos y aliases entre Blade y Controller**
+
+- Se eliminaron inconsistencias entre los nombres de alias usados en el `select` del controlador y los nombres usados en el Blade.
+- Ahora se usan los alias correctos: `linea`, `familia`, `ruta`, `rango`, `horma`, `marca`.
+- Todos los `@sortableth()` y `@filterInput()` están alineados a esos nombres, lo que habilita sort y filtro completo en todos los campos visibles.
+- ✅ Se corrigió el `<tbody>` para que muestre correctamente los alias sin utilizar relaciones Eloquent (`->familia`, `->ruta`, etc.)
+
+**🎨 Fix Subformulario Inline de Colores**
+
+- Se diagnosticó que Alpine.js no estaba funcionando por falta de `x-data`.
+- Se corrigió agregando `x-data="{}"` al `<tbody>`.
+- Confirmado que el botón 🎨 despliega correctamente el subform.
+- 🔧 Se agregó `type="button"` al botón 🎨 para prevenir comportamiento de `submit` del formulario. Esto resolvió el problema de replegado inmediato.
+
+**🔁 Refactor del Controller `index()` con Filtros Multiselección**
+
+- Se limpió y unificó la lógica del controlador para manejar filtros simples y múltiples (Select2).
+- Se eliminó código duplicado y se usó un solo `$aliasMap` para alias de joins y filtros.
+- Se aplicó `whereIn()` para arrays y `like` para strings automáticamente.
+- Confirmado que Select2 con multiselección ahora funciona correctamente para el campo `marca`.
+
+**🌟 Nueva directiva `@filterInputLike()`**
+
+- Se definió un nuevo helper Blade `@filterInputLike('campo')` para permitir filtros tipo `LIKE` en cualquier campo.
+- Esto habilita la búsqueda por fragmento de texto (ej. parte del nombre, descripción, etc.) de forma sencilla.
+- Ya está funcionando y validado en el Blade principal.
+
+**🔄 Estandarización de Filtro Multiselección con Componentes Blade**
+
+- Se decide que el helper oficial para selectores con multiselección sea:
+  ```blade
+  <x-filtros.select-multiple campo="marca" :opciones="$marcas->pluck('denom_marca', 'denom_marca')" />
+  ```
+- Esto reemplaza intentos anteriores con `@filterSelectMultiple()`, que resultaban poco escalables.
+- Este componente puede usarse con cualquier campo y fuente de datos.
+
+**✅ Filtro multiselección para campo sin foreign key: `forma_comercializacion`**
+
+- Como el campo no tiene FK ni catálogo, se generó la colección de opciones directamente desde la base de datos:
+  ```php
+  $formasComercializacion = Articulo::whereNotNull('forma_comercializacion')
+      ->select('forma_comercializacion')
+      ->distinct()
+      ->orderBy('forma_comercializacion')
+      ->pluck('forma_comercializacion', 'forma_comercializacion');
+  ```
+- Y se implementó en el Blade con:
+  ```blade
+  <x-filtros.select-multiple campo="forma_comercializacion" :opciones="$formasComercializacion" />
+  ```
+- Confirmado que funciona correctamente el filtro Select2 con múltiples valores.
+
+---
+
+## 🔻 Próximos Pasos
+- [ ] Mejorar responsive del `index-inline`.
+- [ ] Refactor del `create-modal`.
+- [ ] Aplicar esta estrategia a otros ABMs importantes de KOI (Marcas, Rutas, Hormas, etc.).
+- [ ] Evaluar una macro para paginación + filtro persistente.
+
+---
+
+## ✅ Registro de Decisiones Importantes
+- ✅ Los subformularios deben iniciar ocultos (decisión reconfirmada).
+- ✅ `descripcion` se muestra como `<textarea readonly>`.
+- ✅ Los campos relacionados se muestran por `nombre`, `descripcion`, `denom_`.
+- ✅ Todos los filtros y sort han sido unificados en un formato funcional.
+- ✅ Se decide no modificar el canvas sin orden explícita (palabra clave: "Canvas").
+- ✅ Se confirma que el `type="button"` en el botón 🎨 evita recarga de formulario y replegado automático.
+- ✅ Se crean las directivas `@filterSelect()` y `@ordenIcon()` como helpers estándar dentro de `BladeServiceProvider` para su uso en todos los ABMs KOI.
+- ✅ Confirmado uso de filtros multiselección con Select2 en el campo `marca`, sin errores SQL.
+- ✅ Confirmado funcionamiento de `@filterInputLike()` para filtros por fragmento de texto.
+- ✅ Se establece el uso de `<x-filtros.select-multiple campo="campo" :opciones="$opciones" />` como componente oficial para multiselección escalable.
+- ✅ Confirmado funcionamiento de filtro multiselección para `forma_comercializacion` sin FK, extrayendo valores distintos desde la base de datos.

@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Sistemas\MenuController;
 use App\Http\Controllers\Sistemas\UserController;
 
 use App\Http\Controllers\Sistemas\Importar\ImportarController;
@@ -35,6 +34,7 @@ use App\Http\Controllers\Produccion\ArticuloColorController;
 use App\Http\Controllers\Produccion\AnalisisStockController;
 use App\Http\Controllers\Produccion\AnalisisStockExportController;
 use App\Http\Controllers\Mlibre\OrdersController;
+
 require __DIR__.'/auth.php';
 
 Route::prefix('produccion')->middleware(['auth'])->group(function () {
@@ -44,7 +44,12 @@ Route::prefix('produccion')->middleware(['auth'])->group(function () {
 });
 // Rutas públicas necesarias
 Route::middleware(['auth'])->group(function () {
-   
+
+
+Route::post('mlibre/packs/facturar', [OrdersController::class, 'facturarPack'])
+    ->name('mlibre.packs.facturar')
+    ->middleware(['web','auth']);
+
 
 Route::prefix('mlibre')->group(function () {
     Route::get('/orders', [OrdersController::class, 'index'])->name('mlibre.orders.index');
@@ -56,7 +61,6 @@ Route::prefix('mlibre')->group(function () {
     Route::view('/home', 'home')->name('home');
     Route::view('/profile/edit', 'Editar perfil (en construcción)')->name('profile.edit');
 
-    Route::get('/menu', [MenuController::class, 'index'])->name('menu');
 
 
 

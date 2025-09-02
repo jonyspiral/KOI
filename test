@@ -1,0 +1,15 @@
+mysql -NBe "
+use koi1_stage;
+SELECT CONCAT(
+  'ALTER TABLE \`',table_name,'\` MODIFY \`',column_name,'\` ',column_type,
+  ' CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_ci',
+  CASE WHEN is_nullable='NO' THEN ' NOT NULL' ELSE '' END,
+  CASE WHEN column_default IS NULL THEN '' ELSE CONCAT(' DEFAULT ',QUOTE(column_default)) END,
+  ';'
+)
+FROM information_schema.columns
+WHERE table_schema='koi1_stage'
+  AND column_name IN ('cod_articulo','cod_color_articulo')
+  AND collation_name IN ('utf8mb4_0900_ai_ci','utf8mb4_general_ci');" > /tmp/fix_collations.sql
+
+mysql < /tmp/fix_collations.sql

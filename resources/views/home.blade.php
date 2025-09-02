@@ -13,10 +13,6 @@
         <img src="{{ asset('images/koi.png') }}" alt="Dashboard KOI" class="img-fluid" style="max-height: 300px;">
     </div>
 
-    <div class="text-center">
-        <a href="{{ route('menu') }}" class="btn btn-primary btn-lg">
-            🚀 Ir al Menú Principal
-        </a>
-    </div>
+ 
 </div>
 @endsection

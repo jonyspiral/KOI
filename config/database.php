@@ -71,6 +71,21 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
         ],
+       'mysql_k1' => [
+    'driver' => 'mysql',
+    'host' => env('DB_K1_HOST', '127.0.0.1'),
+    'port' => env('DB_K1_PORT', '3306'),
+    'database' => env('DB_K1_DATABASE', 'koi1_stage'),
+    'username' => env('DB_K1_USERNAME', 'koiuser'),
+    'password' => env('DB_K1_PASSWORD', 'Route667?'),
+    'unix_socket' => env('DB_K1_SOCKET', ''),
+    'charset' => 'utf8mb4',
+    'collation' => 'utf8mb4_0900_as_ci',
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'strict' => false,
+    'engine' => null,
+],
     ],
 
     'migrations' => [

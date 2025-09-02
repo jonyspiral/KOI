@@ -1,0 +1,68 @@
+<!-- 📋 Canvas Guía: ABM Artículos con Subformulario de Colores -->
+
+<!-- ✅ Objetivo General -->
+<!-- Crear un ABM para Artículos con subformulario `ColoresPorArticulo`, utilizando `index-inline` como vista principal, ocultando los colores por defecto y mejorando la experiencia UX con filtros y ordenamiento personalizados. -->
+
+<!-- 📌 Estado Actual -->
+<!-- - `index-inline.blade.php` funcional. -->
+<!-- - Subform `ColoresPorArticulo` oculto por defecto y desplegable con botón. -->
+<!-- - Filtros por columna y ordenamiento dinámico con links. -->
+<!-- - Campos relacionados (`linea`, `familia`, `ruta`, etc.) con sort y filtro corregido. -->
+<!-- - Layout compatible con AdminLTE. -->
+<!-- - Sincronización entre `thead` y `tbody` en tamaño. -->
+<!-- - ✅ Filtros y sorts funcionando en todos los campos. -->
+<!-- - ✅ Subformulario se despliega sin replegarse automáticamente. -->
+<!-- - ✅ Subformulario actualizado con 16 campos personalizados, incluyendo foreign key. -->
+<!-- - ✅ Campos calculados visibles y cargados correctamente en el subform (julio 2025). -->
+
+<!-- 🔧 Última Mejora Incorporada -->
+<!-- 📦 Estandarización de Directivas Blade vía `BladeServiceProvider` -->
+<!-- - Helpers: `@sortableth`, `@filterInput`, `@filterSelect('campo', $opciones)`, `@ordenIcon('campo')` -->
+
+<!-- 🔁 Refactor de Campos y Aliases -->
+<!-- - Aliases unificados: `linea`, `familia`, `ruta`, `rango`, `horma`, `marca`. -->
+<!-- - Uso correcto de estos aliases en filtros y ordenamientos. -->
+<!-- - Eliminación de relaciones Eloquent en `tbody`. -->
+
+<!-- 🎨 Fix Subformulario Inline -->
+<!-- - Añadido `x-data="{}"` a `<tbody>`. -->
+<!-- - `type="button"` al botón 🎨 evita recarga. -->
+<!-- - Comportamiento desplegable funcionando con Alpine.js. -->
+
+<!-- 🔁 Refactor del `index()` en el Controller -->
+<!-- - Lógica unificada para filtros simples y multiselección. -->
+<!-- - Uso de `whereIn()` y `like` automáticos. -->
+<!-- - ✅ Confirmado multiselección (`Select2`) funcional en `marca`. -->
+<!-- - ✅ Carga de relación `coloresPorArticulo.tipo_producto_stock` mediante eager loading (`with()`). -->
+
+<!-- 🌟 Nueva Directiva `@filterInputLike()` -->
+<!-- - Permite filtros `LIKE` para fragmentos de texto. -->
+<!-- - Integrado en el Blade principal. -->
+
+<!-- 🔄 Estándar para filtros multiselección -->
+<!-- <x-filtros.select-multiple campo="marca" :opciones="$marcas->pluck('denom_marca', 'denom_marca')" /> -->
+
+<!-- ✅ Filtro multiselección sin FK: `forma_comercializacion` -->
+<!-- $formasComercializacion = Articulo::whereNotNull('forma_comercializacion')
+    ->select('forma_comercializacion')
+    ->distinct()
+    ->orderBy('forma_comercializacion')
+    ->pluck('forma_comercializacion', 'forma_comercializacion'); -->
+
+<!-- <x-filtros.select-multiple campo="forma_comercializacion" :opciones="$formasComercializacion" /> -->
+
+<!-- 🔻 Próximos Pasos -->
+<!-- - [ ] Mejorar responsive del `index-inline`. -->
+<!-- - [ ] Refactor del `create-modal`. -->
+<!-- - [ ] Aplicar esta estrategia a otros ABMs (Marcas, Rutas, Hormas...). -->
+<!-- - [ ] Evaluar macro para paginación + filtros persistentes. -->
+
+<!-- ✅ Registro de Decisiones Importantes -->
+<!-- - Subformularios deben iniciar ocultos. -->
+<!-- - `descripcion` se muestra como `<textarea readonly>`. -->
+<!-- - Campos relacionados se muestran por `nombre`, `descripcion`, `denom_`. -->
+<!-- - Todos los filtros/sort unificados. -->
+<!-- - Confirmado: `type="button"` en 🎨 previene replegado. -->
+<!-- - Uso estándar de helpers `@filterSelect()`, `@ordenIcon()`, `@filterInputLike()`. -->
+<!-- - Componente oficial para multiselección: `<x-filtros.select-multiple campo="campo" :opciones="$opciones" />` -->
+<!-- - Confirmado funcionamiento de filtro sin FK (`forma_comercializacion`). -->
