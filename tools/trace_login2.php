@@ -46,3 +46,6 @@ try {
   echo "EX: ".$e->getMessage()."\n";
   $T("EX: ".$e->getMessage());
 }
+if (session_status() !== PHP_SESSION_ACTIVE) { @session_start(); }
+// … (usar $_SESSION lo necesario) …
+if (session_status() === PHP_SESSION_ACTIVE) { @session_write_close(); }

@@ -1,6 +1,4 @@
 <?php
-
-
 $css = array(
     'css/bootstrap.min.css',
     'css/jquery-ui/jquery-ui.css',
@@ -22,7 +20,6 @@ $css = array(
     'css/gallery-modal.css',
     'css/spinner.css'
 );
-
 $js = array(
     'pre' => array(
         'js/jquery-1.9.js',
@@ -59,12 +56,7 @@ $js = array(
         'js/services/catalogo.js'
     )
 );
-  ?>   
-<?php /* content/cliente/main.php */ ?>
-<script>console.log('CLIENTE/main: start');</script>
-<?php /* … resto … */ ?>
-<script>console.log('CLIENTE/main: before include index');</script>
-
+?>
 
 <!DOCTYPE html>
 <html ng-app='Koi'>

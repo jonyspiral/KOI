@@ -1,0 +1,25 @@
+# /var/www/encinitas/.htaccess
+Options -Indexes +FollowSymLinks
+DirectoryIndex master.php index.php
+ErrorDocument 404 /index/
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1) Dejar pasar archivos y carpetas reales (css/js/img/tools/ws/etc)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 2) Canonicalizar: si no hay barra final (y no es raíz), redirigir a versión con "/"
+  RewriteCond %{REQUEST_URI} !^/$
+  RewriteCond %{REQUEST_URI} !/$
+  RewriteRule ^(.+)$ /$1/ [R=301,L]
+
+  # 3) Raíz → master
+  RewriteRule ^$ /master.php [L,QSA]
+
+  # 4) Cualquier ruta con barra final → master.php?pagename=...
+  RewriteRule ^(.+)/$ /master.php?pagename=$1 [L,QSA]
+</IfModule>

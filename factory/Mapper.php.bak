@@ -5449,7 +5449,7 @@ class Mapper {
 				$sql .= 'fechaBaja = GETDATE() ';
 				$sql .= 'WHERE cod_cli = ' . Datos::objectToDB($cliente->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_cli), 0) + 1 FROM Clientes;';
+				$sql .= 'SELECT ISNULL(MAX(cod_cli), 0) + 1 FROM clientes;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -5463,7 +5463,7 @@ class Mapper {
 		try {
 			if ($modo == Modos::select){
 				$sql .= 'SELECT * ';
-				$sql .= 'FROM Clientes ';
+				$sql .= 'FROM clientes ';
 				$sql .= 'WHERE cod_cli = ' . Datos::objectToDB($clienteTodos->id) . '; ';
 			} else {
 				$sql .= $this->mapperQueryCliente($clienteTodos, $modo);
@@ -14244,8 +14244,8 @@ class Mapper {
 				$sql .= 'WHERE id_tipo_producto_stock_nro = ' . Datos::objectToDB($tipoProductoStock->id) . '; ';
 			} elseif ($modo == Modos::insert) {
 				$sql .= 'INSERT INTO Tipo_producto_Stock (';
-				$sql .= 'id_Tipo_producto_Stock_nro, ';
-				$sql .= 'id_Tipo_producto_Stock, ';
+				$sql .= 'id_tipo_producto_stock_nro, ';
+				$sql .= 'id_tipo_producto_stock, ';
                 $sql .= 'denom_tipo_producto, ';
 				$sql .= 'nombre_catalogo, ';
 				$sql .= 'mostrar_en_catalogo ';
@@ -14261,10 +14261,10 @@ class Mapper {
                 $sql .= 'denom_tipo_producto = ' . Datos::objectToDB($tipoProductoStock->nombre) . ', ';
 				$sql .= 'nombre_catalogo = ' . Datos::objectToDB($tipoProductoStock->nombreCatalogo) . ', ';
 				$sql .= 'mostrar_en_catalogo = ' . Datos::objectToDB($tipoProductoStock->mostrarEnCatalogo) . ' ';
-				$sql .= 'WHERE id_Tipo_producto_Stock_nro = ' . Datos::objectToDB($tipoProductoStock->id) . '; ';
+				$sql .= 'WHERE id_tipo_producto_stock_nro = ' . Datos::objectToDB($tipoProductoStock->id) . '; ';
 			//} elseif ($modo == Modos::delete) { No se usa.
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id_Tipo_producto_Stock_nro), 0) + 1 FROM Tipo_producto_Stock;';
+				$sql .= 'SELECT ISNULL(MAX(id_tipo_producto_stock_nro), 0) + 1 FROM Tipo_producto_Stock;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}

@@ -1,1 +1,1 @@
-<?php // footer stub ?>
+<div id='divFooter'></div>

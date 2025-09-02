@@ -11,8 +11,8 @@ SELECT     TOP 100 PERCENT (CASE ecommerce_forsale WHEN 'S' THEN (1) ELSE 0 END)
                       colores_por_articulo.ecommerce_info AS [Description AG], '' AS [Short Description AG], '' AS Tags, '' AS [Friendly URL AG], '' AS [Meta Description AG], 
                       '' AS [Meta Keywords AG], '' AS [Meta Title AG], articulos.denom_articulo AS [Product Name AG], '' AS [Available Now AG], '' AS [Available Later AG], 
                       '' AS [Delivery time of in-stock products AG], '' AS [Delivery time of out-of-stock products with allowed orders AG], '' AS [Tags AG], '' AS [Product URL], 
-                      CASE [familias_producto_2].[nombre] WHEN 'SALE' THEN ('Raíz|Inicio|SALE') 
-                      ELSE ('Raíz|Inicio|' + (CASE [titulo_catalogo] WHEN 'SMALL' THEN 'MEN' ELSE [titulo_catalogo] END)) 
+                      CASE [familias_producto_2].[nombre] WHEN 'SALE' THEN ('Raï¿½z|Inicio|SALE') 
+                      ELSE ('Raï¿½z|Inicio|' + (CASE [titulo_catalogo] WHEN 'SMALL' THEN 'MEN' ELSE [titulo_catalogo] END)) 
                       + '|' + [familias_producto_2].[nombre] END AS Category, colores_por_articulo.catalogo_orden_pagina AS [Position], 'Spiral' AS Manufacturer, 
                       '' AS Supplier, 
                       [colores_por_articulo].[cod_articulo] + [colores_por_articulo].[cod_color_articulo] + '_e.jpg;' + [colores_por_articulo].[cod_articulo] + [colores_por_articulo].[cod_color_articulo]
@@ -23,7 +23,7 @@ SELECT     TOP 100 PERCENT (CASE ecommerce_forsale WHEN 'S' THEN (1) ELSE 0 END)
                        + ';' AS [Product Images Caption], 
                       [denom_articulo] + ' ' + [colores_por_articulo].[cod_color_articulo] + ';' + [denom_articulo] + ' ' + [colores_por_articulo].[cod_color_articulo] + ';' + [denom_articulo]
                        + ' ' + [colores_por_articulo].[cod_color_articulo] + ';' + [denom_articulo] + ' ' + [colores_por_articulo].[cod_color_articulo] + ';' + [denom_articulo] + ' ' + [colores_por_articulo].[cod_color_articulo]
-                       + ';' AS [Product Images Caption AG], 'AR Standard rate (21%)' AS Tax, '' AS [Product Carrier], '' AS [Product Accessories], '' AS [Attribute Group Tamaño],
+                       + ';' AS [Product Images Caption AG], 'AR Standard rate (21%)' AS Tax, '' AS [Product Carrier], '' AS [Product Accessories], '' AS [Attribute Group Tamaï¿½o],
                        colores_por_articulo.denom_color AS [Attribute Group Color], '' AS [Attribute Group Dimension], 
                       stock_01_14_20_por_talle_v.Talle AS [Attribute Group Talle], 
                       [articulos].[cod_articulo] + [colores_por_articulo].[cod_color_articulo] + [talle] AS [Combination Reference], 
