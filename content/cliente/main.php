@@ -60,10 +60,7 @@ $js = array(
     )
 );
   ?>   
-<?php /* content/cliente/main.php */ ?>
-<script>console.log('CLIENTE/main: start');</script>
-<?php /* … resto … */ ?>
-<script>console.log('CLIENTE/main: before include index');</script>
+
 
 
 <!DOCTYPE html>

@@ -1,8 +1,3 @@
-<?php /* content/index.php */ ?>
-  
-  
-    
-<script>console.log('CONTENT/index: start');</script>
 <?php 
   /**
      * Función simple para detectar si es un dispositivo móvil.

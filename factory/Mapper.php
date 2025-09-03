@@ -710,7 +710,7 @@ class Mapper {
 				$colorPorArticulo->fotos[$i] = $dr['fotografia' . $i];
 			$colorPorArticulo->fotos[9] = $dr['zoom_lado_interno'];
 			$colorPorArticulo->fotos[10]= $dr['zoom_puntera'];
-			$colorPorArticulo->fotos[11] = $dr['zoom_ca�a'];
+			$colorPorArticulo->fotos[11] = $dr['zoom_caña'];
 			$colorPorArticulo->fotos[12] = $dr['zoom_talon'];
 			$colorPorArticulo->clasificacionComercial = $dr['clasificacion_comercial'];
 			$colorPorArticulo->textoVarios = $dr['texto_varios'];
@@ -718,7 +718,7 @@ class Mapper {
 			$colorPorArticulo->textoTalon = $dr['texto_talon'];
 			//$colorPorArticulo->textoLengua = $dr['texto_lengua'];
 			$colorPorArticulo->textoLadoInterno = $dr['texto_lado_interno'];
-			$colorPorArticulo->textoCania = $dr['texto_ca�a'];
+			$colorPorArticulo->textoCania = $dr['texto_caña'];
 			$colorPorArticulo->precioRecargado = $dr['precio_recargado'];
 			$colorPorArticulo->idTipoProductoStock = Funciones::toInt($dr['id_tipo_producto_stock']);
 			$colorPorArticulo->ecommerceExiste = $dr['ecommerce_existe'];
