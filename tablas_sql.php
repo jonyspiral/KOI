@@ -1,0 +1,690 @@
+<?php
+// KOI2 - Importador desde lista textual (dbo,tabla) → koi1_stage
+// Uso:
+//  php tablas_sql.php           # importa realmente
+//  php tablas_sql.php --dry     # solo muestra qué haría (sin importar)
+
+declare(strict_types=1);
+
+#!/usr/bin/env php
+
+
+// 1) PEGA ACÁ EL TEXTO CON TUS TABLAS (formato: "dbo,acreditar_debitar_cheque_c dbo,acreditar_debitar_cheque_d ...")
+$TABLAS_TXT = <<<TXT
+dbo,acreditar_debitar_cheque_c
+dbo,acreditar_debitar_cheque_d
+dbo,ajustes_stock
+dbo,ajustes_stock_mp
+dbo,Almacenes
+dbo,almacenes_por_seccion
+dbo,anios_bisiestos
+dbo,anomalias
+dbo,anticipos_aparadores
+dbo,aporte_socio
+dbo,areas_distribucion
+dbo,areas_empresa
+dbo,articulos
+dbo,articulos_backup
+dbo,articulos_imagenes
+dbo,asi_diar_auxiliar_subcuentas
+dbo,asiento_diario_cabecera_principal
+dbo,asiento_diario_registro_detalle
+dbo,asiento_estandar_detalle
+dbo,asientos_contables
+dbo,asientos_diario
+dbo,asientos_estandar_cabecera
+dbo,asientos_estandar_elenco
+dbo,asientos_modelo_c
+dbo,asientos_modelo_d
+dbo,asientos_numerador
+dbo,asientos_parametrizados_scarpsys
+dbo,asientos_parametrizados_scarpsys_VIEJO
+dbo,asientos_recoge_subcuentas
+dbo,asientos_registro_analit_extraordi
+dbo,asignacion_calidad_marca
+dbo,asignacion_pedidos
+dbo,auditoria_stock_mp
+dbo,auditoria_stock_mp_detalle
+dbo,Auditoria_stock_prod_terminado
+dbo,auditoria_stock_pt_detalle
+dbo,ausencias
+dbo,autorizaciones
+dbo,autorizaciones_personas
+dbo,autorizaciones_tipos
+dbo,balance_sumas_saldos
+dbo,banco
+dbo,banco_conciliacion
+dbo,banco_conciliacion_temp
+dbo,banco_cta_cte_temp
+dbo,banco_operaciones_diversas
+dbo,banco_propio
+dbo,bancos_cta_cte_padron
+dbo,bancos_depositos_cabecera
+dbo,bancos_nomina_bcra
+dbo,bancos_proveedor_transferir
+dbo,bancos_saldos_fecha_hora_temp
+dbo,bienes_de_uso
+dbo,bienes_de_uso_rubros
+dbo,c_asigna_calidad_marca
+dbo,c_tipo_cambio
+dbo,cabecera_articulos_fallas
+dbo,caja
+dbo,caja_ingresos_temp
+dbo,caja_ingresos_tmp
+dbo,caja_saldos_diarios
+dbo,caja_saldos_diarios_resume_tmp
+dbo,caja_saldos_diarios_totales_tmp
+dbo,caja_stock_dif_valores
+dbo,cajas_posibles_transferencia_interna
+dbo,calendario_laboral
+dbo,calendario_meses_inicio_fin
+dbo,calidades_por_almacen
+dbo,Calificaciones_crediticias
+dbo,cambios_situacion_cliente
+dbo,catalogo_seccion_familia_articulos
+dbo,catalogo_seccion_familias
+dbo,catalogo_secciones
+dbo,catalogos
+dbo,categorias_calzado_usuarios
+dbo,Categorias_Convenio
+dbo,centros_costos
+dbo,cheque
+dbo,chequera_c
+dbo,chequera_d
+dbo,cheques_propios_emision_anul
+dbo,cierres_meses_ejercicio_temp
+dbo,clasificacion_comercial
+dbo,CLAVES_INSTALACION
+dbo,Clientes
+dbo,clientes_comercializacion
+dbo,clientes_datos_NOVOSOFT
+dbo,clientes_mora
+dbo,clientes_ordenes_fabricacion
+dbo,cobranza_medios_temp
+dbo,cobro_cheque_ventanilla_c
+dbo,cobro_cheque_ventanilla_d
+dbo,cobro_cheque_ventanilla_temporal
+dbo,codificacion_organizacion
+dbo,Colores_crosstab
+dbo,colores_empresas
+dbo,colores_fotos
+dbo,Colores_materias_primas
+dbo,colores_por_articulo
+dbo,colores_por_articulo_backup
+dbo,colores_secciones
+dbo,comis_consulta_por_articulo
+dbo,comis_diferen_plazo_cobro
+dbo,comis_diferen_por_articulo
+dbo,comis_diferen_segun_descuento
+dbo,comisiones_cabecera
+dbo,comisiones_diferenciales_vended
+dbo,comisiones_liquidacion_cabecera
+dbo,comisiones_vendedor_cabecera
+dbo,compras_cabecera
+dbo,compras_detalle
+dbo,comprobantes_internos_cabecera
+dbo,comprobantes_numeracion
+dbo,compromisos_fisco_y_servicios
+dbo,concepto
+dbo,concepto_retencion_ganancias
+dbo,conciliacion_bancaria
+dbo,Condiciones_iva
+dbo,condiciones_plazos_pago
+dbo,confirmaciones_stock
+dbo,conjuntos
+dbo,conjuntos_del_articulo
+dbo,consulta_cobranza_medios_temp
+dbo,consumos_stock_mp
+dbo,Consumos_tarea
+dbo,Contactos
+dbo,control_valores_numerador
+dbo,copias
+dbo,costo_mano_obra
+dbo,costos_apropiacion
+dbo,costos_bases_distribucion_primaria
+dbo,costos_cuentas_creacion_temp
+dbo,costos_fijos_c
+dbo,costos_fijos_d
+dbo,costos_ponderador_basico_cantidad
+dbo,costos_ponderador_complejidad
+dbo,costos_ponderador_precio
+dbo,cuenta_bancaria
+dbo,cuentas_operativas_parametrizacion
+dbo,Cumplimientos_parciales
+dbo,curvas
+dbo,curvas_por_articulo
+dbo,deposito_bancario_c
+dbo,deposito_bancario_d
+dbo,deposito_bancario_temporal
+dbo,despachos_c
+dbo,Despachos_cabecera
+dbo,despachos_d
+dbo,Despachos_detalle
+dbo,deudores_cta_cte_histo_temp
+dbo,deudores_cta_cte_temp
+dbo,deudores_parametros_v2
+dbo,devolucion_proveedor_c
+dbo,devolucion_proveedor_d
+dbo,devoluciones_a_cliente_c
+dbo,devoluciones_a_cliente_d
+dbo,Dictamen_comercializacion
+dbo,Dictamen_produccion
+dbo,docum_clientes_cabecera
+dbo,docum_clientes_detalle
+dbo,documento_gasto_datos
+dbo,documento_proveedor_c
+dbo,documento_proveedor_d
+dbo,documento_proveedor_h
+dbo,documentos_c
+dbo,documentos_d
+dbo,documentos_h
+dbo,dtproperties
+dbo,ecommerce_coupons
+dbo,ecommerce_customers
+dbo,ecommerce_deliverys
+dbo,ecommerce_order_details
+dbo,ecommerce_order_status
+dbo,ecommerce_orders
+dbo,ecommerce_payment_methods
+dbo,ecommerce_payments
+dbo,ecommerce_servicios_andreani
+dbo,ecommerce_usergroups
+dbo,efectivo
+dbo,ejercicios_contables
+dbo,emails
+dbo,Empaques
+dbo,empresas
+dbo,empresas_clientes
+dbo,explosion_lote_se_temp
+dbo,facturacion_fecha_an_act_grafo
+dbo,facturacion_tipo_comprob_temp
+dbo,fallas
+dbo,fallas_articulos
+dbo,familias_producto
+dbo,favoritos_cliente
+dbo,fecha_temp
+dbo,fechas_plazos_temp
+dbo,Feriados
+dbo,filas_asientos_contables
+dbo,finales_de_mes
+dbo,fondo_fijo_rendicion_cabe
+dbo,fondo_fijo_resumen_imput
+dbo,fondos_fijos_creacion
+dbo,Forecast_detalle
+dbo,Forecast_encabezado
+dbo,Formas_pago
+dbo,Formularios
+dbo,funcionalidades_por_rol
+dbo,funciones
+dbo,garantias_c
+dbo,garantias_d
+dbo,gastito
+dbo,gastos_rendicion
+dbo,gastos_rendicion_archistoria
+dbo,gestiones_clientes_cobranza
+dbo,grupo_empresa
+dbo,Grupos_clientes
+dbo,habilita
+dbo,herramienta_crear_dw_vacias
+dbo,historial_empleados
+dbo,horarios_por_secciones
+dbo,horas
+dbo,hormas
+dbo,imagenes_para_msg
+dbo,imp_ingr_brut_activid_alicuotas
+dbo,imp_ingr_brut_jurisd_exenc
+dbo,imp_ingr_brutos_convenio_resumen
+dbo,importe_por_operacion_c
+dbo,importe_por_operacion_d
+dbo,impuesto
+dbo,impuesto_por_documento_proveedor
+dbo,imputacion_operaciones
+dbo,imputaciones_estandar
+dbo,imputaciones_frecuentes
+dbo,imputaciones_frecuentes_ANTERIOR
+dbo,Incorporacion_item_pedido
+dbo,indicadores
+dbo,indicadores_por_rol
+dbo,ingreso_cheque_propio
+dbo,Instrucciones_articulo
+dbo,Interes_comercial
+dbo,inventario_disp_pedidos_pend_temp
+dbo,inventario_prod_terminados_temp
+dbo,iva_agrupa_credito_fiscal_temp
+dbo,iva_posicion_mensual_temp
+dbo,koi_ticket
+dbo,libro_banco_renglon_temp
+dbo,libro_ventas_temp
+dbo,lineas_productos_syncViewSpiral
+dbo,liquidacion_aparadores
+dbo,liquidacion_operadores_internos
+dbo,liquidacion_personal_detalle
+dbo,liquidaciones_personal
+dbo,lista_precio_mayorista
+dbo,Lista_precios_clientes
+dbo,lista_precios_modulos
+dbo,localidades
+dbo,lote_compra_cabecera
+dbo,lotes_cabecera
+dbo,Magnitudes_clientes
+dbo,Marcas_syncViewSpiral
+dbo,materiales
+dbo,materiales_predom_articulos
+dbo,Materias_primas
+dbo,materias_primas_movim_extraor
+dbo,materias_primas_movim_extraordin
+dbo,matriz_c
+dbo,mayor_por_cuenta_temp
+dbo,memoriza_modalidad_remi_fac
+dbo,mensajes_basico
+dbo,mensajes_decision_alternativa
+dbo,mensajes_temp
+dbo,mes_segun_cierre_numerica
+dbo,meses_correl_calend_ejerc
+dbo,meses_orden_segun_cierre_V_ANT
+dbo,meses_segun_cierre
+dbo,MO_insumida
+dbo,modos_venta
+dbo,modulos_basicos
+dbo,Modulos_comercializacion
+dbo,Modulos_produccion
+dbo,motivo
+dbo,motivos_ausentismo
+dbo,motivos_devolucion_proveedor
+dbo,motivos_tranferencia_materias_primas
+dbo,mov_mercaderias_cabecera
+dbo,mov_mercaderias_detalle
+dbo,movimientos_almacen
+dbo,movimientos_almacen_confirmacion
+dbo,movimientos_almacen_confirmacion_mp
+dbo,movimientos_almacen_mp
+dbo,movimientos_stock
+dbo,movimientos_stock_mp
+dbo,mundial_jugadores
+dbo,mundial_partidos
+dbo,mundial_partidos_jugador
+dbo,necesid_prod_cumplido_pasos_temp
+dbo,nota_pedidos_cabecera
+dbo,nota_pedidos_detalle
+dbo,notas_credito_causalidades
+dbo,Notas_debito_credito_cdc
+dbo,NotaStock
+dbo,notificaciones
+dbo,notificaciones_por_usuario
+dbo,numeracion_comprobantes
+dbo,Operadores
+dbo,Operadores_puestos
+dbo,orden_cortado_detalle
+dbo,orden_de_pago
+dbo,Orden_fabricacion
+dbo,Ordenes_compra_cabecera
+dbo,Ordenes_compra_detalle
+dbo,ordenes_cortado_cabecera
+dbo,ordenes_de_pago
+dbo,ordenes_de_pago_aplicacion
+dbo,Ordenes_fc
+dbo,Ordenes_fc_detalle
+dbo,p_parametros_modulo_2
+dbo,packaging
+dbo,pagares_a_cobrar
+dbo,pagos_aplicacion_temp
+dbo,Paises
+dbo,param_ctas_acumul
+dbo,parametrizacion_cuentas_acumuladoras
+dbo,Parametros
+dbo,parametros_contabilidad
+dbo,Parametros_Convenio
+dbo,parametros_ejercicio_contable
+dbo,parametros_proveedores_ctas_ctes
+dbo,parametros_usuario
+dbo,parte_caja_egreso_temporal
+dbo,Pasos_rutas_produccion
+dbo,Patrones_mp_cabecera
+dbo,Patrones_mp_detalle
+dbo,pbcatcol
+dbo,pbcatedt
+dbo,pbcatfmt
+dbo,pbcattbl
+dbo,pbcatvld
+dbo,pedidos_altern_color_temp
+dbo,pedidos_c
+dbo,pedidos_cabecera
+dbo,pedidos_cliente_c
+dbo,pedidos_cliente_d
+dbo,pedidos_colores_opcionales
+dbo,pedidos_d
+dbo,pedidos_detalle
+dbo,pedidos_estado
+dbo,pedidos_incluidos_en_ordenes
+dbo,periodos_fiscales_cierres
+dbo,periodos_fiscales_tipos
+dbo,Periodos_liquidacion
+dbo,permisos_por_caja
+dbo,permisos_por_usuarios_por_caja
+dbo,person_funciones_gen
+dbo,persona_gasto
+dbo,personal
+dbo,personal_feriados
+dbo,piezas_calzado
+dbo,piezas_conjuntos
+dbo,piezas_sub_conjuntos
+dbo,plan_cuentas
+dbo,planctas_capitulos
+dbo,planctas_centros_costos
+dbo,planctas_items_gastos
+dbo,planctas_niveles
+dbo,planctas_proporciones_costos
+dbo,planctas_subcapitulos
+dbo,Planes_produccion
+dbo,planilla
+dbo,porcentajes
+dbo,precio_al_facturar
+dbo,predespachos
+dbo,prestamo
+dbo,presupuesto_c
+dbo,presupuesto_d
+dbo,presupuesto_orden_compra
+dbo,prod_terminados_movim_extraor
+dbo,prod_terminados_movim_spiral
+dbo,Programacion_produccion
+dbo,proveedores_cta_cte_histo_temp
+dbo,proveedores_cta_cte_temp
+dbo,proveedores_datos
+dbo,proveedores_ficha_tecnica
+dbo,Proveedores_materias_primas
+dbo,proveedores_menores_pagos
+dbo,Provincias
+dbo,provincias_o_juridicciones
+dbo,Puestos_trabajo
+dbo,Puntos_fijos_stock
+dbo,rango_talles
+dbo,reasignacion_pedidos
+dbo,reasignaciones
+dbo,rechazo_de_cheque_c
+dbo,rechazo_de_cheque_d
+dbo,recibo
+dbo,recibo_aplicacion
+dbo,recibo_cabecera
+dbo,recibos_c
+dbo,registro_entradas_salidas
+dbo,reingreso_cheque_cartera
+dbo,relacion_artic_c_semielaborados
+dbo,remito_orden_de_compra
+dbo,remitos_c
+dbo,remitos_cabecera
+dbo,remitos_internos_cabecera
+dbo,Remitos_internos_detalle
+dbo,Remitos_proveedor_cabecera
+dbo,remitos_proveedor_detalle
+dbo,Remuneraciones_por_articulo
+dbo,rendicion_de_gastos
+dbo,reporte_asistencia
+dbo,reporte_produccion
+dbo,retencion_efectuada
+dbo,retencion_ganancias_tabla
+dbo,retencion_sufrida
+dbo,retenciones_ganan_actualizacion
+dbo,retenciones_ganancias_honorarios
+dbo,retenciones_impositivas_efectuad
+dbo,retenciones_sufridas_impuestos
+dbo,retiro_socio
+dbo,roles
+dbo,roles_por_tipo_notificacion
+dbo,roles_por_usuario
+dbo,rubros_iva
+dbo,rubros_materias_primas
+dbo,ruta_imagenes
+dbo,Rutas_produccion
+dbo,secciones_produccion
+dbo,sectores
+dbo,Sectores_Almacenes
+dbo,secuencia_estuche_par
+dbo,Seguimiento_ordenes_compra
+dbo,Seguimiento_pedidos
+dbo,socio
+dbo,stock
+dbo,stock_articulos
+dbo,Stock_minimo
+dbo,stock_minimo_articulos
+dbo,Stock_mp_fc
+dbo,Stock_mp_real
+dbo,stock_mp_secciones
+dbo,stock_mp_tabla
+dbo,stock_prod_terminados_temp
+dbo,Stock_PT_temp
+dbo,stock_real_articulos
+dbo,StockBackups
+dbo,StockNotas
+dbo,Subd_egresos_temp
+dbo,Subd_ingresos_temp
+dbo,subrubros_materias_primas
+dbo,sucursal
+dbo,sucursales_clientes
+dbo,sucursales_Clientes_spiral
+dbo,sucursales_empresas
+dbo,sueldos_cargas_devengados
+dbo,tabla_aux_banco
+dbo,tabla_caca
+dbo,talles_equivalencias
+dbo,tamanio
+dbo,Tareas_cabecera
+dbo,Tareas_detalle
+dbo,temp_programacion_produccion
+dbo,temporadas
+dbo,tipo_calzado
+dbo,tipo_factura
+dbo,Tipo_producto_Stock
+dbo,tipo_retencion
+dbo,Tipo_sucursal
+dbo,Tipos_documento
+dbo,tipos_notificacion
+dbo,Tipos_proveedor
+dbo,tmp_encinitas_articulos
+dbo,tmp_encinitas_hormas
+dbo,tmp_encinitas_lineas_productos
+dbo,tmp_encinitas_marcas
+dbo,tmp_spiral_rango_talles
+dbo,tranferencias_materias_primas_c
+dbo,tranferencias_materias_primas_d
+dbo,transferencia_bancaria_importe
+dbo,transferencia_bancaria_operacion
+dbo,transferencia_interna_c
+dbo,transferencia_interna_d
+dbo,Transportes
+dbo,trazabilidad_certific_cabecera
+dbo,trazabilidad_historica_general
+dbo,trazabilidad_impresion_stickers
+dbo,trazabilidad_manual_usuario
+dbo,trazabilidad_materiales
+dbo,unid_compra_consumo_relacion
+dbo,Unidades_medida
+dbo,Unidades_produccion
+dbo,users
+dbo,usuarios
+dbo,usuarios_por_almacen
+dbo,usuarios_por_area_empresa
+dbo,usuarios_por_caja
+dbo,usuarios_por_seccion
+dbo,usuarios_por_tipo_notificacion
+dbo,Vales_cabecera
+dbo,Vales_Detalle
+dbo,Vales_detalle_talles
+dbo,valores_negociados_detalle
+dbo,valores_recibo_cartera_entrega
+dbo,vencimientos_meses
+dbo,venta_cheques_c
+dbo,venta_cheques_d
+dbo,venta_cheques_temporal
+dbo,ventas_contado
+dbo,ventas_contado_cabecera
+dbo,ventas_detalle_rem_fac
+dbo,ventas_historico_mensual
+dbo,Zonas
+dbo,zonas_geo
+TXT;
+
+// 2) CONFIGS (ajustá si tus alias difieren)
+$CONN_SQLSRV = 'sqlsrv_encinitas'; // origen ODBC SQL Server (Encinitas)
+$CONN_MYSQL  = 'mysql_k1';         // conexión MySQL destino
+$SCHEMA_DST  = 'koi1_stage';       // schema MySQL destino
+$FLAGS_COMUNES = [
+    '--mirror'            => true,
+    '--fill-all'          => true,
+    '--money-precision'   => '19,4', // si tu command lo soporta
+    // '--force-table'     => true,  // descomentá si querés recrear estructuras incompatibles
+];
+
+// -----------------------------------------------
+// No toques nada de acá para abajo ✋
+// -----------------------------------------------
+
+$dryRun = in_array('--dry', $argv, true);
+
+$root = __DIR__;
+require $root.'/vendor/autoload.php';
+$app = require $root.'/bootstrap/app.php';
+
+// Bootstrap de Laravel Console Kernel para usar DB y Artisan
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
+
+// Helpers
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Artisan;
+
+function parseTablasDesdeTexto(string $txt): array {
+    // separa por espacios, saltos, comas "sucias"
+    $parts = preg_split('/[\s]+/', trim($txt));
+    $out = [];
+    foreach ($parts as $p) {
+        $p = trim($p);
+        if ($p === '') continue;
+        // soporta "dbo,tabla" o "dbo.tabla"
+        $p = str_replace(['dbo,','dbo.','[dbo],','[dbo].'], '', strtolower($p));
+        $p = trim($p, " \t\n\r\0\x0B,[]`");
+        if ($p !== '' && preg_match('/^[a-z0-9_]+$/', $p)) {
+            $out[] = $p;
+        }
+    }
+    // único y ordenado
+    $out = array_values(array_unique($out));
+    sort($out, SORT_STRING);
+    return $out;
+}
+
+function listarTablasMySQL(string $schema): array {
+    $rows = DB::connection('mysql_k1')->select("
+        SELECT LOWER(TABLE_NAME) AS t
+        FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA = ?
+        ORDER BY 1
+    ", [$schema]);
+    return array_map(fn($r) => $r->t, $rows);
+}
+
+function importarTabla(string $tabla, $flags = [], bool $dry = false): bool {
+    // Normalizar $flags: aceptar string, null, o array.
+    if (is_string($flags)) {
+        // Permite pasar "--mirror --fill-all money-precision=19,4"
+        $arr = [];
+        foreach (preg_split('/\s+/', trim($flags)) as $tok) {
+            if ($tok === '') continue;
+            if (str_starts_with($tok, '--')) $tok = substr($tok, 2);
+            if (strpos($tok, '=') !== false) {
+                [$k,$v] = explode('=', $tok, 2);
+                $arr['--'.trim($k)] = trim($v);
+            } else {
+                $arr['--'.trim($tok)] = true;
+            }
+        }
+        $flags = $arr;
+    } elseif (!is_array($flags)) {
+        $flags = [];
+    }
+
+    echo "➡️  Importando: {$tabla} (Encinitas → koi1_stage)\n";
+    if ($dry) { echo "    [dry-run] no se ejecuta.\n"; return true; }
+
+    // Construir args para Artisan
+    $args = [
+        'nombre_tabla' => $tabla,
+        '--connection' => 'sqlsrv_encinitas',
+        '--to'         => 'mysql_k1',
+        '--schema'     => 'koi1_stage',
+        '--mirror'     => !empty($flags['--mirror']),
+        '--fill-all'   => !empty($flags['--fill-all']),
+    ];
+    if (!empty($flags['--force-table']))      $args['--force-table'] = true;
+    if (!empty($flags['--stage-only']))       $args['--stage-only']  = true;
+    if (!empty($flags['--skip-data']))        $args['--skip-data']   = true;
+    if (!empty($flags['--insert-simple']))    $args['--insert-simple'] = true;
+    if (!empty($flags['--money-precision']))  $args['--money-precision'] = $flags['--money-precision'];
+
+    try {
+        $code = Artisan::call('importar:tabla', $args);
+        $out  = Artisan::output();
+        if ($code !== 0) {
+            echo "❌ Error (exit {$code}).\n{$out}\n";
+            return false;
+        }
+        echo "✅ OK\n";
+        if ($out) echo "─── Output ───\n{$out}\n──────────────\n";
+        return true;
+    } catch (Throwable $e) {
+        echo "❌ Excepción: ".$e->getMessage()."\n";
+        return false;
+    }
+}
+
+
+
+// 1) Parsear lista de tablas desde el bloque textual
+$tablasFuente = parseTablasDesdeTexto($TABLAS_TXT);
+if (empty($tablasFuente)) {
+    fwrite(STDERR, "No se detectaron tablas en \$TABLAS_TXT. Pegá el listado en el header.\n");
+    exit(2);
+}
+
+echo "📄 Tablas recibidas (normalizadas): ".count($tablasFuente)."\n";
+
+// 2) Obtener tablas existentes en MySQL koi1_stage
+$tablasMySQL = listarTablasMySQL($SCHEMA_DST);
+echo "🗄  Tablas ya en MySQL ({$SCHEMA_DST}): ".count($tablasMySQL)."\n";
+
+// 3) Diferencia: faltantes a importar
+$faltantes = array_values(array_diff($tablasFuente, $tablasMySQL));
+echo "🔍 Faltantes a importar: ".count($faltantes)."\n";
+if (count($faltantes)) {
+    echo "   Ejemplos: ".implode(', ', array_slice($faltantes, 0, 10)).(count($faltantes)>10?'...':'')."\n";
+} else {
+    echo "🎉 No hay nada que importar. Listo.\n";
+    exit(0);
+}
+
+// 4) Importar en lote
+$errores = 0;
+foreach ($faltantes as $t) {
+    // (opcional) saltar tablas vacías para ahorrar tiempo:
+    try {
+        $cnt = DB::connection('sqlsrv_encinitas')
+                 ->selectOne("SELECT COUNT(*) AS c FROM dbo.$t");
+        if ((int)($cnt->c ?? 0) === 0) {
+            echo "⏭  Saltando {$t}: origen vacío.\n";
+            continue;
+        }
+    } catch (\Throwable $e) {
+        // si falla el COUNT (p.ej. nombre raro), igual intentamos importar
+        echo "ℹ️  No se pudo contar dbo.$t, intento igual. Motivo: ".$e->getMessage()."\n";
+    }
+
+    // ✅ llamada correcta: SOLO (tabla, FLAGS_COMUNES, dryRun)
+    $ok = importarTabla($t, $FLAGS_COMUNES, $dryRun);
+    if (!$ok) { $errores++; }
+}
+
+echo $dryRun
+    ? "✅ Dry-run finalizado. Total faltantes: ".count($faltantes).", errores simulados: {$errores}\n"
+    : "🏁 Proceso terminado. Importadas: ".(count($faltantes)-$errores)."/".count($faltantes).", errores: {$errores}\n";
+
+exit($errores > 0 ? 1 : 0);
