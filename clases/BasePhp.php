@@ -1,11 +1,13 @@
 <?php
 
+require_once __DIR__ . '/BasePhp.php';
+
 class BasePhp {
 	public function __get($name)
 	{
 		$method = 'get' . $name;
 		if (!method_exists($this, $method)) {
-			throw new FactoryExceptionCustomException('No existe el método ' . $method . ' en la clase "' . get_class($this) . '"');
+			throw new FactoryExceptionCustomException('No existe el mï¿½todo ' . $method . ' en la clase "' . get_class($this) . '"');
 		}
 		return $this->$method();
 	}
@@ -14,7 +16,7 @@ class BasePhp {
 	{
 		$method = 'set' . $name;
 		if (!method_exists($this, $method)) {
-			throw new FactoryExceptionCustomException('No existe el método ' . $method . ' en la clase "' . get_class($this) . '"');
+			throw new FactoryExceptionCustomException('No existe el mï¿½todo ' . $method . ' en la clase "' . get_class($this) . '"');
 		}
 		$this->$method($value);
 	}

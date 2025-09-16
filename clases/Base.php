@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/BasePhp.php';
 /**
  * @property int    $modo
  */
@@ -17,7 +17,7 @@ class Base extends BasePhp {
     /**
      * @var array
      *
-     * Es un array de mappings de los atributos con la DB. Ademï¿½s, tiene cierta inteligencia para reconocer common attributes (usuarios, fechas).
+     * Es un array de mappings de los atributos con la DB. Adems, tiene cierta inteligencia para reconocer common attributes (usuarios, fechas).
      * array(
      *   'nombre',
      *   'descripcionArticulo', // Lo transforma solito en descripcion_articulo
@@ -25,7 +25,7 @@ class Base extends BasePhp {
      *   'idFormaDelZapato' => array('db' => 'cod_forma_zapato'),
      *   'fechaAlta',
      *   'unaFechaConOtroFormato' => array('transformer' => array('Funciones::formatearFecha', array(null, 'Y/m/d'))
-     *  // El primer elemento del array transformer es la funciï¿½n, y el 2do un array con los parï¿½metros (los "null" se reemplazan con el valor del campo, en este caso la fecha)
+     *  // El primer elemento del array transformer es la funcin, y el 2do un array con los parmetros (los "null" se reemplazan con el valor del campo, en este caso la fecha)
      * );
      */
     protected $__dbMappings = array();
@@ -33,10 +33,10 @@ class Base extends BasePhp {
     /**
      * @var array
      *
-     * Es un array de configuracion de las relaciones, para poder guardarlas automï¿½ticamente.
+     * Es un array de configuracion de las relaciones, para poder guardarlas automticamente.
      * array(
      *   'colores' => array(
-     *     'cascadeDelete' => false // Por defecto NO borramos en cascada todos los items existentes de la relaciï¿½n
+     *     'cascadeDelete' => false // Por defecto NO borramos en cascada todos los items existentes de la relacin
      *   )
      * );
      */
@@ -177,11 +177,12 @@ class Base extends BasePhp {
         $method = 'set' . ucfirst($this->getClass());
         return method_exists(Factory::getInstance(), $method);
     }
-
-	public function guardar() {
+        protected function validarGuardar() {
+        }
+        public function guardar() {
 		$this->validarGuardar();
 		if ($this->modo != Modos::insert && $this->modo != Modos::update) {
-			throw new FactoryExceptionCustomException('No se puede guardar un objeto que no estï¿½ en modo insert o update');
+			throw new FactoryExceptionCustomException('No se puede guardar un objeto que no est en modo insert o update');
 		}
 
         if ($this->usesOldFactory()) {
@@ -227,11 +228,10 @@ class Base extends BasePhp {
 		return $this;
 	}
 
-	protected function validarGuardar() {
-	}
+	
 	protected function validarBorrar() {
 		if ($this->anulado()) {
-			throw new FactoryExceptionCustomException('El registro que intentï¿½ eliminar no existe');
+			throw new FactoryExceptionCustomException('El registro que intent eliminar no existe');
 		}
 	}
 
@@ -239,7 +239,7 @@ class Base extends BasePhp {
         try {
             return Notificacion::accionNotificar($this, $funcionalidad, $usuarios);
         } catch (Exception $ex) {
-            //Si ocurre un error al notificar, no me importa, devuelvo false y si es necesario se manejarï¿½ desde el controller
+            //Si ocurre un error al notificar, no me importa, devuelvo false y si es necesario se manejar desde el controller
         }
         return false;
     }
@@ -251,9 +251,9 @@ class Base extends BasePhp {
 			    continue;
             }
 			if (substr($key, 0, 1) == '_') {
-                //Esta funciï¿½n se usa para listar las variables y pasarlas en el ECHOJSON que estï¿½ en HTML.
+                //Esta funcin se usa para listar las variables y pasarlas en el ECHOJSON que est en HTML.
                 //Si el atributo empieza con _ es porque es un valor de LazyLoading, y si
-                //es NULL es porque todavï¿½a no fue seteado, entonces no lo devuelvo como valor.
+                //es NULL es porque todava no fue seteado, entonces no lo devuelvo como valor.
                 //Para que un valor de LazyLoading pase a JSON hay que pedirlo antes (Ej: $notaDePedido->detalle)
                 if (is_null($val)) {
                     continue;
@@ -380,7 +380,7 @@ class Base extends BasePhp {
 
             return $this;
         } catch (Exception $ex) {
-            // TODO: acï¿½ deberï¿½amos loggear
+            // TODO: ac deberamos loggear
             throw $ex;
         }
     }
@@ -416,7 +416,7 @@ class Base extends BasePhp {
             // Y finalmente aplico el transformer
             if (array_key_exists('transformer', $mapping)) {
 
-                // Si hay parï¿½metros (que seguramente los haya, al menos un null) hay que reemplazar los "null" por el valor
+                // Si hay parmetros (que seguramente los haya, al menos un null) hay que reemplazar los "null" por el valor
                 $currentTransformer = $mapping['transformer'];
 
                 if (count($currentTransformer) > 1 && is_array($currentTransformer[1])) {
@@ -478,46 +478,76 @@ class Base extends BasePhp {
         }
     }
     protected function persistir() {
-        try {
-            // Elimino de cache todos los objetos de esta clase
-            Cache::deleteAllByTag($this->getClass());
+    try {
+        Cache::deleteAllByTag($this->getClass());
 
-            $existe = false;
+        $existe = false;
+        $mutex = null;          // <- agregado
+        $locked = false;        // <- agregado
+
+        try {
+            // --- Mutex best-effort: si falla, continuamos sin lock ---
             try {
                 $mutex = new Mutex($this->getClass());
-                $mutex->lock();
-                if (Funciones::tieneId(array_values($this->getPKWithValues()))) {
-                    $existe = $this->existeEnDB();
+                $locked = $mutex->lock();
+            } catch (Exception $mx) {
+                if (function_exists('__dbg')) {
+                    __dbg('MUTEX_INIT_WARN', array(
+                        'class' => get_class($this),
+                        'msg'   => $mx->getMessage()
+                    ));
                 }
-                $this->puedePersistir($existe);
-                Transaction::begin();
-                $this->save();
-                Transaction::commit();
-                $mutex->unlock();
-            } catch (Exception $ex) {
-                $mutex->unlock();
-                throw $ex;
+                $mutex = null;   // sin mutex
+                $locked = false; // sin lock
             }
+            // ---------------------------------------------------------
+
+            if (Funciones::tieneId(array_values($this->getPKWithValues()))) {
+                $existe = $this->existeEnDB();
+            }
+
+            // (Opcional de diagnóstico)
+            if (function_exists('__dbg')) {
+                __dbg('PERSISTIR_EXISTE', array('existe' => $existe));
+            }
+
+            // Esto es donde te lanzaba FactoryExceptionRegistroExistente
+            $this->puedePersistir($existe);
+
+            Transaction::begin();
+            $this->save();
+            Transaction::commit();
+
+            if ($mutex && $locked) { $mutex->unlock(); } // <- sólo si lo tomamos
         } catch (Exception $ex) {
-            Transaction::rollback();
+            if ($mutex && $locked) { $mutex->unlock(); } // <- idem
             throw $ex;
         }
+    } catch (Exception $ex) {
+        Transaction::rollback();
+        throw $ex;
     }
+}
+
+
+
+
+
     protected function push() {
         Datos::EjecutarSQLsinQuery($this->getQuery($this->modo));
     }
     protected function getNextId() {
         $row = Datos::EjecutarSQLItem($this->getQuery(Modos::id));
         if (count($row) != 1)
-            throw new FactoryException('No se encontrï¿½ el prï¿½ximo ID');
+            throw new FactoryException('No se encontr el prximo ID');
         return $row['computed'];
     }
 
     /**
-     * Este es el mï¿½todo que conviene extender cuando se necesita un comportamiento particular.
-     * Para extender este mï¿½todo, se puede llamar primero al parent::save(); y despuï¿½s hacer el resto de las cosas (como guardar relaciones).
+     * Este es el mtodo que conviene extender cuando se necesita un comportamiento particular.
+     * Para extender este mtodo, se puede llamar primero al parent::save(); y despus hacer el resto de las cosas (como guardar relaciones).
      *
-     * TODO: ver si es posible hacer algo genï¿½rico para guardar relaciones de forma default
+     * TODO: ver si es posible hacer algo genrico para guardar relaciones de forma default
      */
     protected function save() {
 
@@ -548,7 +578,7 @@ class Base extends BasePhp {
     // Mapper methods
 
     /**
-     * Devuelve una query SQL segï¿½n el modo que se le envï¿½e
+     * Devuelve una query SQL segn el modo que se le enve
      *
      * @param $modo
      * @return string
@@ -791,7 +821,7 @@ class Base extends BasePhp {
             return 'SELECT IDENT_CURRENT(\'' . $this->table() . '\') + IDENT_INCR(\'' . $this->table() . '\');';
         } else {
             if (!($uniqueId = $this->getUniqueId())) {
-                throw new FactoryException('No se puede calcular el NextId de la clase "' . $this->getClass() . '"" porque no tiene un ï¿½nico ID');
+                throw new FactoryException('No se puede calcular el NextId de la clase "' . $this->getClass() . '"" porque no tiene un nico ID');
             }
 
             return 'SELECT ISNULL(MAX(' . $this->__dbMappings[$uniqueId]['db'] . '), 0) + 1 FROM ' . $this->table() . ';';

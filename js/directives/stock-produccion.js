@@ -8,7 +8,7 @@ Koi.directive('stockProduccion', function () {
                 //consulto la api del stock de produccion
                   fetch('/content/api/stock_produccion.php?articulo=' + articulo[0] + '&color=' + articulo[1])
                       .then(function(res) {
-                          return res.json();
+                          return res.text().then(function(t){try{return t?JSON.parse(t):{};}catch(e){console.error('JSON parse',e,t);return {error:true};}});
                       }).then(function(response){
                         if (response.error) {
                           element[0].innerHTML = 0;

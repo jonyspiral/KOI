@@ -1,44 +1,46 @@
 <?php
 
-function sqlEscape($sql) {
-
-    /* De MagicQuotes */
-    $fix_str        = stripslashes($sql);
-    $fix_str    = str_replace("'","''",$sql);
-    $fix_str     = str_replace("\0","[NULL]",$fix_str);
-
+function sqlEscape($str) {
+    // Arreglo menor (tu versión tenía una línea usando $sql en lugar de $fix_str)
+    $fix_str = stripslashes($str);
+    $fix_str = str_replace("'", "''", $fix_str);
+    $fix_str = str_replace("\0", "[NULL]", $fix_str);
     return $fix_str;
+}
 
-}	 
-	
-function getStockEnProduccion($articulo, $color){
-	$host="192.168.2.100";
-	$bd="spiral";
-	$user="juancarlos";
-	$pass="juancarlos,spiral2020";
+function getStockEnProduccion($articulo, $color) {
+    // Sanitización mínima, no cambiamos contrato ni responsabilidades
+    $codigoArticulo = sqlEscape($articulo);
+    $codigoColor    = sqlEscape($color);
 
-	$codigoArticulo = sqlEscape($articulo);
-	$codigoColor = sqlEscape($color);
+    // MySQL (NO MSSQL). Usamos la vista de compatibilidad *_40_v
+    // y la capa interna: Datos::EjecutarSQLItem -> DbMysql->queryOne
+    $sql = "
+        SELECT cod_articulo, denom_articulo, cod_color_articulo,
+               cantidad, cant_1, cant_2, cant_3, cant_4, cant_5, cant_6, cant_7, cant_8, posic_1
+        FROM koi1_stage.stock_produccion_incumplida_40_v
+        WHERE cod_articulo = '{$codigoArticulo}'
+          AND cod_color_articulo = '{$codigoColor}'
+        LIMIT 1
+    ";
 
-	try {
-	
-		$link1 = @mssql_connect($host, $user, $pass);
-		@mssql_select_db($bd);
-		$sql = 'select Top 1 * FROM stock_produccion_incumplida_40_v where cod_articulo = \'' . $codigoArticulo . '\' AND cod_color_articulo = \'' . $codigoColor . '\'' ;
-		$result = @mssql_query($sql, $link1);
+    try {
+        // Usa la lógica existente de KOI (mínimo cambio)
+        if (class_exists('Datos') && method_exists('Datos', 'EjecutarSQLItem')) {
+            $row = Datos::EjecutarSQLItem($sql, 'stock_produccion_incumplida_40_v');
+        } else {
+            // Si por algún motivo no está disponible (no debería pasar),
+            // devolvemos respuesta “vacía” sin romper el contrato.
+            return array('error' => 'driver interno no disponible');
+        }
 
-		if (mssql_num_rows($result)==0) {
-			return array('error' => 'no hay filas');
-		}
+        if (!$row) {
+            return array('error' => 'no hay filas');
+        }
 
-		$row = @mssql_fetch_assoc($result);
+        return array('data' => $row);
 
-		//echo json_encode(array('sql' => $sql));die;
-		mssql_close($link1);
-
-		return array('data' => $row);
-	} catch (Exception $e) {
-		//mssql_close($link1);
-		return array('error' => $e->getMessage());
-	}
+    } catch (Exception $e) {
+        return array('error' => $e->getMessage());
+    }
 }

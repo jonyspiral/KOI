@@ -11,7 +11,7 @@ class Mutex {
 
 	function __construct($mutexId) {
 		if (empty($mutexId))
-			throw new Exception('Error al crear mutex: ID vac�o');
+			throw new Exception('Error al crear mutex: ID vac�o');
 		$this->id = $mutexId;
 		$this->mutex_folder = Config::pathBase . 'tmp/mutex/';
 		$this->onWindows = (substr(PHP_OS, 0, 3) == 'WIN' ? true : false);
@@ -49,19 +49,26 @@ class Mutex {
 	}
 
 	public function unlock() {
-		if(!$this->locked)
-			return true;
-		if($this->onWindows) {
-			if(!flock($this->filePointer, LOCK_UN))
-				throw new Exception('Error al intentar desbloquear el mutex ' . $this->id);
-			fclose($this->filePointer);
-		} else {
-			//if (!sem_release($this->mutexId)) //La comento porque sem_release tira warning en windows (no existe)
-				throw new Exception('Error al intentar desbloquear el mutex ' . $this->id);
-		}
-		$this->locked = false;
-		return true;
-	}
+    if (!$this->locked) return true;
+
+    if ($this->onWindows) {
+        if (!flock($this->filePointer, LOCK_UN)) {
+            throw new Exception('Error al intentar desbloquear el mutex ' . $this->id);
+        }
+        @fclose($this->filePointer);
+    } else {
+        if (isset($this->mutexId) && function_exists('sem_release')) {
+            if (!@sem_release($this->mutexId)) {
+                throw new Exception('Error al intentar desbloquear el mutex ' . $this->id);
+            }
+        }
+        // si no hay semáforo/lock real, no tirar excepción
+    }
+
+    $this->locked = false;
+    return true;
+}
+
 }
 
 ?>
