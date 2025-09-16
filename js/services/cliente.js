@@ -19,33 +19,7 @@ Koi.factory('ServiceCliente', ['$http', function ($http) {
         callback
       );
     },
-addFavoritoBatch: async function (favoritos) {
-  console.log("📦 JSON ENVIADO:", JSON.stringify({ favorites: favoritos }));
-
-  return await fetch('/content/cliente/favoritos/agregarVarios.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ favorites: favoritos })
-  })
-  .then(res => res.text())
-  .then(texto => {
-    console.log("🔴 Respuesta cruda del servidor:", texto);
-    try {
-      const json = JSON.parse(texto);
-      console.log("✅ Respuesta parseada JSON:", json);
-      return json;
-    } catch (e) {
-      console.error("❌ No se pudo parsear JSON:", e);
-      throw e;
-    }
-  });
-},
-
-
-
-    removeFavorito: function (articulo, callback) {
+        removeFavorito: function (articulo, callback) {
       //console.log("articulo", articulo, "callback", callback);
       this.post(
         this.basePath + 'favoritos/borrar.php',
@@ -54,45 +28,60 @@ addFavoritoBatch: async function (favoritos) {
       );
     },
 
-    removeFavoritoBatch: async function (articulos) {
-      /*const data = new FormData();
-      data.append('idArticulo', articulo.idArticulo);
-      data.append('idColor', articulo.idColorPorArticulo);*/
-      let data = JSON.stringify( { favorites : articulos } )
 
-      let res = await fetch(this.basePath + 'favoritos/borrarVarios.php', {
-        method: 'POST',
-        headers: { // cabeceras HTTP
-            // vamos a enviar los datos en formato JSON
-            'Content-Type': 'application/json'
-        },
-        body: data
-      });
-     
-      res = res.json()
+      addFavoritoBatch: async function (favoritos) {
+  const res = await fetch(this.basePath + 'favoritos/agregarVarios.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',                         // <-- importante
+    body: JSON.stringify({ favorites: favoritos })
+  });
 
-      return res;
-      /*this.post(
-        this.basePath + 'favoritos/borrarVarios.php',
-        { favorites : articulos },
-        callback
-      );*/
-    },
+  const txt = await res.text();
+  try {
+    const json = JSON.parse(txt);
+    return json; // {status, message, data}
+  } catch (e) {
+    console.error('addFavoritoBatch parse error:', e, txt);
+    throw e;
+  }
+},
 
-    removeAllFavs: async function () {
+removeFavoritoBatch: async function (favoritos) {
+  const res = await fetch(this.basePath + 'favoritos/borrarVarios.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',                         // <-- importante
+    body: JSON.stringify({ favorites: favoritos })
+  });
 
-      let res = await fetch(this.basePath + 'favoritos/borrarTodos.php', {
-        method: 'POST',
-        headers: { // cabeceras HTTP
-            // vamos a enviar los datos en formato JSON
-            'Content-Type': 'application/json'
-        },
-      });
-     
-      res = res.json()
+  const txt = await res.text();
+  try {
+    const json = JSON.parse(txt);
+    return json; // {status, message, data}
+  } catch (e) {
+    console.error('removeFavoritoBatch parse error:', e, txt);
+    throw e;
+  }
+},
 
-      return res;  
-    },
+removeAllFavs: async function () {
+  const res = await fetch('/content/cliente/favoritos/borrarTodos.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',          // ⬅️ envía PHPSESSID
+    body: '{}'                       // (vacío, pero fuerza JSON)
+  });
+
+  const txt = await res.text();
+  console.log('borrarTodos RAW:', txt);
+  try {
+    return JSON.parse(txt);
+  } catch (e) {
+    console.error('borrarTodos JSON parse error:', e);
+    throw e;
+  }
+},
 
     updateCurva: function (articulo, curva, callback) {
       this.post(
@@ -120,6 +109,21 @@ addFavoritoBatch: async function (favoritos) {
 
     cancelarPedido: function (pedido, callback) {
       this.post(this.basePath + 'pedidos/borrar.php', {id: pedido.id}, callback);
+    },
+
+    // Nuevo: obtiene sucursales del cliente desde el endpoint JSON
+    getSucursales: function (callback) {
+      // Endpoint absoluto bajo /content/ws/
+      $http.get('/content/ws/sucursales.php', { withCredentials: true }).success(function (result) {
+        if (result && result.status === 200 && result.data) {
+          callback(null, result.data);
+        } else {
+          var msg = (result && result.message) ? result.message : 'Error al obtener sucursales';
+          callback(msg);
+        }
+      }).error(function (err) {
+        callback(err || 'Error HTTP al obtener sucursales');
+      });
     }
   };
 

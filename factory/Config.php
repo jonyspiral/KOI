@@ -17,7 +17,7 @@ class Config {
     const mysql_charset = 'utf8';     // clave para PHP 5.6
 
     /* ======= (dejas tus constantes MSSQL existentes abajo, sin tocar) ======= */
-	const conexion_sql_ip = 'localhost';
+	const conexion_sql_ip = '192.168.2.100';
 	//const conexion_sql_user = 'Koi'; Usuario del SQL de CAMACHUI
 	//const conexion_sql_pass = 'Koisys.123'; Password del SQL de CAMACHUI
 	const conexion_sql_user = 'Koi';

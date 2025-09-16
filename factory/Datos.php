@@ -22,9 +22,60 @@ class Datos {
     }
 
     /** Devuelve una sola fila (array<string,mixed>|null) */
-    public static function EjecutarSQLItem($sql, $class = '') {
-        return self::db()->queryOne($sql);
+ // factory/Datos.php
+
+/**
+ * Devuelve una sola fila (array<string,mixed>|null)
+ * Normaliza "0 filas" => null (comportamiento SQLServer),
+ * y además maneja tipos variados de retorno del driver MySQL.
+ */
+public static function EjecutarSQLItem($sql, $class = '')
+{
+    $raw = self::db()->queryOne($sql);
+
+    // --- DEBUG opcional
+    if (function_exists('__dbg')) {
+        $dbg = array(
+            'type'     => gettype($raw),
+            'is_array' => is_array($raw),
+            'count'    => is_array($raw) ? count($raw) : null
+        );
+        __dbg('DATOS.EjecutarSQLItem.raw', $dbg);
     }
+
+    // ---------------------------
+    // Normalización + compatibilidad KOI1:
+    // Si NO hay fila, debe lanzar FactoryExceptionRegistroNoExistente
+    // para que Base::existeEnDB() funcione como antes.
+    // ---------------------------
+
+    // 1) Sin resultados (false/null/[] ⇒ NO existe)  // <--- BLOQUE CLAVE
+    if ($raw === false || $raw === null || (is_array($raw) && count($raw) === 0)) {
+        // Mantenemos compatibilidad con el flujo legacy:
+        if (class_exists('FactoryExceptionRegistroNoExistente')) {
+            throw new FactoryExceptionRegistroNoExistente('Registro no existente');
+        } else {
+            // Fallback: lanzar una Exception genérica para no “mentir” existencia
+            throw new Exception('Registro no existente');
+        }
+    }
+
+    // 2) Algunos drivers devuelven [[fila]] en lugar de [fila]
+    if (is_array($raw) && isset($raw[0]) && is_array($raw[0])) {
+        // si viniera envuelto, devolvemos la primera fila asociativa
+        return $raw[0];
+    }
+
+    // 3) Ya tenemos la fila asociativa
+    if (is_array($raw)) {
+        return $raw;
+    }
+
+    // 4) Cualquier otro caso raro: devolver tal cual
+    return $raw;
+}
+
+
 
     /** Devuelve un valor escalar (mixed|null) */
     public static function EjecutarScalar($sql) {
@@ -159,4 +210,25 @@ public static function objectToDB($obj) {
     public static function Exec($sql, $params = array()) {
         return self::EjecutarCommand($sql, $params);
     }
+    public static function EjecutarSQLsinQuery($sql) {
+    // Si tenés un shim T-SQL→MySQL, aplicalo acá
+    if (method_exists('Datos', '_shimTSql')) { $sql = self::_shimTSql($sql); }
+
+    if (function_exists('__dbg')) { __dbg('DATOS.EjecutarSQLsinQuery.sql', mb_substr($sql,0,500)); }
+
+    // Ejecuta con el driver actual (DbMysql->exec)
+    $db = self::db();
+    $ok = $db->exec($sql);
+
+    if ($ok === false && function_exists('__dbg')) {
+        $driverErr = null;
+        if (is_object($db)) {
+            if (method_exists($db, 'lastError'))       $driverErr = $db->lastError();
+            elseif (property_exists($db, 'lastError')) $driverErr = $db->lastError;
+        }
+        __dbg('DATOS.EjecutarSQLsinQuery.err', array('driverErr'=>$driverErr));
+    }
+    return $ok;
+}
+
 }

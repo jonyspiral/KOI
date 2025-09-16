@@ -1,11 +1,11 @@
--- rename_case_tables.sql
--- Generated: 2025-09-01T09:24:33.723611Z
--- Usage: set @db='koi1_stage'; then: USE `koi1_stage`; SOURCE this file.
+
+
+
 
 SET @db := IFNULL(@db, DATABASE());
 SELECT CONCAT('Operating on schema: ', @db) AS info;
 
--- Safety: require lower_case_table_names=0 (case-sensitive FS)
+
 SET @lcts := @@lower_case_table_names;
 SELECT @lcts AS lower_case_table_names;
 
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `__case_rename_log`(
   executed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Canonical names to enforce (with at least one uppercase)
+
 DROP TEMPORARY TABLE IF EXISTS `__canonical_names`;
 CREATE TEMPORARY TABLE `__canonical_names`(name VARCHAR(255) PRIMARY KEY) ENGINE=MEMORY;
 INSERT IGNORE INTO `__canonical_names`(name) VALUES ('Almacenes');
@@ -125,7 +125,7 @@ BEGIN
     FETCH cur INTO v_name;
     IF done = 1 THEN LEAVE read_loop; END IF;
 
-    -- find existing table that matches case-insensitively
+    
     SELECT table_name INTO v_existing
       FROM information_schema.tables
      WHERE table_schema = @db
@@ -133,19 +133,19 @@ BEGIN
      LIMIT 1;
 
     IF v_existing IS NULL THEN
-      -- nothing to rename
+      
       ITERATE read_loop;
     END IF;
 
-    -- if already exact case, skip
+    
     IF BINARY v_existing = BINARY v_name THEN
       ITERATE read_loop;
     END IF;
 
-    -- ensure no object (table/view) already has the target name with exact case
+    
     IF EXISTS (SELECT 1 FROM information_schema.tables
                 WHERE table_schema=@db AND table_name = v_name) THEN
-      -- target exists, skip to avoid collision
+      
       ITERATE read_loop;
     END IF;
 
@@ -161,12 +161,12 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Run the renames
--- CALL `__do_case_renames`();
 
--- Show what happened
+
+
+
 SELECT * FROM `__case_rename_log` ORDER BY executed_at DESC, id DESC;
 
--- (Optional) Generate rollback SQL on demand:
+
 SELECT CONCAT('RENAME TABLE `', new_name, '` TO `', old_name, '`;') AS rollback_sql
   FROM `__case_rename_log` ORDER BY id DESC;

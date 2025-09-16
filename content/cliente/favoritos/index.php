@@ -365,6 +365,17 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
       $scope.sucursales = <? echo json_encode($sucursales); ?>;
       $scope.idSucursalPedido = '<? echo $idSucursalDefault; ?>';
 
+      // Refresca sucursales desde el nuevo endpoint JSON (sin romper el default del server)
+      ServiceCliente.getSucursales(function (err, data) {
+        if (!err && data) {
+          $scope.sucursales = data;
+          // Si no vino default del server, usar el primero disponible
+          if (!$scope.idSucursalPedido && data.length) {
+            $scope.idSucursalPedido = data[0].id;
+          }
+        }
+      });
+
       var commonCallback = function (err, result) {
         if (err) {
           $.growl.error('Error al guardar (' + err + ')');
@@ -569,7 +580,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
         //console.log(articulo)
         var cb = function (err, result) {
           if (err) {
-            $.error(err);
+            $.growl.error({ title: 'Error', message: err });
           } else {
             $scope.favoritos[articulo.idLinea].items.splice($scope.favoritos[articulo.idLinea].items.indexOf(articulo), 1);
             if (!$scope.favoritos[articulo.idLinea].items.length) {
@@ -630,9 +641,9 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
       $scope.confirmarPedido = function (idSucursalPedido) {
         ServiceCliente.confirmarPedido({idSucursal: idSucursalPedido}, function (err, result) {
           if (err) {
-            $.error(err);
+            $.growl.error({ title: 'Error', message: err });
           } else {
-            $.growl.notice('Pedido guardado correctamente');
+            $.growl.notice({ title: 'OK', message: 'Pedido guardado correctamente' });
             // $scope.limpiarCantidades(); Se quieren borrar los favoritos enteramente
             $scope.favoritos = [];
           }
@@ -691,6 +702,11 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
                     <button type="button" class="btn btn-generar-pedido" ng-click="showSucursales = true" ng-show="!showSucursales">
                         <i class="fa fa-fw fa-shopping-cart"></i> Generar pedido
                     </button>
+
+
+
+
+
                     <a href="/favoritos/reporte/" target="_blank" class="btn btn-generar-pedido">
                         <i class="fa fa-fw fa-file"></i> Generar Reporte
                     </a>
