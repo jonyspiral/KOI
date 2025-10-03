@@ -1,0 +1,4 @@
+
+CREATE VIEW caja_v AS
+	SELECT		c.cod_caja, c.cod_duenio, c.cod_caja_padre, c.nombre, c.fecha_limite, c.dias_cierre, ISNULL(c.importe_efectivo, 0) AS importe_efectivo, c.importe_descubierto, 
+				c.importe_maximo, c.cod_imputacion, c.caja_banco, c.anul

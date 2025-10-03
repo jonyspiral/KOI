@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<loginTicketResponse version="1">
+    <header>
+        <source>CN=wsaahomo, O=AFIP, C=AR, SERIALNUMBER=CUIT 33693450239</source>
+        <destination>C=ar, O=spiral shoes s.a., SERIALNUMBER=CUIT 33710051459, CN=koi systems</destination>
+        <uniqueId>1877521315</uniqueId>
+        <generationTime>2016-07-13T10:12:29.891-03:00</generationTime>
+        <expirationTime>2016-07-13T22:12:29.891-03:00</expirationTime>
+    </header>
+    <credentials>
+        <token>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pgo8c3NvIHZlcnNpb249IjIuMCI+CiAgICA8aWQgdW5pcXVlX2lkPSIyODQ2MTcxNTczIiBzcmM9IkNOPXdzYWFob21vLCBPPUFGSVAsIEM9QVIsIFNFUklBTE5VTUJFUj1DVUlUIDMzNjkzNDUwMjM5IiBnZW5fdGltZT0iMTQ2ODQxNTQ4OSIgZXhwX3RpbWU9IjE0Njg0NTg3NDkiIGRzdD0iQ049d3NmZSwgTz1BRklQLCBDPUFSIi8+CiAgICA8b3BlcmF0aW9uIHZhbHVlPSJncmFudGVkIiB0eXBlPSJsb2dpbiI+CiAgICAgICAgPGxvZ2luIHVpZD0iQz1hciwgTz1zcGlyYWwgc2hvZXMgcy5hLiwgU0VSSUFMTlVNQkVSPUNVSVQgMzM3MTAwNTE0NTksIENOPWtvaSBzeXN0ZW1zIiBzZXJ2aWNlPSJ3c2ZlIiByZWdtZXRob2Q9IjIyIiBlbnRpdHk9IjMzNjkzNDUwMjM5IiBhdXRobWV0aG9kPSJjbXMiPgogICAgICAgICAgICA8cmVsYXRpb25zPgogICAgICAgICAgICAgICAgPHJlbGF0aW9uIHJlbHR5cGU9IjQiIGtleT0iMzM3MTAwNTE0NTkiLz4KICAgICAgICAgICAgPC9yZWxhdGlvbnM+CiAgICAgICAgPC9sb2dpbj4KICAgIDwvb3BlcmF0aW9uPgo8L3Nzbz4KCg==</token>
+        <sign>AQPNND2dJaM0WZ62WBPQYBR6lL8ttPh8/ZORlT0YBb4JIRvvIGLHjcfGZfky+cjzpEEMWlYOdQBN3l7jscmIq2vOdVfQ8XGkZepLhfNwqaa2WlucjImUChfXYa6Kn77rtXGimn0X75zxgloC1Vt6tJ3gAVCLU4gzeLnBsZttrEA=</sign>
+    </credentials>
+</loginTicketResponse>
+

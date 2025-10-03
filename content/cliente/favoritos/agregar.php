@@ -12,9 +12,9 @@ try {
 
     $favorito->guardar();
 
-    Html::jsonSuccess('El artículo fue añadido a favoritos');
+    Html::jsonSuccess('El art?culo fue aÃ±adido a favoritos');
 } catch (FactoryExceptionRegistroExistente $ex) {
-    Html::jsonSuccess('El artículo ya estaba marcado como favorito');
+    Html::jsonSuccess('El articulo ya estaba marcado como favorito');
 } catch (Exception $ex) {
     Html::jsonError($ex->getMessage());
 }

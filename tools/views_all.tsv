@@ -1,0 +1,1080 @@
+locale is "C"
+locale charset is "ANSI_X3.4-1968"
+using default charset "ISO-8859-1"
+locale is "C"
+locale charset is "ANSI_X3.4-1968"
+using default charset "ISO-8859-1"
+1> 2> 1> 2> 3> 4> 5> 6> 7> schema_name	view_name	colid	text
+dbo	almacenes_por_seccion_v	1	
+CREATE VIEW almacenes_por_seccion_v AS
+SELECT a.cod_seccion, b.*
+FROM almacenes_por_seccion a
+INNER JOIN almacenes b ON a.cod_almacen = b.cod_almacen
+dbo	articulos_imagenes_v	1	CREATE VIEW dbo.articulos_imagenes_v
+AS
+SELECT     TOP 100 PERCENT *
+FROM         dbo.articulos_imagenes ai
+WHERE     (tipo = N'imagen')
+ORDER BY producto, orden
+
+dbo	asignados_por_tarea	1	CREATE VIEW dbo.asignados_por_tarea
+AS
+SELECT     TOP 100 PERCENT dbo.Orden_fabricacion.nro_plan AS Lote, dbo.Tareas_cabecera.nro_orden_fabricacion, dbo.Tareas_cabecera.nro_tarea, 
+                      dbo.Orden_fabricacion.cod_articulo, dbo.Orden_fab
+dbo	asignados_por_tarea	2	              ORDER BY dbo.asignacion_pedidos.nro_plan, dbo.asignacion_pedidos.nro_orden_fabricacion, dbo.asignacion_pedidos.nro_tarea) a ON 
+                      dbo.Tareas_cabecera.nro_orden_fabricacion = a.nro_orden_fabricacion AND dbo.Tareas_cabecer
+dbo	banco_propio_v	1	
+CREATE VIEW [dbo].[banco_propio_v] AS
+	SELECT b.nombre, bp.*
+	FROM banco b
+	INNER JOIN banco_propio bp ON b.cod_banco = bp.cod_banco
+dbo	caja_v	1	
+CREATE VIEW caja_v AS
+	SELECT		c.cod_caja, c.cod_duenio, c.cod_caja_padre, c.nombre, c.fecha_limite, c.dias_cierre, ISNULL(c.importe_efectivo, 0) AS importe_efectivo, c.importe_descubierto, 
+				c.importe_maximo, c.cod_imputacion, c.caja_banco, c.anul
+dbo	cajas_posibles_transferencia_interna_v	1	
+CREATE VIEW [dbo].[cajas_posibles_transferencia_interna_v] AS
+	SELECT cpti.*, c1.nombre nombre_caja_salida, c2.nombre nombre_caja_entrada
+	FROM cajas_posibles_transferencia_interna cpti
+	INNER JOIN caja c1 ON cpti.cod_caja_salida = c1.cod_caja
+	INNE
+dbo	cajas_resumen	1	
+CREATE VIEW cajas_resumen AS 
+
+SELECT 
+	fecha,
+	(
+		CASE
+		WHEN (SELECT 1 FROM caja_saldos_diarios WHERE caja_fecha = fecha) = 1 THEN 'S'
+		ELSE 'N'
+		END
+	) caja_cerrada,
+	SUM(cd_importe_1) cd_importe_1,
+	SUM(cd_importe_2) cd_importe_2,
+	SU
+dbo	cajas_resumen	2	po_docum_u_operacion = 'BD' AND
+		tipo_valor = 'C'
+	GROUP BY caja_fecha
+
+	UNION
+
+	--Órdenes de pago
+	SELECT
+		caja_fecha fecha,
+		0 cd_importe_1, 0 cd_importe_2, 0 cd_importe_3, 0 cd_importe_4, 0 cd_importe_5, 0 cd_importe_6,
+		0 oi_importe_1, 0
+dbo	cheque_v	1	CREATE VIEW [dbo].[cheque_v] AS
+	SELECT c.*, b.nombre as banco_nombre,
+	DATEDIFF(dd, GETDATE(), c.fecha_vencimiento) as dias_vencimiento
+	FROM cheque c
+	LEFT JOIN banco b ON b.cod_banco = c.cod_banco
+
+
+dbo	chequera_v	1	CREATE VIEW [dbo].[chequera_v] AS
+	SELECT c.*, d.cod_chequera_d, d.numero, d.utilizado, cb.nombre_cuenta
+	FROM chequera_c c
+	INNER JOIN chequera_d d ON c.cod_chequera = d.cod_chequera
+	INNER JOIN cuenta_bancaria cb ON c.cod_cuenta_bancaria = cb.cod_cuenta
+dbo	cheques_propios_v	1	CREATE VIEW cheques_propios_v AS
+	SELECT		c.cod_cheque, c.empresa, c.numero, banco.nombre AS banco_nombre, c.importe, c.fecha_vencimiento, p.cod_prov, p.razon_social, 
+				c.librador_nombre, c.dias_vencimiento AS dias, c.esperando_en_banco, c.fecha_cred
+dbo	cheques_rechazados_v	1	
+
+CREATE VIEW cheques_rechazados_v AS
+	SELECT fecha_documento fecha, c.fecha_vencimiento, c.empresa, cli.cod_cli, cli.razon_social cliente_razon_social, p.cod_prov, p.razon_social proveedor_razon_social,
+	c.librador_nombre, b.nombre banco_nombre, c.nu
+dbo	clientes_v	1	
+
+
+CREATE VIEW clientes_v AS
+	SELECT (o.nombres + ' ' + o.apellido) nombre_vendedor, debe.fecha_debe, debe.importe_pendiente_debe, haber.fecha_haber, haber.importe_pendiente_haber, a.saldo,
+			plazos.dias_promedio_pago, ISNULL(total_cheques.total_che
+dbo	colores_por_articulo_v	1	
+--View para no hacer un JOIN en el mapper
+CREATE  VIEW colores_por_articulo_v AS
+SELECT
+	a.denom_articulo,
+	cpa.cod_articulo,
+	cpa.cod_color_articulo,
+	cpa.denom_color,
+	cpa.cod_variante,
+	cpa.corte,
+	cpa.vigente,
+	cpa.fecha_de_baja,
+	cpa.deno
+dbo	compras_pendientes	1	CREATE VIEW dbo.compras_pendientes
+AS
+SELECT     TOP 100 PERCENT dbo.Ordenes_compra_detalle.cod_material, dbo.Ordenes_compra_detalle.cod_color, 
+                      SUM(dbo.Ordenes_compra_detalle.cantidad_pendiente) AS pendiente
+FROM         dbo.Ord
+dbo	compras_vw	1	CREATE VIEW dbo.compras_vw
+AS
+SELECT     TOP 100 PERCENT dbo.compras_cabecera.empresa, dbo.compras_cabecera.fecha, dbo.compras_cabecera.fecha_periodo_fiscal, dbo.compras_cabecera.tipo_doc, 
+                      dbo.compras_cabecera.letra, dbo.compras_
+dbo	consumos_comprometidos_v	1	CREATE VIEW dbo.consumos_comprometidos_v
+AS
+SELECT     dbo.tareas_incumplidas_v.nro_plan, dbo.tareas_incumplidas_v.nro_orden_fabricacion, dbo.tareas_incumplidas_v.nro_tarea, 
+                      dbo.tareas_incumplidas_v.cantidad, dbo.patrones_v.cod_a
+dbo	costo_factura_total_v	1	CREATE VIEW dbo.costo_factura_total_v
+AS
+SELECT     TOP 100 PERCENT dbo.documentos_cantidades.fecha, dbo.documentos_cantidades.empresa, dbo.documentos_cantidades.punto_venta, 
+                      dbo.documentos_cantidades.tipo_docum, dbo.documentos_c
+dbo	costo_mp_factura_24meses_v	1	CREATE VIEW dbo.costo_mp_factura_24meses_v
+AS
+SELECT     TOP 100 PERCENT dbo.documentos_cantidades.fecha, dbo.documentos_cantidades.empresa, dbo.documentos_cantidades.punto_venta, 
+                      dbo.documentos_cantidades.tipo_docum, dbo.documen
+dbo	costo_mp_factura_v	1	CREATE VIEW dbo.costo_mp_factura_v
+AS
+SELECT     TOP 100 PERCENT dbo.documentos_cantidades.fecha, dbo.documentos_cantidades.empresa, dbo.documentos_cantidades.punto_venta, 
+                      dbo.documentos_cantidades.tipo_docum, dbo.documentos_cant
+dbo	costo_mp_producto_detalle_v	1	CREATE VIEW dbo.costo_mp_producto_detalle_v
+AS
+SELECT     dbo.patrones_vigentes_v.cod_articulo, dbo.patrones_vigentes_v.denom_articulo, dbo.patrones_vigentes_v.cod_color_articulo, 
+                      dbo.patrones_vigentes_v.tipo_patron, dbo.patrones
+dbo	costo_mp_producto_V	1	CREATE VIEW dbo.costo_mp_producto_V
+AS
+SELECT     cod_articulo, denom_articulo, cod_color_articulo, SUM(Costo) AS Costo, cod_linea
+FROM         dbo.costo_mp_producto_detalle_v
+GROUP BY cod_articulo, denom_articulo, cod_color_articulo, cod_linea
+
+dbo	costo_mp_semielaborado_detalle_v	1	CREATE VIEW dbo.costo_mp_semielaborado_detalle_v
+AS
+SELECT     dbo.patrones_se_vigentes_v.cod_articulo, dbo.patrones_se_vigentes_v.denom_articulo, dbo.patrones_se_vigentes_v.cod_color_articulo, 
+                      dbo.patrones_se_vigentes_v.tipo_pat
+dbo	costo_producto_total_V	1	CREATE VIEW dbo.costo_producto_total_V
+AS
+SELECT     costo_agrupado.cod_linea AS cod_linea, costo_agrupado.cod_articulo AS cod_articulo, costo_agrupado.denom_articulo AS denom_articulo, 
+                      costo_agrupado.cod_color_articulo AS cod_co
+dbo	costos_fijos_periodo_v	1	CREATE VIEW dbo.costos_fijos_periodo_v
+AS
+SELECT     dbo.costos_fijos_c.nro_periodo, dbo.costos_fijos_d.cod_linea, 
+                      dbo.costos_fijos_c.costo_estructura * dbo.costos_fijos_d.porcentaje_periodo / 100 / dbo.costos_fijos_d.cantidad_pr
+dbo	costos_fijos_periodo_vig_v	1	CREATE VIEW dbo.costos_fijos_periodo_vig_v
+AS
+SELECT     dbo.costos_fijos_c.nro_periodo, dbo.costos_fijos_d.cod_linea, 
+                      dbo.costos_fijos_c.costo_estructura * dbo.costos_fijos_d.porcentaje_periodo / 100 / dbo.costos_fijos_d.cantida
+dbo	cuenta_corriente_historica	1	
+CREATE VIEW [dbo].[cuenta_corriente_historica] AS
+	SELECT TOP 100 PERCENT r.empresa empresa, 1 punto_venta, 'REC' tipo_docum, '' tipo_docum_2, r.nro_recibo numero, 'R' letra, NULL nro_comprobante,
+						   r.cod_cliente cod_cliente, r.fecha_documento 
+dbo	cuenta_corriente_historica_proveedor	1	/*		((CASE tipo_doc 
+			WHEN 'NCR' THEN (-1)
+			ELSE (1)
+		END) * total_doc) total_documento
+empresa, cod_prov, tipo_doc, nro_doc, fecha, total_doc importe_debe (FAC NDB), total_doc importe_haber (NCR OP)*/
+CREATE VIEW dbo.cuenta_corriente_historica_
+dbo	cuenta_corriente_historica_proveedor_v	1	CREATE VIEW [dbo].[cuenta_corriente_historica_proveedor_v] AS
+	SELECT
+		dp.empresa, dp.punto_venta, dp.tipo_docum, dp.nro_documento, dp.letra, dp.cod_proveedor, dbo.relativeDate(dp.fecha,'today',0) fecha, dp.observaciones, (case when dp.tipo_docum = 'NC
+dbo	despachos_d_v	1	CREATE VIEW despachos_d_v AS 
+SELECT
+	d.nro_despacho nro_despacho,
+	d.nro_item nro_item,
+	d.empresa empresa,
+	d.anulado anulado,
+	cli.razon_social razon_social,
+	c.cod_cliente cod_cliente,
+	c.cod_sucursal cod_sucursal,
+	c.cod_ecommerce_order cod_
+dbo	despachos_v	1	
+CREATE VIEW despachos_v AS 
+SELECT
+	d.nro_despacho_nro nro_despacho,
+	d.nro_item_despacho nro_item,
+	d.cod_empresa_despacho empresa,
+	d.cod_cli cod_cliente,
+	d.cod_suc_cli cod_sucursal,
+	d.nro_pedido_nro nro_pedido,
+	d.anulado anulado,
+	d.pendi
+dbo	documento_proveedor	1	
+CREATE VIEW [dbo].[documento_proveedor] AS
+	SELECT
+			/* campos de DocumentoProveedor */
+			id, empresa, punto_venta, tipo_docum, nro_documento, letra, cod_proveedor, operacion_tipo, fecha,
+			neto_gravado, neto_no_gravado, importe_total, importe_pe
+dbo	documento_proveedor_aplicacion_debe_v	1	
+CREATE VIEW [dbo].[documento_proveedor_aplicacion_debe_v] AS
+	SELECT * FROM documento_proveedor_aplicacion_v WHERE tipo_docum = 'FAC' OR tipo_docum = 'NDB'
+dbo	documento_proveedor_aplicacion_haber_v	1	
+CREATE VIEW [dbo].[documento_proveedor_aplicacion_haber_v] AS
+	SELECT * FROM documento_proveedor_aplicacion_v WHERE tipo_docum = 'OP' OR tipo_docum = 'NCR' OR tipo_docum = 'REN'
+dbo	documento_proveedor_aplicacion_v	1	
+CREATE VIEW [dbo].[documento_proveedor_aplicacion_v] AS
+	SELECT cod_documento_proveedor AS id, empresa, punto_venta, tipo_docum, nro_documento, letra,
+			factura_gastos, cod_proveedor, fecha, importe_total, importe_pendiente
+	FROM dbo.documento_prove
+dbo	documento_proveedor_h_v	1	
+
+CREATE VIEW [dbo].[documento_proveedor_h_v] AS
+	SELECT
+		h.id, h.empresa, h.cod_madre, h.cod_cancel, h.tipo_docum_cancel, h.importe, h.cod_usuario, h.fecha_alta,
+		dad.fecha AS fecha_debe, dah.fecha AS fecha_haber, dad.cod_proveedor, dad.factura_ga
+dbo	documentos	1	
+
+CREATE VIEW [dbo].[documentos] AS
+	SELECT
+			empresa, punto_venta, tipo_docum, numero, letra, nro_comprobante, anulado, tipo_docum_2, cod_cliente, cod_sucursal, cod_usuario,
+			cancel_nro_documento, causa, CAST(observaciones AS VARCHAR(8000)) obser
+dbo	documentos_aplicacion_debe_v	1	
+	CREATE VIEW documentos_aplicacion_debe_v AS
+		SELECT empresa, punto_venta, tipo_docum, nro_documento, letra, nro_comprobante, cod_cliente, fecha, importe_total, importe_pendiente
+		FROM documentos_aplicacion_v
+		WHERE (tipo_docum = 'FAC') OR (tipo_d
+dbo	documentos_aplicacion_haber_v	1	
+	CREATE VIEW documentos_aplicacion_haber_v AS
+		SELECT empresa, punto_venta, tipo_docum, nro_documento, letra, nro_comprobante, cod_cliente, fecha, importe_total, importe_pendiente
+		FROM documentos_aplicacion_v
+		WHERE (tipo_docum = 'REC') OR (tipo_
+dbo	documentos_aplicacion_v	1	
+	CREATE VIEW documentos_aplicacion_v AS
+		SELECT empresa, punto_venta, tipo_docum, nro_documento, letra, nro_comprobante, cod_cliente, fecha_documento AS fecha, importe_total, importe_pendiente
+		FROM documentos_c
+		WHERE anulado = 'N'
+		UNION ALL
+
+dbo	documentos_cantidades	1	
+CREATE VIEW documentos_cantidades AS 
+SELECT c.fecha fecha, c.cod_cliente cod_cliente, a.*
+FROM (
+	(
+		SELECT
+			empresa empresa, punto_venta punto_venta, tipo_docum tipo_docum, nro_documento nro_documento, letra letra_documento,
+			NULL nro_remit
+dbo	documentos_d_v	1	CREATE VIEW documentos_d_v AS 
+SELECT
+	d.*,
+	c.anulado,
+	c.cod_cliente
+FROM
+	documentos_d d
+LEFT JOIN documentos_c c ON d.empresa = c.empresa AND c.punto_venta = d.punto_venta AND d.tipo_docum = c.tipo_docum AND d.nro_documento = c.nro_documento AN
+dbo	documentos_h_v	1	
+	CREATE VIEW documentos_h_v AS
+		SELECT h.*, dad.fecha fecha_debe, dah.fecha fecha_haber, dad.cod_cliente
+		FROM documentos_h h
+		INNER JOIN documentos dad ON
+			h.empresa = dad.empresa AND
+			h.madre_punto_venta = dad.punto_venta AND
+			h.madre_t
+dbo	documentos_rentabilidad	1	CREATE VIEW dbo.documentos_rentabilidad
+AS
+SELECT     TOP 100 PERCENT dbo.documentos.empresa, dbo.documentos.punto_venta, dbo.documentos.tipo_docum, dbo.documentos.numero, 
+                      dbo.documentos.letra, dbo.documentos.anulado, dbo.documen
+dbo	documentos_vendedor	1	
+CREATE VIEW [dbo].[documentos_vendedor] AS
+	SELECT
+			d.*, c.cod_vendedor, c.razon_social
+	FROM documentos d
+	LEFT JOIN clientes c ON d.cod_cliente = c.cod_cli
+
+dbo	ecomexperts_articulos_update_v	1	CREATE VIEW dbo.ecomexperts_articulos_update_v
+AS
+SELECT     TOP 100 PERCENT dbo.colores_por_articulo.ml_reference AS sku, dbo.colores_por_articulo.ml_name AS titulo, '' AS garantia, 21 AS impuesto, 
+                      'default' AS precio_titulo1, d
+dbo	ecomexperts_articulos_update_v	2	od_articulo = dbo.colores_por_articulo.cod_articulo AND piu.cod_color_articulo = dbo.colores_por_articulo.cod_color_articulo
+WHERE     (dbo.stock_01_14_20_por_talle_v.Talle <> 'X') AND (dbo.stock_01_14_20_por_talle_v.Talle IS NOT NULL) AND 
+            
+dbo	ecommerce_colores_por_articulo_v	1	
+CREATE VIEW ecommerce_colores_por_articulo_v AS
+
+SELECT
+	c.cod_articulo cod_articulo,
+	c.cod_color_articulo cod_color_articulo,
+	c.fechaUltimaMod fecha_ultima_mod,
+	c.categoria_usuario categoria_usuario,
+
+	c.ecommerce_existe ecommerce_existe,
+	
+dbo	ecommerce_orders_v	1	CREATE VIEW ecommerce_orders_v AS
+
+SELECT o.*, c.firstname, c.lastname, c.cod_usergroup cod_usergroup, u.nombre nombre_usergroup
+FROM ecommerce_orders o
+LEFT JOIN ecommerce_customers c ON o.cod_customer = c.cod_customer
+LEFT JOIN ecommerce_usergroups
+dbo	egreso_de_fondos_v	1	CREATE VIEW [dbo].[egreso_de_fondos_v] AS
+	SELECT op.nro_orden_de_pago numero, op.empresa, (case when op.cod_proveedor is null then op.beneficiario else ('[' + cast(p.cod_prov AS VARCHAR) + '] ' + p.razon_social) end) de_para,
+		(SELECT ISNULL(SUM(e1.im
+dbo	egresos_compras_gastos_vw	1	
+
+CREATE   view    egresos_compras_gastos_vw as
+
+select  * from(SELECT top 100 percent  dbo.compras_cabecera.empresa, dbo.compras_cabecera.fecha, dbo.compras_cabecera.fecha_periodo_fiscal, dbo.compras_cabecera.tipo_doc, 
+                      dbo.compr
+dbo	egresos_ff_vw	1	CREATE VIEW dbo.egresos_ff
+AS
+SELECT     dbo.gastos_rendicion.empresa, dbo.gastos_rendicion.sucursal_empresa, dbo.gastos_rendicion.gasto_fecha AS fecha, 
+                      dbo.gastos_rendicion.operacion_tipo AS tipo, dbo.ordenes_de_pago.tipo_docum 
+dbo	egresos_op_vw	1	CREATE VIEW dbo.egresos_op_vw
+AS
+SELECT     empresa, sucursal_empresa, fecha_orden_pago AS fecha, operacion_tipo AS tipo, tipo_docum AS docum, orden_pago_nro AS op_nro, cod_prov, 
+                      importe_a_pagar AS importe, imput_obligacion_paga 
+dbo	egresos_vw	1	CREATE VIEW dbo.egresos_vw
+AS
+SELECT     dbo.gastos_rendicion.empresa, dbo.gastos_rendicion.sucursal_empresa, dbo.gastos_rendicion.gasto_fecha AS fecha, 
+                      dbo.gastos_rendicion.operacion_tipo AS tipo, dbo.ordenes_de_pago.tipo_docum 
+dbo	facturacion_cantidades_por_articulo_v	1	CREATE VIEW dbo.facturacion_cantidades_por_articulo_v
+AS
+SELECT     dbo.documentos_cantidades.fecha, dbo.documentos_cantidades.empresa, dbo.documentos_cantidades.cod_almacen, 
+                      dbo.documentos_cantidades.cod_articulo, dbo.articulos.
+dbo	facturas_con_saldo_pendientexxx	1	CREATE VIEW dbo.facturas_con_saldo_pendiente
+AS
+SELECT     empresa, tipo_docum, factura_nro, letra_factura, cod_cli, saldo_pendiente, documento_fecha, pagado_total, desactivado_aplicado, grado
+FROM         dbo.docum_clientes_cabecera
+WHERE     (saldo_
+dbo	facturas_detalle	1	
+CREATE  VIEW dbo.facturas_detalle
+AS
+SELECT     TOP 100 PERCENT dbo.Despachos_detalle.nro_despacho_nro AS nro_despacho, dbo.Despachos_detalle.nro_item_despacho AS nro_item, 
+                      dbo.Despachos_detalle.cod_empresa_despacho AS empresa, 
+dbo	facturas_detalle	2	
+                      dbo.Despachos_detalle.cod_empresa_despacho = dbo.remitos_c.empresa
+WHERE     (dbo.Despachos_detalle.anulado = 'N')
+
+
+dbo	fasonier_v	1	CREATE VIEW dbo.fasonier_v AS
+SELECT P.*, o.cod_operador ,o.tipo_operador FROM operadores o
+INNER JOIN proveedores_datos p ON o.cod_proveedor = p.cod_prov
+
+dbo	ficha_tecnica_patrones_d	1	CREATE VIEW dbo.ficha_tecnica_patrones_d
+AS
+SELECT     p.cod_articulo, p.cod_color_articulo, p.version, p.nro_item, p.cod_pieza, p.cod_material, p.cod_color_material, p.cod_seccion, p.fecha_alta, p.item_nuevo, 
+                      p.consumo_par, p.co
+dbo	fichajes_v	1	
+CREATE VIEW fichajes_v AS
+SELECT
+	r.clave_tabla, r.legajo_nro, r.movimiento_tipo, r.fecha, r.entrada_horario, r.salida_horario, r.con_anomalias, r.ubicacion_tipo, r.ubicacion_confirmada,
+	r.diferencia_entrada, r.diferencia_salida, p.cod_personal, p.s
+dbo	filas_asientos_contables_v	1	CREATE VIEW dbo.filas_asientos_contables_v
+AS
+SELECT     TOP 100 PERCENT c.cod_asiento, c.empresa, c.nombre AS asunto, dbo.round(c.importe) AS importe, c.cod_ejercicio, c.fecha_asiento, d.numero_fila, 
+                      d.cod_imputacion, pc.denomin
+dbo	gastos_vw	1	CREATE VIEW dbo.gastos_vw
+AS
+SELECT     TOP 100 PERCENT empresa, gasto_fecha AS fecha, fecha_rendicion AS fecha_periodo_fiscal, comprobante_tipo AS tipo_doc, '' AS letra, comprobante_nro AS nro_doc, 
+                      '' AS cod_prov, cuit_proveedor
+dbo	gestion_proveedores	1	
+CREATE VIEW gestion_proveedores AS
+	SELECT p.cod_prov, p.razon_social, p.cuit, p.imputacion_especifica, i.denominacion, p.anulado, p.observaciones_gestion, a.saldo, total_cheques
+	FROM dbo.proveedores_datos AS p 
+	LEFT JOIN (
+		SELECT p.cod_prov, IS
+dbo	gestion_proveedores_1	1	
+CREATE VIEW gestion_proveedores_1 AS
+	SELECT p.cod_prov, p.razon_social, p.cuit, p.imputacion_especifica, i.denominacion, p.anulado, p.observaciones_gestion, a.saldo
+	FROM dbo.proveedores_datos AS p 
+	LEFT JOIN (
+		SELECT p.cod_prov, ISNULL(SUM((CAS
+dbo	gestion_proveedores_2	1	
+CREATE VIEW gestion_proveedores_2 AS
+	SELECT p.cod_prov, p.razon_social, p.cuit, p.imputacion_especifica, i.denominacion, p.anulado, p.observaciones_gestion, a.saldo
+	FROM dbo.proveedores_datos AS p 
+	LEFT JOIN (
+		SELECT p.cod_prov, ISNULL(SUM((CAS
+dbo	importe_por_operacion_d_v	1	
+	CREATE VIEW importe_por_operacion_d_v AS
+		SELECT d.*, c.tipo_transferencia, c.cod_caja, c.fecha_caja, c.fecha_alta
+		FROM importe_por_operacion_d d
+		INNER JOIN importe_por_operacion_c c ON d.cod_importe_operacion = c.cod_importe_operacion
+dbo	importes_op_acumulado_mes	1	
+
+CREATE VIEW [dbo].[importes_op_acumulado_mes] AS
+	SELECT p.cod_prov cod_proveedor, SUM(ISNULL(op.importe_sujeto_ret, 0)) importe_acumulado_mes, SUM(ISNULL(re.importe_retenido, 0)) importe_retenido_mes
+	FROM proveedores_datos p
+		LEFT JOIN orden_de_
+dbo	indicadores_por_rol_v	1	
+CREATE VIEW indicadores_por_rol_v AS
+	SELECT TOP 100 PERCENT ixr.cod_indicador, i.nombre nombre_indicador, r.*
+	FROM indicadores_por_rol ixr
+	INNER JOIN roles r ON ixr.cod_rol = r.cod_rol
+	INNER JOIN indicadores i ON i.cod_indicador = ixr.cod_indica
+dbo	ingresos_v	1	CREATE VIEW dbo.ingresos_v
+AS
+SELECT     fecha_alta, empresa, tipo_docum, nro_documento, cod_cliente, operacion_tipo, importe_1, importe_2, importe_3, importe_4, importe_5, 
+                      ingreso_bancario_importe, importe_6, importe_total, plaz
+dbo	koi_ticket_v	1	
+CREATE VIEW koi_ticket_v AS
+	SELECT TOP 100 PERCENT * FROM (
+		-- 1. Los que tienen fecha de resolución (con o sin responsable)
+		SELECT *, 1 orden1, fecha_estimada_resolucion orden2, NULL orden3 FROM koi_ticket
+		WHERE anulado = 'N' AND fecha_estim
+dbo	lineas_productos	1	
+-- Crear la vista llamada 'lineas' en la base de datos 'desarrollo'
+CREATE VIEW lineas_productos AS
+SELECT 
+    cod_linea,
+    denom_linea,
+    origen,
+    lanzamiento_inicial,
+    estado_de_linea,
+    fecha_de_baja,
+    anulado,
+    material,
+dbo	listado_clientes_v	1	CREATE VIEW listado_clientes_v AS
+	SELECT	c.cod_cli cod_cliente, c.razon_social, c.denom_fantasia, c.cuit, c.cod_vendedor,
+			sc.telefono_1, sc.telefono_2, c.email email_cliente, sc.email email_sucursal,
+			pa.cod_pais, pr.cod_provincia, pr.denom_provi
+dbo	listado_proveedores_v	1	
+CREATE VIEW dbo.listado_proveedores_v AS
+	SELECT		p.*, pr.denom_provincia, l.denom_localidad
+	FROM		proveedores_v p
+				LEFT OUTER JOIN provincias pr ON pr.cod_provincia = p.provincia
+				LEFT OUTER JOIN localidades l ON l.cod_localidad = p.localida
+dbo	Marcas	1	
+-- Crear la vista llamada 'marcas' en la base de datos 'encinitas', que apunta a la tabla de 'spiral'
+CREATE VIEW Marcas AS
+SELECT 
+    cod_marca,
+    cod_cliente,
+    denom_marca,
+    anulado,
+    fecha_ultima_modificacion,
+    autor_ultima_modi
+dbo	materiales_preferentes_v	1	CREATE VIEW dbo.materiales_preferentes_v
+AS
+SELECT     TOP 100 PERCENT dbo.materiales.cod_material, dbo.Materias_primas.cod_color, dbo.materiales.denom_material AS Material, 
+                      dbo.Proveedores_materias_primas.cod_proveedor, dbo.prov
+dbo	materiales_v	1	CREATE VIEW materiales_v AS
+	SELECT m.*, a.cod_articulo, a.naturaleza
+	FROM materiales m
+	LEFT OUTER JOIN articulos a ON m.cod_material = a.cod_material
+
+dbo	materias_primas_v	1	
+CREATE VIEW materias_primas_v AS
+	SELECT mp.*, cmp.denom_color, cmp.abrev_color
+	FROM Materias_primas mp
+	INNER JOIN Colores_materias_primas cmp ON mp.cod_color = cmp.cod_color
+dbo	movimientos_caja_v	1	
+CREATE VIEW [dbo].[movimientos_caja_v] AS
+	SELECT 'I' tipo, 'REC' tipo_documento, r.nro_recibo numero, (case when r.cod_cliente is null then r.recibido_de else c.razon_social end) de, 'SPIRAL SHOES S.A.' para,
+		(SELECT ISNULL(SUM(e1.importe), 0)
+		F
+dbo	movimientos_caja_v	2	n = ipoc.cod_importe_operacion
+	WHERE op.anulado = 'N'
+
+	UNION ALL
+
+	SELECT 'I' tipo, 'ICP' tipo_documento, icp.cod_ingreso_cheque_propio numero, '-' de, '[' + cast(caja.cod_caja AS VARCHAR) + '] ' + caja.nombre para,
+		0 efectivo,
+		(SELECT ISNULL
+dbo	movimientos_caja_v	3	creditar_debitar_cheque = ac2.cod_acreditar_debitar_cheque AND acc.empresa = ac2.empresa) para,
+		(SELECT ISNULL(SUM(e1.importe), 0)
+		FROM importe_por_operacion_c ipoc1
+		INNER JOIN importe_por_operacion_d ipod1 ON ipoc1.cod_importe_operacion = ipod1.
+dbo	movimientos_caja_v	4	peracion_c ipoc1
+		INNER JOIN importe_por_operacion_d ipod1 ON ipoc1.cod_importe_operacion = ipod1.cod_importe_operacion AND ipod1.tipo_importe = 'E'
+		INNER JOIN efectivo e1 ON ipod1.cod_importe = e1.cod_efectivo
+		WHERE db.cod_importe_operacion = ipo
+dbo	movimientos_caja_v	5	on) efectivo,
+		0 cheques,
+		0 transferencias,
+		0 retenciones,
+		tbo.importe_total total, ipoc.cod_caja, dbo.relativeDate(tbo.fecha,'today',0) fecha,
+		tbo.empresa empresa,
+		ipoc.cod_importe_operacion cod_importe_operacion
+	FROM transferencia_ban
+dbo	movimientos_caja_v	6	ER JOIN importe_por_operacion_d ipod2 ON ipoc2.cod_importe_operacion = ipod2.cod_importe_operacion AND ipod2.tipo_importe = 's'
+		INNER JOIN cheque c1 ON ipod2.cod_importe = c1.cod_cheque
+		WHERE aps.cod_importe_operacion = ipoc2.cod_importe_operacion) 
+dbo	movimientos_caja_v	7	s,
+		0 retenciones,
+		r.importe_total total, ipoc.cod_caja, dbo.relativeDate(r.fecha_documento,'today',0) fecha,
+		r.empresa empresa,
+		ipoc.cod_importe_operacion cod_importe_operacion
+	FROM prestamo r
+	LEFT OUTER JOIN cuenta_bancaria cb ON cb.cod_c
+dbo	movimientos_caja_v_anul	1	CREATE VIEW movimientos_caja_v_anul AS
+
+	SELECT 'E' tipo, 'REC' tipo_documento, r.nro_recibo numero, (case when r.cod_cliente is null then r.recibido_de else c.razon_social end) de, 'SPIRAL SHOES S.A.' para,
+		(SELECT ISNULL(SUM(e1.importe), 0)
+		FROM
+dbo	movimientos_caja_v_anul	2	_importe_operacion = ipoc.cod_importe_operacion
+	WHERE op.anulado = 'S'
+
+	UNION ALL
+
+	SELECT (case when tbo.entrada_salida = 'E' then 'E' else 'I' end) tipo, 'TB' tipo_documento, tbo.cod_transferencia_ban numero,
+		(case when tbo.entrada_salida = 'E
+dbo	movimientos_caja_v_anul	3	echa,
+		aps.empresa empresa,
+		ipoc.cod_importe_operacion cod_importe_operacion,
+		aps.anulado
+	FROM aporte_socio aps
+	LEFT OUTER JOIN socio s ON s.cod_socio = aps.cod_socio
+	INNER JOIN importe_por_operacion_c ipoc ON aps.cod_importe_operacion = ipo
+dbo	movimientos_caja_v_chq	1	CREATE VIEW movimientos_caja_v_chq AS 
+
+SELECT * FROM (
+	SELECT 'E' tipo, 'DC' tipo_documento, dc.cod_acreditar_debitar_cheque numero,
+		(SELECT '[' + cast(caja.cod_caja AS VARCHAR) + '] ' + caja.nombre
+		FROM acreditar_debitar_cheque_d dc1
+		INNER 
+dbo	movimientos_caja_v_chq	2	oday',0) fecha,
+		ac.empresa empresa,
+		ipoc.cod_importe_operacion cod_importe_operacion,
+		'N' anulado
+	FROM acreditar_debitar_cheque_d ac
+	INNER JOIN acreditar_debitar_cheque_c acc ON acc.cod_acreditar_debitar_cheque = ac.cod_acreditar_debitar_cheq
+dbo	movimientos_caja_v_noanul	1	
+
+CREATE VIEW movimientos_caja_v_noanul AS
+
+	SELECT 'I' tipo, 'REC' tipo_documento, r.nro_recibo numero, (case when r.cod_cliente is null then r.recibido_de else c.razon_social end) de, 'SPIRAL SHOES S.A.' para,
+		(SELECT ISNULL(SUM(e1.importe), 0)
+
+dbo	movimientos_caja_v_noanul	2	operacion = ipoc.cod_importe_operacion
+
+	UNION ALL
+
+	SELECT 'I' tipo, 'ICP' tipo_documento, icp.cod_ingreso_cheque_propio numero, '-' de, '[' + cast(caja.cod_caja AS VARCHAR) + '] ' + caja.nombre para,
+		0 efectivo,
+		(SELECT ISNULL(SUM(c1.importe),
+dbo	movimientos_caja_v_noanul	3	' AND acc.cod_acreditar_debitar_cheque = ac2.cod_acreditar_debitar_cheque AND acc.empresa = ac2.empresa) para,
+		(SELECT ISNULL(SUM(e1.importe), 0)
+		FROM importe_por_operacion_c ipoc1
+		INNER JOIN importe_por_operacion_d ipod1 ON ipoc1.cod_importe_ope
+dbo	movimientos_caja_v_noanul	4	SNULL(SUM(e1.importe), 0)
+		FROM importe_por_operacion_c ipoc1
+		INNER JOIN importe_por_operacion_d ipod1 ON ipoc1.cod_importe_operacion = ipod1.cod_importe_operacion AND ipod1.tipo_importe = 'E'
+		INNER JOIN efectivo e1 ON ipod1.cod_importe = e1.cod_e
+dbo	movimientos_caja_v_noanul	5	 e1.cod_efectivo
+		WHERE tbo.cod_importe_operacion = ipoc1.cod_importe_operacion) efectivo,
+		0 cheques,
+		0 transferencias,
+		0 retenciones,
+		tbo.importe_total total, ipoc.cod_caja, dbo.relativeDate(tbo.fecha,'today',0) fecha,
+		tbo.empresa empres
+dbo	movimientos_caja_v_noanul	6	)
+		FROM importe_por_operacion_c ipoc2
+		INNER JOIN importe_por_operacion_d ipod2 ON ipoc2.cod_importe_operacion = ipod2.cod_importe_operacion AND ipod2.tipo_importe = 's'
+		INNER JOIN cheque c1 ON ipod2.cod_importe = c1.cod_cheque
+		WHERE aps.cod_imp
+dbo	movimientos_caja_v_noanul	7	acion) efectivo,
+		0 cheques,
+		0 transferencias,
+		0 retenciones,
+		r.importe_total total, ipoc.cod_caja, dbo.relativeDate(r.fecha_documento,'today',0) fecha,
+		r.empresa empresa,
+		ipoc.cod_importe_operacion cod_importe_operacion,
+		r.anulado
+	F
+dbo	movimientos_stock_mp_v	1	
+------------------------------------------------------------------------ MOVIMIENTOS VIEW ------------------------------------------------------------------------------------------
+
+
+CREATE VIEW dbo.movimientos_stock_mp_v AS
+SELECT m.*, ma.denom_mat
+dbo	movimientos_stock_v	1	
+CREATE VIEW movimientos_stock_v AS
+SELECT m.*, a.denom_articulo nombre_articulo FROM movimientos_stock m
+LEFT JOIN articulos a ON m.cod_articulo = a.cod_articulo
+
+dbo	mp_consumos_facon_vw	1	CREATE VIEW dbo.mp_consumos_facon_vw
+AS
+SELECT     fecha_ultima_modificacion AS fecha_movimiento, COD_MATERIAL, cod_color, - (1 * ISNULL(cantidad, 0)) AS cant, - (1 * ISNULL(cant_1, 0)) AS c1, - (1 * ISNULL(cant_2, 
+                      0)) AS c2, - (
+dbo	mp_consumos_vw	1	CREATE VIEW dbo.mp_consumos_vw
+AS
+SELECT     dbo.Tareas_detalle.fecha_salida_real AS fecha_movimiento, dbo.Consumos_tarea.cod_material, dbo.Consumos_tarea.cod_color, 
+                      - (1 * ISNULL(dbo.Consumos_tarea.cant_consumo, 0)) AS Cant, - (
+dbo	mp_mov_extraor_vw	1	CREATE VIEW dbo.mp_mov_extraor_vw
+AS
+SELECT     fecha_movimiento, cod_material, cod_color_material AS cod_color, (CASE WHEN efecto_movimiento = 'S' THEN - 1 ELSE 1 END) * ISNULL(cantidad, 0) 
+                      AS cantidad, (CASE WHEN efecto_movimie
+dbo	mp_remitos_vw	1	/*SELECT     dbo.Remitos_proveedor_cabecera.fecha_recepcion AS fecha_movimiento, dbo.remitos_proveedor_detalle.cod_material, dbo.remitos_proveedor_detalle.cod_color, 
+                      ISNULL(dbo.remitos_proveedor_detalle.cantidad, 0) * dbo.materiale
+dbo	mp_stock_agrupado_vw	1	CREATE VIEW mp_stock_agrupado_vw AS SELECT cod_material, cod_color_material AS cod_color, SUM(CASE WHEN efecto_movimiento = 'e' THEN cantidad ELSE (- 1 * cantidad) END) AS cant, SUM(cant_1) AS c1, SUM(cant_2) AS c2, SUM(cant_3) AS c3, SUM(cant_4) AS c4, S
+dbo	mp_stock_detallado_vw	1	CREATE VIEW mp_stock_detallado_vw AS SELECT fecha_ultima_modificacion AS fecha_movimiento, COD_MATERIAL, cod_color, - (1 * cantidad) AS cant, - (1 * cant_1) AS c1, - (1 * cant_2) AS c2, - (1 * cant_3) AS c3, - (1 * cant_4) AS c4, - (1 * cant_5) AS c5, - (
+dbo	mundial	1	
+CREATE VIEW mundial AS
+SELECT j.id, j.nombre, ISNULL(puntaje, 0) puntaje FROM (
+	SELECT
+		j.id jugador,
+		SUM((CASE WHEN pj.goles_1 = p.goles_1 AND pj.goles_2 = p.goles_2 THEN
+			3
+		ELSE
+			(CASE WHEN (pj.goles_1 > pj.goles_2 AND p.goles_1 > p.g
+dbo	mundial_detalle	1	
+CREATE VIEW mundial_detalle AS
+SELECT 
+	pj.id_jugador, j.nombre nombre_jugador, p.id id_partido, p.nombre nombre_partido, pj.goles_1, pj.goles_2,
+	(CASE WHEN p.goles_1 IS NOT NULL AND p.goles_2 IS NOT NULL THEN 1 ELSE 0 END) jugado,
+	(CASE WHEN pj.g
+dbo	notificaciones_por_usuario_v	1	--Es porque la clase NotificacionPorUsuario Usuario y necesita todos sus campos para el fill
+--Y además es para que aparezca la fecha y así poder filtrar en el getListObject
+
+CREATE VIEW notificaciones_por_usuario_v AS
+SELECT
+	a.cod_notificacion, a.v
+dbo	operadores_v	1	
+CREATE VIEW operadores_v AS
+	SELECT		p.cod_personal, p.legajo_nro, p.cod_categoria, p.apellido, p.nombres, p.fecha_ultima_modificacion, p.autor_ultima_modificacion, p.anulado, p.funcion, p.cuil, 
+				p.fecha_antiguedad_gremio, p.fecha_ingreso, p.centr
+dbo	ordenes_compra_cabecera_v	1	
+CREATE VIEW ordenes_compra_cabecera_v AS
+	SELECT		c.*, (SELECT SUM(cantidad_pendiente) FROM ordenes_compra_detalle d WHERE c.cod_orden_de_compra = d.cod_orden_de_compra) pendiente
+	FROM		ordenes_compra_cabecera c
+dbo	Ordenes_compra_detalle_v	1	
+
+
+CREATE VIEW Ordenes_compra_detalle_v AS
+	SELECT d.*, c.cod_proveedor, c.fecha_emision, c.es_hexagono
+	FROM Ordenes_compra_cabecera c
+	INNER JOIN Ordenes_compra_detalle d ON c.cod_sucursal = d.cod_sucursal AND c.nro_orden_compra = d.nro_orden_comp
+dbo	patrones_se_vigentes_v	1	CREATE VIEW dbo.patrones_se_vigentes_v
+AS
+SELECT     TOP 100 PERCENT dbo.Patrones_mp_detalle.cod_seccion, dbo.Patrones_mp_cabecera.cod_articulo, dbo.articulos.denom_articulo, 
+                      dbo.Patrones_mp_detalle.cod_color_articulo, dbo.Patron
+dbo	patrones_v	1	CREATE VIEW dbo.patrones_v
+AS
+SELECT     dbo.Patrones_mp_cabecera.cod_color_articulo, dbo.articulos.denom_articulo, dbo.Patrones_mp_cabecera.cod_articulo, 
+                      dbo.Patrones_mp_cabecera.version, dbo.Patrones_mp_detalle.cod_material, db
+dbo	patrones_vigentes_v	1	CREATE VIEW dbo.patrones_vigentes_v
+AS
+SELECT     TOP 100 PERCENT dbo.Patrones_mp_detalle.cod_seccion, dbo.Patrones_mp_cabecera.cod_articulo, dbo.articulos.denom_articulo, 
+                      dbo.Patrones_mp_detalle.cod_color_articulo, dbo.Patrones_
+dbo	pedidos_clientes_articulo_vendedor	1	CREATE VIEW dbo.pedidos_clientes_articulo_vendedor
+AS
+SELECT     TOP 100 PERCENT dbo.pedidos_d.cod_articulo, dbo.pedidos_d.cod_color_articulo, dbo.pedidos_d.pendiente, dbo.pedidos_d.cantidad AS Pedido, 
+                      dbo.pedidos_d.pend_1 AS P1,
+dbo	pedidos_clientes_sin_mora_vw	1	CREATE VIEW dbo.pedidos_clientes_sin_mora_vw
+AS
+SELECT     TOP 100 PERCENT dbo.pedidos_detalle.cod_articulo, dbo.pedidos_detalle.cod_color_articulo, SUM(dbo.pedidos_detalle.cantidad_pendiente) 
+                      AS Pendiente, SUM(dbo.pedidos_detall
+dbo	pedidos_d_v	1	CREATE VIEW dbo.pedidos_d_v
+AS
+SELECT     a.*, b.cod_cliente AS cod_cliente, cl.cod_vendedor AS cod_vendedor, b.aprobado AS aprobado, b.fecha_alta AS fecha_pedido, 
+                      p.predespachados AS predespachados, p.pred_1 AS pred_1, p.pred_2 
+dbo	Pedidos_rentabilidad_v	1	CREATE VIEW dbo.Pedidos_rentabilidad_v
+AS
+SELECT     p.nro_pedido AS nro_pedido, p.cod_articulo, dbo.costo_producto_total_V.denom_articulo, p.cod_color_articulo, p.cantidad, p.precio_unitario, 
+                      dbo.costo_producto_total_V.cod_linea
+dbo	pendientes_aplicacion_clientes_v	1	CREATE VIEW [dbo].[pendientes_aplicacion_clientes_v] AS
+	SELECT	d.cod_cliente, c.razon_social, d.empresa, d.fecha_documento,
+			dbo.sumarTiempo(d.fecha_documento, 'dia', 60) fecha_vencimiento,
+			d.tipo_docum, d.letra, d.nro_documento, d.observaciones,
+dbo	permisos_por_usuarios_por_caja_v	1	CREATE VIEW [dbo].[permisos_por_usuarios_por_caja_v] AS
+	SELECT		c.cod_caja, c.nombre, c.anulado, p.cod_usuario,p.cod_permiso,
+				(CASE WHEN (SELECT count(*) FROM cuenta_bancaria cb WHERE cb.cod_caja = c.cod_caja) > 0 THEN 'S' ELSE 'N' END) es_caja_ban
+dbo	predespachos_v	1	
+--Es para tener cliente y sucursal en los getListObject
+CREATE VIEW predespachos_v AS 
+SELECT
+	pre.empresa empresa,
+	pre.nro_pedido nro_pedido,
+	pre.nro_item nro_item,
+	pe.anulado anulado,
+	pec.cod_ecommerce_order cod_ecommerce_order,
+	pec.cod_c
+dbo	presentismo	1	
+CREATE VIEW presentismo AS
+
+SELECT TOP 100 PERCENT t1.fecha, t1.legajo_nro, (CASE WHEN t2.legajo_nro IS NULL THEN 'AUSENTE' ELSE 'PRESENTE' END) presencia
+FROM (
+	SELECT dias.*, p.legajo_nro
+	FROM (
+		SELECT fecha
+		FROM registro_entradas_salidas
+dbo	prestashop_articulos_update_v	1	CREATE VIEW dbo.prestashop_articulos_update_v
+AS
+SELECT     TOP 100 PERCENT (CASE ecommerce_forsale WHEN 'S' THEN (1) ELSE 0 END) AS [On Sale], 0 AS [Online Only], '' AS EAN13, '' AS UPC, 0 AS [Eco-Tax],
+                       (CASE [stock_01_14_20_por
+dbo	prestashop_articulos_update_v	2	r_articulo.cod_color_articulo
+                       + ';' AS [Product Images Caption AG], 'AR Standard rate (21%)' AS Tax, '' AS [Product Carrier], '' AS [Product Accessories], '' AS [Attribute Group Tamaño],
+                       dbo.colores_por_arti
+dbo	prestashop_articulos_update_v	3	raleza = 'PT') AND (dbo.colores_por_articulo.ecommerce_existe = 'S') AND 
+                      (dbo.colores_por_articulo.id_tipo_producto_stock <> '06') AND (dbo.stock_01_14_20_por_talle_v.cant_1 > 0)
+ORDER BY dbo.articulos.cod_articulo + dbo.colores_p
+dbo	prestashop_imagenes_update	1	CREATE VIEW dbo.prestashop_imagenes_update
+AS
+SELECT     cpa.cod_articulo, cpa.cod_color_articulo,
+                          (SELECT     imagen
+                            FROM          dbo.articulos_imagenes AS ai
+                            WHERE  
+dbo	programacion_empaque_v	1	CREATE VIEW dbo.programacion_empaque_v
+AS
+SELECT     dbo.Orden_fabricacion.Confirmada, dbo.Orden_fabricacion.fecha_inicio, dbo.Tareas_cabecera.fecha_corte, dbo.Tareas_cabecera.fecha_aparado, 
+                      dbo.Tareas_cabecera.fecha_armado, dbo.
+dbo	promedio_tolerancia_pagados	1	
+CREATE VIEW promedio_tolerancia_pagados
+AS
+SELECT 
+	casiPagas.documento_fecha,
+	casiPagas.cod_cli,
+	casiPagas.empresa,
+	casiPagas.factura_nro,
+	casiPagas.letra_factura,
+	promedioHijas.promedio
+FROM
+(
+	SELECT
+		facturasNuevas.documento_fecha,
+dbo	proveedor_v	1	
+
+CREATE VIEW [dbo].[proveedor_v] AS
+	SELECT p.cod_prov, p.tipo_proveedor, p.fecha_baja, p.vivo, p.razon_social, p.denom_fantasia, p.cuit, p.condicion_iva, p.rubro, p.imputacion_en_compra, p.calle, p.numero, 
+		p.piso, p.oficina_depto, p.cod_postal, p
+dbo	proveedores_materias_primas_v	1	CREATE VIEW proveedores_materias_primas_v AS
+	SELECT pmp.*, m.denom_material
+	FROM proveedores_materias_primas pmp
+	INNER JOIN materiales m ON m.cod_material = pmp.cod_material
+
+
+dbo	proveedores_plazo_pago	1	
+CREATE VIEW proveedores_plazo_pago AS
+SELECT
+	cod_prov AS Cod,
+	razon_social AS Razon_Social,
+	denom_fantasia AS Denom_Fantasia,
+	plazo_pago AS Plazo_Pago
+FROM proveedores_datos
+WHERE anulado = 'N'
+dbo	proveedores_v	1	
+CREATE VIEW [dbo].[proveedores_v] AS
+	SELECT p.*, ia.importe_acumulado_mes, ia.importe_retenido_mes, gp1.saldo saldo_1, gp2.saldo saldo_2, (gp1.saldo + gp2.saldo) saldo
+	FROM dbo.proveedores_datos AS p 
+	LEFT JOIN dbo.importes_op_acumulado_mes AS ia 
+dbo	remitos_c_v	1	CREATE VIEW remitos_c_v AS 
+SELECT
+	r.*,
+	c.razon_social
+FROM
+	remitos_c r
+INNER JOIN clientes c ON c.cod_cli = r.cod_cliente
+
+dbo	reporte_articulos_v	1	CREATE VIEW [dbo].[reporte_articulos_v] AS
+SELECT     dbo.documentos_c.cod_cliente, dbo.Clientes.razon_social, dbo.articulos.denom_articulo, dbo.documentos_cantidades.cod_articulo, 
+                      dbo.documentos_cantidades.cod_color_articulo, dbo
+dbo	reporte_facturacion_proveedores_v	1	CREATE VIEW [dbo].[reporte_facturacion_proveedores_v] AS
+	SELECT
+		dpc.fecha, dpc.fecha_periodo_fiscal, dpc.tipo_docum, dpc.punto_venta, dpc.nro_documento, dpc.letra,
+		p.cod_prov, p.razon_social, p.imputacion_general, pc.denominacion denominacion_imp_
+dbo	reporte_facturacion_v	1	
+CREATE VIEW [dbo].[reporte_facturacion_v] AS
+	SELECT
+		c.empresa, c.fecha_documento fecha, c.tipo_docum tipo_documento,
+		(CASE WHEN c.nro_comprobante IS NULL THEN c.nro_documento ELSE c.nro_comprobante END) numero,
+		c.letra letra, c.cod_cliente, c
+dbo	resumen_bancario_v	1	CREATE VIEW resumen_bancario_v AS
+	SELECT 'E' tipo, 'DC' tipo_documento, dc.cod_acreditar_debitar_cheque numero,
+		'Cheque Nº: ' + cast((SELECT TOP 1 c.numero
+		FROM cheque c
+		INNER JOIN importe_por_operacion_d ipod2 ON ipod2.cod_importe_operacion = 
+dbo	resumen_bancario_v	2	= 'E' AND tic.cod_transferencia_int = ti2.cod_transferencia_int AND tic.empresa = ti2.empresa) AS VARCHAR)
+		) detalle,
+		importe_total importe,
+		ipoc.cod_caja, dbo.relativeDate(tic.fecha_documento,'today',0) fecha,
+		ti.empresa empresa,
+		cast(tic.
+dbo	retenciones_efectuadas_v	1	CREATE VIEW retenciones_efectuadas_v AS
+SELECT
+	r.fecha, r.nombre razon_social, r.cuit, r.importe importe_retencion, o.nro_orden_de_pago, o.importe_total importe_orden_de_pago
+FROM retencion_efectuada r
+LEFT JOIN importe_por_operacion_d ixo ON ixo.tip
+dbo	roles_por_tipo_notificacion_v	1	
+CREATE VIEW roles_por_tipo_notificacion_v AS
+SELECT a.cod_tipo_notificacion, a.eliminable, b.*
+FROM roles_por_tipo_notificacion a
+INNER JOIN roles b ON a.cod_rol = b.cod_rol
+dbo	roles_por_usuario_v	1	
+--View para no hacer un JOIN en el mapper
+CREATE VIEW roles_por_usuario_v AS
+SELECT rpu.cod_usuario cod_usuario, r.cod_rol cod_rol, r.nombre nombre, r.tipo tipo, r.anulado anulado
+FROM roles_por_usuario rpu 
+INNER JOIN roles r ON rpu.cod_rol = r.cod
+dbo	saldos_historicos_proveedor	1	
+CREATE VIEW saldos_historicos_proveedor
+AS
+(
+	SELECT empresa, cod_prov, (sum(importe_debe - importe_haber)) saldo 
+	FROM cuenta_corriente_historica_proveedor
+	GROUP BY empresa, cod_prov
+)
+dbo	stock_01_14_20_por_talle_v	1	CREATE VIEW dbo.stock_01_14_20_por_talle_v
+AS
+SELECT     TOP 100 PERCENT cod_articulo, cod_color_articulo, Talle, cantidad, cant_1
+FROM         (SELECT     dbo.articulos.cod_articulo, dbo.colores_por_articulo.cod_color_articulo, ISNULL(stock_consolidad
+dbo	stock_01_14_20_por_talle_v	2	                           FROM          dbo.stock
+                                                   WHERE      (cod_almacen = '01') OR
+                                                                          (cod_almacen = '14') OR
+                 
+dbo	stock_01_14_20_por_talle_v	3	_articulo ON 
+                                             dbo.articulos.cod_articulo = dbo.colores_por_articulo.cod_articulo
+                       UNION ALL
+                       SELECT     dbo.articulos.cod_articulo, dbo.colores_por_articulo.cod_co
+dbo	stock_01_14_20_por_talle_v	4	
+                                                   FROM          dbo.stock
+                                                   WHERE      (cod_almacen = '01') OR
+                                                                          (cod_almacen = '1
+dbo	stock_01_14_20_por_talle_v	5	ores_por_articulo.cod_color_articulo ON 
+                                             dbo.articulos.cod_articulo = dbo.colores_por_articulo.cod_articulo) DERIVEDTBL
+WHERE     (NOT (Talle IS NULL))
+
+dbo	stock_asignados	1	CREATE VIEW dbo.stock_asignados
+AS
+SELECT     TOP 100 PERCENT dbo.asignacion_pedidos.nro_plan, dbo.asignacion_pedidos.nro_orden_fabricacion, dbo.asignacion_pedidos.nro_tarea, 
+                      dbo.asignacion_pedidos.cod_articulo, dbo.asignacion_pe
+dbo	stock_comprometido_mp_v	1	CREATE VIEW dbo.stock_comprometido_mp_v
+AS
+SELECT     TOP 100 PERCENT dbo.Patrones_mp_detalle.cod_material, dbo.Patrones_mp_detalle.cod_color_material, 
+                      SUM(ISNULL(dbo.Patrones_mp_detalle.consumo_par, 0) * ISNULL(dbo.tareas_incump
+dbo	stock_disponible_total_v	1	CREATE VIEW dbo.stock_disponible_total_v
+AS
+SELECT     TOP 100 PERCENT dbo.colores_por_articulo.cod_articulo, dbo.articulos.denom_articulo, dbo.colores_por_articulo.cod_color_articulo, 
+                      dbo.colores_por_articulo.id_tipo_producto_st
+dbo	stock_menos_asignado_vw	1	CREATE VIEW dbo.stock_menos_asignado_vw
+AS
+SELECT     cod_almacen, cod_articulo, cod_color_articulo, SUM(cant_s) AS cant_s, SUM(S1) AS S1, SUM(S2) AS S2, SUM(S3) AS S3, SUM(S4) AS S4, SUM(S5) 
+                      AS S5, SUM(S6) AS S6, SUM(S7) AS S7, 
+dbo	stock_menos_pendiente_vw	1	CREATE VIEW dbo.stock_menos_pendiente_vw
+AS
+SELECT     stock_d.cod_almacen, stock_d.cod_articulo, stock_d.cod_color_articulo, SUM(stock_d.cant_s) AS cant_s, SUM(stock_d.S1) AS S1, SUM(stock_d.S2) 
+                      AS S2, SUM(stock_d.S3) AS S3, SUM
+dbo	stock_menos_pendiente_vw_original	1	CREATE VIEW dbo.stock_menos_pendiente_vw_original AS SELECT stock_d.cod_almacen, stock_d.cod_articulo, stock_d.cod_color_articulo, SUM(stock_d.cant_s) AS cant_s, SUM(stock_d.S1) AS S1, SUM(stock_d.S2) AS S2, SUM(stock_d.S3) AS S3, SUM(stock_d.S4) AS S4, S
+dbo	stock_mp	1	CREATE VIEW dbo.stock_mp
+AS
+SELECT     TOP 100 PERCENT dbo.Materias_primas.cod_material, dbo.materiales.denom_material, dbo.Materias_primas.cod_color, a.cod_almacen, SUM(a.cant) 
+                      AS cant, SUM(a.c1) AS c1, SUM(a.c2) AS c2, SUM(a.c3
+dbo	stock_mp_detalle	1	CREATE VIEW dbo.stock_mp_detalle
+AS
+SELECT     TOP 100 PERCENT fecha_movimiento, cod_material, cod_color, cantidad, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, cod_almacen, Motivo, nro_operacion, 
+                      efecto_movimiento
+FROM         (SEL
+dbo	stock_mp_rango	1	CREATE VIEW stock_mp_rango AS SELECT TOP 100 PERCENT cod_material, cod_color, SUM(cant) AS cant, SUM(c1) AS c1, SUM(c2) AS c2, SUM(c3) AS c3, SUM(c4) AS c4, SUM(c5) AS c5, SUM(c6) AS c6, SUM(c7) AS c7, SUM(c8) AS c8, SUM(c9) AS c9, SUM(c10) AS c10 FROM (S
+dbo	stock_mp_rango	2	cod_rango IS NOT NULL THEN (- Consumos_tarea.cant_4) ELSE 0 END) AS c4, SUM(CASE WHEN materiales.cod_rango IS NOT NULL THEN (- Consumos_tarea.cant_5) ELSE 0 END) AS c5, SUM(CASE WHEN materiales.cod_rango IS NOT NULL THEN (- Consumos_tarea.cant_6) ELSE 0 E
+dbo	stock_mp_sin_rango_ a_eliminar	1	CREATE VIEW [dbo].[stock_mp_sin_rango] AS 
+SELECT TOP 100 PERCENT cod_material, cod_color, SUM(cant) AS cant FROM 
+(SELECT dbo.materias_primas_movim_extraor.cod_material, dbo.materias_primas_movim_extraor.cod_color_material AS cod_color, SUM(- dbo.mater
+dbo	stock_mp_vw	1	
+CREATE VIEW dbo.stock_mp_vw AS
+SELECT	s.cod_almacen, s.cod_material, s.cod_color,
+		ISNULL(s.cant_1, 0) AS S1,
+		ISNULL(s.cant_2, 0) AS S2,
+		ISNULL(s.cant_3, 0) AS S3,
+		ISNULL(s.cant_4, 0) AS S4,
+		ISNULL(s.cant_5, 0) AS S5,
+		ISNULL(s.cant_6, 
+dbo	stock_pedidos_pendientes	1	CREATE VIEW dbo.stock_pedidos_pendientes
+AS
+SELECT     TOP 100 PERCENT dbo.pedidos_d.cod_almacen, dbo.pedidos_d.cod_articulo, dbo.pedidos_d.cod_color_articulo, SUM(ISNULL(dbo.pedidos_d.pend_1, 
+                      CONVERT(numeric, 0))) AS pend_1, SUM
+dbo	stock_pedidos_pendientes_cliente_v	1	CREATE VIEW dbo.stock_pedidos_pendientes_cliente_v
+AS
+SELECT     TOP 100 PERCENT dbo.pedidos_c.cod_cliente, dbo.pedidos_d.cod_almacen, dbo.pedidos_d.cod_articulo, dbo.pedidos_d.cod_color_articulo, 
+                      SUM(ISNULL(dbo.pedidos_d.pend_1,
+dbo	stock_pedidos_pendientes_con_estado_v	1	CREATE VIEW dbo.stock_pedidos_pendientes_con_estado_v
+AS
+SELECT     TOP 100 PERCENT dbo.pedidos_d.cod_articulo, dbo.pedidos_d.cod_color_articulo, SUM(dbo.pedidos_d.pendiente) AS cant_pend, 
+                      SUM(dbo.pedidos_d.pend_1) AS pend_1, SUM
+dbo	stock_pedidos_predespachados	1	
+
+/*Stock pedidos asignados sin detalle
+
+*/
+CREATE   VIEW [dbo].[stock_pedidos_predespachados]
+ AS
+SELECT     TOP 100 PERCENT pre.cod_almacen, pre.cod_articulo, pre.cod_color_articulo, SUM(ISNULL(pre.pred_1, 0)) AS a1, SUM(ISNULL(pre.pred_2, 0)) AS a
+dbo	stock_pedidos_sin_predespachar	1	/*Stock pedidos que no fueron predespachados*/
+CREATE VIEW dbo.stock_pedidos_sin_predespachar
+AS
+SELECT     TOP 100 PERCENT dbo.pedidos_d.cod_almacen, dbo.pedidos_d.cod_articulo, dbo.pedidos_d.cod_color_articulo, SUM(ISNULL(dbo.pedidos_d.pend_1, 
+    
+dbo	stock_produccion_incumplida_v	1	CREATE VIEW dbo.stock_produccion_incumplida_v
+AS
+SELECT     TOP 100 PERCENT cod_articulo, denom_articulo, cod_color_articulo, SUM(cantidad) AS cantidad, SUM(ISNULL(pos_1_cant, 0)) AS cant_1, 
+                      SUM(ISNULL(pos_2_cant, 0)) AS cant_2, 
+dbo	stock_pt	1	CREATE VIEW dbo.stock_pt
+AS
+SELECT     s.cod_almacen, s.cod_articulo, s.cod_color_articulo, ISNULL(s.cant_1, 0) AS S1, ISNULL(s.cant_2, 0) AS S2, ISNULL(s.cant_3, 0) AS S3, 
+                      ISNULL(s.cant_4, 0) AS S4, ISNULL(s.cant_5, 0) AS S5, IS
+dbo	Stock_pt_detalle	1	
+CREATE VIEW [dbo].[stock_pt_detalle] AS
+SELECT	CAST(SUBSTRING(CONVERT(VARCHAR, fecha_alta, 103), 0, 11) AS DATETIME) AS fecha_movimiento,
+		fecha_alta fecha_alta, cod_almacen, cod_articulo, cod_color_articulo,
+		(CASE tipo_movimiento WHEN 'NEG' THEN 
+dbo	stock_pt_real_v	1	CREATE VIEW dbo.stock_pt_real_v AS select	alm.cod_almacen + ' - ' + alm.denom_almacen as "Almacen",
+		art.cod_articulo + ' - ' + art.denom_articulo as "Articulo",
+		cxa.cod_color_articulo + ' - ' + cxa.denom_color as "Color",
+		ccu.denom_categoria as "
+dbo	Stock_pt_real_valorizado_v	1	CREATE VIEW dbo.Stock_pt_real_valorizado_v
+AS
+SELECT     TOP 100 PERCENT dbo.stock_pt.cod_almacen, dbo.stock_pt.nombre_almacen, dbo.stock_pt.cod_articulo, dbo.stock_pt.nombre_articulo, 
+                      dbo.stock_pt.cod_color_articulo, dbo.stock_p
+dbo	stock_registros_aux_vw	1	
+CREATE VIEW [dbo].[stock_registros_aux_vw]
+AS
+	/*
+		Esta consulta trae registros de cada lugar donde se debe sacar el stock y pone uno por línea
+		Los asignados los trae como Almacen '01'. De donde se la llame se debe agrupar y hacer la suma.
+		Se 
+dbo	stock_registros_aux_vw	2	res_por_articulo.cod_articulo = prod_terminados_movim_extraor.cod_articulo) AND (colores_por_articulo.cod_color_articulo = prod_terminados_movim_extraor.cod_color_articulo)
+	WHERE ((prod_terminados_movim_extraor.cod_almacen <> '') AND ((articulos.vigente
+dbo	stock_registros_aux_vw	3	eza)='PT'))
+	GROUP BY docum_clientes_detalle.cod_articulo, docum_clientes_detalle.cod_color, docum_clientes_detalle.cod_almacen
+) UNION (
+	SELECT '01' cod_almacen, cod_articulo, cod_color_articulo, (-1) * SUM(pend_1) c_1, (-1) * SUM(pend_2) c_2, (-1) *
+dbo	stock01_por_talle_v	1	CREATE VIEW dbo.stock01_por_talle_v AS SELECT dbo.articulos.cod_articulo, dbo.colores_por_articulo.cod_color_articulo, ISNULL(stock01.cantidad, 0) AS cantidad, dbo.rango_talles.posic_1 AS Talle, ISNULL(stock01.cant_1, 0) AS cant_1 FROM dbo.rango_talles IN
+dbo	stock01_por_talle_v	2	ant_1 FROM dbo.rango_talles INNER JOIN dbo.articulos ON dbo.rango_talles.cod_rango = dbo.articulos.cod_rango LEFT OUTER JOIN (SELECT cod_almacen, cod_articulo, cod_color_articulo, cantidad, cant_6 FROM dbo.stock WHERE (cod_almacen = '01')) stock01 RIGHT O
+dbo	stock14_por_talle_v	1	CREATE VIEW dbo.stock14_por_talle_v
+AS
+SELECT     dbo.articulos.cod_articulo, dbo.colores_por_articulo.cod_color_articulo, ISNULL(stock14.cantidad, 0) AS cantidad, dbo.rango_talles.posic_1 AS Talle, 
+                      ISNULL(stock14.cant_1, 0) AS c
+dbo	stock14_por_talle_v	2	ALL
+SELECT     dbo.articulos.cod_articulo, dbo.colores_por_articulo.cod_color_articulo, ISNULL(stock14.cantidad, 0) AS cantidad, dbo.rango_talles.posic_5 AS Talle, 
+                      ISNULL(stock14.cant_5, 0) AS cant_1
+FROM         dbo.rango_talles
+dbo	stock14y20_por_talle_v	1	CREATE VIEW dbo.stock14y20_por_talle_v
+AS
+SELECT     dbo.articulos.cod_articulo, dbo.colores_por_articulo.cod_color_articulo, ISNULL(stock14.cantidad, 0) AS cantidad, dbo.rango_talles.posic_1 AS Talle, 
+                      ISNULL(stock14.cant_1, 0) A
+dbo	stock14y20_por_talle_v	2	 cant_1
+                            FROM          dbo.stock
+                            WHERE      (cod_almacen = '14') OR
+                                                   (cod_almacen = '20')
+                            GROUP BY cod_articulo, cod_c
+dbo	stock14y20_por_talle_v	3	ores_por_articulo.cod_color_articulo ON 
+                      dbo.articulos.cod_articulo = dbo.colores_por_articulo.cod_articulo
+UNION ALL
+SELECT     dbo.articulos.cod_articulo, dbo.colores_por_articulo.cod_color_articulo, ISNULL(stock14.cantidad, 0) 
+dbo	stock20_por_talle_v	1	CREATE VIEW dbo.stock20_por_talle
+AS
+SELECT     dbo.articulos.cod_articulo, dbo.colores_por_articulo.cod_color_articulo, ISNULL(stock20.cantidad, 0) AS cantidad, dbo.rango_talles.posic_1 AS Talle, 
+                      ISNULL(stock20.cant_1, 0) AS can
+dbo	stock20_por_talle_v	2	L
+SELECT     dbo.articulos.cod_articulo, dbo.colores_por_articulo.cod_color_articulo, ISNULL(stock20.cantidad, 0) AS cantidad, dbo.rango_talles.posic_5 AS Talle, 
+                      ISNULL(stock20.cant_5, 0) AS cant_1
+FROM         dbo.rango_talles I
+dbo	subdiario_de_ingresos_v	1	CREATE VIEW [dbo].[subdiario_de_ingresos_v] AS
+	SELECT *, total - efectivo - transferencias - retenciones AS cheques FROM ( --Calculamos los cheques así para que la consulta sea más rápida, 10 segundos contra 13
+		SELECT r.nro_recibo numero, r.empresa, 
+dbo	sucursales_v	1	CREATE VIEW sucursales_v AS 
+SELECT s.*, l.cod_zona_geo
+FROM sucursales_clientes s
+LEFT JOIN localidades l ON s.cod_pais = l.cod_pais AND s.cod_provincia = l.cod_provincia AND s.cod_localidad_nro = l.cod_localidad_nro
+
+
+dbo	sysconstraints	1	CREATE VIEW sysconstraints AS SELECT
+	constid = convert(int, id),
+	id = convert(int, parent_obj),
+	colid = convert(smallint, info),
+	spare1 = convert(tinyint, 0),
+	status = convert(int,
+			CASE xtype
+				WHEN 'PK' THEN 1 WHEN 'UQ' THEN 2 WHEN 'F' T
+dbo	syssegments	1	CREATE VIEW syssegments (segment, name, status) AS
+	SELECT  0, 'system'     , 0  UNION
+	SELECT	1, 'default'    , 1  UNION
+	SELECT	2, 'logsegment' , 0
+
+dbo	tareas_cabecera_v	1	CREATE VIEW tareas_cabecera_v AS
+	SELECT tc.*, o.cod_articulo, o.cod_color_articulo, o.version
+	FROM Tareas_cabecera tc
+	INNER JOIN Orden_fabricacion o ON o.nro_orden_fabricacion = tc.nro_orden_fabricacion
+
+dbo	tareas_detalle_v	1	
+CREATE VIEW tareas_detalle_v AS
+	SELECT td.*, tc.anulado, o.cod_articulo, o.cod_color_articulo, o.version, c.vigente, a.vigente articulo_vigente, a.naturaleza
+	FROM Tareas_detalle td
+	INNER JOIN Tareas_cabecera tc ON tc.nro_orden_fabricacion = td.nro
+dbo	tareas_incumplidas_empaque_v	1	/*TAREAS INCUMPLIAS
+
+*/
+CREATE VIEW dbo.tareas_incumplidas_empaque_v
+AS
+SELECT     *, nro_plan AS [plan], nro_orden_fabricacion AS op, nro_tarea AS tarea
+FROM         (SELECT     TOP 100 PERCENT dbo.Orden_fabricacion.nro_plan, dbo.Orden_fabricacion.
+dbo	tareas_incumplidas_v	1	/*TAREAS INCUMPLIAS*/
+CREATE VIEW dbo.tareas_incumplidas_v
+AS
+SELECT     TOP 100 PERCENT dbo.Orden_fabricacion.nro_plan, dbo.Orden_fabricacion.nro_orden_fabricacion, dbo.Tareas_detalle.nro_tarea, 
+                      dbo.Tareas_cabecera.cantidad, db
+dbo	tareas_sin empaque_v	1	CREATE VIEW dbo.[tareas_sin empaque_v]
+AS
+SELECT     TOP 100 PERCENT *
+FROM         (SELECT     TOP 100 PERCENT dbo.Orden_fabricacion.nro_plan, dbo.Orden_fabricacion.nro_orden_fabricacion, dbo.Tareas_detalle.nro_tarea, 
+                               
+dbo	tranferencias_materias_primas_v	1	CREATE VIEW dbo.tranferencias_materias_primas_v
+AS
+SELECT     TOP 100 PERCENT fecha_alta AS fecha_Movimiento, cod_material, cod_color, cantidad, cant_1, cant_2, cant_3, cant_4, cant_5, cant_6, cant_7, cant_8, 
+                      cant_9, cant_10, cod
+dbo	ultimos_precios_mp	1	CREATE VIEW dbo.ultimos_precios_mp
+AS
+SELECT     d.cod_material, d.cod_color,
+                          (SELECT     TOP 1 ISNULL(d2.precio_unitario, 0)
+                            FROM          Ordenes_compra_detalle d2
+                            WH
+dbo	usuarios_por_almacen_v	1	
+
+
+--Es porque la clase UsuarioPorAlmacen hereda de Usuario y necesita todos sus campos para el fill
+
+CREATE VIEW usuarios_por_almacen_v AS
+SELECT a.cod_almacen, b.*
+FROM usuarios_por_almacen a
+INNER JOIN users b ON a.cod_usuario = b.cod_usuario
+dbo	usuarios_por_area_empresa_v	1	
+CREATE VIEW usuarios_por_area_empresa_v AS
+	SELECT a.id_area_empresa, b.*
+	FROM usuarios_por_area_empresa a
+	INNER JOIN users b ON a.cod_usuario = b.cod_usuario
+dbo	usuarios_por_caja_v	1	
+
+
+CREATE VIEW [dbo].[usuarios_por_caja_v] AS
+	SELECT		c.cod_caja, c.nombre, p.cod_usuario,
+				(CASE WHEN (SELECT count(*) FROM cuenta_bancaria cb WHERE cb.cod_caja = c.cod_caja) > 0 THEN 'S' ELSE 'N' END) es_caja_banco
+	FROM		usuarios_por_caja p I
+dbo	usuarios_por_seccion_v	1	
+CREATE VIEW [dbo].[usuarios_por_seccion_v] AS
+SELECT a.cod_seccion, b.*
+FROM usuarios_por_seccion a
+INNER JOIN users b ON a.cod_usuario = b.cod_usuario
+dbo	usuarios_por_tipo_notificacion_v	1	
+CREATE VIEW usuarios_por_tipo_notificacion_v AS
+
+SELECT a.cod_tipo_notificacion, a.eliminable, b.*
+FROM usuarios_por_tipo_notificacion a
+INNER JOIN users b ON a.cod_usuario = b.cod_usuario
+dbo	valores_en_cartera_v	1	
+CREATE VIEW valores_en_cartera_v AS
+SELECT TOP 100 PERCENT c.cod_cheque, c.empresa, c.numero, banco.nombre banco_nombre, c.importe, c.fecha_vencimiento, c.cod_cliente, cl.razon_social, c.librador_nombre, c.librador_cuit, c.dias_vencimiento AS dias
+FRO
+dbo	VIEW1	1	CREATE VIEW dbo.VIEW1
+AS
+SELECT     situacion, cod_seccion, cod_articulo, denom_articulo, cod_color_articulo, SUM(cantidad) AS cant
+FROM         dbo.tareas_incumplidas_v
+GROUP BY situacion, cod_seccion, cod_articulo, denom_articulo, cod_color_articulo
+dbo	VIEW2	1	CREATE VIEW dbo.VIEW2
+AS
+SELECT     TOP 100 PERCENT empresa, 1 AS punto_venta, 'REC' AS tipo_docum, nro_recibo AS numero, 'R' AS letra, nro_recibo AS nro_comprobante, 
+                      anulado, NULL AS tipo_docum_2, dbo.IfNullZero(cod_cliente) AS 
+dbo	VIEW3	1	CREATE VIEW dbo.VIEW3
+AS
+SELECT     TOP 100 PERCENT dbo.colores_por_articulo.catalogo_orden_pagina AS [Position], 'Spiral' AS Manufacturer, '' AS Supplier, 
+                      dbo.colores_por_articulo.cod_articulo + dbo.colores_por_articulo.cod_colo
+dbo	VIEW3	2	e, 
+                      dbo.familias_producto.nombre AS familia, familias_producto_2.nombre AS familia_ecommere, dbo.colores_por_articulo.ecommerce_existe, 
+                      dbo.colores_por_articulo.catalogo, dbo.colores_por_articulo.id_tipo_prod
+demian	movimientos_caja_v_chq	1	CREATE VIEW movimientos_caja_v_chq AS 
+
+SELECT * FROM (
+	SELECT 'E' tipo, 'DC' tipo_documento, dc.cod_acreditar_debitar_cheque numero,
+		(SELECT '[' + cast(caja.cod_caja AS VARCHAR) + '] ' + caja.nombre
+		FROM acreditar_debitar_cheque_d dc1
+		INNER 
+demian	movimientos_caja_v_chq	2	oday',0) fecha,
+		ac.empresa empresa,
+		ipoc.cod_importe_operacion cod_importe_operacion,
+		'N' anulado
+	FROM acreditar_debitar_cheque_d ac
+	INNER JOIN acreditar_debitar_cheque_c acc ON acc.cod_acreditar_debitar_cheque = ac.cod_acreditar_debitar_cheq
+demian	view_prueba_v	1	
+CREATE VIEW view_prueba_v AS
+SELECT     *
+                       FROM          mp_mov_extraor_vw
+                       UNION ALL
+                       SELECT     *
+                       FROM         mp_remitos_vw
+                       UNION AL
+(206 rows affected)
+1> 

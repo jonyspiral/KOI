@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW valores_en_cartera_v AS SELECT c.cod_cheque, c.empresa, c.numero, banco.nombre banco_nombre, c.importe, c.fecha_vencimiento, c.cod_cliente, cl.razon_social, c.librador_nombre, c.librador_cuit, c.dias_vencimiento AS diasFRO;;

@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW costos_fijos_periodo_vig_vASSELECT costos_fijos_c.nro_periodo, costos_fijos_d.cod_linea, costos_fijos_c.costo_estructura * costos_fijos_d.porcentaje_periodo / 100 / costos_fijos_d.cantida;;

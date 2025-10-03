@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW costo_mp_producto_detalle_vASSELECT patrones_vigentes_v.cod_articulo, patrones_vigentes_v.denom_articulo, patrones_vigentes_v.cod_color_articulo, patrones_vigentes_v.tipo_patron, patrones;;

@@ -2,16 +2,27 @@ Koi.factory('ServiceCliente', ['$http', function ($http) {
   var service = {
     basePath: '/content/cliente/',
 
-    post: function (url, obj, callback) {
-      $http.post(url, obj).success(function (result) {
-        if (funciones.getJSONType(result) !== funciones.jsonSuccess) {
-          callback(funciones.getJSONMsg(result));
-        } else {
-          callback(null, result);
-        }
-      });
-    },
 
+
+      post: function (url, obj, callback) {
+          console.log("[ServiceCliente.post] →", url, obj);
+          $http.post(url, obj)
+              .success(function (result) {
+                  console.log("[ServiceCliente.post] success ←", result);
+                  if (funciones.getJSONType(result) !== funciones.jsonSuccess) {
+                      var msg = funciones.getJSONMsg(result);
+                      console.warn("[ServiceCliente.post] jsonError ←", msg);
+                      callback(msg);
+                  } else {
+                      callback(null, result);
+                  }
+              })
+              .error(function (err, status) {
+                  var msg = err && err.message ? err.message : ('HTTP ' + (status || '') + ' al llamar ' + url);
+                  console.error("[ServiceCliente.post] error ←", status, err, "→ msg:", msg);
+                  callback(msg);
+              });
+      },
     addFavorito: function (articulo, callback) {
       this.post(
         this.basePath + 'favoritos/agregar.php',
@@ -99,9 +110,13 @@ removeAllFavs: async function () {
       );
     },
 
-    confirmarPedido: function (datos, callback) {
-      this.post(this.basePath + 'pedidos/agregar.php', datos, callback);
-    },
+      confirmarPedido: function (datos, callback) {
+          console.log("[ServiceCliente.confirmarPedido] → datos:", datos);
+          this.post(this.basePath + 'pedidos/agregar.php', datos, function (err, res) {
+              console.log("[ServiceCliente.confirmarPedido] callback ←", { err: err, res: res });
+              callback && callback(err, res);
+          });
+      },
 
     generarReportePedido: function (datos, callback) {
       this.post(this.basePath + 'pedidos/index.php', datos, callback);
@@ -109,24 +124,13 @@ removeAllFavs: async function () {
 
     cancelarPedido: function (pedido, callback) {
       this.post(this.basePath + 'pedidos/borrar.php', {id: pedido.id}, callback);
-    },
-
-    // Nuevo: obtiene sucursales del cliente desde el endpoint JSON
-    getSucursales: function (callback) {
-      // Endpoint absoluto bajo /content/ws/
-      $http.get('/content/ws/sucursales.php', { withCredentials: true }).success(function (result) {
-        if (result && result.status === 200 && result.data) {
-          callback(null, result.data);
-        } else {
-          var msg = (result && result.message) ? result.message : 'Error al obtener sucursales';
-          callback(msg);
-        }
-      }).error(function (err) {
-        callback(err || 'Error HTTP al obtener sucursales');
-      });
     }
   };
 
   return service;
 }]);
+
+
+
+
 

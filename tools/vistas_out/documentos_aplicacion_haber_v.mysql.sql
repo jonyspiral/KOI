@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW documentos_aplicacion_haber_v AS SELECT empresa, punto_venta, tipo_docum, nro_documento, letra, nro_comprobante, cod_cliente, fecha, importe_total, importe_pendienteFROM documentos_aplicacion_vWHERE (tipo_docum = 'REC') OR (tipo_;;

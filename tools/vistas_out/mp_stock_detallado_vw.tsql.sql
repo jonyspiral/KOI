@@ -1,0 +1,1 @@
+CREATE VIEW mp_stock_detallado_vw AS SELECT fecha_ultima_modificacion AS fecha_movimiento, COD_MATERIAL, cod_color, - (1 * cantidad) AS cant, - (1 * cant_1) AS c1, - (1 * cant_2) AS c2, - (1 * cant_3) AS c3, - (1 * cant_4) AS c4, - (1 * cant_5) AS c5, - (

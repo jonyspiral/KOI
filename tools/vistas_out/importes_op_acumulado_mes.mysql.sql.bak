@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `importes_op_acumulado_mes` AS SELECT p.cod_prov cod_proveedor, SUM(IFNULL(op.importe_sujeto_ret, 0)) importe_acumulado_mes, SUM(IFNULL(re.importe_retenido, 0)) importe_retenido_mesFROM proveedores_datos pLEFT JOIN orden_de_;

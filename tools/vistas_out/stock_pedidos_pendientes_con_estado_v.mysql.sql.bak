@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW stock_pedidos_pendientes_con_estado_vASSELECT TOP 100 pedidos_d.cod_articulo, pedidos_d.cod_color_articulo, SUM(pedidos_d.pendiente) AS cant_pend, SUM(pedidos_d.pend_1) AS pend_1, SUM;

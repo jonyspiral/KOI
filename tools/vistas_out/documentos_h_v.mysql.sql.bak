@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `documentos_h_v` AS SELECT h.*, dad.fecha fecha_debe, dah.fecha fecha_haber, dad.cod_clienteFROM documentos_h hINNER JOIN documentos dad ON h.empresa = dad.empresa ANDh.madre_punto_venta = dad.punto_venta ANDh.madre_t;

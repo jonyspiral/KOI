@@ -365,17 +365,6 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
       $scope.sucursales = <? echo json_encode($sucursales); ?>;
       $scope.idSucursalPedido = '<? echo $idSucursalDefault; ?>';
 
-      // Refresca sucursales desde el nuevo endpoint JSON (sin romper el default del server)
-      ServiceCliente.getSucursales(function (err, data) {
-        if (!err && data) {
-          $scope.sucursales = data;
-          // Si no vino default del server, usar el primero disponible
-          if (!$scope.idSucursalPedido && data.length) {
-            $scope.idSucursalPedido = data[0].id;
-          }
-        }
-      });
-
       var commonCallback = function (err, result) {
         if (err) {
           $.growl.error('Error al guardar (' + err + ')');
@@ -580,7 +569,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
         //console.log(articulo)
         var cb = function (err, result) {
           if (err) {
-            $.growl.error({ title: 'Error', message: err });
+            $.error(err);
           } else {
             $scope.favoritos[articulo.idLinea].items.splice($scope.favoritos[articulo.idLinea].items.indexOf(articulo), 1);
             if (!$scope.favoritos[articulo.idLinea].items.length) {
@@ -592,58 +581,118 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
         ServiceCliente.removeFavorito(articulo, cb);
       };
 
-    $scope.isLoading = false;
-    $scope.removeAllFavs = async function () {
-        $scope.isLoading = true; 
-           try {
-            let res = await ServiceCliente.removeAllFavs();
-            console.log(res);
-            location.reload(); // Refresh page after completion
-        } catch (error) {
-            console.error("Error removing favorites:", error);
-        } finally {
-            $scope.isLoading = false; // Re-enable button (if needed before refresh)
-            $scope.$apply(); // Ensure UI updates (since async function is outside Angular's digest cycle)
+   $scope.isLoading = false;
+
+$scope.removeAllFavs = async function () {
+  if ($scope.isLoading) return;
+  $scope.isLoading = true;
+
+  try {
+    // 1) Aplanamos todos los favoritos visibles en la grilla
+    const payload = [];
+    angular.forEach($scope.favoritos, function (linea) {
+      angular.forEach(linea.items, function (art) {
+        // si tiene subArticulos, borramos cada combinación idArticulo + idColor
+        if (art.subArticulos && art.subArticulos.length) {
+          art.subArticulos.forEach(sa => {
+            const idArticulo = sa.idArticulo || sa?.fav?.idArticulo || art?.fav?.idArticulo || art.idArticulo;
+            const idColor    = sa.idColorPorArticulo || sa?.colorPorArticulo?.id || sa?.fav?.idColorPorArticulo || art?.fav?.idColorPorArticulo;
+            if (idArticulo && idColor) {
+              payload.push({ idArticulo, idColorPorArticulo: idColor });
+            }
+          });
+        } else {
+          // fallback cuando no hay subArticulos
+          const idArticulo = art?.fav?.idArticulo || art.idArticulo;
+          const idColor    = art?.fav?.idColorPorArticulo || art?.colorPorArticulo?.id;
+          if (idArticulo && idColor) {
+            payload.push({ idArticulo, idColorPorArticulo: idColor });
+          }
         }
+      });
+    });
+
+    if (payload.length === 0) {
+      console.warn('No hay favoritos para borrar.');
+      $scope.isLoading = false;
+      return;
     }
 
-      $scope.toggleFavorito2 = async function (articulo) {
-        console.log('articulo', articulo);
+    // 2) Llamamos al batch que ya funciona (borrarVarios.php)
+    const res = await ServiceCliente.removeFavoritoBatch(payload);
 
-        let favorites = [];
-        for (item of articulo.subArticulos) {
-          favorites.push({
-            idArticulo : item.idArticulo,
-            idColorPorArticulo : item.idColorPorArticulo
-          })
-        }
-        console.log("favorites", favorites)
-        
-        if (articulo.favorito) {
-          let res = await ServiceCliente.removeFavoritoBatch(favorites);
-          if (res.status == 200) {
-           $scope.$apply(() => {
-            articulo.favorito = false;
-          });
-          }
-        } else {
-          let res = await ServiceCliente.addFavoritoBatch(favorites);
-          if (res.status == 200) {
-           $scope.$apply(() => {
-            articulo.favorito = true;
-          });
-          }
-        }     
-        //window.location('/favoritos/')   
-      };
+    // 3) Si OK, limpiamos la vista en el acto
+    if (res && res.status === 200) {
+      // vaciamos estructura y actualizamos la UI
+      $scope.favoritos = {};
+      $scope.$applyAsync();
+      // si preferís refrescar:
+      // location.reload();
+    } else {
+      throw new Error(res?.message || 'No se pudo borrar los favoritos.');
+    }
+  } catch (err) {
+    console.error('Error removing favorites:', err);
+    alert('No se pudieron borrar los favoritos. Intente nuevamente.');
+  } finally {
+    $scope.isLoading = false;
+  }
+};
+
+
+
+
+      $scope.toggleFavorito2 = function (articulo, $event) {
+  if ($event) { $event.preventDefault(); $event.stopPropagation(); }
+
+  // 1) Determinar nuevo estado y actualizar UI al instante (optimista)
+  var nuevoEstado = !articulo.favorito;
+  articulo.favorito = nuevoEstado;
+
+  if (Array.isArray(articulo.subArticulos)) {
+    articulo.subArticulos.forEach(function (sa) { sa.favorito = nuevoEstado; });
+  }
+
+  // Forzar re-render inmediato
+  $scope.$applyAsync();
+
+  // 2) Armar payload batch (usa subArticulos si existen, si no, el propio artículo)
+  var items = (Array.isArray(articulo.subArticulos) && articulo.subArticulos.length ? articulo.subArticulos : [articulo]);
+
+  var favorites = items.map(function (sa) {
+    return {
+      idArticulo: sa.idArticulo,
+      idColorPorArticulo: sa.idColorPorArticulo || (sa.colorPorArticulo && sa.colorPorArticulo.id)
+    };
+  }).filter(function (x) { return x.idArticulo && x.idColorPorArticulo; });
+
+  // 3) Llamar backend según el nuevo estado
+  var prom = nuevoEstado
+    ? ServiceCliente.addFavoritoBatch(favorites)
+    : ServiceCliente.removeFavoritoBatch(favorites);
+
+  prom.then(function (res) {
+    if (!(res && res.status === 200)) throw new Error('respuesta no OK');
+    // nada más: ya dejamos el UI en el estado correcto
+  }).catch(function (err) {
+    // 4) Rollback si falla backend
+    articulo.favorito = !nuevoEstado;
+    if (Array.isArray(articulo.subArticulos)) {
+      articulo.subArticulos.forEach(function (sa) { sa.favorito = !nuevoEstado; });
+    }
+    $scope.$applyAsync();
+    console.error('Favorito toggle error:', err);
+  });
+};
+
 
       $scope.showSucursales = false;
       $scope.confirmarPedido = function (idSucursalPedido) {
         ServiceCliente.confirmarPedido({idSucursal: idSucursalPedido}, function (err, result) {
           if (err) {
-            $.growl.error({ title: 'Error', message: err });
+            $.error(err);
           } else {
-            $.growl.notice({ title: 'OK', message: 'Pedido guardado correctamente' });
+            $.growl.notice('Pedido guardado correctamente');
             // $scope.limpiarCantidades(); Se quieren borrar los favoritos enteramente
             $scope.favoritos = [];
           }
@@ -666,198 +715,220 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
 </script>
 
 <div id="favoritos" ng-controller="FavoritosCtrl">
-    <h1 class="text-left hidden-xs">Favoritos / Nuevo pedido</h1>
-    <h2 class="text-center visible-xs">Favoritos / Nuevo pedido</h2>
-    <div ng-if="!show(favoritos)">
-        <div class="well big">
-            <h1>Aún no se han seleccionado favoritos</h1>
-        </div>
+  <h1 class="text-left hidden-xs">Favoritos / Nuevo pedido</h1>
+  <h2 class="text-center visible-xs">Favoritos / Nuevo pedido</h2>
+
+  <div ng-if="!show(favoritos)">
+    <div class="well big">
+      <h1>Aún no se han seleccionado favoritos</h1>
     </div>
-    <div ng-if="show(favoritos)">
-        <div class="btn btn-danger btn-generar-pedido" ng-click="removeAllFavs()" ng-disabled="isLoading">
-            <i class="fa fa-fw fa-ban"></i>Sacar Todos los Favoritos<i class="fa fa-fw fa-ban"></i>
-        </div>
-        <div class="row well">
-            <div class="col-xs-12">
-                <h2>Detalles del pedido</h2>
-                <div class="detalle-pedido col-totales">
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td class="titulo">Pares</td>
-                                <td class="valor total-pares">{{ sumTotalPares() }}</td>
-                            </tr>
-                            <tr ng-if="descuento > 0">
-                                <td class="titulo">Descuentos</td>
-                                <td class="valor">{{ funciones.formatearMoneda(sumTotalDescuento()) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="titulo no-border">$ Total</td>
-                                <td class="valor no-border total">{{ funciones.formatearMoneda(sumTotalCosto()) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 15px;">
-                    <button type="button" class="btn btn-generar-pedido" ng-click="showSucursales = true" ng-show="!showSucursales">
-                        <i class="fa fa-fw fa-shopping-cart"></i> Generar pedido
-                    </button>
+  </div>
 
-
-
-
-
-                    <a href="/favoritos/reporte/" target="_blank" class="btn btn-generar-pedido">
-                        <i class="fa fa-fw fa-file"></i> Generar Reporte
-                    </a>
-                    <div class="form-group" ng-show="showSucursales">
-                        <label for="sucursal">Sucursal de entrega:</label>
-                        <select class="form-control" id="sucursal" ng-model="idSucursalPedido" style="max-width: 320px; margin: 0 auto;">
-                            <option ng-repeat="sucursal in sucursales" value="{{ sucursal.id }}">{{ sucursal.id }} - {{ sucursal.nombre }}</option>
-                        </select>
-                    </div>
-                    <button type="button" class="btn btn-generar-pedido btn-success" ng-click="confirmarPedido(idSucursalPedido)" ng-show="showSucursales">
-                        <i class="fa fa-fw fa-shopping-cart"></i> Confirmar pedido
-                    </button>
-                    <button type="button" class="btn btn-generar-pedido" ng-click="showSucursales = false" ng-show="showSucursales">
-                        <i class="fa fa-fw fa-times"></i> Cancelar
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="row" ng-repeat="(idLinea, linea) in favoritos">
-            <div class="col-xs-12">
-                <div class="row total">
-                    <div class="col-xs-12">
-                        <h2><b>[{{ linea.nombre }}]</b> {{ sumTotalParesPorLinea(idLinea) }} pares - {{ funciones.formatearMoneda(sumTotalCostoPorLinea(idLinea)) }}</h2>
-                    </div>
-                </div>
-                <div class="row favorito" ng-repeat="articulo in linea.items">
-                    <div class="col-sm-3 item-imagen">
-                        <div class="item-inner">
-                            <a href="javascript:;" picture-modal>
-                                <img ng-src="{{getImageUrl(articulo.fav)}}" default-src="{{getUnavailableImageUrl()}}">
-                            </a>
-                            <div class="item-tipo" style="width: 65%">
-                                <!--<span class="badge" ng-class="{'badge-danger': articulo.colorPorArticulo.tipoProductoStock.id == '1'}">{{ articulo.fav.colorPorArticulo.tipoProductoStock.nombre }}</span>
-                                <span class="badge inverted">{{ articulo.fav.formaDeComercializacion }}</span>
-                                <span class="badge badge-danger" ng-if="articulo.colorPorArticulo.tipoProductoStock.descuentoPorc">-{{ articulo.fav.colorPorArticulo.tipoProductoStock.descuentoPorc }}%</span>-->
-                            </div>
-                            <div class="item-star">
-                                <a id="{{getIdStarArticulo(articulo)}}" href="javascript:;" ng-click="toggleFavorito2(articulo)" data-articulo={{articulo}}>
-                                    <i class="fa fa-2-5x" ng-class="articulo.favorito ? 'star-on' : 'star-off'"></i>
-                                </a>
-                            </div>
-
-                            <!-- nuevo para mostrar los subArticulos con colorPorArticulo y los badges -->
-                            <div class="item-precios">
-                             <!--<span>{{ funciones.formatearMoneda(getPrecioMayorista(articulo)) }} / {{ funciones.formatearMoneda(getPrecioMinorista(articulo)) }}</span> -->
-                                <span class="subarticulo sub-inline-grid" ng-repeat="subArticulo in articulo.subArticulos">
-                                
-                                  <span>{{ subArticulo.nombre + ' - ' + subArticulo.idArticulo + ' ' + subArticulo.idColorPorArticulo }}</span>
-                                  <span>
-                                    <span data-toggle="popover" data-html="true" data-placement="bottom" tabindex="0"  item-stock={{subArticulo.cantidadTalles}}>
-                                      <span class="badge item-stock-badge">Stock: {{ subArticulo.stockTotal }}</span>
-                                    </span>
-                                       <span class="badge">Pronto: <span class="stock-produccion" stock-produccion={{getArticuloCodigoColor(subArticulo)}}>0</span> </span> 
-                                 </span>
-                                </span>
-                            </div>
-
-                            <div class="subitem-talles">
-                                <span class="subarticulo" ng-repeat="subarticuloi in articulo.subArticulos">
-                                    <span>
-                                      <span class="badge">{{ subarticuloi.primerTalle }} - {{ subarticuloi.ultimoTalle }}</span>
-                                      <span class="badge inverted">{{ subarticuloi.formaDeComercializacion }}</span>
-                                    </span>
-                                    <span>
-                                        <span class="badge"  class="{'badge-danger': subarticuloi.colorPorArticulo.tipoProductoStock.id == '1'}">{{ subarticuloi.colorPorArticulo.tipoProductoStock.nombre }}</span>
-                                        <span class="badge badge-danger" ng-if="subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc">-{{ subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc }}%</span>
-                                    </span> 
-                                    <span>  | {{ funciones.formatearMoneda(getPrecioMayorista(subarticuloi)) }} </span>
-                                </span> 
-                            </div>  
-                            <!--<div class="item-name">
-                                {{getName(articulo.fav)}}
-                            </div>-->
-                        </div>
-                    </div>
-                    <div class="col-sm-7">
-                      <div ng-repeat="subArticulo in articulo.subArticulos">
-                        
-                        <table class="tabla-curvas">
-                            <thead>
-                            <tr class="row-talles">
-                                <th>{{ subArticulo.idArticulo + ' ' + subArticulo.idColorPorArticulo }}</th>
-                                <th ng-repeat="talle in subArticulo.talles">{{ talle }}</th>
-                                <th ng-if="articulo.formaDeComercializacion == 'M'">Cant.</th>
-                                <th ng-if="articulo.formaDeComercializacion == 'M'">+/-</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr class="row-stock">
-                                <td>Stock</td>
-                                <td class="aCenter" ng-repeat="(i, talle) in subArticulo.talles">{{ subArticulo.stock[i + 1] }}</td>
-                                <td ng-if="subArticulo.formaDeComercializacion == 'M'" colspan="3"></td>
-                            </tr>
-                            <tr class="row-curva" ng-if="subArticulo.formaDeComercializacion == 'L' || subArticulo.formaDeComercializacion == 'T'">
-                                <!-- LIBRE -->
-                                <td style="padding: 3px 0;">Libre</td>
-                                <td ng-repeat="(i, talle) in subArticulo.talles">
-                                    <input maxlength="3" type="number" step="1" min="0" max="999" ng-model="subArticulo.paresLibres[i]" ng-change="updateLibre(subArticulo, i, talle)" />
-                                </td>
-                            </tr>
-                            <tr class="row-curva" ng-if="subArticulo.formaDeComercializacion == 'M'" ng-repeat="(j, curva) in subArticulo.curvas">
-                                <!-- Modular -->
-                                <td>Curva {{ j+1 }}</td>
-                                <td ng-repeat="(i, talle) in subArticulo.talles">{{ curva.cantidades[i] }}</td>
-                                <td class="col-curvas-cantidad">{{ curva.unidadesSeleccionadas }}</td>
-                                <td>
-                                    <button type="button" class="btn" ng-click="addCurva(subArticulo, curva)"><i class="fa fa-fw fa-plus"></i></button>
-                                    <button type="button" class="btn" ng-disabled="curva.unidadesSeleccionadas <= 0" ng-click="removeCurva(subArticulo, curva)"><i class="fa fa-fw fa-minus"></i></button>
-                                </td>
-                            </tr>
-                            </tbody>
-                            <tfoot>
-                            <!-- Totales -->
-                            <tr class="row-totales">
-                                <td id="aCenter">Total</td>
-                                <td ng-repeat="(i, talle) in subArticulo.talles">{{ sumTotalColumna(subArticulo, i) }}</td>
-                                <td colspan="{{ subArticulo.formaDeComercializacion == 'M' ? '2' : '1' }}" style="background: #eaeaea;"></td>
-                            </tr>
-                            </tfoot>
-                        </table>
-
-                      </div>
-                    </div>
-                    <div class="col-sm-2 col-totales">
-                        <table>
-                            <tbody>
-                            <tr>
-                                <td class="titulo">P. Minor.</td>
-                                <td class="valor">{{ funciones.formatearMoneda(getPrecioMinorista(articulo)) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="titulo">P. Mayor.</td>
-                                <td class="valor">{{ funciones.formatearMoneda(getPrecioMayorista(articulo)) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="titulo">Pares</td>
-                                <td class="valor total-pares">{{ sumTotalArticuloPares(articulo) }}</td>
-                            </tr>
-                            <tr ng-if="descuento > 0">
-                                <td class="titulo">Descuento</td>
-                                <td class="valor">{{ funciones.formatearMoneda(sumTotalArticuloDescuento(articulo)) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="titulo no-border">$ Total</td>
-                                <td class="valor no-border total">{{ funciones.formatearMoneda(sumTotalArticuloCosto(articulo)) }}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div ng-if="show(favoritos)">
+    <div class="btn btn-danger btn-generar-pedido" ng-click="removeAllFavs()" ng-disabled="isLoading">
+      <i class="fa fa-fw fa-ban"></i>Sacar Todos los Favoritos<i class="fa fa-fw fa-ban"></i>
     </div>
+
+    <div class="row well">
+      <div class="col-xs-12">
+        <h2>Detalles del pedido</h2>
+        <div class="detalle-pedido col-totales">
+          <table>
+            <tbody>
+              <tr>
+                <td class="titulo">Pares</td>
+                <td class="valor total-pares">{{ sumTotalPares() }}</td>
+              </tr>
+              <tr ng-if="descuento > 0">
+                <td class="titulo">Descuentos</td>
+                <td class="valor">{{ funciones.formatearMoneda(sumTotalDescuento()) }}</td>
+              </tr>
+              <tr>
+                <td class="titulo no-border">$ Total</td>
+                <td class="valor no-border total">{{ funciones.formatearMoneda(sumTotalCosto()) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 15px;">
+          <button type="button" class="btn btn-generar-pedido" ng-click="showSucursales = true" ng-show="!showSucursales">
+            <i class="fa fa-fw fa-shopping-cart"></i> Generar pedido
+          </button>
+          <a href="/favoritos/reporte/" target="_blank" class="btn btn-generar-pedido">
+            <i class="fa fa-fw fa-file"></i> Generar Reporte
+          </a>
+
+          <div class="form-group" ng-show="showSucursales">
+            <label for="sucursal">Sucursal de entrega:</label>
+            <select class="form-control" id="sucursal" ng-model="idSucursalPedido" style="max-width: 320px; margin: 0 auto;">
+              <option ng-repeat="sucursal in sucursales" value="{{ sucursal.id }}">{{ sucursal.id }} - {{ sucursal.nombre }}</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn btn-generar-pedido btn-success" ng-click="confirmarPedido(idSucursalPedido)" ng-show="showSucursales">
+            <i class="fa fa-fw fa-shopping-cart"></i> Confirmar pedido
+          </button>
+          <button type="button" class="btn btn-generar-pedido" ng-click="showSucursales = false" ng-show="showSucursales">
+            <i class="fa fa-fw fa-times"></i> Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" ng-repeat="(idLinea, linea) in favoritos">
+      <div class="col-xs-12">
+        <div class="row total">
+          <div class="col-xs-12">
+            <h2><b>[{{ linea.nombre }}]</b> {{ sumTotalParesPorLinea(idLinea) }} pares - {{ funciones.formatearMoneda(sumTotalCostoPorLinea(idLinea)) }}</h2>
+          </div>
+        </div>
+
+        <!-- CARD DE FAVORITO -->
+        <div class="row favorito"
+             ng-repeat="articulo in linea.items track by (articulo.fav.idArticulo + '-' + articulo.fav.idColorPorArticulo)"
+             ng-if="articulo.favorito">
+
+          <!-- Imagen + estrella -->
+          <div class="col-sm-3 item-imagen">
+            <div class="item-inner">
+              <a href="" picture-modal ng-click="$event.preventDefault()">
+                <img ng-src="{{getImageUrl(articulo.fav)}}" default-src="{{getUnavailableImageUrl()}}">
+              </a>
+
+              <div class="item-tipo" style="width: 65%"></div>
+
+              <div class="item-star">
+                <a ng-attr-id="{{getIdStarArticulo(articulo.fav)}}"
+                   href=""
+                   ng-click="toggleFavorito2(articulo, $event)">
+                  <i class="fa fa-2x"
+                     ng-class="{
+                       'fa-star':   articulo.favorito,
+                       'fa-star-o': !articulo.favorito,
+                       'star-on':   articulo.favorito,
+                       'star-off':  !articulo.favorito
+                     }"></i>
+                </a>
+              </div>
+
+              <!-- SubArtículos + badges -->
+              <div class="item-precios">
+                <span class="subarticulo sub-inline-grid" ng-repeat="subArticulo in articulo.subArticulos">
+                  <span>{{ subArticulo.nombre + ' - ' + subArticulo.idArticulo + ' ' + subArticulo.idColorPorArticulo }}</span>
+                  <span>
+                    <span data-toggle="popover" data-html="true" data-placement="bottom" tabindex="0" item-stock="{{subArticulo.cantidadTalles}}">
+                      <span class="badge item-stock-badge">Stock: {{ subArticulo.stockTotal }}</span>
+                    </span>
+                    <span class="badge">
+                      Pronto:
+                      <span class="stock-produccion" stock-produccion="{{getArticuloCodigoColor(subArticulo)}}">0</span>
+                    </span>
+                  </span>
+                </span>
+              </div>
+
+              <div class="subitem-talles">
+                <span class="subarticulo" ng-repeat="subarticuloi in articulo.subArticulos">
+                  <span>
+                    <span class="badge">{{ subarticuloi.primerTalle }} - {{ subarticuloi.ultimoTalle }}</span>
+                    <span class="badge inverted">{{ subarticuloi.formaDeComercializacion }}</span>
+                  </span>
+                  <span>
+                    <span class="badge">{{ subarticuloi.colorPorArticulo.tipoProductoStock.nombre }}</span>
+                    <span class="badge badge-danger" ng-if="subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc">-{{ subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc }}%</span>
+                  </span>
+                  <span> | {{ funciones.formatearMoneda(getPrecioMayorista(subarticuloi)) }} </span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Curvas / talles -->
+          <div class="col-sm-7">
+            <div ng-repeat="subArticulo in articulo.subArticulos">
+              <table class="tabla-curvas">
+                <thead>
+                  <tr class="row-talles">
+                    <th>{{ subArticulo.idArticulo + ' ' + subArticulo.idColorPorArticulo }}</th>
+                    <th ng-repeat="talle in subArticulo.talles">{{ talle }}</th>
+                    <th ng-if="articulo.formaDeComercializacion == 'M'">Cant.</th>
+                    <th ng-if="articulo.formaDeComercializacion == 'M'">+/-</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="row-stock">
+                    <td>Stock</td>
+                    <td class="aCenter" ng-repeat="(i, talle) in subArticulo.talles">{{ subArticulo.stock[i + 1] }}</td>
+                    <td ng-if="subArticulo.formaDeComercializacion == 'M'" colspan="3"></td>
+                  </tr>
+
+                  <!-- Libre -->
+                  <tr class="row-curva" ng-if="subArticulo.formaDeComercializacion == 'L' || subArticulo.formaDeComercializacion == 'T'">
+                    <td style="padding: 3px 0;">Libre</td>
+                    <td ng-repeat="(i, talle) in subArticulo.talles">
+                      <input maxlength="3" type="number" step="1" min="0" max="999"
+                             ng-model="subArticulo.paresLibres[i]"
+                             ng-change="updateLibre(subArticulo, i, talle)" />
+                    </td>
+                  </tr>
+
+                  <!-- Modular -->
+                  <tr class="row-curva" ng-if="subArticulo.formaDeComercializacion == 'M'" ng-repeat="(j, curva) in subArticulo.curvas">
+                    <td>Curva {{ j+1 }}</td>
+                    <td ng-repeat="(i, talle) in subArticulo.talles">{{ curva.cantidades[i] }}</td>
+                    <td class="col-curvas-cantidad">{{ curva.unidadesSeleccionadas }}</td>
+                    <td>
+                      <button type="button" class="btn" ng-click="addCurva(subArticulo, curva)"><i class="fa fa-fw fa-plus"></i></button>
+                      <button type="button" class="btn" ng-disabled="curva.unidadesSeleccionadas <= 0" ng-click="removeCurva(subArticulo, curva)"><i class="fa fa-fw fa-minus"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="row-totales">
+                    <td id="aCenter">Total</td>
+                    <td ng-repeat="(i, talle) in subArticulo.talles">{{ sumTotalColumna(subArticulo, i) }}</td>
+                    <td colspan="{{ subArticulo.formaDeComercializacion == 'M' ? '2' : '1' }}" style="background: #eaeaea;"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Totales por artículo -->
+          <div class="col-sm-2 col-totales">
+            <table>
+              <tbody>
+                <tr>
+                  <td class="titulo">P. Minor.</td>
+                  <td class="valor">{{ funciones.formatearMoneda(getPrecioMinorista(articulo)) }}</td>
+                </tr>
+                <tr>
+                  <td class="titulo">P. Mayor.</td>
+                  <td class="valor">{{ funciones.formatearMoneda(getPrecioMayorista(articulo)) }}</td>
+                </tr>
+                <tr>
+                  <td class="titulo">Pares</td>
+                  <td class="valor total-pares">{{ sumTotalArticuloPares(articulo) }}</td>
+                </tr>
+                <tr ng-if="descuento > 0">
+                  <td class="titulo">Descuento</td>
+                  <td class="valor">{{ funciones.formatearMoneda(sumTotalArticuloDescuento(articulo)) }}</td>
+                </tr>
+                <tr>
+                  <td class="titulo no-border">$ Total</td>
+                  <td class="valor no-border total">{{ funciones.formatearMoneda(sumTotalArticuloCosto(articulo)) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- /Totales por artículo -->
+
+        </div>
+        <!-- /CARD DE FAVORITO -->
+
+      </div>
+    </div>
+  </div>
 </div>
+
