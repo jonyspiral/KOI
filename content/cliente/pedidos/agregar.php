@@ -1,11 +1,40 @@
-<?php require_once('../../../premaster.php'); if (Usuario::logueado()->puede('cliente/pedidos/agregar/')) { ?>
-<?php
+<<?php require_once('../../../premaster.php');
+print_r($_POST);
+error_log('[cliente/pedidos/agregar.php] IN ' . (isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'no-ct'));
+if (!empty($_SERVER['CONTENT_TYPE']) && stripos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+    $raw = file_get_contents('php://input');
+    error_log('[cliente/pedidos/agregar.php] RAW: ' . substr($raw, 0, 512));
+    if ($raw !== false && $raw !== '') {
+        $json = json_decode($raw, true);
+        if (is_array($json)) {
+            foreach ($json as $k => $v) {
+                if (!isset($_POST[$k])) {
+                    $_POST[$k] = $v;
+                }
+            }
+        }
+    }
+}
 
-$idSucursal = Funciones::post('idSucursal');
-$idAlmacen = '01';
+if (Usuario::logueado()->puede('cliente/pedidos/agregar/')) { ?>
+    <?php
+    $idSucursal = Funciones::post('idSucursal');
+    error_log('[cliente/pedidos/agregar.php] idSucursal=' . var_export($idSucursal, true));
+    if ($idSucursal === null || $idSucursal === '') {
+        header('HTTP/1.1 400 Bad Request');
+        Html::jsonError('Falta idSucursal');
+        exit;
+    }
+
+
+
+    $idAlmacen = '01';
 $idTemporada = 9;
-
-
+// abrir transacción antes de operaciones (si aún no lo hiciste)
+    Factory::getInstance()->beginTransaction();
+    error_log("[agregar.php] beginTransaction OK");
+// antes de armar PedidoCliente
+    error_log("[agregar.php] armar PedidoCliente para cliente=" . (isset(Usuario::logueado()->cliente->id) ? Usuario::logueado()->cliente->id : 'null') . " sucursal=" . var_export($idSucursal, true));
 try {
 
     // Primero preparo el PedidoCliente
@@ -73,7 +102,11 @@ try {
     if ($pedidoCliente->importeTotal <= 0) {
         throw new FactoryExceptionCustomException('No se puede cargar un pedido vac�o');
     }
+// después de calcular totales de pedidoCliente
+    error_log("[agregar.php] pedidoCliente total=" . var_export($pedidoCliente->importeTotal, true));
 
+// antes de armar nota de pedido
+    error_log("[agregar.php] armar NotaDePedido (idAlmacen=" . var_export(isset($idAlmacen) ? $idAlmacen : null, true) . ", idTemporada=" . var_export(isset($idTemporada) ? $idTemporada : null, true) . ")");
 
     // Genero el Pedido
 
@@ -82,7 +115,25 @@ try {
     $notaDePedido->cliente = $pedidoCliente->cliente;
     $notaDePedido->sucursal = $pedidoCliente->sucursal;
     $notaDePedido->idAlmacen = $idAlmacen;
-    $notaDePedido->vendedor = Factory::getInstance()->getVendedor(Usuario::logueado()->contacto->cliente->vendedor->id);
+
+    // Resolver vendedor de forma segura (evita fatal si no hay contacto asociado)
+    $vendedorId = null;
+    try {
+        if (isset(Usuario::logueado()->contacto) && isset(Usuario::logueado()->contacto->cliente) && isset(Usuario::logueado()->contacto->cliente->vendedor)) {
+            $vendedorId = Usuario::logueado()->contacto->cliente->vendedor->id;
+        }
+    } catch (Exception $e) { /* ignore */ }
+    if (!$vendedorId && isset($pedidoCliente->cliente) && isset($pedidoCliente->cliente->vendedor)) {
+        $vendedorId = $pedidoCliente->cliente->vendedor->id;
+    }
+    if (!$vendedorId && isset(Usuario::logueado()->cliente) && isset(Usuario::logueado()->cliente->vendedor)) {
+        $vendedorId = Usuario::logueado()->cliente->vendedor->id;
+    }
+    if (!$vendedorId) {
+        throw new FactoryExceptionCustomException('No se pudo determinar el vendedor para el pedido.');
+    }
+    $notaDePedido->vendedor = Factory::getInstance()->getVendedor($vendedorId);
+
     $notaDePedido->temporada = Factory::getInstance()->getTemporada($idTemporada);
     $notaDePedido->usuario = Usuario::logueado();
     $notaDePedido->precioAlFacturar = 'S';
@@ -125,15 +176,21 @@ try {
         $favorito->borrar();
     }
 
+
+    // después del commit
     Factory::getInstance()->commitTransaction();
+    error_log("[agregar.php] commit OK");
 
 	Html::jsonSuccess('El pedido fue guardado correctamente');
+    // en los catch, loguear el mensaje y proteger rollback
 } catch (FactoryExceptionCustomException $ex) {
-    Factory::getInstance()->rollbackTransaction();
-	Html::jsonError($ex->getMessage());
+    error_log("[agregar.php] CATCH FactoryExceptionCustomException: " . $ex->getMessage());
+    try { Factory::getInstance()->rollbackTransaction(); error_log("[agregar.php] rollback OK"); } catch (Exception $e2) { error_log("[agregar.php] rollback FAIL: " . $e2->getMessage()); }
+    Html::jsonError($ex->getMessage());
 } catch (Exception $ex) {
-    Factory::getInstance()->rollbackTransaction();
-	Html::jsonError('Ocurri� un error al intentar guardar el pedido. ' . $ex->getMessage());
+    error_log("[agregar.php] CATCH Exception: " . $ex->getMessage());
+    try { Factory::getInstance()->rollbackTransaction(); error_log("[agregar.php] rollback OK"); } catch (Exception $e2) { error_log("[agregar.php] rollback FAIL: " . $e2->getMessage()); }
+    Html::jsonError('Ocurrió un error al intentar guardar el pedido. ' . $ex->getMessage());
 }
 
 ?>

@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `reporte_articulos_v` AS SELECT documentos_c.cod_cliente, Clientes.razon_social, articulos.denom_articulo, documentos_cantidades.cod_articulo, documentos_cantidades.cod_color_articulo, dbo;

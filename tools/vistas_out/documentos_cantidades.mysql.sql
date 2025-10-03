@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW documentos_cantidades AS SELECT c.fecha fecha, c.cod_cliente cod_cliente, a.*FROM ((SELECT empresa empresa, punto_venta punto_venta, tipo_docum tipo_docum, nro_documento nro_documento, letra letra_documento,NULL nro_remit;;

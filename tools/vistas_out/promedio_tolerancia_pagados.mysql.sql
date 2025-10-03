@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW promedio_tolerancia_pagadosASSELECT casiPagas.documento_fecha,casiPagas.cod_cli,casiPagas.empresa,casiPagas.factura_nro,casiPagas.letra_factura,promedioHijas.promedioFROM(SELECT facturasNuevas.documento_fecha,;;

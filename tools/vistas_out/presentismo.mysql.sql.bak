@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `presentismo` AS SELECT t1.fecha, t1.legajo_nro, (CASE WHEN t2.legajo_nro IS NULL THEN 'AUSENTE' ELSE 'PRESENTE' END) presenciaFROM (SELECT dias.*, p.legajo_nroFROM (SELECT fechaFROM registro_entradas_salidas;

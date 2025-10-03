@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW tareas_incumplidas_empaque_vASSELECT *, nro_plan AS `plan`, nro_orden_fabricacion AS op, nro_tarea AS tareaFROM (SELECT Orden_fabricacion.nro_plan, Orden_fabricacion.;

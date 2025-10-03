@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `reporte_facturacion_proveedores_v` AS SELECTdpc.fecha, dpc.fecha_periodo_fiscal, dpc.tipo_docum, dpc.punto_venta, dpc.nro_documento, dpc.letra,p.cod_prov, p.razon_social, p.imputacion_general, pc.denominacion denominacion_imp_;

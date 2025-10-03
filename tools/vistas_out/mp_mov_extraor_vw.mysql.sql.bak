@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW mp_mov_extraor_vwASSELECT fecha_movimiento, cod_material, cod_color_material AS cod_color, (CASE WHEN efecto_movimiento = 'S' THEN - 1 ELSE 1 END) * IFNULL(cantidad, 0) AS cantidad, (CASE WHEN efecto_movimie;

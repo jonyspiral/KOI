@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW stock_pedidos_pendientes_cliente_vASSELECT TOP 100 pedidos_c.cod_cliente, pedidos_d.cod_almacen, pedidos_d.cod_articulo, pedidos_d.cod_color_articulo, SUM(IFNULL(pedidos_d.pend_1,;;
