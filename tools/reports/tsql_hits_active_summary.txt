@@ -1,633 +1,925 @@
-     98 content/administracion/tesoreria
-     32 content/administracion/cobranzas
-     24 content/comercial/notas_de_credito
-     24 content/administracion/proveedores
-     22 content/produccion/compras
-     20 content/cliente/favoritos
-     19 content/comercial/pedidos
-     14 content/comercial/notas_de_debito
-     12 content/produccion/stock_mp
-     12 content/comercial/facturas
-     12 content/abm/clientes
-     10 content/sistema/notificaciones
-      8 content/produccion/stock
-      8 content/comercial/remitos
-      8 content/administracion/contabilidad
-      8 content/administracion/cajas
-      6 content/sistema/formularios
-      6 content/produccion/producto
-      6 content/produccion/gestion_produccion
-      6 content/comercial/ecommerce
-      6 content/comercial/despachos
-      6 content/comercial/cuenta_corriente
-      6 content/cliente/catalogo
-      6 content/administracion/finanzas
-      6 content/abm/articulos
-      4 content/comercial/stock
-      4 content/comercial/calidad
-      4 content/cliente/pedidos
-      4 content/administracion/rrhh
-      4 content/abm/condiciones_iva
-      4 content/abm/cajas
-      2 content/sistema/roles
-      2 content/sistema/indicadores
-      2 content/sistema/avanzado
-      2 content/produccion/reportes
-      2 content/comercial/vendedores
-      2 content/comercial/reportes
-      2 content/comercial/predespachos
-      2 content/abm/seccion_produccion
-      2 content/abm/proveedores
-      2 content/abm/personal
-      2 content/abm/alicuotas_retenciones
+    147 content/administracion/tesoreria
+     48 content/administracion/cobranzas
+     36 content/comercial/notas_de_credito
+     36 content/administracion/proveedores
+     33 content/produccion/compras
+     30 content/cliente/favoritos
+     28 content/comercial/pedidos
+     21 content/comercial/notas_de_debito
+     18 content/produccion/stock_mp
+     18 content/comercial/facturas
+     18 content/abm/clientes
+     15 content/sistema/notificaciones
+     12 content/produccion/stock
+     12 content/comercial/remitos
+     12 content/administracion/contabilidad
+     12 content/administracion/cajas
+      9 content/sistema/formularios
+      9 content/produccion/producto
+      9 content/produccion/gestion_produccion
+      9 content/comercial/ecommerce
+      9 content/comercial/despachos
+      9 content/comercial/cuenta_corriente
+      9 content/cliente/catalogo
+      9 content/administracion/finanzas
+      9 content/abm/articulos
+      6 content/comercial/stock
+      6 content/comercial/calidad
+      6 content/cliente/pedidos
+      6 content/administracion/rrhh
+      6 content/abm/condiciones_iva
+      6 content/abm/cajas
+      3 content/sistema/roles
+      3 content/sistema/indicadores
+      3 content/sistema/avanzado
+      3 content/produccion/reportes
+      3 content/comercial/vendedores
+      3 content/comercial/reportes
+      3 content/comercial/predespachos
+      3 content/abm/seccion_produccion
+      3 content/abm/proveedores
+      3 content/abm/personal
+      3 content/abm/alicuotas_retenciones
       1 premaster.php/
       1 master.php/
       1 main.php/
       1 login.php/
+      1 js/validate/Viejo validate.js.bak.bak
       1 js/validate/Viejo validate.js.bak
       1 js/validate/Viejo validate.js
+      1 js/ui-bootstrap.js.bak.bak
       1 js/ui-bootstrap.js.bak
       1 js/ui-bootstrap.js
+      1 js/tabs/tabs.js.bak.bak
       1 js/tabs/tabs.js.bak
       1 js/tabs/tabs.js
+      1 js/slimScroll/jquery.slimscroll.min.js.bak.bak
       1 js/slimScroll/jquery.slimscroll.min.js.bak
       1 js/slimScroll/jquery.slimscroll.min.js
+      1 js/slimScroll/jquery.slimscroll.js.bak.bak
       1 js/slimScroll/jquery.slimscroll.js.bak
       1 js/slimScroll/jquery.slimscroll.js
+      1 js/services/cliente.js.bak.bak
       1 js/services/cliente.js.bak
       1 js/services/cliente.js
+      1 js/services/catalogo.js.bak.bak
       1 js/services/catalogo.js.bak
       1 js/services/catalogo.js
+      1 js/menu/menu.js.bak.bak
       1 js/menu/menu.js.bak
       1 js/menu/menu.js
+      1 js/loadJSON/loadJSON.js.bak.bak
       1 js/loadJSON/loadJSON.js.bak
       1 js/loadJSON/loadJSON.js
+      1 js/livequery/livequery.js.bak.bak
       1 js/livequery/livequery.js.bak
       1 js/livequery/livequery.js
+      1 js/listaAlternada/listaAlternada.js.bak.bak
       1 js/listaAlternada/listaAlternada.js.bak
       1 js/listaAlternada/listaAlternada.js
+      1 js/koiCheckbox/koiCheckbox.js.bak.bak
       1 js/koiCheckbox/koiCheckbox.js.bak
       1 js/koiCheckbox/koiCheckbox.js
+      1 js/koiCheckbox/koiCheckbox.css.bak.bak
       1 js/koiCheckbox/koiCheckbox.css.bak
       1 js/koiCheckbox/koiCheckbox.css
+      1 js/jTooltip/jTooltip.js.bak.bak
       1 js/jTooltip/jTooltip.js.bak
       1 js/jTooltip/jTooltip.js
+      1 js/jquery-ui.js.bak.bak
       1 js/jquery-ui.js.bak
       1 js/jquery-ui.js
+      1 js/jquery-mousewheel.js.bak.bak
       1 js/jquery-mousewheel.js.bak
       1 js/jquery-mousewheel.js
+      1 js/jquery.min.js.bak.bak
       1 js/jquery.min.js.bak
       1 js/jquery.min.js
+      1 js/jquery.js.bak.bak
       1 js/jquery.js.bak
       1 js/jquery.js
+      1 js/jquery-easing.js.bak.bak
       1 js/jquery-easing.js.bak
       1 js/jquery-easing.js
+      1 js/jquery-1.9.js.bak.bak
       1 js/jquery-1.9.js.bak
       1 js/jquery-1.9.js
+      1 js/jMsgBox/jMsgBox.js.bak.bak
       1 js/jMsgBox/jMsgBox.js.bak
       1 js/jMsgBox/jMsgBox.js
+      1 js/highstock.js.bak.bak
       1 js/highstock.js.bak
       1 js/highstock.js
+      1 js/highcharts.js.bak.bak
       1 js/highcharts.js.bak
       1 js/highcharts.js
+      1 js/growl/jquery.growl.js.bak.bak
       1 js/growl/jquery.growl.js.bak
       1 js/growl/jquery.growl.js
+      1 js/gmaps/jsapi.js.bak.bak
       1 js/gmaps/jsapi.js.bak
       1 js/gmaps/jsapi.js
+      1 js/gmaps/gmaps.js.bak.bak
       1 js/gmaps/gmaps.js.bak
       1 js/gmaps/gmaps.js
+      1 js/funciones.js.bak.bak
       1 js/funciones.js.bak
       1 js/funciones.js
+      1 js/fixedHeader/fixedHeader.js.bak.bak
       1 js/fixedHeader/fixedHeader.js.bak
       1 js/fixedHeader/fixedHeader.js
+      1 js/directives/stock-produccion.js.bak.bak
+      1 js/directives/stock-produccion.js.bak.2025-09-03_024936.bak.bak
       1 js/directives/stock-produccion.js.bak.2025-09-03_024936.bak
       1 js/directives/stock-produccion.js.bak.2025-09-03_024936
       1 js/directives/stock-produccion.js.bak
       1 js/directives/stock-produccion.js
+      1 js/directives/sidebar.js.bak.bak
       1 js/directives/sidebar.js.bak
       1 js/directives/sidebar.js
+      1 js/directives/item-stock.js.bak.bak
       1 js/directives/item-stock.js.bak
       1 js/directives/item-stock.js
+      1 js/checktree/checktree.js.bak.bak
       1 js/checktree/checktree.js.bak
       1 js/checktree/checktree.js
+      1 js/bootstrap.min.js.bak.bak
       1 js/bootstrap.min.js.bak
       1 js/bootstrap.min.js
+      1 js/backgroundRotator/backgroundRotator.js.bak.bak
       1 js/backgroundRotator/backgroundRotator.js.bak
       1 js/backgroundRotator/backgroundRotator.js
+      1 js/autoSuggestBox/autoSuggestBox.php.bak.bak
       1 js/autoSuggestBox/autoSuggestBox.php.bak
       1 js/autoSuggestBox/autoSuggestBox.php
+      1 js/autoSuggestBox/autoSuggestBox.js.bak.bak
       1 js/autoSuggestBox/autoSuggestBox.js.bak
       1 js/autoSuggestBox/autoSuggestBox.js
+      1 js/angular.min.js.bak.bak
       1 js/angular.min.js.bak
       1 js/angular.min.js
+      1 js/angular.js.bak.bak
       1 js/angular.js.bak
       1 js/angular.js
+      1 js/angular-animate.js.bak.bak
       1 js/angular-animate.js.bak
       1 js/angular-animate.js
       1 .htaccess/
+      1 factory/reporte_incompatibilidades.txt.bak
       1 factory/reporte_incompatibilidades.txt
+      1 factory/Mutex.php.bak.bak
       1 factory/Mutex.php.bak
       1 factory/Mutex.php
+      1 factory/Mapper.php.bak.bak
       1 factory/Mapper.php.bak
       1 factory/Mapper.php
+      1 factory/Funciones.php.bak.bak
       1 factory/Funciones.php.bak
       1 factory/Funciones.php
+      1 factory/Funcionalidades.php.bak.bak
       1 factory/Funcionalidades.php.bak
       1 factory/Funcionalidades.php
+      1 factory/Factory.php.bak.bak
       1 factory/Factory.php.bak
       1 factory/Factory.php
+      1 factory/drivers/DbMysql.php.bak.bak
       1 factory/drivers/DbMysql.php.bak
       1 factory/drivers/DbMysql.php
+      1 factory/Datos.php.bak.bak
       1 factory/Datos.php.bak
       1 factory/Datos.php
+      1 factory/Datos copy.php.bak
       1 factory/Datos copy.php
+      1 content/index.php.bak.bak.bak
       1 content/index.php.bak.bak
       1 content/index.php.bak
       1 content/index.php
+      1 content/cliente/menu.php.bak.bak
       1 content/cliente/menu.php.bak
       1 content/cliente/menu.php
+      1 content/cliente/main.php.bak.bak
       1 content/cliente/main.php.bak
       1 content/cliente/main.php
+      1 content/cliente/index.php.bak.bak
       1 content/cliente/index.php.bak
       1 content/cliente/index.php
+      1 content/cliente/actualizarFiltros.php.bak.bak
       1 content/cliente/actualizarFiltros.php.bak
       1 content/cliente/actualizarFiltros.php
+      1 content/api/stock_produccion.php.bak.bak
+      1 content/api/stock_produccion.php.bak.2025-09-03_065537.bak.bak
       1 content/api/stock_produccion.php.bak.2025-09-03_065537.bak
       1 content/api/stock_produccion.php.bak.2025-09-03_065537
       1 content/api/stock_produccion.php.bak
       1 content/api/stock_produccion.php
+      1 content/api/session_.php.bak.bak
       1 content/api/session_.php.bak
       1 content/api/session_.php
+      1 content/api/funciones.php.bak.bak
+      1 content/api/funciones.php.bak.2025-09-03_100939.bak.bak
       1 content/api/funciones.php.bak.2025-09-03_100939.bak
       1 content/api/funciones.php.bak.2025-09-03_100939
       1 content/api/funciones.php.bak
       1 content/api/funciones.php
+      1 clases/ZonaTransporte.php.bak.bak
       1 clases/ZonaTransporte.php.bak
       1 clases/ZonaTransporte.php
+      1 clases/Zona.php.bak.bak
       1 clases/Zona.php.bak
       1 clases/Zona.php
+      1 clases/VentaChequesTemporal.php.bak.bak
       1 clases/VentaChequesTemporal.php.bak
       1 clases/VentaChequesTemporal.php
+      1 clases/VentaCheques.php.bak.bak
       1 clases/VentaCheques.php.bak
       1 clases/VentaCheques.php
+      1 clases/VentaChequesCabecera.php.bak.bak
       1 clases/VentaChequesCabecera.php.bak
       1 clases/VentaChequesCabecera.php
+      1 clases/UsuarioPorTipoNotificacion.php.bak.bak
       1 clases/UsuarioPorTipoNotificacion.php.bak
       1 clases/UsuarioPorTipoNotificacion.php
+      1 clases/UsuarioPorSeccionProduccion.php.bak.bak
       1 clases/UsuarioPorSeccionProduccion.php.bak
       1 clases/UsuarioPorSeccionProduccion.php
+      1 clases/UsuarioPorCaja.php.bak.bak
       1 clases/UsuarioPorCaja.php.bak
       1 clases/UsuarioPorCaja.php
+      1 clases/UsuarioPorAreaEmpresa.php.bak.bak
       1 clases/UsuarioPorAreaEmpresa.php.bak
       1 clases/UsuarioPorAreaEmpresa.php
+      1 clases/UsuarioPorAlmacen.php.bak.bak
       1 clases/UsuarioPorAlmacen.php.bak
       1 clases/UsuarioPorAlmacen.php
+      1 clases/Usuario.php.bak.bak
       1 clases/Usuario.php.bak
       1 clases/Usuario.php
+      1 clases/UsuarioLogin.php.bak.bak.bak
       1 clases/UsuarioLogin.php.bak.bak
       1 clases/UsuarioLogin.php.bak
       1 clases/UsuarioLogin.php
+      1 clases/UsuarioCalzado.php.bak.bak
       1 clases/UsuarioCalzado.php.bak
       1 clases/UsuarioCalzado.php
+      1 clases/UnidadDeMedida.php.bak.bak
       1 clases/UnidadDeMedida.php.bak
       1 clases/UnidadDeMedida.php
+      1 clases/Transporte.php.bak.bak
       1 clases/Transporte.php.bak
       1 clases/Transporte.php
+      1 clases/TransferenciaInterna.php.bak.bak
       1 clases/TransferenciaInterna.php.bak
       1 clases/TransferenciaInterna.php
+      1 clases/TransferenciaInternaCabecera.php.bak.bak
       1 clases/TransferenciaInternaCabecera.php.bak
       1 clases/TransferenciaInternaCabecera.php
+      1 clases/TransferenciaDoble.php.bak.bak
       1 clases/TransferenciaDoble.php.bak
       1 clases/TransferenciaDoble.php
+      1 clases/TransferenciaBase.php.bak.bak
       1 clases/TransferenciaBase.php.bak
       1 clases/TransferenciaBase.php
+      1 clases/TipoRetencion.php.bak.bak
       1 clases/TipoRetencion.php.bak
       1 clases/TipoRetencion.php
+      1 clases/TipoProveedor.php.bak.bak
       1 clases/TipoProveedor.php.bak
       1 clases/TipoProveedor.php
+      1 clases/TipoProductoStock.php.bak.bak
       1 clases/TipoProductoStock.php.bak
       1 clases/TipoProductoStock.php
+      1 clases/TipoPeriodoFiscal.php.bak.bak
       1 clases/TipoPeriodoFiscal.php.bak
       1 clases/TipoPeriodoFiscal.php
+      1 clases/TipoNotificacion.php.bak.bak
       1 clases/TipoNotificacion.php.bak
       1 clases/TipoNotificacion.php
+      1 clases/TipoFactura.php.bak.bak
       1 clases/TipoFactura.php.bak
       1 clases/TipoFactura.php
+      1 clases/Temporada.php.bak.bak
       1 clases/Temporada.php.bak
       1 clases/Temporada.php
+      1 clases/TareaProduccion.php.bak.bak
       1 clases/TareaProduccion.php.bak
       1 clases/TareaProduccion.php
+      1 clases/TareaProduccionItem.php.bak.bak
       1 clases/TareaProduccionItem.php.bak
       1 clases/TareaProduccionItem.php
+      1 clases/Sucursal.php.bak.bak
       1 clases/Sucursal.php.bak
       1 clases/Sucursal.php
+      1 clases/StoreLocatorUpdater.php.bak.bak
       1 clases/StoreLocatorUpdater.php.bak
       1 clases/StoreLocatorUpdater.php
+      1 clases/Stock.php.bak.bak
       1 clases/Stock.php.bak
       1 clases/Stock.php
+      1 clases/StockMP.php.bak.bak
       1 clases/StockMP.php.bak
       1 clases/StockMP.php
+      1 clases/SolicitudDeFondos.php.bak.bak
       1 clases/SolicitudDeFondos.php.bak
       1 clases/SolicitudDeFondos.php
+      1 clases/SolicitudDeFondosItem.php.bak.bak
       1 clases/SolicitudDeFondosItem.php.bak
       1 clases/SolicitudDeFondosItem.php
+      1 clases/Socio.php.bak.bak
       1 clases/Socio.php.bak
       1 clases/Socio.php
+      1 clases/SeguimientoCliente.php.bak.bak
       1 clases/SeguimientoCliente.php.bak
       1 clases/SeguimientoCliente.php
+      1 clases/SeccionProduccion.php.bak.bak
       1 clases/SeccionProduccion.php.bak
       1 clases/SeccionProduccion.php
+      1 clases/RutaProduccion.php.bak.bak
       1 clases/RutaProduccion.php.bak
       1 clases/RutaProduccion.php
+      1 clases/RutaProduccionPaso.php.bak.bak
       1 clases/RutaProduccionPaso.php.bak
       1 clases/RutaProduccionPaso.php
+      1 clases/Rubro.php.bak.bak
       1 clases/Rubro.php.bak
       1 clases/Rubro.php
+      1 clases/RubroIva.php.bak.bak
       1 clases/RubroIva.php.bak
       1 clases/RubroIva.php
+      1 clases/RolPorUsuario.php.bak.bak
       1 clases/RolPorUsuario.php.bak
       1 clases/RolPorUsuario.php
+      1 clases/RolPorTipoNotificacion.php.bak.bak
       1 clases/RolPorTipoNotificacion.php.bak
       1 clases/RolPorTipoNotificacion.php
+      1 clases/Rol.php.bak.bak
       1 clases/Rol.php.bak
       1 clases/Rol.php
+      1 clases/RetiroSocio.php.bak.bak
       1 clases/RetiroSocio.php.bak
       1 clases/RetiroSocio.php
+      1 clases/RetencionSufrida.php.bak.bak
       1 clases/RetencionSufrida.php.bak
       1 clases/RetencionSufrida.php
+      1 clases/Retencion.php.bak.bak
       1 clases/Retencion.php.bak
       1 clases/Retencion.php
+      1 clases/RetencionEfectuada.php.bak.bak
       1 clases/RetencionEfectuada.php.bak
       1 clases/RetencionEfectuada.php
+      1 clases/RendicionGastos.php.bak.bak
       1 clases/RendicionGastos.php.bak
       1 clases/RendicionGastos.php
+      1 clases/RemitoProveedor.php.bak.bak
       1 clases/RemitoProveedor.php.bak
       1 clases/RemitoProveedor.php
+      1 clases/RemitoProveedorItem.php.bak.bak
       1 clases/RemitoProveedorItem.php.bak
       1 clases/RemitoProveedorItem.php
+      1 clases/RemitoPorOrdenDeCompra.php.bak.bak
       1 clases/RemitoPorOrdenDeCompra.php.bak
       1 clases/RemitoPorOrdenDeCompra.php
+      1 clases/ReingresoChequeCartera.php.bak.bak
       1 clases/ReingresoChequeCartera.php.bak
       1 clases/ReingresoChequeCartera.php
+      1 clases/Recibo.php.bak.bak
       1 clases/Recibo.php.bak
       1 clases/Recibo.php
+      1 clases/RechazoCheque.php.bak.bak
       1 clases/RechazoCheque.php.bak
       1 clases/RechazoCheque.php
+      1 clases/RechazoChequeCabecera.php.bak.bak
       1 clases/RechazoChequeCabecera.php.bak
       1 clases/RechazoChequeCabecera.php
+      1 clases/RangoTalle.php.bak.bak
       1 clases/RangoTalle.php.bak
       1 clases/RangoTalle.php
+      1 clases/Provincia.php.bak.bak
       1 clases/Provincia.php.bak
       1 clases/Provincia.php
+      1 clases/Proveedor.php.bak.bak
       1 clases/Proveedor.php.bak
       1 clases/Proveedor.php
+      1 clases/ProveedorMateriaPrima.php.bak.bak
       1 clases/ProveedorMateriaPrima.php.bak
       1 clases/ProveedorMateriaPrima.php
+      1 clases/Presupuesto.php.bak.bak
       1 clases/Presupuesto.php.bak
       1 clases/Presupuesto.php
+      1 clases/PresupuestoOrdenCompra.php.bak.bak
       1 clases/PresupuestoOrdenCompra.php.bak
       1 clases/PresupuestoOrdenCompra.php
+      1 clases/PresupuestoItem.php.bak.bak
       1 clases/PresupuestoItem.php.bak
       1 clases/PresupuestoItem.php
+      1 clases/Prestamo.php.bak.bak
       1 clases/Prestamo.php.bak
       1 clases/Prestamo.php
+      1 clases/Predespacho.php.bak.bak
       1 clases/Predespacho.php.bak
       1 clases/Predespacho.php
+      1 clases/PHPMailer.php.bak.bak
       1 clases/PHPMailer.php.bak
       1 clases/PHPMailer.php
+      1 clases/Personal.php.bak.bak
       1 clases/Personal.php.bak
       1 clases/Personal.php
+      1 clases/PersonaGasto.php.bak.bak
       1 clases/PersonaGasto.php.bak
       1 clases/PersonaGasto.php
+      1 clases/PermisoPorUsuarioPorCaja.php.bak.bak
       1 clases/PermisoPorUsuarioPorCaja.php.bak
       1 clases/PermisoPorUsuarioPorCaja.php
+      1 clases/PermisoPorCaja.php.bak.bak
       1 clases/PermisoPorCaja.php.bak
       1 clases/PermisoPorCaja.php
+      1 clases/Pedido.php.bak.bak
       1 clases/Pedido.php.bak
       1 clases/Pedido.php
+      1 clases/PedidoItem.php.bak.bak
       1 clases/PedidoItem.php.bak
       1 clases/PedidoItem.php
+      1 clases/Patron.php.bak.bak
       1 clases/Patron.php.bak
       1 clases/Patron.php
+      1 clases/PatronItem.php.bak.bak
       1 clases/PatronItem.php.bak
       1 clases/PatronItem.php
+      1 clases/Parametro.php.bak.bak
       1 clases/Parametro.php.bak
       1 clases/Parametro.php
+      1 clases/ParametroContabilidad.php.bak.bak
       1 clases/ParametroContabilidad.php.bak
       1 clases/ParametroContabilidad.php
+      1 clases/Pais.php.bak.bak
       1 clases/Pais.php.bak
       1 clases/Pais.php
+      1 clases/OrdenDePago.php.bak.bak
       1 clases/OrdenDePago.php.bak
       1 clases/OrdenDePago.php
+      1 clases/OrdenDeFabricacion.php.bak.bak
       1 clases/OrdenDeFabricacion.php.bak
       1 clases/OrdenDeFabricacion.php
+      1 clases/OrdenDeCompra.php.bak.bak
       1 clases/OrdenDeCompra.php.bak
       1 clases/OrdenDeCompra.php
+      1 clases/OrdenDeCompraItem.php.bak.bak
       1 clases/OrdenDeCompraItem.php.bak
       1 clases/OrdenDeCompraItem.php
+      1 clases/Operador.php.bak.bak
       1 clases/Operador.php.bak
       1 clases/Operador.php
+      1 clases/NotificacionPorUsuario.php.bak.bak
       1 clases/NotificacionPorUsuario.php.bak
       1 clases/NotificacionPorUsuario.php
+      1 clases/Notificacion.php.bak.bak
       1 clases/Notificacion.php.bak
       1 clases/Notificacion.php
+      1 clases/NotaDeCreditoProveedor.php.bak.bak
       1 clases/NotaDeCreditoProveedor.php.bak
       1 clases/NotaDeCreditoProveedor.php
+      1 clases/MovimientoStock.php.bak.bak
       1 clases/MovimientoStock.php.bak
       1 clases/MovimientoStock.php
+      1 clases/MovimientoStockMP.php.bak.bak
       1 clases/MovimientoStockMP.php.bak
       1 clases/MovimientoStockMP.php
+      1 clases/MovimientoAlmacen.php.bak.bak
       1 clases/MovimientoAlmacen.php.bak
       1 clases/MovimientoAlmacen.php
+      1 clases/MovimientoAlmacenMP.php.bak.bak
       1 clases/MovimientoAlmacenMP.php.bak
       1 clases/MovimientoAlmacenMP.php
+      1 clases/MovimientoAlmacenConfirmacion.php.bak.bak
       1 clases/MovimientoAlmacenConfirmacion.php.bak
       1 clases/MovimientoAlmacenConfirmacion.php
+      1 clases/MovimientoAlmacenConfirmacionMP.php.bak.bak
       1 clases/MovimientoAlmacenConfirmacionMP.php.bak
       1 clases/MovimientoAlmacenConfirmacionMP.php
+      1 clases/MotivoAusentismo.php.bak.bak
       1 clases/MotivoAusentismo.php.bak
       1 clases/MotivoAusentismo.php
+      1 clases/Material.php.bak.bak
       1 clases/Material.php.bak
       1 clases/Material.php
+      1 clases/Marca.php.bak.bak
       1 clases/Marca.php.bak
       1 clases/Marca.php
+      1 clases/LoteDeProduccion.php.bak.bak
       1 clases/LoteDeProduccion.php.bak
       1 clases/LoteDeProduccion.php
+      1 clases/Logger.php.bak.bak
       1 clases/Logger.php.bak
       1 clases/Logger.php
+      1 clases/Localidad.php.bak.bak
       1 clases/Localidad.php.bak
       1 clases/Localidad.php
+      1 clases/ListaAplicable.php.bak.bak
       1 clases/ListaAplicable.php.bak
       1 clases/ListaAplicable.php
+      1 clases/LineaProducto.php.bak.bak
       1 clases/LineaProducto.php.bak
       1 clases/LineaProducto.php
+      1 clases/KoiTicket.php.bak.bak
       1 clases/KoiTicket.php.bak
       1 clases/KoiTicket.php
+      1 clases/InstruccionArticulo.php.bak.bak
       1 clases/InstruccionArticulo.php.bak
       1 clases/InstruccionArticulo.php
+      1 clases/IngresoChequePropio.php.bak.bak
       1 clases/IngresoChequePropio.php.bak
       1 clases/IngresoChequePropio.php
+      1 clases/IndicadorPorRol.php.bak.bak
       1 clases/IndicadorPorRol.php.bak
       1 clases/IndicadorPorRol.php
+      1 clases/Indicador.php.bak.bak
       1 clases/Indicador.php.bak
       1 clases/Indicador.php
+      1 clases/Imputacion.php.bak.bak
       1 clases/Imputacion.php.bak
       1 clases/Imputacion.php
+      1 clases/ImpuestoPorDocumentoProveedor.php.bak.bak
       1 clases/ImpuestoPorDocumentoProveedor.php.bak
       1 clases/ImpuestoPorDocumentoProveedor.php
+      1 clases/Impuesto.php.bak.bak
       1 clases/Impuesto.php.bak
       1 clases/Impuesto.php
+      1 clases/ImportePorOperacionItem.php.bak.bak
       1 clases/ImportePorOperacionItem.php.bak
       1 clases/ImportePorOperacionItem.php
+      1 clases/Importe.php.bak.bak
       1 clases/Importe.php.bak
       1 clases/Importe.php
+      1 clases/HtmlTableRow.php.bak.bak
       1 clases/HtmlTableRow.php.bak
       1 clases/HtmlTableRow.php
+      1 clases/HtmlTable.php.bak.bak
       1 clases/HtmlTable.php.bak
       1 clases/HtmlTable.php
+      1 clases/HtmlTableHead.php.bak.bak
       1 clases/HtmlTableHead.php.bak
       1 clases/HtmlTableHead.php
+      1 clases/HtmlTableHeader.php.bak.bak
       1 clases/HtmlTableHeader.php.bak
       1 clases/HtmlTableHeader.php
+      1 clases/HtmlTableFoot.php.bak.bak
       1 clases/HtmlTableFoot.php.bak
       1 clases/HtmlTableFoot.php
+      1 clases/HtmlTableCell.php.bak.bak
       1 clases/HtmlTableCell.php.bak
       1 clases/HtmlTableCell.php
+      1 clases/HtmlTableBody.php.bak.bak
       1 clases/HtmlTableBody.php.bak
       1 clases/HtmlTableBody.php
+      1 clases/HtmlStyle.php.bak.bak
       1 clases/HtmlStyle.php.bak
       1 clases/HtmlStyle.php
+      1 clases/Html.php.bak.bak.bak
       1 clases/Html.php.bak.bak
       1 clases/Html.php.bak
       1 clases/Html.php
+      1 clases/HtmlAutoSuggestBox.php.bak.bak.bak
       1 clases/HtmlAutoSuggestBox.php.bak.bak
       1 clases/HtmlAutoSuggestBox.php.bak
       1 clases/HtmlAutoSuggestBox.php
+      1 clases/Html2Xls.php.bak.bak
       1 clases/Html2Xls.php.bak
       1 clases/Html2Xls.php
+      1 clases/Horma.php.bak.bak
       1 clases/Horma.php.bak
       1 clases/Horma.php
+      1 clases/GrupoEmpresa.php.bak.bak
       1 clases/GrupoEmpresa.php.bak
       1 clases/GrupoEmpresa.php
+      1 clases/Gastito.php.bak.bak
       1 clases/Gastito.php.bak
       1 clases/Gastito.php
+      1 clases/Garantia.php.bak.bak
       1 clases/Garantia.php.bak
       1 clases/Garantia.php
+      1 clases/GarantiaItem.php.bak.bak
       1 clases/GarantiaItem.php.bak
       1 clases/GarantiaItem.php
+      1 clases/FuncionalidadPorRol.php.bak.bak
       1 clases/FuncionalidadPorRol.php.bak
       1 clases/FuncionalidadPorRol.php
+      1 clases/FormularioVentaCheques.php.bak.bak
       1 clases/FormularioVentaCheques.php.bak
       1 clases/FormularioVentaCheques.php
+      1 clases/FormularioRendicionGastos.php.bak.bak
       1 clases/FormularioRendicionGastos.php.bak
       1 clases/FormularioRendicionGastos.php
+      1 clases/FormularioRecibo.php.bak.bak
       1 clases/FormularioRecibo.php.bak
       1 clases/FormularioRecibo.php
+      1 clases/FormularioPresupuesto.php.bak.bak
       1 clases/FormularioPresupuesto.php.bak
       1 clases/FormularioPresupuesto.php
+      1 clases/FormularioPredespacho.php.bak.bak
       1 clases/FormularioPredespacho.php.bak
       1 clases/FormularioPredespacho.php
+      1 clases/Formulario.php.bak.bak
       1 clases/Formulario.php.bak
       1 clases/Formulario.php
+      1 clases/FormularioPedidoCliente.php.bak.bak
       1 clases/FormularioPedidoCliente.php.bak
       1 clases/FormularioPedidoCliente.php
+      1 clases/FormularioOrdenDePago.php.bak.bak
       1 clases/FormularioOrdenDePago.php.bak
       1 clases/FormularioOrdenDePago.php
+      1 clases/FormularioOrdenDeCompra.php.bak.bak
       1 clases/FormularioOrdenDeCompra.php.bak
       1 clases/FormularioOrdenDeCompra.php
+      1 clases/FormularioOperacionSocio.php.bak.bak
       1 clases/FormularioOperacionSocio.php.bak
       1 clases/FormularioOperacionSocio.php
+      1 clases/FormularioNotaDeCredito.php.bak.bak
       1 clases/FormularioNotaDeCredito.php.bak
       1 clases/FormularioNotaDeCredito.php
+      1 clases/FormularioGarantia.php.bak.bak
       1 clases/FormularioGarantia.php.bak
       1 clases/FormularioGarantia.php
+      1 clases/FormularioFavoritoCliente.php.bak.bak
       1 clases/FormularioFavoritoCliente.php.bak
       1 clases/FormularioFavoritoCliente.php
+      1 clases/FormularioDevolucionCliente.php.bak.bak
       1 clases/FormularioDevolucionCliente.php.bak
       1 clases/FormularioDevolucionCliente.php
+      1 clases/FormularioDepositoBancarioTemporal.php.bak.bak
       1 clases/FormularioDepositoBancarioTemporal.php.bak
       1 clases/FormularioDepositoBancarioTemporal.php
+      1 clases/FormularioCobroChequesVentanilla.php.bak.bak
       1 clases/FormularioCobroChequesVentanilla.php.bak
       1 clases/FormularioCobroChequesVentanilla.php
+      1 clases/FormaDePago.php.bak.bak
       1 clases/FormaDePago.php.bak
       1 clases/FormaDePago.php
+      1 clases/Forecast.php.bak.bak
       1 clases/Forecast.php.bak
       1 clases/Forecast.php
+      1 clases/ForecastItem.php.bak.bak
       1 clases/ForecastItem.php.bak
       1 clases/ForecastItem.php
+      1 clases/FilaAsientoContable.php.bak.bak
       1 clases/FilaAsientoContable.php.bak
       1 clases/FilaAsientoContable.php
+      1 clases/Fichaje.php.bak.bak
       1 clases/Fichaje.php.bak
       1 clases/Fichaje.php
+      1 clases/FavoritoCliente.php.bak.bak
       1 clases/FavoritoCliente.php.bak
       1 clases/FavoritoCliente.php
+      1 clases/Fasonier.php.bak.bak
       1 clases/Fasonier.php.bak
       1 clases/Fasonier.php
+      1 clases/FajaHoraria.php.bak.bak
       1 clases/FajaHoraria.php.bak
       1 clases/FajaHoraria.php
+      1 clases/ExplosionLoteTemp.php.bak.bak
       1 clases/ExplosionLoteTemp.php.bak
       1 clases/ExplosionLoteTemp.php
+      1 clases/Email.php.bak.bak
       1 clases/Email.php.bak
       1 clases/Email.php
+      1 clases/EjercicioContable.php.bak.bak
       1 clases/EjercicioContable.php.bak
       1 clases/EjercicioContable.php
+      1 clases/Efectivo.php.bak.bak
       1 clases/Efectivo.php.bak
       1 clases/Efectivo.php
+      1 clases/ecommerce/Ecommerce_WS.php.bak.bak
       1 clases/ecommerce/Ecommerce_WS.php.bak
       1 clases/ecommerce/Ecommerce_WS.php
+      1 clases/ecommerce/Ecommerce_Usergroup.php.bak.bak
       1 clases/ecommerce/Ecommerce_Usergroup.php.bak
       1 clases/ecommerce/Ecommerce_Usergroup.php
+      1 clases/ecommerce/Ecommerce_ServicioAndreani.php.bak.bak
       1 clases/ecommerce/Ecommerce_ServicioAndreani.php.bak
       1 clases/ecommerce/Ecommerce_ServicioAndreani.php
+      1 clases/ecommerce/Ecommerce_Payment.php.bak.bak
       1 clases/ecommerce/Ecommerce_Payment.php.bak
       1 clases/ecommerce/Ecommerce_Payment.php
+      1 clases/ecommerce/Ecommerce_PaymentMethod.php.bak.bak
       1 clases/ecommerce/Ecommerce_PaymentMethod.php.bak
       1 clases/ecommerce/Ecommerce_PaymentMethod.php
+      1 clases/ecommerce/Ecommerce_OrderStatus.php.bak.bak
       1 clases/ecommerce/Ecommerce_OrderStatus.php.bak
       1 clases/ecommerce/Ecommerce_OrderStatus.php
+      1 clases/ecommerce/Ecommerce_Order.php.bak.bak
       1 clases/ecommerce/Ecommerce_Order.php.bak
       1 clases/ecommerce/Ecommerce_Order.php
+      1 clases/ecommerce/Ecommerce_OrderDetail.php.bak.bak
       1 clases/ecommerce/Ecommerce_OrderDetail.php.bak
       1 clases/ecommerce/Ecommerce_OrderDetail.php
+      1 clases/ecommerce/Ecommerce_Delivery.php.bak.bak
       1 clases/ecommerce/Ecommerce_Delivery.php.bak
       1 clases/ecommerce/Ecommerce_Delivery.php
+      1 clases/ecommerce/Ecommerce_Customer.php.bak.bak
       1 clases/ecommerce/Ecommerce_Customer.php.bak
       1 clases/ecommerce/Ecommerce_Customer.php
+      1 clases/ecommerce/Ecommerce_Coupon.php.bak.bak
       1 clases/ecommerce/Ecommerce_Coupon.php.bak
       1 clases/ecommerce/Ecommerce_Coupon.php
+      1 clases/ecommerce/Ecommerce_Configuration.php.bak.bak
       1 clases/ecommerce/Ecommerce_Configuration.php.bak
       1 clases/ecommerce/Ecommerce_Configuration.php
+      1 clases/DocumentoProveedor.php.bak.bak
       1 clases/DocumentoProveedor.php.bak
       1 clases/DocumentoProveedor.php
+      1 clases/DocumentoProveedorItem.php.bak.bak
       1 clases/DocumentoProveedorItem.php.bak
       1 clases/DocumentoProveedorItem.php
+      1 clases/DocumentoProveedorHija.php.bak.bak
       1 clases/DocumentoProveedorHija.php.bak
       1 clases/DocumentoProveedorHija.php
+      1 clases/Documento.php.bak.bak
       1 clases/Documento.php.bak
       1 clases/Documento.php
+      1 clases/DocumentoItem.php.bak.bak
       1 clases/DocumentoItem.php.bak
       1 clases/DocumentoItem.php
+      1 clases/DocumentoHija.php.bak.bak
       1 clases/DocumentoHija.php.bak
       1 clases/DocumentoHija.php
+      1 clases/DocumentoHaber.php.bak.bak
       1 clases/DocumentoHaber.php.bak
       1 clases/DocumentoHaber.php
+      1 clases/DocumentoGastoDatos.php.bak.bak
       1 clases/DocumentoGastoDatos.php.bak
       1 clases/DocumentoGastoDatos.php
+      1 clases/Direccion.php.bak.bak
       1 clases/Direccion.php.bak
       1 clases/Direccion.php
+      1 clases/DevolucionACliente.php.bak.bak
       1 clases/DevolucionACliente.php.bak
       1 clases/DevolucionACliente.php
+      1 clases/DevolucionAClienteItem.php.bak.bak
       1 clases/DevolucionAClienteItem.php.bak
       1 clases/DevolucionAClienteItem.php
+      1 clases/Despacho.php.bak.bak
       1 clases/Despacho.php.bak
       1 clases/Despacho.php
+      1 clases/DespachoItem.php.bak.bak
       1 clases/DespachoItem.php.bak
       1 clases/DespachoItem.php
+      1 clases/DepositoBancarioTemporal.php.bak.bak
       1 clases/DepositoBancarioTemporal.php.bak
       1 clases/DepositoBancarioTemporal.php
+      1 clases/DepositoBancario.php.bak.bak
       1 clases/DepositoBancario.php.bak
       1 clases/DepositoBancario.php
+      1 clases/DepositoBancarioCabecera.php.bak.bak
       1 clases/DepositoBancarioCabecera.php.bak
       1 clases/DepositoBancarioCabecera.php
+      1 clases/DebitarCheque.php.bak.bak
       1 clases/DebitarCheque.php.bak
       1 clases/DebitarCheque.php
+      1 clases/DebitarChequeCabecera.php.bak.bak
       1 clases/DebitarChequeCabecera.php.bak
       1 clases/DebitarChequeCabecera.php
+      1 clases/CurvaProduccionPorArticulo.php.bak.bak
       1 clases/CurvaProduccionPorArticulo.php.bak
       1 clases/CurvaProduccionPorArticulo.php
+      1 clases/CurvaPorArticulo.php.bak.bak
       1 clases/CurvaPorArticulo.php.bak
       1 clases/CurvaPorArticulo.php
+      1 clases/Curva.php.bak.bak
       1 clases/Curva.php.bak
       1 clases/Curva.php
+      1 clases/CuentaCorrienteHistoricaProveedor.php.bak.bak
       1 clases/CuentaCorrienteHistoricaProveedor.php.bak
       1 clases/CuentaCorrienteHistoricaProveedor.php
+      1 clases/CuentaCorrienteHistorica.php.bak.bak
       1 clases/CuentaCorrienteHistorica.php.bak
       1 clases/CuentaCorrienteHistorica.php
+      1 clases/CuentaCorrienteHistoricaDocumentoProveedor.php.bak.bak
       1 clases/CuentaCorrienteHistoricaDocumentoProveedor.php.bak
       1 clases/CuentaCorrienteHistoricaDocumentoProveedor.php
+      1 clases/CuentaBancaria.php.bak.bak
       1 clases/CuentaBancaria.php.bak
       1 clases/CuentaBancaria.php
+      1 clases/Contacto.php.bak.bak
       1 clases/Contacto.php.bak
       1 clases/Contacto.php
+      1 clases/ConsumoStockMP.php.bak.bak
       1 clases/ConsumoStockMP.php.bak
       1 clases/ConsumoStockMP.php
+      1 clases/Conjunto.php.bak.bak
       1 clases/Conjunto.php.bak
       1 clases/Conjunto.php
+      1 clases/ConfirmacionStock.php.bak.bak
       1 clases/ConfirmacionStock.php.bak
       1 clases/ConfirmacionStock.php
+      1 clases/CondicionIva.php.bak.bak
       1 clases/CondicionIva.php.bak
       1 clases/CondicionIva.php
+      1 clases/ConceptoRetencionGanancias.php.bak.bak
       1 clases/ConceptoRetencionGanancias.php.bak
       1 clases/ConceptoRetencionGanancias.php
+      1 clases/Concepto.php.bak.bak
       1 clases/Concepto.php.bak
       1 clases/Concepto.php
+      1 clases/ColorPorArticulo.php.bak.bak
       1 clases/ColorPorArticulo.php.bak
       1 clases/ColorPorArticulo.php
+      1 clases/Color.php.bak.bak
       1 clases/Color.php.bak
       1 clases/Color.php
+      1 clases/ColorMateriaPrima.php.bak.bak
       1 clases/ColorMateriaPrima.php.bak
       1 clases/ColorMateriaPrima.php
+      1 clases/CobroChequeVentanillaTemporal.php.bak.bak
       1 clases/CobroChequeVentanillaTemporal.php.bak
       1 clases/CobroChequeVentanillaTemporal.php
+      1 clases/CobroChequeVentanilla.php.bak.bak
       1 clases/CobroChequeVentanilla.php.bak
       1 clases/CobroChequeVentanilla.php
+      1 clases/CobroChequeVentanillaCabecera.php.bak.bak
       1 clases/CobroChequeVentanillaCabecera.php.bak
       1 clases/CobroChequeVentanillaCabecera.php
+      1 clases/Cliente.php.bak.bak
       1 clases/Cliente.php.bak
       1 clases/Cliente.php
+      1 clases/CierrePeriodoFiscal.php.bak.bak
       1 clases/CierrePeriodoFiscal.php.bak
       1 clases/CierrePeriodoFiscal.php
+      1 clases/Chequera.php.bak.bak
       1 clases/Chequera.php.bak
       1 clases/Chequera.php
+      1 clases/ChequeraItem.php.bak.bak
       1 clases/ChequeraItem.php.bak
       1 clases/ChequeraItem.php
+      1 clases/Cheque.php.bak.bak
       1 clases/Cheque.php.bak
       1 clases/Cheque.php
+      1 clases/CausaNotaDeCredito.php.bak.bak
       1 clases/CausaNotaDeCredito.php.bak
       1 clases/CausaNotaDeCredito.php
+      1 clases/CategoriaCalzadoUsuario.php.bak.bak
       1 clases/CategoriaCalzadoUsuario.php.bak
       1 clases/CategoriaCalzadoUsuario.php
+      1 clases/Catalogo.php.bak.bak
       1 clases/Catalogo.php.bak
       1 clases/Catalogo.php
+      1 clases/CambiosSituacionCliente.php.bak.bak
       1 clases/CambiosSituacionCliente.php.bak
       1 clases/CambiosSituacionCliente.php
+      1 clases/CajaPosiblesTransferenciaInterna.php.bak.bak
       1 clases/CajaPosiblesTransferenciaInterna.php.bak
       1 clases/CajaPosiblesTransferenciaInterna.php
+      1 clases/BancoPropio.php.bak.bak
       1 clases/BancoPropio.php.bak
       1 clases/BancoPropio.php
+      1 clases/Banco.php.bak.bak
       1 clases/Banco.php.bak
       1 clases/Banco.php
+      1 clases/AutorizacionTipo.php.bak.bak
       1 clases/AutorizacionTipo.php.bak
       1 clases/AutorizacionTipo.php
+      1 clases/Autorizacion.php.bak.bak
       1 clases/Autorizacion.php.bak
       1 clases/Autorizacion.php
+      1 clases/AutorizacionPersona.php.bak.bak
       1 clases/AutorizacionPersona.php.bak
       1 clases/AutorizacionPersona.php
+      1 clases/AsientoContable.php.bak.bak
       1 clases/AsientoContable.php.bak
       1 clases/AsientoContable.php
+      1 clases/AsientoContableModelo.php.bak.bak
       1 clases/AsientoContableModelo.php.bak
       1 clases/AsientoContableModelo.php
+      1 clases/AsientoContableModeloFila.php.bak.bak
       1 clases/AsientoContableModeloFila.php.bak
       1 clases/AsientoContableModeloFila.php
+      1 clases/Articulo.php.bak.bak
       1 clases/Articulo.php.bak
       1 clases/Articulo.php
+      1 clases/AreaEmpresa.php.bak.bak
       1 clases/AreaEmpresa.php.bak
       1 clases/AreaEmpresa.php
+      1 clases/AporteSocio.php.bak.bak
       1 clases/AporteSocio.php.bak
       1 clases/AporteSocio.php
+      1 clases/AlmacenPorSeccion.php.bak.bak
       1 clases/AlmacenPorSeccion.php.bak
       1 clases/AlmacenPorSeccion.php
+      1 clases/Almacen.php.bak.bak
       1 clases/Almacen.php.bak
       1 clases/Almacen.php
+      1 clases/AjusteStock.php.bak.bak
       1 clases/AjusteStock.php.bak
       1 clases/AjusteStock.php
+      1 clases/AjusteStockMP.php.bak.bak
       1 clases/AjusteStockMP.php.bak
       1 clases/AjusteStockMP.php
+      1 clases/AcreditarDebitarCheque.php.bak.bak
       1 clases/AcreditarDebitarCheque.php.bak
       1 clases/AcreditarDebitarCheque.php
+      1 clases/AcreditarDebitarChequeCabecera.php.bak.bak
       1 clases/AcreditarDebitarChequeCabecera.php.bak
       1 clases/AcreditarDebitarChequeCabecera.php
+      1 clases/AcreditarCheque.php.bak.bak
       1 clases/AcreditarCheque.php.bak
       1 clases/AcreditarCheque.php
+      1 clases/AcreditarChequeCabecera.php.bak.bak
       1 clases/AcreditarChequeCabecera.php.bak
       1 clases/AcreditarChequeCabecera.php
