@@ -1,8 +1,11 @@
 <?php
 
+session_start();
 session_cache_limiter("nocache");
 error_reporting(0);
-header('Content-type: text/html; charset=utf-8;');
+
+if (!headers_sent()) header('Content-Type: text/html; charset=UTF-8'); 
+
 // header('Content-type: text/html; charset=iso-8859-1;');
 
 require_once('includes.php');
@@ -21,7 +24,9 @@ try {
 
     UsuarioLogin::login(); 
 	
-  
+    if ($_SERVER['REMOTE_ADDR'] == '190.104.245.136' || $_SERVER['REMOTE_ADDR'] == '190.190.22.173') {
+		Logger::addInfo('U: ' . Usuario::logueado()->id);
+	}
 } catch (LoginFailException $ex){
     $onDocumentReady = 'loginFail("' . $ex->getMessage() . '");'; 
 } catch (Exception $ex){

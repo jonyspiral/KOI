@@ -5,7 +5,7 @@ $db = Factory::getInstance()->db();
 
 $tabla = isset($_GET['tabla']) ? $_GET['tabla'] : '';
 if (!preg_match('/^[A-Za-z0-9_]{1,64}$/', $tabla)) {
-  http_response_code(400); die('tabla inválida');
+  http_response_code(400); die('tabla invĂˇlida');
 }
 $schema = (new ReflectionClass('Config'))->getConstant('mysql_db');
 

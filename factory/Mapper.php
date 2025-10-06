@@ -83,21 +83,56 @@ class Mapper {
 			throw $ex;
 		}
 	}
-	private function cambiarWhere($sentencia, $clausulaWhere, $limit) {
-		try {
-			if ($limit != 0) {
-				$iPos2 = strrpos($sentencia, 'SELECT');
-				$sentencia = 'SELECT TOP ' . $limit . substr($sentencia, $iPos2 + 6);
-			}
-			$iPos1 = strrpos($sentencia, 'WHERE');
-			if (trim($clausulaWhere) == '')
-				return substr($sentencia, 0, $iPos1 + 6) . '1 = 1; ';
-			else
-				return substr($sentencia, 0, $iPos1 + 6) . $clausulaWhere;
-		} catch (Exception $ex) {
-			throw $ex;
-		}
-	}
+	private function cambiarWhere($sentencia, $clausulaWhere, $limit)
+{
+    try {
+        // 0) Normalizo punto y coma final (lo saco y lo agrego al final)
+        $sentencia = rtrim($sentencia);
+        $semicolon = '';
+        if (substr($sentencia, -1) === ';') {
+            $semicolon = ';';
+            $sentencia = substr($sentencia, 0, -1);
+        }
+
+        // 1) LIMIT (MySQL): reemplaza el TOP de SQL Server
+        if ((int)$limit > 0) {
+            // Quito un LIMIT existente al final si lo hubiera (simple)
+            $sentencia = preg_replace('/\s+LIMIT\s+\d+(\s*,\s*\d+)?\s*$/i', '', $sentencia);
+            $sentencia .= ' LIMIT ' . (int)$limit;
+        }
+
+        // 2) WHERE (case-insensitive como el original pero robusto al casing)
+        //    Nota: se mantiene el comportamiento de "cortar" desde WHERE, como el mapper original.
+        $ipos = strripos($sentencia, 'WHERE'); // última ocurrencia, case-insensitive
+        if ($ipos === false) {
+            // No había WHERE: lo agrego al final (manteniendo LIMIT si ya lo puse)
+            // Inserto antes de LIMIT si existe al final
+            if (preg_match('/\s+LIMIT\s+\d+(\s*,\s*\d+)?\s*$/i', $sentencia, $m, PREG_OFFSET_CAPTURE)) {
+                $off = $m[0][1];
+                $before = substr($sentencia, 0, $off);
+                $after  = substr($sentencia, $off);
+                $pred   = (trim($clausulaWhere) === '') ? '1 = 1' : $clausulaWhere;
+                $sentencia = rtrim($before) . ' WHERE ' . $pred . ' ' . ltrim($after);
+            } else {
+                $pred   = (trim($clausulaWhere) === '') ? '1 = 1' : $clausulaWhere;
+                $sentencia .= ' WHERE ' . $pred;
+            }
+        } else {
+            // Había WHERE: rearmo desde WHERE (como el original), sin meter ';' en el medio
+            $prefix = substr($sentencia, 0, $ipos + 6); // incluye "WHERE "
+            if (trim($clausulaWhere) === '') {
+                $sentencia = $prefix . '1 = 1';
+            } else {
+                $sentencia = $prefix . $clausulaWhere;
+            }
+            // Ojo: esto mantiene el comportamiento original que descarta lo que venía después del WHERE.
+        }
+
+        return rtrim($sentencia) . $semicolon;
+    } catch (Exception $ex) {
+        throw $ex;
+    }
+}
 
 	//FILLS
 
@@ -4065,7 +4100,7 @@ class Mapper {
 				//} elseif ($modo == Modos::update) {
 				//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_acreditar_debitar_cheque), 0) + 1 FROM acreditar_debitar_cheque_d ';
+				$sql .= 'SELECT IFNULL(MAX(cod_acreditar_debitar_cheque), 0) + 1 FROM acreditar_debitar_cheque_d ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($acreditarDebitarCheque->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -4100,13 +4135,13 @@ class Mapper {
 				$sql .= Datos::objectToDB($acreditarDebitarChequeCabecera->fecha) . ', ';
 				$sql .= Datos::objectToDB($acreditarDebitarChequeCabecera->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 				//} elseif ($modo == Modos::update) {
 				//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_acreditar_debitar_cheque), 0) + 1 FROM acreditar_debitar_cheque_c ';
+				$sql .= 'SELECT IFNULL(MAX(cod_acreditar_debitar_cheque), 0) + 1 FROM acreditar_debitar_cheque_c ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($acreditarDebitarChequeCabecera->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -4147,12 +4182,12 @@ class Mapper {
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= Datos::objectToDB($ajusteStock->cantidad[$i]) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM ajustes_stock; ';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM ajustes_stock; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -4192,12 +4227,12 @@ class Mapper {
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= Datos::objectToDB($ajusteStockMP->cantidad[$i]) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM ajustes_stock_mp; ';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM ajustes_stock_mp; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -4223,7 +4258,7 @@ class Mapper {
 				$sql .= ') VALUES (';
 				$sql .= Datos::objectToDB($almacen->id) . ', ';
 				$sql .=  Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($almacen->nombre) . ', ';
 				$sql .= Datos::objectToDB($almacen->nombreCorto) . ' ';
 				$sql .= '); ';
@@ -4231,12 +4266,12 @@ class Mapper {
 				$sql .= 'UPDATE almacenes SET ';
 				$sql .= 'denom_almacen = ' . Datos::objectToDB($almacen->nombre) . ', ';
 				$sql .= 'denom_abrev = ' . Datos::objectToDB($almacen->nombreCorto) . ', ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE cod_almacen = ' . Datos::objectToDB($almacen->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE almacenes SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('N') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_almacen = ' . Datos::objectToDB($almacen->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -4307,8 +4342,8 @@ class Mapper {
 				$sql .= Datos::objectToDB($aporteSocio->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() , ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() , ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE aporte_socio SET ';
@@ -4316,18 +4351,18 @@ class Mapper {
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($aporteSocio->asientoContable->id) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($aporteSocio->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE nro_aporte_socio = ' . Datos::objectToDB($aporteSocio->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($aporteSocio->empresa) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE aporte_socio SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE nro_aporte_socio = ' . Datos::objectToDB($aporteSocio->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($aporteSocio->empresa) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_aporte_socio), 0) + 1 FROM aporte_socio ';
+				$sql .= 'SELECT IFNULL(MAX(nro_aporte_socio), 0) + 1 FROM aporte_socio ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($aporteSocio->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -4358,7 +4393,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($areaEmpresa->habilitadaTicket) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'DELETE FROM usuarios_por_area_empresa ';
@@ -4367,16 +4402,16 @@ class Mapper {
 				$sql .= 'nombre = ' . Datos::objectToDB($areaEmpresa->nombre) . ', ';
 				$sql .= 'habilitada_ticket = ' . Datos::objectToDB($areaEmpresa->habilitadaTicket) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = ' . 'GETDATE()' . ' ' ;
+				$sql .= 'fecha_ultima_mod = ' . 'NOW()' . ' ' ;
 				$sql .= 'WHERE id = ' . Datos::objectToDB($areaEmpresa->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE areas_empresa SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE id = ' . Datos::objectToDB($areaEmpresa->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM areas_empresa; ';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM areas_empresa; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -4435,7 +4470,7 @@ class Mapper {
 				$sql .= Datos::objectToDB('S') . ', ';
 				$sql .= Datos::objectToDB('S') . ', ';
 				$sql .= Datos::objectToDB($articulo->naturaleza) . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				//$sql .= Datos::objectToDB($articulo->rubroIva->id) . ', ';
 				/* Se usan los precios de ColorPorArticulo
 				$sql .= Datos::objectToDB($articulo->precioDistribuidor) . ', ';
@@ -4472,19 +4507,19 @@ class Mapper {
 				*/
 				/* Solapa Comercial */
 				$sql .= 'cod_rubro_iva = ' . Datos::objectToDB($articulo->rubroIva->id) . ', ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB($articulo->id) . '; ';
 				//Cuando se modifica un art�culo, tambi�n pongo la fecha de �ltima modificaci�n en sus colores (para sincronizar luego con ecommerce)
 				$sql .= 'UPDATE colores_por_articulo SET ';
-				$sql .= 'fechaUltimaMod = GETDATE() ';
+				$sql .= 'fechaUltimaMod = NOW() ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB($articulo->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE articulos SET ';
 				$sql .= 'vigente = ' . Datos::objectToDB('N') . ', ';
-				$sql .= 'fecha_de_baja = GETDATE() ';
+				$sql .= 'fecha_de_baja = NOW() ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB($articulo->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(CONVERT(INT, cod_articulo)), 0) + 1 FROM articulos WHERE ISNUMERIC(cod_articulo) = 1; ';
+				$sql .= 'SELECT IFNULL(MAX(CONVERT(INT, cod_articulo)), 0) + 1 FROM articulos WHERE ISNUMERIC(cod_articulo) = 1; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -4520,7 +4555,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($asientoContable->importe) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'DELETE FROM filas_asientos_contables ';
@@ -4531,16 +4566,16 @@ class Mapper {
 				$sql .= 'fecha_asiento = ' . Datos::objectToDB($asientoContable->fecha) . ', ';
 				$sql .= 'importe = ' . Datos::objectToDB($asientoContable->importe) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = ' . 'GETDATE()' . ' ' ;
+				$sql .= 'fecha_ultima_mod = ' . 'NOW()' . ' ' ;
 				$sql .= 'WHERE cod_asiento = ' . Datos::objectToDB($asientoContable->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE asientos_contables SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_asiento = ' . Datos::objectToDB($asientoContable->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_asiento), 0) + 1 FROM asientos_contables; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_asiento), 0) + 1 FROM asientos_contables; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -4568,7 +4603,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($asientoContableModelo->nombre) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'DELETE FROM asientos_modelo_d ';
@@ -4576,16 +4611,16 @@ class Mapper {
 				$sql .= 'UPDATE asientos_modelo_c SET ';
 				$sql .= 'nombre = ' . Datos::objectToDB($asientoContableModelo->nombre) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = ' . 'GETDATE()' . ' ' ;
+				$sql .= 'fecha_ultima_mod = ' . 'NOW()' . ' ' ;
 				$sql .= 'WHERE cod_asiento_modelo = ' . Datos::objectToDB($asientoContableModelo->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE asientos_modelo_c SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_asiento_modelo = ' . Datos::objectToDB($asientoContableModelo->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_asiento_modelo), 0) + 1 FROM asientos_modelo_c; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_asiento_modelo), 0) + 1 FROM asientos_modelo_c; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -4618,13 +4653,13 @@ class Mapper {
 				$sql .= Datos::objectToDB($asientoContableModeloFila->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE asientos_modelo_d SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_asiento_modelo = ' . Datos::objectToDB($asientoContableModeloFila->idAsientoContableModelo) . ' ';
 				$sql .= 'AND numero_fila = ' . Datos::objectToDB($asientoContableModeloFila->numeroFila) . '; ';
 			} else {
@@ -4760,20 +4795,20 @@ class Mapper {
 				$sql .= Datos::objectToDB($banco->idBanco) . ', ';
 				$sql .= Datos::objectToDB($banco->nombre) . ', ';
 				$sql .= Datos::objectToDB($banco->codigoBanco) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE banco SET ';
 				$sql .= 'nombre = ' . Datos::objectToDB($banco->nombre) . ', ';
 				$sql .= 'numero_banco = ' . Datos::objectToDB($banco->codigoBanco) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_banco = ' . Datos::objectToDB($banco->idBanco) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE banco SET ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_banco = ' . Datos::objectToDB($banco->idBanco) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_banco), 0) + 1 FROM banco;';
+				$sql .= 'SELECT IFNULL(MAX(cod_banco), 0) + 1 FROM banco;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -4824,7 +4859,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($bancoPropio->direccion->provincia->id) . ', ';
 				$sql .= Datos::objectToDB($bancoPropio->imputacionContable) . ', ';
 				$sql .= Datos::objectToDB($bancoPropio->fechaInicioCuenta) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE banco_propio SET ';
@@ -4841,16 +4876,16 @@ class Mapper {
 				$sql .= 'direccion_cod_provincia = ' . Datos::objectToDB($bancoPropio->direccion->provincia->id) . ', ';
 				$sql .= 'imputacion_contable = ' . Datos::objectToDB($bancoPropio->imputacionContable) . ', ';
 				$sql .= 'fecha_inicio_cuenta = ' . Datos::objectToDB($bancoPropio->fechaInicioCuenta) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_banco = ' . Datos::objectToDB($bancoPropio->banco->idBanco) . ' AND ';
 				$sql .= 'cod_sucursal = ' . Datos::objectToDB($bancoPropio->idSucursal) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE banco_propio SET ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_banco = ' . Datos::objectToDB($bancoPropio->idBanco) . ' AND ';
 				$sql .= 'cod_sucursal = ' . Datos::objectToDB($bancoPropio->idSucursal) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_sucursal), 0) + 1 FROM banco_propio WHERE cod_banco = ' . Datos::objectToDB($bancoPropio->banco->idBanco) . ';';
+				$sql .= 'SELECT IFNULL(MAX(cod_sucursal), 0) + 1 FROM banco_propio WHERE cod_banco = ' . Datos::objectToDB($bancoPropio->banco->idBanco) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -4896,7 +4931,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($caja->esCajaBanco) . ', ';
 				$sql .= Datos::objectToDB(Funciones::toFloat($caja->dispParaNegociar)) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE caja SET ';
@@ -4909,15 +4944,15 @@ class Mapper {
 				$sql .= 'importe_maximo = ' . Datos::objectToDB(Funciones::toFloat($caja->importeMaximo)) . ', ';
 				$sql .= 'caja_banco = ' . Datos::objectToDB($caja->esCajaBanco) . ', ';
 				$sql .= 'disp_para_negociar = ' . Datos::objectToDB(Funciones::toFloat($caja->dispParaNegociar)) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_caja = ' . Datos::objectToDB($caja->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE caja SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_caja = ' . Datos::objectToDB($caja->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_caja), 0) + 1 FROM caja;';
+				$sql .= 'SELECT IFNULL(MAX(cod_caja), 0) + 1 FROM caja;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -4975,12 +5010,12 @@ class Mapper {
 				$sql .= Datos::objectToDB(Funciones::padLeft($cambiosSituacionCliente->calificacionNueva, 2, '0')) . ', ';
 				$sql .= Datos::objectToDB(Funciones::padLeft($cambiosSituacionCliente->calificacionAnterior, 2, '0')) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_cambios_situacion_cliente), 0) + 1 FROM cambios_situacion_cliente' . '; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_cambios_situacion_cliente), 0) + 1 FROM cambios_situacion_cliente' . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -5006,20 +5041,20 @@ class Mapper {
 				$sql .= Datos::objectToDB($categoriaCalzadoUsuario->id) . ', ';
 				$sql .= Datos::objectToDB($categoriaCalzadoUsuario->nombre) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE categorias_calzado_usuarios SET ';
 				$sql .= 'denom_categoria = ' . Datos::objectToDB($categoriaCalzadoUsuario->nombre) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB($categoriaCalzadoUsuario->anulado) . ', ';
 				if ($categoriaCalzadoUsuario->anulado == 'S')
-					$sql .= 'fechaBaja = GETDATE(), ';
-				$sql .= 'fechaUltimaMod = GETDATE(), ';
+					$sql .= 'fechaBaja = NOW(), ';
+				$sql .= 'fechaUltimaMod = NOW(), ';
 				$sql .= 'WHERE cod_categoria = ' . Datos::objectToDB($categoriaCalzadoUsuario->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE categorias_calzado_usuarios SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fechaBaja = GETDATE() ';
+				$sql .= 'fechaBaja = NOW() ';
 				$sql .= 'WHERE cod_categoria = ' . Datos::objectToDB($categoriaCalzadoUsuario->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -5082,7 +5117,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($cierrePeriodoFiscal->fechaHasta) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE periodos_fiscales_cierres SET ';
@@ -5090,16 +5125,16 @@ class Mapper {
 				$sql .= 'fecha_desde = ' . Datos::objectToDB($cierrePeriodoFiscal->fechaDesde) . ', ';
 				$sql .= 'fecha_hasta = ' . Datos::objectToDB($cierrePeriodoFiscal->fechaHasta) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_cierre_periodo = ' . Datos::objectToDB($cierrePeriodoFiscal->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE periodos_fiscales_cierres SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_cierre_periodo = ' . Datos::objectToDB($cierrePeriodoFiscal->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_cierre_periodo), 0) + 1 FROM periodos_fiscales_cierres;';
+				$sql .= 'SELECT IFNULL(MAX(cod_cierre_periodo), 0) + 1 FROM periodos_fiscales_cierres;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -5157,7 +5192,7 @@ class Mapper {
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($cheque->fechaEmision) . ', ';
 				$sql .= Datos::objectToDB($cheque->fechaVencimiento) . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE cheque SET ';
@@ -5178,16 +5213,16 @@ class Mapper {
 				$sql .= 'fecha_vencimiento = ' . Datos::objectToDB($cheque->fechaVencimiento) . ', ';
 				$sql .= 'fecha_emision= ' . Datos::objectToDB($cheque->fechaEmision) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = ' . 'GETDATE()' . ' ' ;
+				$sql .= 'fecha_ultima_mod = ' . 'NOW()' . ' ' ;
 				$sql .= 'WHERE cod_cheque = ' . Datos::objectToDB($cheque->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE cheque SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_cheque = ' . Datos::objectToDB($cheque->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_cheque), 0) + 1 FROM cheque; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_cheque), 0) + 1 FROM cheque; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -5221,7 +5256,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($chequera->numeroFin) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE chequera_c SET ';
@@ -5229,7 +5264,7 @@ class Mapper {
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'WHERE cod_chequera= ' . Datos::objectToDB($chequera->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_chequera), 0) + 1 FROM chequera_c; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_chequera), 0) + 1 FROM chequera_c; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -5263,7 +5298,7 @@ class Mapper {
 				$sql .= 'DELETE FROM chequera_d ';
 				$sql .= 'WHERE cod_chequera_d = ' . Datos::objectToDB($chequeraItem->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_chequera_d), 0) + 1 FROM chequera_d' . '; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_chequera_d), 0) + 1 FROM chequera_d' . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -5357,7 +5392,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($cliente->condicionIva->id) . ', ';
 				$sql .= Datos::objectToDB($cliente->creditoDescuentoEspecial) . ', ';
 				if ($cliente->calificacion != $cliente->calificacionOriginal)
-					$sql .= 'GETDATE(), ';
+					$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($cliente->creditoFormaDePago->id) . ', ';
 				$sql .= Datos::objectToDB($cliente->creditoLimite) . ', ';
 				$sql .= Datos::objectToDB($cliente->creditoPlazoMaximo) . ', ';
@@ -5384,7 +5419,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($cliente->interno1) . ', ';
 				$sql .= Datos::objectToDB($cliente->habilitadoCae) . ', ';
 				$sql .= Datos::objectToDB($cliente->vendedor->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE Clientes SET ';
@@ -5412,7 +5447,7 @@ class Mapper {
 				$sql .= 'cod_cond_iva = ' . Datos::objectToDB($cliente->condicionIva->id) . ', ';
 				$sql .= 'descuento_especial = ' . Datos::objectToDB($cliente->creditoDescuentoEspecial) . ', ';
 				if ($cliente->calificacion != $cliente->calificacionOriginal)
-					$sql .= 'fecha_calificacion = GETDATE(), ';
+					$sql .= 'fecha_calificacion = NOW(), ';
 				$sql .= 'forma_pago = ' . Datos::objectToDB($cliente->creditoFormaDePago->id) . ', ';
 				$sql .= 'limite_credito = ' . Datos::objectToDB($cliente->creditoLimite) . ', ';
 				$sql .= 'plazo_maximo = ' . Datos::objectToDB($cliente->creditoPlazoMaximo) . ', ';
@@ -5439,17 +5474,17 @@ class Mapper {
 				$sql .= 'interno_1 = ' . Datos::objectToDB($cliente->interno1) . ', ';
 				$sql .= 'habilitado_cae = ' . Datos::objectToDB($cliente->habilitadoCae) . ', ';
 				$sql .= 'cod_vendedor = ' . Datos::objectToDB($cliente->vendedor->id) . ', ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE cod_cli = ' . Datos::objectToDB($cliente->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE Clientes SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'autorizado = ' . Datos::objectToDB('S') . ', '; //Esto es para que no aparezca como "POR AUTORIZAR"
-				$sql .= 'fecha_ultima_modificacion = GETDATE(), ';
-				$sql .= 'fechaBaja = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW(), ';
+				$sql .= 'fechaBaja = NOW() ';
 				$sql .= 'WHERE cod_cli = ' . Datos::objectToDB($cliente->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_cli), 0) + 1 FROM Clientes;';
+				$sql .= 'SELECT IFNULL(MAX(cod_cli), 0) + 1 FROM Clientes;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -5499,7 +5534,7 @@ class Mapper {
 				//} elseif ($modo == Modos::update) {
 				//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_cobro_cheque_ventanilla), 0) + 1 FROM cobro_cheque_ventanilla_d ';
+				$sql .= 'SELECT IFNULL(MAX(cod_cobro_cheque_ventanilla), 0) + 1 FROM cobro_cheque_ventanilla_d ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($cobroChequeVentanilla->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -5535,19 +5570,19 @@ class Mapper {
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB($cobroChequeVentanillaCabecera->responsable->idPersonal) . ', ';
 				$sql .= Datos::objectToDB($cobroChequeVentanillaCabecera->fecha) . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE cobro_cheque_ventanilla_c SET ';
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($cobroChequeVentanillaCabecera->asientoContable->id) . ', ';
 				$sql .= 'observaciones = ' .Datos::objectToDB($cobroChequeVentanillaCabecera->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_cobro_cheque_ventanilla = ' . Datos::objectToDB($cobroChequeVentanillaCabecera->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($cobroChequeVentanillaCabecera->empresa) . '; ';
 				//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_cobro_cheque_ventanilla), 0) + 1 FROM cobro_cheque_ventanilla_c ';
+				$sql .= 'SELECT IFNULL(MAX(cod_cobro_cheque_ventanilla), 0) + 1 FROM cobro_cheque_ventanilla_c ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($cobroChequeVentanillaCabecera->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -5584,7 +5619,7 @@ class Mapper {
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE cobro_cheque_ventanilla_temporal SET ';
@@ -5592,16 +5627,16 @@ class Mapper {
 				$sql .= 'cheques = ' . Datos::objectToDB($cobroChequeVentanillaTemporal->idCheques) . ', ';
 				$sql .= 'confirmado = ' .Datos::objectToDB($cobroChequeVentanillaTemporal->confirmado) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_cobro_cheque_vent_temp = ' . Datos::objectToDB($cobroChequeVentanillaTemporal->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE cobro_cheque_ventanilla_temporal SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' .Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_cobro_cheque_vent_temp = ' . Datos::objectToDB($cobroChequeVentanillaTemporal->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_cobro_cheque_vent_temp), 0) + 1 FROM cobro_cheque_ventanilla_temporal;';
+				$sql .= 'SELECT IFNULL(MAX(cod_cobro_cheque_vent_temp), 0) + 1 FROM cobro_cheque_ventanilla_temporal;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -5627,17 +5662,17 @@ class Mapper {
 				$sql .= Datos::objectToDB($color->id) . ', ';
 				$sql .= Datos::objectToDB($color->nombre) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE Colores_materias_primas SET ';
 				$sql .= 'denom_color = ' . Datos::objectToDB($color->nombre) . ', ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE cod_color = ' . Datos::objectToDB($color->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE Colores_materias_primas SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE cod_color = ' . Datos::objectToDB($color->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -5674,7 +5709,7 @@ class Mapper {
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE Materias_primas SET ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE(), ';
+				$sql .= 'fecha_ultima_modificacion = NOW(), ';
 				$sql .= 'precio_unitario = ' . Datos::objectToDB($colorMateriaPrima->precioUnitario) . ', ';
 				$sql .= 'precio_venta_unitario = ' . Datos::objectToDB($colorMateriaPrima->precioVentaUnitario) . ', ';
 				$sql .= 'autor_ultima_modificacion = ' . Datos::objectToDB(Usuario::logueado()->id) . ' ';
@@ -5721,7 +5756,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($colorPorArticulo->color->nombre) . ', ';
 				$sql .= Datos::objectToDB($colorPorArticulo->color->id) . ', ';
 				$sql .= Datos::objectToDB('S') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'DELETE FROM curvas_por_articulo ';
@@ -5757,12 +5792,12 @@ class Mapper {
 				$sql .= 'ecommerce_price2 = ' . Datos::objectToDB($colorPorArticulo->ecommercePrice2) . ', ';
 				$sql .= 'ecommerce_price3 = ' . Datos::objectToDB($colorPorArticulo->ecommercePrice3) . ', ';
 				$sql .= 'ecommerce_image1 = ' . Datos::objectToDB($colorPorArticulo->ecommerceImage1) . ', ';
-				$sql .= 'fechaUltimaMod = GETDATE() ';
+				$sql .= 'fechaUltimaMod = NOW() ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB($colorPorArticulo->articulo->id) . ' ';
 				$sql .= 'AND cod_color_articulo = ' . Datos::objectToDB($colorPorArticulo->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE colores_por_articulo SET ';
-				$sql .= 'fecha_de_baja = GETDATE(), ';
+				$sql .= 'fecha_de_baja = NOW(), ';
 				$sql .= 'vigente = ' . Datos::objectToDB('N') . ' ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB($colorPorArticulo->articulo->id) . ' ';
 				$sql .= 'AND cod_color_articulo = ' . Datos::objectToDB($colorPorArticulo->id) . '; ';
@@ -5795,7 +5830,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($concepto->descripcion) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE concepto SET ';
@@ -5807,7 +5842,7 @@ class Mapper {
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE cod_concepto = ' . Datos::objectToDB($concepto->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_concepto), 0) + 1 FROM concepto;';
+				$sql .= 'SELECT IFNULL(MAX(cod_concepto), 0) + 1 FROM concepto;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -5840,10 +5875,10 @@ class Mapper {
 		try {
 			if ($modo == Modos::select){
 				$sql .= 'SELECT * ';
-				$sql .= 'FROM condiciones_iva ';
+				$sql .= 'FROM Condiciones_iva ';
 				$sql .= 'WHERE denom_cond_iva = ' . Datos::objectToDB($condicionIva->id) . '; ';
 			} elseif ($modo == Modos::insert) {
-				$sql .= 'INSERT INTO condiciones_iva (';
+				$sql .= 'INSERT INTO Condiciones_iva (';
 				$sql .= 'cod_cond_iva, ';
 				$sql .= 'denom_cond_iva, ';
 				$sql .= 'anulado, ';
@@ -5865,7 +5900,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($condicionIva->tratamiento) . ' ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
-				$sql .= 'UPDATE condiciones_iva SET ';
+				$sql .= 'UPDATE Condiciones_iva SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB($condicionIva->anulado) . ', ';
 				$sql .= 'denom_completa = ' . Datos::objectToDB($condicionIva->nombre) . ', ';
 				$sql .= 'letra_factura = ' . Datos::objectToDB($condicionIva->letraFactura) . ', ';
@@ -5875,7 +5910,7 @@ class Mapper {
 				$sql .= 'tratamiento = ' . Datos::objectToDB($condicionIva->tratamiento) . ' ';
 				$sql .= 'WHERE denom_cond_iva = ' . Datos::objectToDB($condicionIva->id) . '; ';
 			} elseif ($modo == Modos::delete) {
-				$sql .= 'UPDATE condiciones_iva SET ';
+				$sql .= 'UPDATE Condiciones_iva SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE denom_cond_iva = ' . Datos::objectToDB($condicionIva->id) . '; ';
 			} else {
@@ -5915,17 +5950,17 @@ class Mapper {
 					$sql .= Datos::objectToDB($confirmacionStock->cantidad[$i]) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE confirmaciones_stock SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' .Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE id = ' . Datos::objectToDB($confirmacionStock->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM confirmaciones_stock;';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM confirmaciones_stock;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -6090,12 +6125,12 @@ class Mapper {
                 for ($i = 1; $i <= 10; $i++)
                     $sql .= Datos::objectToDB($consumoStockMP->cantidad[$i]) . ', ';
                 $sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-                $sql .= 'GETDATE() ';
+                $sql .= 'NOW() ';
                 $sql .= '); ';
                 //} elseif ($modo == Modos::update) {
                 //} elseif ($modo == Modos::delete) {
             } elseif ($modo == Modos::id) {
-                $sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM consumos_stock_mp; ';
+                $sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM consumos_stock_mp; ';
             } else {
                 throw new FactoryException('Modo incorrecto');
             }
@@ -6133,7 +6168,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($cuentaBancaria->numeroCuenta) . ', ';
 				$sql .= Datos::objectToDB($cuentaBancaria->nombreCuenta) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE cuenta_bancaria SET ';
@@ -6142,15 +6177,15 @@ class Mapper {
 				$sql .= 'cod_caja = ' . Datos::objectToDB($cuentaBancaria->caja->id) . ', ';
 				$sql .= 'cod_proveedor = ' . Datos::objectToDB($cuentaBancaria->proveedor->id) . ', ';
 				$sql .= 'cod_imputacion = ' . Datos::objectToDB($cuentaBancaria->imputacion->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_cuenta_bancaria = ' . Datos::objectToDB($cuentaBancaria->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE cuenta_bancaria SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_cuenta_bancaria = ' . Datos::objectToDB($cuentaBancaria->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_cuenta_bancaria), 0) + 1 FROM cuenta_bancaria;';
+				$sql .= 'SELECT IFNULL(MAX(cod_cuenta_bancaria), 0) + 1 FROM cuenta_bancaria;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -6386,7 +6421,7 @@ class Mapper {
                 //} elseif ($modo == Modos::update) {
                 //} elseif ($modo == Modos::delete) {
             } elseif ($modo == Modos::id) {
-                $sql .= 'SELECT ISNULL(MAX(cod_deposito_bancario), 0) + 1 FROM deposito_bancario_d ';
+                $sql .= 'SELECT IFNULL(MAX(cod_deposito_bancario), 0) + 1 FROM deposito_bancario_d ';
                 $sql .= 'WHERE empresa = ' . Datos::objectToDB($depositoCheque->empresa) . ';';
             } else {
                 throw new FactoryException('Modo incorrecto');
@@ -6424,19 +6459,19 @@ class Mapper {
                 $sql .= Datos::objectToDB($depositoChequeCabecera->observaciones) . ', ';
                 $sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
                 $sql .= Datos::objectToDB($depositoChequeCabecera->fecha) . ', ';
-                $sql .= 'GETDATE()';
+                $sql .= 'NOW()';
                 $sql .= '); ';
             } elseif ($modo == Modos::update) {
                 $sql .= 'UPDATE deposito_bancario_c SET ';
                 $sql .= 'cod_asiento_contable = ' . Datos::objectToDB($depositoChequeCabecera->asientoContable->id) . ', ';
                 $sql .= 'observaciones = ' .Datos::objectToDB($depositoChequeCabecera->observaciones) . ', ';
                 $sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-                $sql .= 'fecha_ultima_mod = GETDATE() ';
+                $sql .= 'fecha_ultima_mod = NOW() ';
                 $sql .= 'WHERE cod_deposito_bancario = ' . Datos::objectToDB($depositoChequeCabecera->numero) . ' ';
                 $sql .= 'AND empresa = ' . Datos::objectToDB($depositoChequeCabecera->empresa) . '; ';
                 //} elseif ($modo == Modos::delete) {
             } elseif ($modo == Modos::id) {
-                $sql .= 'SELECT ISNULL(MAX(cod_deposito_bancario), 0) + 1 FROM deposito_bancario_c ';
+                $sql .= 'SELECT IFNULL(MAX(cod_deposito_bancario), 0) + 1 FROM deposito_bancario_c ';
                 $sql .= 'WHERE empresa = ' . Datos::objectToDB($depositoChequeCabecera->empresa) . ';';
             } else {
                 throw new FactoryException('Modo incorrecto');
@@ -6479,7 +6514,7 @@ class Mapper {
                 $sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
                 $sql .= Datos::objectToDB('N') . ', ';
                 $sql .= Datos::objectToDB('N') . ', ';
-                $sql .= 'GETDATE() ';
+                $sql .= 'NOW() ';
                 $sql .= '); ';
             } elseif ($modo == Modos::update) {
                 $sql .= 'UPDATE deposito_bancario_temporal SET ';
@@ -6491,16 +6526,16 @@ class Mapper {
                 $sql .= 'cheques = ' . Datos::objectToDB($depositoBancarioTemporal->idCheques) . ', ';
                 $sql .= 'confirmado = ' .Datos::objectToDB($depositoBancarioTemporal->confirmado) . ', ';
                 $sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-                $sql .= 'fecha_ultima_mod = GETDATE() ';
+                $sql .= 'fecha_ultima_mod = NOW() ';
                 $sql .= 'WHERE cod_deposito_bancario_temporal = ' . Datos::objectToDB($depositoBancarioTemporal->id) . '; ';
             } elseif ($modo == Modos::delete) {
                 $sql .= 'UPDATE deposito_bancario_temporal SET ';
                 $sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
                 $sql .= 'anulado = ' .Datos::objectToDB('S') . ', ';
-                $sql .= 'fecha_baja = GETDATE() ';
+                $sql .= 'fecha_baja = NOW() ';
                 $sql .= 'WHERE cod_deposito_bancario_temporal = ' . Datos::objectToDB($depositoBancarioTemporal->id) . '; ';
             } elseif ($modo == Modos::id) {
-                $sql .= 'SELECT ISNULL(MAX(cod_deposito_bancario_temporal), 0) + 1 FROM deposito_bancario_temporal;';
+                $sql .= 'SELECT IFNULL(MAX(cod_deposito_bancario_temporal), 0) + 1 FROM deposito_bancario_temporal;';
             } else {
                 throw new FactoryException('Modo incorrecto');
             }
@@ -6540,7 +6575,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($despacho->pendiente) . ', ';
 				$sql .= Datos::objectToDB($despacho->ecommerceOrder->id) . ', ';
 				$sql .= Datos::objectToDB($despacho->observaciones) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			} elseif ($modo == Modos::delete) {
@@ -6553,17 +6588,17 @@ class Mapper {
 					$sql .= 'UPDATE despachos_d SET ';
 					$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 					$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-					$sql .= 'fecha_baja = GETDATE() ';
+					$sql .= 'fecha_baja = NOW() ';
 					$sql .= 'WHERE nro_despacho = ' . Datos::objectToDB($despachoItem->despachoNumero) . ' ';
 					$sql .= 'AND nro_item = ' . Datos::objectToDB($despachoItem->numeroDeItem) . '; ';
 				}
 				$sql .= 'UPDATE despachos_c SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE nro_despacho = ' . Datos::objectToDB($despacho->numero) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_despacho), 0) + 1 FROM despachos_c;';
+				$sql .= 'SELECT IFNULL(MAX(nro_despacho), 0) + 1 FROM despachos_c;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -6621,8 +6656,8 @@ class Mapper {
 				$sql .= Datos::objectToDB(Funciones::sumaArray($despachoItem->cantidad)) . ', ';
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= Datos::objectToDB($despachoItem->cantidad[$i]) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE despachos_d SET ';
@@ -6644,13 +6679,13 @@ class Mapper {
 				$sql .= 'predespachados = predespachados + ' . Datos::objectToDB($despachoItem->cantidadTotal) . ', ';
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= 'pred_' . $i . ' = pred_' . $i . ' + ' . Datos::objectToDB($despachoItem->cantidad[$i]) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE nro_pedido = ' . Datos::objectToDB($despachoItem->pedidoNumero) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($despachoItem->pedidoNumeroDeItem) . '; ';
 				//Anulo el despachoItem
 				$sql .= 'UPDATE despachos_d SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE nro_despacho = ' . Datos::objectToDB($despachoItem->despachoNumero) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($despachoItem->numeroDeItem) . '; ';
 			} else {
@@ -6686,17 +6721,17 @@ class Mapper {
                 $sql .= Datos::objectToDB('N') . ', ';
                 $sql .= Datos::objectToDB($devolucionACliente->observaciones) . ', ';
                 $sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-                $sql .= 'GETDATE() ';
+                $sql .= 'NOW() ';
                 $sql .= '); ';
                 //} elseif ($modo == Modos::update) {
             } elseif ($modo == Modos::delete) {
                 $sql .= 'UPDATE devoluciones_a_cliente_c SET ';
                 $sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
                 $sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-                $sql .= 'fecha_baja = GETDATE() ';
+                $sql .= 'fecha_baja = NOW() ';
                 $sql .= 'WHERE cod_devolucion = ' . Datos::objectToDB($devolucionACliente->id) . '; ';
             } elseif ($modo == Modos::id) {
-                $sql .= 'SELECT ISNULL(MAX(cod_devolucion), 0) + 1 FROM devoluciones_a_cliente_c;';
+                $sql .= 'SELECT IFNULL(MAX(cod_devolucion), 0) + 1 FROM devoluciones_a_cliente_c;';
             } else {
                 throw new FactoryException('Modo incorrecto');
             }
@@ -6732,7 +6767,7 @@ class Mapper {
                 for ($i = 1; $i <= 10; $i++)
                     $sql .= Datos::objectToDB($devolucionAClienteItem->cantidad[$i]) . ', ';
                 $sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-                $sql .= 'GETDATE() ';
+                $sql .= 'NOW() ';
                 $sql .= '); ';
                 //} elseif ($modo == Modos::update) {
                 //} elseif ($modo == Modos::delete) {
@@ -6948,7 +6983,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($documentoGastoDatos->direccion->pais->id) . ', ';
 				$sql .= Datos::objectToDB($documentoGastoDatos->direccion->localidad->id) . ', ';
 				$sql .= Datos::objectToDB($documentoGastoDatos->direccion->provincia->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE documento_gasto_datos SET ';
@@ -6967,7 +7002,7 @@ class Mapper {
 				$sql .= 'WHERE cod_documento_gasto_datos = ' . Datos::objectToDB($documentoGastoDatos->id) . '; ';
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_documento_gasto_datos), 0) + 1 FROM documento_gasto_datos;';
+				$sql .= 'SELECT IFNULL(MAX(cod_documento_gasto_datos), 0) + 1 FROM documento_gasto_datos;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7036,7 +7071,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($documentoHija->documentoCancelatorio->letra) . ', ';
 				$sql .= Datos::objectToDB($documentoHija->importe) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			} elseif ($modo == Modos::delete) {
@@ -7106,7 +7141,7 @@ class Mapper {
 					$sql .= Datos::objectToDB($documentoItem->cantidad[$i]) . ', ';
 				$sql .= Datos::objectToDB($documentoItem->descripcionItem) . ', ';
 				$sql .= Datos::objectToDB($documentoItem->imputacion->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) { //Lo uso para cuando borro el documento (no borro el detalle)
 			} elseif ($modo == Modos::delete) {
@@ -7184,7 +7219,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($documentoProveedor->asientoContable->id) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ,';
+				$sql .= 'NOW() ,';
 				$sql .= Datos::objectToDB($documentoProveedor->idViejo) . ', ';
 				$sql .= Datos::objectToDB($documentoProveedor->facturaGastos) . ', ';
 				$sql .= Datos::objectToDB($documentoProveedor->documentoGastoDatos->id) . ' ';
@@ -7208,16 +7243,16 @@ class Mapper {
 				$sql .= 'documento_en_conflicto = ' . Datos::objectToDB($documentoProveedor->documentoEnConflicto) . ', ';
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($documentoProveedor->asientoContable->id) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_documento_proveedor = ' . Datos::objectToDB($documentoProveedor->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE documento_proveedor_c SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_documento_proveedor = ' . Datos::objectToDB($documentoProveedor->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_documento_proveedor), 0) + 1 FROM documento_proveedor_c;';
+				$sql .= 'SELECT IFNULL(MAX(cod_documento_proveedor), 0) + 1 FROM documento_proveedor_c;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7358,7 +7393,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($documentoProveedorHija->documentoCancelatorio->tipoDocumento) . ', ';
 				$sql .= Datos::objectToDB($documentoProveedorHija->importe) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			} elseif ($modo == Modos::delete) {
@@ -7418,7 +7453,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($documentoProveedorItem->origenDetalle) . ', ';
 				$sql .= Datos::objectToDB($documentoProveedorItem->remitoPorOrdenDeCompra->id) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE documento_proveedor_d SET ';
@@ -7430,18 +7465,18 @@ class Mapper {
 				$sql .= 'gravado = ' . Datos::objectToDB($documentoProveedorItem->gravado) . ', ';
 				$sql .= 'cod_remito_orden_de_compra = ' . Datos::objectToDB($documentoProveedorItem->remitoPorOrdenDeCompra->id) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_documento_proveedor = ' . Datos::objectToDB($documentoProveedorItem->documentoProveedor->id) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($documentoProveedorItem->nroItem) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE documento_proveedor_d SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_documento_proveedor = ' . Datos::objectToDB($documentoProveedorItem->documentoProveedor->id) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($documentoProveedorItem->nroItem) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_item), 0) + 1 FROM documento_proveedor_d ';
+				$sql .= 'SELECT IFNULL(MAX(nro_item), 0) + 1 FROM documento_proveedor_d ';
 				$sql .= 'WHERE cod_documento_proveedor = ' . Datos::objectToDB($documentoProveedorItem->idDocumentoProveedor) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -7482,7 +7517,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($ecommerce_Coupon->appliedAmount) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ecommerce_coupons SET ';
@@ -7491,16 +7526,16 @@ class Mapper {
 				$sql .= 'max_amount = ' . Datos::objectToDB($ecommerce_Coupon->maxAmount) . ', ';
 				$sql .= 'applied_amount = ' . Datos::objectToDB($ecommerce_Coupon->appliedAmount) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_coupon = ' . Datos::objectToDB($ecommerce_Coupon->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ecommerce_coupons SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_coupon = ' . Datos::objectToDB($ecommerce_Coupon->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_coupon), 0) + 1 FROM ecommerce_coupons; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_coupon), 0) + 1 FROM ecommerce_coupons; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7544,7 +7579,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($ecommerce_Customer->offers) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ecommerce_customers SET ';
@@ -7557,16 +7592,16 @@ class Mapper {
 				$sql .= 'newsletters = ' . Datos::objectToDB($ecommerce_Customer->newsletters) . ', ';
 				$sql .= 'offers = ' . Datos::objectToDB($ecommerce_Customer->offers) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_customer = ' . Datos::objectToDB($ecommerce_Customer->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ecommerce_customers SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_customer = ' . Datos::objectToDB($ecommerce_Customer->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_customer), 0) + 1 FROM ecommerce_customers; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_customer), 0) + 1 FROM ecommerce_customers; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7612,17 +7647,17 @@ class Mapper {
 				$sql .= Datos::objectToDB($ecommerce_Delivery->timeFrame) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ecommerce_deliverys SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_delivery = ' . Datos::objectToDB($ecommerce_Delivery->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_delivery), 0) + 1 FROM ecommerce_deliverys; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_delivery), 0) + 1 FROM ecommerce_deliverys; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7670,7 +7705,7 @@ class Mapper {
 				$sql .= Datos::objectToDB(0) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ecommerce_orders SET ';
@@ -7684,16 +7719,16 @@ class Mapper {
 				$sql .= 'cupon_cambio_utilizado = ' . Datos::objectToDB($ecommerce_Order->cuponDeCambioUtilizado) . ', ';
 				$sql .= 'cupon_cambio_importe = ' . Datos::objectToDB($ecommerce_Order->cuponDeCambioImporte) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_order = ' . Datos::objectToDB($ecommerce_Order->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ecommerce_orders SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_order = ' . Datos::objectToDB($ecommerce_Order->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_order), 0) + 1 FROM ecommerce_orders; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_order), 0) + 1 FROM ecommerce_orders; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7733,17 +7768,17 @@ class Mapper {
 				$sql .= Datos::objectToDB($ecommerce_OrderDetail->subtotal) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			} elseif ($modo == Modos::delete) { //Tal vez esto deber�a ser DELETE
 				$sql .= 'UPDATE ecommerce_order_details SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_order_detail = ' . Datos::objectToDB($ecommerce_OrderDetail->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_order_detail), 0) + 1 FROM ecommerce_order_details; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_order_detail), 0) + 1 FROM ecommerce_order_details; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7779,7 +7814,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($ecommerce_OrderStatus->idDependencias) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ecommerce_order_status SET ';
@@ -7789,16 +7824,16 @@ class Mapper {
 				$sql .= 'cod_proximo_status = ' . Datos::objectToDB($ecommerce_OrderStatus->proximoStatus->id) . ', ';
 				$sql .= 'cod_dependencias = ' . Datos::objectToDB($ecommerce_OrderStatus->idDependencias) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_status = ' . Datos::objectToDB($ecommerce_OrderStatus->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ecommerce_order_status SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_status = ' . Datos::objectToDB($ecommerce_OrderStatus->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_status), 0) + 1 FROM ecommerce_order_status; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_status), 0) + 1 FROM ecommerce_order_status; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7871,22 +7906,22 @@ class Mapper {
 				$sql .= Datos::objectToDB($ecommerce_Payment->info) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ecommerce_payments SET ';
 				$sql .= 'info = ' . Datos::objectToDB($ecommerce_Payment->info) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_payment = ' . Datos::objectToDB($ecommerce_Payment->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ecommerce_payments SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_payment = ' . Datos::objectToDB($ecommerce_Payment->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_payment), 0) + 1 FROM ecommerce_payments; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_payment), 0) + 1 FROM ecommerce_payments; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7914,22 +7949,22 @@ class Mapper {
 				$sql .= Datos::objectToDB($ecommerce_PaymentMethod->nombre) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ecommerce_payment_methods SET ';
 				$sql .= 'nombre = ' . Datos::objectToDB($ecommerce_PaymentMethod->nombre) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_method = ' . Datos::objectToDB($ecommerce_PaymentMethod->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ecommerce_payment_methods SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_method = ' . Datos::objectToDB($ecommerce_PaymentMethod->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_method), 0) + 1 FROM ecommerce_payment_methods; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_method), 0) + 1 FROM ecommerce_payment_methods; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -7959,23 +7994,23 @@ class Mapper {
 				$sql .= Datos::objectToDB($ecommerce_ServicioAndreani->numeroDeContrato) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ecommerce_servicios_andreani SET ';
 				$sql .= 'nombre = ' . Datos::objectToDB($ecommerce_ServicioAndreani->nombre) . ', ';
 				$sql .= 'numero_contrato = ' . Datos::objectToDB($ecommerce_ServicioAndreani->numeroDeContrato) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_servicio_andreani = ' . Datos::objectToDB($ecommerce_ServicioAndreani->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ecommerce_servicios_andreani SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_servicio_andreani = ' . Datos::objectToDB($ecommerce_ServicioAndreani->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_servicio_andreani), 0) + 1 FROM ecommerce_servicios_andreani; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_servicio_andreani), 0) + 1 FROM ecommerce_servicios_andreani; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -8005,23 +8040,23 @@ class Mapper {
 				$sql .= Datos::objectToDB($ecommerce_Usergroup->empresa) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ecommerce_usergroups SET ';
 				$sql .= 'nombre = ' . Datos::objectToDB($ecommerce_Usergroup->nombre) . ', ';
 				$sql .= 'empresa = ' . Datos::objectToDB($ecommerce_Usergroup->empresa) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_usergroup = ' . Datos::objectToDB($ecommerce_Usergroup->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ecommerce_usergroups SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_usergroup = ' . Datos::objectToDB($ecommerce_Usergroup->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_usergroup), 0) + 1 FROM ecommerce_usergroups; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_usergroup), 0) + 1 FROM ecommerce_usergroups; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -8048,7 +8083,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($efectivo->importe);
 				$sql .= '); ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_efectivo), 0) + 1 FROM efectivo; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_efectivo), 0) + 1 FROM efectivo; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -8095,7 +8130,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($ejercicioContable->fechaHasta) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ejercicios_contables SET ';
@@ -8103,16 +8138,16 @@ class Mapper {
 				$sql .= 'fecha_desde = ' . Datos::objectToDB($ejercicioContable->fechaDesde) . ', ';
 				$sql .= 'fecha_hasta = ' . Datos::objectToDB($ejercicioContable->fechaHasta) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = ' . 'GETDATE()' . ' ' ;
+				$sql .= 'fecha_ultima_mod = ' . 'NOW()' . ' ' ;
 				$sql .= 'WHERE cod_ejercicio_contable = ' . Datos::objectToDB($ejercicioContable->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ejercicios_contables SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_ejercicio_contable = ' . Datos::objectToDB($ejercicioContable->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_ejercicio_contable), 0) + 1 FROM ejercicios_contables; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_ejercicio_contable), 0) + 1 FROM ejercicios_contables; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -8156,22 +8191,22 @@ class Mapper {
 				$sql .= Datos::objectToDB($email->fechaProgramada) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE emails SET ';
 				$sql .= 'fecha_enviado = ' . Datos::objectToDB($email->fechaEnviado) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = ' . 'GETDATE()' . ' ' ;
+				$sql .= 'fecha_ultima_mod = ' . 'NOW()' . ' ' ;
 				$sql .= 'WHERE cod_email = ' . Datos::objectToDB($email->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE emails SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_email = ' . Datos::objectToDB($email->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_email), 0) + 1 FROM emails; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_email), 0) + 1 FROM emails; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -8193,7 +8228,7 @@ class Mapper {
 				for($i = 1; $i < 11; $i++)
 					$sql .= 'cant_' . $i . ' = ' . Datos::objectToDB($explosionLoteTemp->cantidadesComprar[$i]) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = ' . 'GETDATE()' . ' ' ;
+				$sql .= 'fecha_ultima_mod = ' . 'NOW()' . ' ' ;
 				$sql .= 'WHERE cod_explosion_lote_temp = ' . Datos::objectToDB($explosionLoteTemp->id) . '; ';
 			//} elseif ($modo == Modos::delete) {
 			} else {
@@ -8268,8 +8303,8 @@ class Mapper {
 				$sql .= Datos::objectToDB($factura->asientoContable->id) . ', ';
 				$sql .= Datos::objectToDB($factura->ecommerceOrder->id) . ', ';
 				$sql .= Datos::objectToDB($factura->observaciones) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 				if (!$factura->tieneDetalle()) {
 					//Si tieneDetalle == 'S' es porque no tiene articulos en despachos_d, sino en documentos_d. No es el camino com�n
@@ -8297,7 +8332,7 @@ class Mapper {
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($factura->asientoContable->id) . ', ';
 				$sql .= 'cod_ecommerce_order = ' . Datos::objectToDB($factura->ecommerceOrder->id) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($factura->empresa) . ' ';
 				$sql .= 'AND punto_venta = ' . Datos::objectToDB($factura->puntoDeVenta) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($factura->tipoDocumento) . ' ';
@@ -8322,14 +8357,14 @@ class Mapper {
 				$sql .= 'UPDATE documentos_c SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($factura->empresa) . ' ';
 				$sql .= 'AND punto_venta = ' . Datos::objectToDB($factura->puntoDeVenta) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($factura->tipoDocumento) . ' ';
 				$sql .= 'AND nro_documento = ' . Datos::objectToDB($factura->numero) . ' ';
 				$sql .= 'AND letra = ' . Datos::objectToDB($factura->letra) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_documento), 0) + 1 FROM documentos_c ';
+				$sql .= 'SELECT IFNULL(MAX(nro_documento), 0) + 1 FROM documentos_c ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($factura->empresa) . ' ';
 				$sql .= 'AND punto_venta = ' . Datos::objectToDB($factura->puntoDeVenta) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($factura->tipoDocumento) . ' ';
@@ -8378,7 +8413,7 @@ class Mapper {
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE cod_faja_horaria = ' . Datos::objectToDB($fajaHoraria->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_faja_horaria), 0) + 1 FROM horarios_por_secciones;';
+				$sql .= 'SELECT IFNULL(MAX(cod_faja_horaria), 0) + 1 FROM horarios_por_secciones;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -8542,7 +8577,7 @@ class Mapper {
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE cod_operador = ' . Datos::objectToDB($fasonier->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_prov), 0) + 1 FROM proveedores_datos;';
+				$sql .= 'SELECT IFNULL(MAX(cod_prov), 0) + 1 FROM proveedores_datos;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -8594,7 +8629,7 @@ class Mapper {
 				$sql .= 'DELETE FROM registro_entradas_salidas ';
 				$sql .= 'WHERE clave_tabla = ' . Datos::objectToDB($fichaje->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(clave_tabla), 0) + 1 FROM registro_entradas_salidas;';
+				$sql .= 'SELECT IFNULL(MAX(clave_tabla), 0) + 1 FROM registro_entradas_salidas;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -8633,13 +8668,13 @@ class Mapper {
 				$sql .= Datos::objectToDB($filaAsientoContable->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE filas_asientos_contables SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_asiento = ' . Datos::objectToDB($filaAsientoContable->idAsientoContable) . ' ';
 				$sql .= 'AND numero_fila = ' . Datos::objectToDB($filaAsientoContable->numeroFila) . '; ';
 			} else {
@@ -8668,7 +8703,7 @@ class Mapper {
                 $sql .= 'anulado ';
                 $sql .= ') VALUES (';
                 $sql .= Datos::objectToDB($forecast->nombre) . ', ';
-                $sql .= 'GETDATE(), ';
+                $sql .= 'NOW(), ';
                 $sql .= Datos::objectToDB($forecast->fechaInicio) . ', ';
                 $sql .= Datos::objectToDB($forecast->fechaFin) . ', ';
                 $sql .= Datos::objectToDB($forecast->observaciones) . ', ';
@@ -8884,7 +8919,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($gastito->observaciones) . ', ';
 				$sql .= Datos::objectToDB($gastito->caja->id) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE gastito SET ';
@@ -8895,13 +8930,13 @@ class Mapper {
 				$sql .= 'observaciones = ' . Datos::objectToDB($gastito->observaciones) . ', ';
 				$sql .= 'cod_rendicion_gastos = ' . Datos::objectToDB($gastito->rendicionGastos->numero) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_gastito = ' . Datos::objectToDB($gastito->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'DELETE FROM gastito ';
 				$sql .= 'WHERE cod_gastito = ' . Datos::objectToDB($gastito->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_gastito), 0) + 1 FROM gastito;';
+				$sql .= 'SELECT IFNULL(MAX(cod_gastito), 0) + 1 FROM gastito;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -8937,7 +8972,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($garantia->observaciones) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE garantias_c SET ';
@@ -8947,13 +8982,13 @@ class Mapper {
 				$sql .= 'solucion_ncr = ' . Datos::objectToDB($garantia->solucionNcr) . ', ';
 				$sql .= 'movimientos = ' . Datos::objectToDB($garantia->movimientos) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_garantia = ' . Datos::objectToDB($garantia->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE garantias_c SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_garantia = ' . Datos::objectToDB($garantia->id) . '; ';
 			} elseif ($modo == Modos::id) {
 				$sql .= 'SELECT IDENT_CURRENT(\'garantias_c\') + IDENT_INCR(\'garantias_c\');';
@@ -9003,7 +9038,7 @@ class Mapper {
 				$sql .= 'WHERE id = ' . Datos::objectToDB($garantiaItem->id) . '; ';
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM garantias_d;';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM garantias_d;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9013,53 +9048,65 @@ class Mapper {
 		}
 	}
 	private function mapperQuerySeguimientoCliente(SeguimientoCliente $seguimientoCliente, $modo){
-		$sql = '';
-		try {
-			if ($modo == Modos::select){
-				$sql .= 'SELECT * ';
-				$sql .= 'FROM gestiones_clientes_cobranza ';
-				$sql .= 'WHERE id = ' . Datos::objectToDB($seguimientoCliente->id) . '; ';
-			} elseif ($modo == Modos::insert) {
-				$sql .= 'INSERT INTO gestiones_clientes_cobranza (';
-				$sql .= 'id, ';
-				$sql .= 'cod_cli, ';
-				$sql .= 'fecha_gestion, ';
-				$sql .= 'observaciones, ';
-				$sql .= 'estado, ';
-				$sql .= 'cod_usuario, ';
-				$sql .= 'fecha_alta ';
-				$sql .= ') VALUES (';
-				$sql .= Datos::objectToDB($seguimientoCliente->id) . ', ';
-				$sql .= Datos::objectToDB($seguimientoCliente->cliente->id) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= Datos::objectToDB($seguimientoCliente->observaciones) . ', ';
-				$sql .= Datos::objectToDB($seguimientoCliente->estado) . ', ';
-				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
-				$sql .= '); ';
-			} elseif ($modo == Modos::update) {
-				$sql .= 'UPDATE gestiones_clientes_cobranza SET ';
-				$sql .= 'observaciones = ' . Datos::objectToDB($seguimientoCliente->observaciones) . ', ';
-				$sql .= 'estado = ' . Datos::objectToDB($seguimientoCliente->estado) . ', ';
-				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
-				$sql .= 'WHERE id = ' . Datos::objectToDB($seguimientoCliente->id) . '; ';
-			} elseif ($modo == Modos::delete) {
-				$sql .= 'UPDATE gestiones_clientes_cobranza SET ';
-				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
-				$sql .= 'WHERE id = ' . Datos::objectToDB($seguimientoCliente->id) . '; ';
-			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM gestiones_clientes_cobranza;';
-			} else {
-				throw new FactoryException('Modo incorrecto');
-			}
-			return $sql;
-		} catch (Exception $ex) {
-			throw $ex;
-		}
-	}
+    $sql = '';
+    try {
+        if ($modo == Modos::select){
+            if (Funciones::tieneId(array($seguimientoCliente->id))) {
+                // SELECT por PK
+                $sql .= 'SELECT * ';
+                $sql .= 'FROM `gestiones_clientes_cobranza` ';
+                $sql .= 'WHERE `id` = ' . Datos::objectToDB($seguimientoCliente->id) . '; ';
+            } else {
+                // LISTADO por cliente (lo que necesita la UI)
+                $sql .= 'SELECT * ';
+                $sql .= 'FROM `gestiones_clientes_cobranza` ';
+                $sql .= 'WHERE `anulado` = ' . Datos::objectToDB('N') . ' ';
+                $sql .= 'AND `cod_cli` = ' . Datos::objectToDB($seguimientoCliente->cliente->id) . ' ';
+                $sql .= 'ORDER BY `fecha_gestion` DESC; ';
+            }
+
+        } elseif ($modo == Modos::insert) {
+            $sql .= 'INSERT INTO `gestiones_clientes_cobranza` (';
+            $sql .= '  `id`, `cod_cli`, `fecha_gestion`, `observaciones`, `estado`, `cod_usuario`, `fecha_alta`, `anulado`';
+            $sql .= ') VALUES (';
+            $sql .=      Datos::objectToDB($seguimientoCliente->id) . ', ';
+            $sql .=      Datos::objectToDB($seguimientoCliente->cliente->id) . ', ';
+            $sql .= '   NOW(), ';
+            $sql .=      Datos::objectToDB($seguimientoCliente->observaciones) . ', ';
+            $sql .=      Datos::objectToDB((int)$seguimientoCliente->estado) . ', ';
+            $sql .=      Datos::objectToDB(Usuario::logueado()->id) . ', ';
+            $sql .= '   NOW(), ';
+            $sql .=      Datos::objectToDB('N'); // <-- importante para consistencia
+            $sql .= '); ';
+
+        } elseif ($modo == Modos::update) {
+            $sql .= 'UPDATE `gestiones_clientes_cobranza` SET ';
+            $sql .= '  `observaciones` = ' . Datos::objectToDB($seguimientoCliente->observaciones) . ', ';
+            $sql .= '  `estado` = ' . Datos::objectToDB((int)$seguimientoCliente->estado) . ', ';
+            $sql .= '  `cod_usuario_ultima_mod` = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
+            $sql .= '  `fecha_ultima_mod` = NOW() ';
+            $sql .= 'WHERE `id` = ' . Datos::objectToDB($seguimientoCliente->id) . '; ';
+
+        } elseif ($modo == Modos::delete) {
+            $sql .= 'UPDATE `gestiones_clientes_cobranza` SET ';
+            $sql .= '  `anulado` = ' . Datos::objectToDB('S') . ', ';
+            $sql .= '  `cod_usuario_baja` = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
+            $sql .= '  `fecha_baja` = NOW() ';
+            $sql .= 'WHERE `id` = ' . Datos::objectToDB($seguimientoCliente->id) . '; ';
+
+        } elseif ($modo == Modos::id) {
+            $sql .= 'SELECT IFNULL(MAX(`id`), 0) + 1 FROM `gestiones_clientes_cobranza`;';
+
+        } else {
+            throw new FactoryException('Modo incorrecto');
+        }
+        return $sql;
+    } catch (Exception $ex) {
+        throw $ex;
+    }
+}
+
+
 	private function mapperQueryGrupoEmpresa(GrupoEmpresa $grupoEmpresa, $modo){
 		$sql = '';
 		try {
@@ -9102,7 +9149,7 @@ class Mapper {
 		try {
 			if ($modo == Modos::insert) {
 				$sql .= 'UPDATE users SET ';
-				$sql .= 'fechaUltimaAct = GETDATE() ';
+				$sql .= 'fechaUltimaAct = NOW() ';
 				$sql .= 'WHERE cod_usuario = ' . Datos::objectToDB($heartbeat->idUsuario) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -9141,7 +9188,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($koiTicket->estado) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($koiTicket->usuario->id) . ', '; //Est� as� para los casos en los que viene de un ticket delegado
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE koi_ticket SET ';
@@ -9156,16 +9203,16 @@ class Mapper {
 				$sql .= 'cod_usuario_cierre = ' . Datos::objectToDB($koiTicket->usuarioCierre->id) . ', ';
 				$sql .= 'fecha_cierre = ' . Datos::objectToDB($koiTicket->fechaCierre) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_koi_ticket = ' . Datos::objectToDB($koiTicket->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE koi_ticket SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_koi_ticket = ' . Datos::objectToDB($koiTicket->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_koi_ticket), 0) + 1 FROM koi_ticket;';
+				$sql .= 'SELECT IFNULL(MAX(cod_koi_ticket), 0) + 1 FROM koi_ticket;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9207,13 +9254,13 @@ class Mapper {
 				$sql .= Datos::objectToDB($horma->punto) . ', ';
 				$sql .= Datos::objectToDB($horma->talleDesde) . ', ';
 				$sql .= Datos::objectToDB($horma->talleHasta) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE hormas SET ';
 				$sql .= 'activa = ' . Datos::objectToDB($horma->activa) . ', ';
 				if ($horma->activa == 'N')
-					$sql .= 'desactivada_fecha = GETDATE(), ';
+					$sql .= 'desactivada_fecha = NOW(), ';
 				$sql .= 'color_externo = ' . Datos::objectToDB($horma->colorExterno) . ', ';
 				$sql .= 'decidio_retirar = ' . Datos::objectToDB($horma->retiradaPor) . ', ';
 				$sql .= 'denom_horma = ' . Datos::objectToDB($horma->nombre) . ', ';
@@ -9227,7 +9274,7 @@ class Mapper {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE hormas SET ';
 				$sql .= 'activa = ' . Datos::objectToDB('N') . ', ';
-				$sql .= 'desactivada_fecha = GETDATE() ';
+				$sql .= 'desactivada_fecha = NOW() ';
 				$sql .= 'WHERE cod_horma = ' . Datos::objectToDB($horma->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -9256,12 +9303,12 @@ class Mapper {
 				$sql .= Datos::objectToDB($ImportePorOperacion->tipoOperacion) . ', ';
 				$sql .= Datos::objectToDB($ImportePorOperacion->caja->id) . ', ';
 				$sql .= Datos::objectToDB($ImportePorOperacion->fechaCaja) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_importe_operacion), 0) + 1 FROM importe_por_operacion_c;';
+				$sql .= 'SELECT IFNULL(MAX(cod_importe_operacion), 0) + 1 FROM importe_por_operacion_c;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9327,12 +9374,12 @@ class Mapper {
 				$sql .= Datos::objectToDB($imputacion->imputable) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE plan_cuentas SET ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE(), ';
+				$sql .= 'fecha_ultima_mod = NOW(), ';
 				$sql .= 'cuenta = ' . Datos::objectToDB($imputacion->idNuevo) . ', ';
 				$sql .= 'denominacion = ' . Datos::objectToDB($imputacion->nombre) . ', ';
 				$sql .= 'es_imputable = ' . Datos::objectToDB($imputacion->imputable) . ', ';
@@ -9342,7 +9389,7 @@ class Mapper {
 				$sql .= 'UPDATE plan_cuentas SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cuenta = ' . Datos::objectToDB($imputacion->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -9381,12 +9428,12 @@ class Mapper {
 				$sql .= Datos::objectToDB($impuesto->tipo) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE impuesto SET ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE(), ';
+				$sql .= 'fecha_ultima_mod = NOW(), ';
 				$sql .= 'nombre = ' . Datos::objectToDB($impuesto->nombre) . ', ';
 				$sql .= 'descripcion = ' . Datos::objectToDB($impuesto->descripcion) . ', ';
 				$sql .= 'cod_imputacion = ' . Datos::objectToDB($impuesto->imputacion->id) . ', ';
@@ -9398,10 +9445,10 @@ class Mapper {
 				$sql .= 'UPDATE impuesto SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_impuesto = ' . Datos::objectToDB($impuesto->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_impuesto), 0) + 1 FROM impuesto;';
+				$sql .= 'SELECT IFNULL(MAX(cod_impuesto), 0) + 1 FROM impuesto;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9482,7 +9529,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($indicador->where) . ', ';
 				$sql .= Datos::objectToDB($indicador->query) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'DELETE FROM indicadores_por_rol ';
@@ -9497,15 +9544,15 @@ class Mapper {
 				$sql .= 'fields = ' . Datos::objectToDB($indicador->fields) . ', ';
 				$sql .= 'clausula_where = ' . Datos::objectToDB($indicador->where) . ', ';
 				$sql .= 'query = ' . Datos::objectToDB($indicador->query) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_indicador = ' . Datos::objectToDB($indicador->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE indicadores SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_indicador = ' . Datos::objectToDB($indicador->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_indicador), 0) + 1 FROM indicadores;';
+				$sql .= 'SELECT IFNULL(MAX(cod_indicador), 0) + 1 FROM indicadores;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9564,10 +9611,10 @@ class Mapper {
 				$sql .= Datos::objectToDB($ingresoChequePropio->importeTotal) . ', ';
 				$sql .= Datos::objectToDB($ingresoChequePropio->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_ingreso_cheque_propio), 0) + 1 FROM ingreso_cheque_propio;';
+				$sql .= 'SELECT IFNULL(MAX(cod_ingreso_cheque_propio), 0) + 1 FROM ingreso_cheque_propio;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9599,19 +9646,19 @@ class Mapper {
 				$sql .= Datos::objectToDB($instruccionArticulo->interna) . ', ';
 				$sql .= Datos::objectToDB($instruccionArticulo->instruccion) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE instrucciones_articulo SET ';
 				$sql .= 'instruccion = ' . Datos::objectToDB($instruccionArticulo->instruccion) . ', ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB(Funciones::toString($instruccionArticulo->idArticulo)) . ' ';
 				$sql .= 'AND cod_seccion = ' . Datos::objectToDB($instruccionArticulo->idSeccion) . ' ';
 				$sql .= 'AND interna = ' . Datos::objectToDB($instruccionArticulo->interna) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE instrucciones_articulo SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB(Funciones::toString($instruccionArticulo->idArticulo)) . ' ';
 				$sql .= 'AND cod_seccion = ' . Datos::objectToDB($instruccionArticulo->idSeccion) . ' ';
 				$sql .= 'AND interna = ' . Datos::objectToDB($instruccionArticulo->interna) . '; ';
@@ -9646,7 +9693,7 @@ class Mapper {
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($lineaProducto->nombre) . ', ';
 				$sql .= Datos::objectToDB($lineaProducto->tituloCatalogo) . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($lineaProducto->fechaLanzamiento) . ', ';
 				$sql .= Datos::objectToDB($lineaProducto->origen) . ' ';
 				$sql .= '); ';
@@ -9654,8 +9701,8 @@ class Mapper {
 				$sql .= 'UPDATE lineas_productos SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB($lineaProducto->anulado) . ', ';
 				if ($lineaProducto->anulado == 'S')
-					$sql .= 'fecha_de_baja = GETDATE(), ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE(), ';
+					$sql .= 'fecha_de_baja = NOW(), ';
+				$sql .= 'fecha_ultima_modificacion = NOW(), ';
 				$sql .= 'denom_linea = ' . Datos::objectToDB($lineaProducto->nombre) . ', ';
 				$sql .= 'titulo_catalogo = ' . Datos::objectToDB($lineaProducto->tituloCatalogo) . ', ';
 				$sql .= 'lanzamiento_inicial = ' . Datos::objectToDB($lineaProducto->fechaLanzamiento) . ', ';
@@ -9664,10 +9711,10 @@ class Mapper {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE lineas_productos SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_de_baja = GETDATE() ';
+				$sql .= 'fecha_de_baja = NOW() ';
 				$sql .= 'WHERE cod_linea_nro = ' . Datos::objectToDB($lineaProducto->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_linea_nro), 0) + 1 FROM lineas_productos;';
+				$sql .= 'SELECT IFNULL(MAX(cod_linea_nro), 0) + 1 FROM lineas_productos;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9720,7 +9767,7 @@ class Mapper {
 				$sql .= 'cod_provincia = ' . Datos::objectToDB($localidad->provincia->id) . ' AND ';
 				$sql .= 'cod_localidad_nro = ' . Datos::objectToDB($localidad->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_localidad_nro), 0) + 1 FROM localidades;';
+				$sql .= 'SELECT IFNULL(MAX(cod_localidad_nro), 0) + 1 FROM localidades;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9747,22 +9794,22 @@ class Mapper {
 				$sql .= Datos::objectToDB($marca->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($marca->nombre) . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($marca->logo) . ' ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE Marcas SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB($marca->anulado) . ', ';
 				if ($marca->anulado == 'S')
-					$sql .= 'fechaBaja = GETDATE(), ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE(), ';
+					$sql .= 'fechaBaja = NOW(), ';
+				$sql .= 'fecha_ultima_modificacion = NOW(), ';
 				$sql .= 'denom_marca = ' . Datos::objectToDB($marca->nombre) . ', ';
 				$sql .= 'logo = ' . Datos::objectToDB($marca->logo) . ' ';
 				$sql .= 'WHERE cod_marca = ' . Datos::objectToDB($marca->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE Marcas SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fechaBaja = GETDATE() ';
+				$sql .= 'fechaBaja = NOW() ';
 				$sql .= 'WHERE cod_marca = ' . Datos::objectToDB($marca->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -9811,16 +9858,16 @@ class Mapper {
 				$sql .= Datos::objectToDB($motivo->tipo) . ', ';
 				$sql .= Datos::objectToDB($motivo->descripcion) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE motivo SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fechaBaja = GETDATE() ';
+				$sql .= 'fechaBaja = NOW() ';
 				$sql .= 'WHERE cod_motivo = ' . Datos::objectToDB($motivo->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_motivo), 0) + 1 FROM motivo; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_motivo), 0) + 1 FROM motivo; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9848,22 +9895,22 @@ class Mapper {
 				$sql .= Datos::objectToDB($motivoAusentismo->nombre) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE motivos_ausentismo SET ';
 				$sql .= 'nombre = ' . Datos::objectToDB($motivoAusentismo->nombre) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE id = ' . Datos::objectToDB($motivoAusentismo->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE motivos_ausentismo SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE id = ' . Datos::objectToDB($motivoAusentismo->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM motivos_ausentismo; ';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM motivos_ausentismo; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9905,12 +9952,12 @@ class Mapper {
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= Datos::objectToDB($movimientoAlmacen->cantidad[$i]) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM movimientos_almacen; ';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM movimientos_almacen; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -9954,7 +10001,7 @@ class Mapper {
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($movimientoAlmacenConfirmacion->usuario->id ? $movimientoAlmacenConfirmacion->usuario->id : Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE movimientos_almacen_confirmacion SET ';
@@ -9966,10 +10013,10 @@ class Mapper {
 				$sql .= 'UPDATE movimientos_almacen_confirmacion SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_confirmacion = ' . Datos::objectToDB($movimientoAlmacenConfirmacion->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_confirmacion), 0) + 1 FROM movimientos_almacen_confirmacion; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_confirmacion), 0) + 1 FROM movimientos_almacen_confirmacion; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -10011,12 +10058,12 @@ class Mapper {
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= Datos::objectToDB($movimientoAlmacenMP->cantidad[$i]) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM movimientos_almacen_mp; ';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM movimientos_almacen_mp; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -10060,7 +10107,7 @@ class Mapper {
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($movimientoAlmacenConfirmacionMP->usuario->id ? $movimientoAlmacenConfirmacionMP->usuario->id : Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE movimientos_almacen_confirmacion_mp SET ';
@@ -10072,10 +10119,10 @@ class Mapper {
 				$sql .= 'UPDATE movimientos_almacen_confirmacion_mp SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_confirmacion = ' . Datos::objectToDB($movimientoAlmacenConfirmacionMP->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_confirmacion), 0) + 1 FROM movimientos_almacen_confirmacion_mp; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_confirmacion), 0) + 1 FROM movimientos_almacen_confirmacion_mp; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -10119,12 +10166,12 @@ class Mapper {
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= Datos::objectToDB(Funciones::toInt($movimientoStock->cantidad[$i])) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM movimientos_stock; ';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM movimientos_stock; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -10168,12 +10215,12 @@ class Mapper {
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= Datos::objectToDB(Funciones::toFloat($movimientoStockMP->cantidad[$i])) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM movimientos_stock_mp; ';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM movimientos_stock_mp; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -10250,8 +10297,8 @@ class Mapper {
 				$sql .= Datos::objectToDB($notaDeCredito->documentoCancelatorio->numero) . ', ';
 				$sql .= Datos::objectToDB($notaDeCredito->causa->id) . ', ';
 				$sql .= Datos::objectToDB($notaDeCredito->observaciones) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 				if (isset($notaDeCredito->documentoCancelatorio->numero)) { //Si es una NCR de una factura, actualizo la factura
 					$sql .= 'UPDATE documentos_c SET ';
@@ -10274,7 +10321,7 @@ class Mapper {
 				$sql .= 'mail_enviado = ' . Datos::objectToDB($notaDeCredito->mailEnviado) . ', ';
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($notaDeCredito->asientoContable->id) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($notaDeCredito->empresa) . ' ';
 				$sql .= 'AND punto_venta = ' . Datos::objectToDB($notaDeCredito->puntoDeVenta) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($notaDeCredito->tipoDocumento) . ' ';
@@ -10287,14 +10334,14 @@ class Mapper {
 				$sql .= 'UPDATE documentos_c SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($notaDeCredito->empresa) . ' ';
 				$sql .= 'AND punto_venta = ' . Datos::objectToDB($notaDeCredito->puntoDeVenta) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($notaDeCredito->tipoDocumento) . ' ';
 				$sql .= 'AND nro_documento = ' . Datos::objectToDB($notaDeCredito->numero) . ' ';
 				$sql .= 'AND letra = ' . Datos::objectToDB($notaDeCredito->letra) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_documento), 0) + 1 FROM documentos_c ';
+				$sql .= 'SELECT IFNULL(MAX(nro_documento), 0) + 1 FROM documentos_c ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($notaDeCredito->empresa) . ' ';
 				$sql .= 'AND punto_venta = ' . Datos::objectToDB($notaDeCredito->puntoDeVenta) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($notaDeCredito->tipoDocumento) . ' ';
@@ -10374,8 +10421,8 @@ class Mapper {
 				$sql .= Datos::objectToDB($notaDeDebito->formaDePago->id) . ', ';
 				$sql .= Datos::objectToDB($notaDeDebito->asientoContable->id) . ', ';
 				$sql .= Datos::objectToDB($notaDeDebito->observaciones) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE documentos_c SET ';
@@ -10388,7 +10435,7 @@ class Mapper {
 				$sql .= 'mail_enviado = ' . Datos::objectToDB($notaDeDebito->mailEnviado) . ', ';
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($notaDeDebito->asientoContable->id) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($notaDeDebito->empresa) . ' ';
 				$sql .= 'AND punto_venta = ' . Datos::objectToDB($notaDeDebito->puntoDeVenta) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($notaDeDebito->tipoDocumento) . ' ';
@@ -10401,14 +10448,14 @@ class Mapper {
 				$sql .= 'UPDATE documentos_c SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($notaDeDebito->empresa) . ' ';
 				$sql .= 'AND punto_venta = ' . Datos::objectToDB($notaDeDebito->puntoDeVenta) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($notaDeDebito->tipoDocumento) . ' ';
 				$sql .= 'AND nro_documento = ' . Datos::objectToDB($notaDeDebito->numero) . ' ';
 				$sql .= 'AND letra = ' . Datos::objectToDB($notaDeDebito->letra) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_documento), 0) + 1 FROM documentos_c ';
+				$sql .= 'SELECT IFNULL(MAX(nro_documento), 0) + 1 FROM documentos_c ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($notaDeDebito->empresa) . ' ';
 				$sql .= 'AND punto_venta = ' . Datos::objectToDB($notaDeDebito->puntoDeVenta) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($notaDeDebito->tipoDocumento) . ' ';
@@ -10447,21 +10494,21 @@ class Mapper {
 				$sql .= Datos::objectToDB($notificacion->link) . ', ';
 				$sql .= Datos::objectToDB($notificacion->detalle) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE notificaciones SET ';
 				$sql .= 'detalle = ' . Datos::objectToDB($notificacion->detalle) . ', ';
 				$sql .= 'link = ' . Datos::objectToDB($notificacion->link) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_notificacion = ' . Datos::objectToDB($notificacion->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE notificaciones SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_notificacion = ' . Datos::objectToDB($notificacion->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_notificacion), 0) + 1 FROM notificaciones;';
+				$sql .= 'SELECT IFNULL(MAX(cod_notificacion), 0) + 1 FROM notificaciones;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -10492,20 +10539,20 @@ class Mapper {
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($notificacionPorUsuario->eliminable) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				//Corresponde al UPDATE de NOTIFICACION, donde ya tengo el idNotificacion
 				$sql .= 'UPDATE notificaciones_por_usuario SET ';
 				$sql .= 'vista = ' . Datos::objectToDB($notificacionPorUsuario->vista) . ', ';
 				$sql .= 'eliminable = ' . Datos::objectToDB($notificacionPorUsuario->eliminable) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_usuario = ' . Datos::objectToDB($notificacionPorUsuario->id) . ' ';
 				$sql .= 'AND cod_notificacion = ' . Datos::objectToDB($notificacionPorUsuario->idNotificacion) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE notificaciones_por_usuario SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_usuario = ' . Datos::objectToDB($notificacionPorUsuario->id) . ' ';
 				$sql .= 'AND cod_notificacion = ' . Datos::objectToDB($notificacionPorUsuario->idNotificacion) . '; ';
 			} else {
@@ -10683,7 +10730,7 @@ class Mapper {
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE cod_operador = ' . Datos::objectToDB($operador->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_personal), 0) + 1 FROM personal;';
+				$sql .= 'SELECT IFNULL(MAX(cod_personal), 0) + 1 FROM personal;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -10720,35 +10767,35 @@ class Mapper {
 				$sql .= Datos::objectToDB(Funciones::padLeft($ordenDeCompra->id, 6, 0)) . ', ';
 				$sql .= Datos::objectToDB($ordenDeCompra->proveedor->id) . ', ';
 				$sql .= Datos::objectToDB($ordenDeCompra->loteDeProduccion->id) . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($ordenDeCompra->almacen->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($ordenDeCompra->observaciones) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE ordenes_compra_cabecera SET ';
 				$sql .= 'nro_lote = ' . Datos::objectToDB($ordenDeCompra->loteDeProduccion->id) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($ordenDeCompra->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_orden_de_compra = ' . Datos::objectToDB($ordenDePago->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE ordenes_compra_detalle SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_orden_de_compra = ' . Datos::objectToDB($ordenDeCompra->id) . '; ';
 				$sql .= 'UPDATE ordenes_compra_cabecera SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_orden_de_compra = ' . Datos::objectToDB($ordenDeCompra->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_orden_de_compra), 0) + 1 FROM ordenes_compra_cabecera; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_orden_de_compra), 0) + 1 FROM ordenes_compra_cabecera; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -10813,7 +10860,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($ordenDeCompraItem->loteDeCompra) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE Ordenes_compra_detalle SET ';
@@ -10824,18 +10871,18 @@ class Mapper {
 				$sql .= 'cantidad_pendiente = ' . Datos::objectToDB($ordenDeCompraItem->cantidadPendiente) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'fecha_entrega = ' . Datos::objectToDB($ordenDeCompraItem->fechaEntrega) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_orden_de_compra = ' . Datos::objectToDB($ordenDeCompraItem->ordenDeCompra->id) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($ordenDeCompraItem->numeroDeItem) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE Ordenes_compra_detalle SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_orden_de_compra = ' . Datos::objectToDB($ordenDeCompraItem->ordenDeCompra->id) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($ordenDeCompraItem->numeroDeItem) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_item), 0) + 1 FROM Ordenes_compra_detalle ';
+				$sql .= 'SELECT IFNULL(MAX(nro_item), 0) + 1 FROM Ordenes_compra_detalle ';
 				$sql .= 'WHERE cod_orden_de_compra = ' . Datos::objectToDB($ordenDeCompraItem->ordenDeCompra->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -10912,7 +10959,7 @@ class Mapper {
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE nro_orden_fabricacion = ' . Datos::objectToDB($ordenDeFabricacion->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_orden_fabricacion), 0) + 1 FROM Orden_fabricacion;';
+				$sql .= 'SELECT IFNULL(MAX(nro_orden_fabricacion), 0) + 1 FROM Orden_fabricacion;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -10967,7 +11014,7 @@ class Mapper {
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($ordenDePago->fecha) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE orden_de_pago SET ';
@@ -10977,18 +11024,18 @@ class Mapper {
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($ordenDePago->asientoContable->id) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($ordenDePago->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE nro_orden_de_pago = ' . Datos::objectToDB($ordenDePago->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($ordenDePago->empresa) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE orden_de_pago SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE nro_orden_de_pago = ' . Datos::objectToDB($ordenDePago->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($ordenDePago->empresa) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_orden_de_pago), 0) + 1 FROM orden_de_pago ';
+				$sql .= 'SELECT IFNULL(MAX(nro_orden_de_pago), 0) + 1 FROM orden_de_pago ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($ordenDePago->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -11086,20 +11133,20 @@ class Mapper {
 				$sql .= Datos::objectToDB($parametroContabilidad->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE parametros_contabilidad SET ';
 				$sql .= 'cod_imputacion = ' . Datos::objectToDB($parametroContabilidad->imputacion->id) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($parametroContabilidad->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_parametro = ' . Datos::objectToDB($parametroContabilidad->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE parametros_contabilidad SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_parametro = ' . Datos::objectToDB($parametroContabilidad->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -11136,7 +11183,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($patron->colorPorArticulo->id) . ', ';
 				$sql .= Datos::objectToDB($patron->version) . ', ';
 				$sql .= Datos::objectToDB($patron->tipoPatron) . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($patron->confirmado) . ', ';
 				$sql .= Datos::objectToDB($patron->versionActual) . ', ';
 				$sql .= Datos::objectToDB($patron->borrador) . ', ';
@@ -11152,7 +11199,7 @@ class Mapper {
 
 				$sql .= 'UPDATE patrones_mp_cabecera SET ';
 				$sql .= 'tipo_patron = ' . Datos::objectToDB($patron->tipoPatron) . ', ';
-				$sql .= 'fecha = GETDATE() , ';
+				$sql .= 'fecha = NOW() , ';
 				$sql .= 'confirmado = ' . Datos::objectToDB($patron->confirmado) . ', ';
 				$sql .= 'version_actual = ' . Datos::objectToDB($patron->versionActual) . ', ';
 				$sql .= 'borrador = ' . Datos::objectToDB($patron->borrador) . ', ';
@@ -11211,7 +11258,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($patronItem->material->id) . ', ';
 				$sql .= Datos::objectToDB($patronItem->colorMateriaPrima->idColor) . ', ';
 				$sql .= Datos::objectToDB($patronItem->seccion->id) . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($patronItem->itemNuevo) . ', ';
 				$sql .= Datos::objectToDB($patronItem->consumoPar) . ', ';
 				$sql .= Datos::objectToDB($patronItem->consumoBatch) . ', ';
@@ -11228,7 +11275,7 @@ class Mapper {
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_item), 0) + 1 FROM Patrones_mp_detalle ';
+				$sql .= 'SELECT IFNULL(MAX(nro_item), 0) + 1 FROM Patrones_mp_detalle ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB($patronItem->patron->articulo->id) . ' ';
 				$sql .= 'AND cod_color_articulo = ' . Datos::objectToDB($patronItem->patron->colorPorArticulo->id) . ' ';
 				$sql .= 'AND version = ' . Datos::objectToDB($patronItem->patron->version) . '; ';
@@ -11286,8 +11333,8 @@ class Mapper {
 				$sql .= Datos::objectToDB($pedido->formaDePago->id) . ', ';
 				$sql .= Datos::objectToDB($pedido->temporada->id) . ', ';
 				$sql .= Datos::objectToDB($pedido->ecommerceOrder->id) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'DELETE FROM pedidos_d ';
@@ -11305,16 +11352,16 @@ class Mapper {
 				$sql .= 'cod_temporada = ' . Datos::objectToDB($pedido->temporada->id) . ', ';
 				$sql .= 'cod_ecommerce_order = ' . Datos::objectToDB($pedido->ecommerceOrder->id) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE nro_pedido = ' . Datos::objectToDB($pedido->numero) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE pedidos_c SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE nro_pedido = ' . Datos::objectToDB($pedido->numero) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_pedido), 0) + 1 FROM pedidos_c;';
+				$sql .= 'SELECT IFNULL(MAX(nro_pedido), 0) + 1 FROM pedidos_c;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -11364,15 +11411,15 @@ class Mapper {
 				$sql .= Datos::objectToDB(Funciones::sumaArray($pedidoItem->cantidad)) . ', ';
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= Datos::objectToDB($pedidoItem->cantidad[$i]) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE pedidos_d SET ';
 				$sql .= 'pendiente = ' . Datos::objectToDB($pedidoItem->getTotalPendiente()) . ', ';
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= 'pend_' . $i . ' = ' . Datos::objectToDB($pedidoItem->pendiente[$i]) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE nro_pedido = ' . Datos::objectToDB($pedidoItem->numero) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($pedidoItem->numeroDeItem) . '; ';
 			} elseif ($modo == Modos::delete) {
@@ -11465,22 +11512,22 @@ class Mapper {
 				$sql .= Datos::objectToDB($personaGasto->nombre) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE persona_gasto SET ';
 				$sql .= 'nombre = ' . Datos::objectToDB($personaGasto->nombre) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE id = ' . Datos::objectToDB($personaGasto->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE persona_gasto SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE id = ' . Datos::objectToDB($personaGasto->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id), 0) + 1 FROM persona_gasto;';
+				$sql .= 'SELECT IFNULL(MAX(id), 0) + 1 FROM persona_gasto;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -11639,7 +11686,7 @@ class Mapper {
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE cod_personal = ' . Datos::objectToDB($personal->idPersonal) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_personal), 0) + 1 FROM personal;';
+				$sql .= 'SELECT IFNULL(MAX(cod_personal), 0) + 1 FROM personal;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -11676,7 +11723,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($loteDeProduccion->nombre) . ', ';
 				$sql .= Datos::objectToDB($loteDeProduccion->forecast->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE Planes_produccion SET ';
@@ -11685,14 +11732,14 @@ class Mapper {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE Orden_fabricacion SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-                $sql .= 'fecha_ultima_modificacion = GETDATE() ';
+                $sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE nro_plan = ' . Datos::objectToDB($loteDeProduccion->id) . '; ';
                 $sql .= 'UPDATE Planes_produccion SET ';
                 $sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-                $sql .= 'fecha_baja = GETDATE() ';
+                $sql .= 'fecha_baja = NOW() ';
                 $sql .= 'WHERE nro_plan = ' . Datos::objectToDB($loteDeProduccion->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_plan), 0) + 1 FROM Planes_produccion;';
+				$sql .= 'SELECT IFNULL(MAX(nro_plan), 0) + 1 FROM Planes_produccion;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -11738,8 +11785,8 @@ class Mapper {
 				$sql .= Datos::objectToDB($predespacho->getTotalTickeados()) . ', ';
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= Datos::objectToDB($predespacho->tickeados[$i]) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE predespachos SET ';
@@ -11749,7 +11796,7 @@ class Mapper {
 				$sql .= 'tickeados = ' . Datos::objectToDB($predespacho->getTotalTickeados()) . ', ';
 				for ($i = 1; $i <= 10; $i++)
 					$sql .= 'tick_' . $i . ' = ' . Datos::objectToDB($predespacho->tickeados[$i]) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE nro_pedido = ' . Datos::objectToDB($predespacho->pedidoNumero) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($predespacho->pedidoNumeroDeItem) . '; ';
 			} elseif ($modo == Modos::delete) {
@@ -11797,26 +11844,26 @@ class Mapper {
 				$sql .= Datos::objectToDB($prestamo->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= is_null($prestamo->fecha) ? 'GETDATE(), ' : Datos::objectToDB($prestamo->fecha) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= is_null($prestamo->fecha) ? 'NOW(), ' : Datos::objectToDB($prestamo->fecha) . ', ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE prestamo SET ';
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($prestamo->asientoContable->id) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($prestamo->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE nro_prestamo = ' . Datos::objectToDB($prestamo->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($prestamo->empresa) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE prestamo SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE nro_prestamo = ' . Datos::objectToDB($prestamo->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($prestamo->empresa) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_prestamo), 0) + 1 FROM prestamo ';
+				$sql .= 'SELECT IFNULL(MAX(nro_prestamo), 0) + 1 FROM prestamo ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($prestamo->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -11853,7 +11900,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($presupuesto->observaciones) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'DELETE FROM presupuesto_d ';
@@ -11863,16 +11910,16 @@ class Mapper {
 				$sql .= 'nro_lote = ' . Datos::objectToDB($presupuesto->loteDeProduccion->id) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($presupuesto->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_presupuesto = ' . Datos::objectToDB($presupuesto->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE presupuesto_c SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_presupuesto = ' . Datos::objectToDB($presupuesto->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_presupuesto), 0) + 1 FROM presupuesto_c;';
+				$sql .= 'SELECT IFNULL(MAX(cod_presupuesto), 0) + 1 FROM presupuesto_c;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -11921,7 +11968,7 @@ class Mapper {
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE presupuesto_d SET ';
@@ -11935,18 +11982,18 @@ class Mapper {
 
 				$sql .= 'saciado = ' . Datos::objectToDB($presupuestoItem->saciado) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_presupuesto = ' . Datos::objectToDB($presupuestoItem->presupuesto->id) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($presupuestoItem->numeroDeItem) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE presupuesto_d SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_presupuesto = ' . Datos::objectToDB($presupuestoItem->presupuesto->id) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($presupuestoItem->numeroDeItem) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_item), 0) + 1 FROM presupuesto_d ';
+				$sql .= 'SELECT IFNULL(MAX(nro_item), 0) + 1 FROM presupuesto_d ';
 				$sql .= 'WHERE cod_presupuesto = ' . Datos::objectToDB($presupuestoItem->presupuesto->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -11982,7 +12029,7 @@ class Mapper {
 				$sql .= 'DELETE FROM presupuesto_orden_compra ';
 				$sql .= 'WHERE cod_presupuesto_orden_compra = ' . Datos::objectToDB($presupuestoOrdenDeCompra->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_presupuesto_orden_compra), 0) + 1 FROM presupuesto_orden_compra;';
+				$sql .= 'SELECT IFNULL(MAX(cod_presupuesto_orden_compra), 0) + 1 FROM presupuesto_orden_compra;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -12144,7 +12191,7 @@ class Mapper {
 				$sql .= 'autorizado = ' . Datos::objectToDB('S') . ' '; //Esto es para que no aparezca como "POR AUTORIZAR"
 				$sql .= 'WHERE cod_prov = ' . Datos::objectToDB($proveedor->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_prov), 0) + 1 FROM proveedores_datos;';
+				$sql .= 'SELECT IFNULL(MAX(cod_prov), 0) + 1 FROM proveedores_datos;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -12281,7 +12328,7 @@ class Mapper {
 				$sql .= Datos::objectToDB(Funciones::padLeft($rangoTalle->id, 2, '0')) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($rangoTalle->nombre) . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				for ($i = 1; $i < 21; $i++)
 					$sql .= Datos::objectToDB($rangoTalle->posicion[$i]) . ', ';
 				$sql .= Datos::objectToDB($rangoTalle->punto) . ' ';
@@ -12290,8 +12337,8 @@ class Mapper {
 				$sql .= 'UPDATE rango_talles SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB($rangoTalle->anulado) . ', ';
 				if ($rangoTalle->anulado == 'S')
-					$sql .= 'fechaBaja = GETDATE(), ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE(), ';
+					$sql .= 'fechaBaja = NOW(), ';
+				$sql .= 'fecha_ultima_modificacion = NOW(), ';
 				$sql .= 'denom_rango = ' . Datos::objectToDB($rangoTalle->nombre) . ', ';
 				for ($i = 1; $i < 21; $i++)
 					$sql .= 'posic_' . $i . ' = ' . Datos::objectToDB($rangoTalle->posicion[$i]) . ', ';
@@ -12300,10 +12347,10 @@ class Mapper {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE rango_talles SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fechaBaja = GETDATE() ';
+				$sql .= 'fechaBaja = NOW() ';
 				$sql .= 'WHERE cod_rango_nro = ' . Datos::objectToDB($rangoTalle->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_rango_nro), 0) + 1 FROM rango_talles;';
+				$sql .= 'SELECT IFNULL(MAX(cod_rango_nro), 0) + 1 FROM rango_talles;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -12338,7 +12385,7 @@ class Mapper {
 				//} elseif ($modo == Modos::update) {
 				//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_rechazo_cheque), 0) + 1 FROM rechazo_de_cheque_d ';
+				$sql .= 'SELECT IFNULL(MAX(cod_rechazo_cheque), 0) + 1 FROM rechazo_de_cheque_d ';
 				$sql .= 'WHERE entrada_salida = ' . Datos::objectToDB($rechazoCheque->entradaSalida) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($rechazoCheque->empresa) . ';';
 			} else {
@@ -12374,19 +12421,19 @@ class Mapper {
 				$sql .= Datos::objectToDB($rechazoChequeCabecera->motivo->id) . ', ';
 				$sql .= Datos::objectToDB($rechazoChequeCabecera->asientoContable->id) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE rechazo_de_cheque_c SET ';
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($rechazoChequeCabecera->asientoContable->id) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_rechazo_cheque = ' . Datos::objectToDB($rechazoChequeCabecera->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($rechazoChequeCabecera->empresa) . '; ';
 				//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_rechazo_cheque), 0) + 1 FROM rechazo_de_cheque_c ';
+				$sql .= 'SELECT IFNULL(MAX(cod_rechazo_cheque), 0) + 1 FROM rechazo_de_cheque_c ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($rechazoChequeCabecera->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -12443,8 +12490,8 @@ class Mapper {
 				$sql .= Datos::objectToDB($recibo->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= is_null($recibo->fecha) ? 'GETDATE(), ' : Datos::objectToDB($recibo->fecha) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= is_null($recibo->fecha) ? 'NOW(), ' : Datos::objectToDB($recibo->fecha) . ', ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE recibo SET ';
@@ -12457,18 +12504,18 @@ class Mapper {
 				$sql .= 'cod_ecommerce_order = ' . Datos::objectToDB($recibo->ecommerceOrder->id) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($recibo->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE nro_recibo = ' . Datos::objectToDB($recibo->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($recibo->empresa) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE recibo SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE nro_recibo = ' . Datos::objectToDB($recibo->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($recibo->empresa) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_recibo), 0) + 1 FROM recibo ';
+				$sql .= 'SELECT IFNULL(MAX(nro_recibo), 0) + 1 FROM recibo ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($recibo->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -12506,7 +12553,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($reingresoChequeCartera->asientoContable->id) . ', ';
 				$sql .= Datos::objectToDB($reingresoChequeCartera->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE reingreso_cheque_cartera SET ';
@@ -12515,7 +12562,7 @@ class Mapper {
 				$sql .= 'AND empresa = ' . Datos::objectToDB($reingresoChequeCartera->empresa) . '; ';
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_reingreso_cheques_cartera), 0) + 1 FROM reingreso_cheque_cartera ';
+				$sql .= 'SELECT IFNULL(MAX(cod_reingreso_cheques_cartera), 0) + 1 FROM reingreso_cheque_cartera ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($reingresoChequeCartera->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -12563,8 +12610,8 @@ class Mapper {
 				$sql .= Datos::objectToDB($remito->cantidadPares) . ', ';
 				$sql .= Datos::objectToDB($remito->ecommerceOrder->id) . ', ';
 				$sql .= Datos::objectToDB($remito->observaciones) . ', ';
-				$sql .= 'GETDATE(), ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW(), ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 				foreach ($remito->detalle as $despachoItem) {
 					$sql .= 'UPDATE despachos_d SET ';
@@ -12587,12 +12634,12 @@ class Mapper {
 				$sql .= 'UPDATE remitos_c SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($remito->empresa) . ' ';
 				$sql .= 'AND nro_remito = ' . Datos::objectToDB($remito->numero) . ' ';
 				$sql .= 'AND letra = ' . Datos::objectToDB($remito->letra) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_remito), 0) + 1 FROM remitos_c ';
+				$sql .= 'SELECT IFNULL(MAX(nro_remito), 0) + 1 FROM remitos_c ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($remito->empresa) . ' ';
 				$sql .= 'AND letra = ' . Datos::objectToDB($remito->letra) . ';';
 			} else {
@@ -12650,7 +12697,7 @@ class Mapper {
 				$sql .= 'DELETE FROM remito_orden_de_compra ';
 				$sql .= 'WHERE cod_remito_orden_de_compra = ' . Datos::objectToDB($remitoPorOrdenDeCompra->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_remito_orden_de_compra), 0) + 1 FROM remito_orden_de_compra;';
+				$sql .= 'SELECT IFNULL(MAX(cod_remito_orden_de_compra), 0) + 1 FROM remito_orden_de_compra;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -12692,7 +12739,7 @@ class Mapper {
 				$sql .= Datos::objectToDB('S') . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE remitos_proveedor_cabecera SET ';
@@ -12706,7 +12753,7 @@ class Mapper {
 				$sql .= 'DELETE FROM remitos_proveedor_cabecera ';
 				$sql .= 'WHERE cod_remito_proveedor = ' . Datos::objectToDB($remitoProveedor->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_remito_proveedor), 0) + 1 FROM remitos_proveedor_cabecera;';
+				$sql .= 'SELECT IFNULL(MAX(cod_remito_proveedor), 0) + 1 FROM remitos_proveedor_cabecera;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -12751,7 +12798,7 @@ class Mapper {
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($remitoProveedorItem->embalaje) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE remitos_proveedor_detalle SET ';
@@ -12759,7 +12806,7 @@ class Mapper {
 				for($i = 1; $i < 11; $i++)
 					$sql .= 'cant_' . $i . ' = ' . Datos::objectToDB($remitoProveedorItem->cantidades[$i]) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_remito_proveedor = ' . Datos::objectToDB($remitoProveedorItem->remitoProveedor->id) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($remitoProveedorItem->numeroDeItem) . '; ';
 			} elseif ($modo == Modos::delete) {
@@ -12767,7 +12814,7 @@ class Mapper {
 				$sql .= 'WHERE cod_remito_proveedor = ' . Datos::objectToDB($remitoProveedorItem->remitoProveedor->id) . ' ';
 				$sql .= 'AND nro_item = ' . Datos::objectToDB($remitoProveedorItem->numeroDeItem) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_item), 0) + 1 FROM remitos_proveedor_detalle ';
+				$sql .= 'SELECT IFNULL(MAX(nro_item), 0) + 1 FROM remitos_proveedor_detalle ';
 				$sql .= 'WHERE cod_remito_proveedor = ' . Datos::objectToDB($remitoProveedorItem->remitoProveedor->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -12809,25 +12856,25 @@ class Mapper {
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($rendicionGastos->fecha) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE rendicion_de_gastos SET ';
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($rendicionGastos->asientoContable->id) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($rendicionGastos->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_rendicion_gastos = ' . Datos::objectToDB($rendicionGastos->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($rendicionGastos->empresa) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE rendicion_de_gastos SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_rendicion_gastos = ' . Datos::objectToDB($rendicionGastos->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($rendicionGastos->empresa) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_rendicion_gastos), 0) + 1 FROM rendicion_de_gastos ';
+				$sql .= 'SELECT IFNULL(MAX(cod_rendicion_gastos), 0) + 1 FROM rendicion_de_gastos ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($rendicionGastos->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -12870,7 +12917,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($retencionEfectuada->importe) . ', ';
 				$sql .= Datos::objectToDB($retencionEfectuada->fecha) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE retencion_efectuada SET ';
@@ -12879,15 +12926,15 @@ class Mapper {
 				$sql .= 'importe_neto = ' . Datos::objectToDB($retencionEfectuada->importeNeto) . ', ';
 				$sql .= 'importe = ' . Datos::objectToDB($retencionEfectuada->importe) . ', ';
 				$sql .= 'fecha = ' . Datos::objectToDB($retencionEfectuada->fecha) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_retencion = ' . Datos::objectToDB($retencionEfectuada->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE retencion_efectuada SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_retencion = ' . Datos::objectToDB($retencionEfectuada->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_retencion), 0) + 1 FROM retencion_efectuada; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_retencion), 0) + 1 FROM retencion_efectuada; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -12939,7 +12986,7 @@ class Mapper {
 				$sql .= 'AND tramo_escala = ' . Datos::objectToDB($retencionEscala->item) . '; ';
 			//} elseif ($modo == Modos::delete) {
 			//} elseif ($modo == Modos::id) {
-			//	$sql .= 'SELECT ISNULL(MAX(cod_retencion), 0) + 1 FROM retenciones_ganancias_honorarios; ';
+			//	$sql .= 'SELECT IFNULL(MAX(cod_retencion), 0) + 1 FROM retenciones_ganancias_honorarios; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -12979,7 +13026,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($retencionSufrida->importe) . ', ';
 				$sql .= Datos::objectToDB($retencionSufrida->fecha) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE retencion_sufrida SET ';
@@ -12987,15 +13034,15 @@ class Mapper {
 				$sql .= 'numero_certificado = ' . Datos::objectToDB($retencionSufrida->numeroCertificado) . ', ';
 				$sql .= 'importe = ' . Datos::objectToDB($retencionSufrida->importe) . ', ';
 				$sql .= 'fecha = ' . Datos::objectToDB($retencionSufrida->fecha) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_retencion = ' . Datos::objectToDB($retencionSufrida->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE retencion_sufrida SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_retencion = ' . Datos::objectToDB($retencionSufrida->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_retencion), 0) + 1 FROM retencion_sufrida; ';
+				$sql .= 'SELECT IFNULL(MAX(cod_retencion), 0) + 1 FROM retencion_sufrida; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -13050,7 +13097,7 @@ class Mapper {
 				$sql .= 'AND item_concepto = ' . Datos::objectToDB($retencionTabla->item) . '; ';
 			//} elseif ($modo == Modos::delete) {
 			//} elseif ($modo == Modos::id) {
-			//	$sql .= 'SELECT ISNULL(MAX(cod_retencion), 0) + 1 FROM retencion_ganancias_tabla; ';
+			//	$sql .= 'SELECT IFNULL(MAX(cod_retencion), 0) + 1 FROM retencion_ganancias_tabla; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -13092,8 +13139,8 @@ class Mapper {
 				$sql .= Datos::objectToDB($retiroSocio->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() , ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() , ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE retiro_socio SET ';
@@ -13101,18 +13148,18 @@ class Mapper {
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($retiroSocio->asientoContable->id) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($retiroSocio->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE nro_retiro_socio = ' . Datos::objectToDB($retiroSocio->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($retiroSocio->empresa) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE retiro_socio SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE nro_retiro_socio = ' . Datos::objectToDB($retiroSocio->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($retiroSocio->empresa) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(nro_retiro_socio), 0) + 1 FROM retiro_socio ';
+				$sql .= 'SELECT IFNULL(MAX(nro_retiro_socio), 0) + 1 FROM retiro_socio ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($retiroSocio->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -13139,7 +13186,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($rol->nombre) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($rol->tipo) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				//Le borro las funcionalidades pq despu�s se van a guardar en el transaction
@@ -13151,7 +13198,7 @@ class Mapper {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE roles SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_rol = ' . Datos::objectToDB($rol->id) . '; ';
 			} elseif ($modo == Modos::id) {
 				$sql .= 'SELECT IDENT_CURRENT(\'roles\') + IDENT_INCR(\'roles\');';
@@ -13303,23 +13350,23 @@ class Mapper {
 				$sql .= ') VALUES (';
 				$sql .= Datos::objectToDB($rutaProduccion->id) . ', ';
 				$sql .= Datos::objectToDB($rutaProduccion->nombre) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE rutas_produccion SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB($rutaProduccion->anulado) . ', ';
 				if ($rutaProduccion->anulado == 'S')
-					$sql .= 'fecha_baja = GETDATE(), ';
+					$sql .= 'fecha_baja = NOW(), ';
 				$sql .= 'denom_ruta = ' . Datos::objectToDB($rutaProduccion->nombre) . ', ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE cod_ruta = ' . Datos::objectToDB($rutaProduccion->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE Rutas_produccion SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_ruta = ' . Datos::objectToDB($rutaProduccion->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_ruta), 0) + 1 FROM rutas_produccion;';
+				$sql .= 'SELECT IFNULL(MAX(cod_ruta), 0) + 1 FROM rutas_produccion;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -13338,7 +13385,7 @@ class Mapper {
 				$sql .= 'AND cod_paso = ' . Datos::objectToDB($rutaProduccionPaso->nroPaso) . '; ';
 			} elseif ($modo == Modos::insert) {
 				$sql .= 'DECLARE @idRutaProduccionPaso AS INT; ';
-				$sql .= 'SET @idRutaProduccionPaso = (SELECT ISNULL(MAX(cod_paso), 0) FROM Rutas_produccion WHERE cod_ruta = ' . Datos::objectToDB($rutaProduccionPaso->rutaProduccion->id) . ') + 1; ';
+				$sql .= 'SET @idRutaProduccionPaso = (SELECT IFNULL(MAX(cod_paso), 0) FROM Rutas_produccion WHERE cod_ruta = ' . Datos::objectToDB($rutaProduccionPaso->rutaProduccion->id) . ') + 1; ';
 				$sql .= 'INSERT INTO Pasos_rutas_produccion (';
 				$sql .= 'cod_ruta, ';
 				$sql .= 'cod_paso, ';
@@ -13361,7 +13408,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($rutaProduccionPaso->puntoProgramacion) . ', ';
 				$sql .= Datos::objectToDB($rutaProduccionPaso->seccionProduccion->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($rutaProduccionPaso->tieneSubordinadas) . ', ';
 				$sql .= Datos::objectToDB($rutaProduccionPaso->jerarquiaSeccion) . ', ';
 				$sql .= Datos::objectToDB('N') . ' ';
@@ -13373,7 +13420,7 @@ class Mapper {
 				$sql .= 'ejecucion = ' . Datos::objectToDB($rutaProduccionPaso->ejecucion) . ', ';
 				$sql .= 'duracion = ' . Datos::objectToDB($rutaProduccionPaso->duracion) . ', ';
 				$sql .= 'punto_programacion = ' . Datos::objectToDB($rutaProduccionPaso->puntoProgramacion) . ', ';
-				$sql .= 'fechaUltimaMod = GETDATE(), ';
+				$sql .= 'fechaUltimaMod = NOW(), ';
 				$sql .= 'tiene_subordinadas = ' . Datos::objectToDB($rutaProduccionPaso->tieneSubordinadas) . ', ';
 				$sql .= 'jerarquia_seccion = ' . Datos::objectToDB($rutaProduccionPaso->jerarquiaSeccion) . ' ';
 				$sql .= 'WHERE cod_ruta = ' . Datos::objectToDB($rutaProduccionPaso->rutaProduccion->id) . ' ';
@@ -13381,7 +13428,7 @@ class Mapper {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE Pasos_rutas_produccion SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_ruta = ' . Datos::objectToDB($rutaProduccionPaso->rutaProduccion->id) . ' ';
 				$sql .= 'AND cod_paso = ' . Datos::objectToDB($rutaProduccionPaso->nroPaso) . '; ';
 			} else {
@@ -13420,7 +13467,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($seccionProduccion->color) . ', ';
 				$sql .= Datos::objectToDB($seccionProduccion->nombreCorto) . ', ';
 				$sql .= Datos::objectToDB($seccionProduccion->nombre) . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($seccionProduccion->imprimeStickers) . ', ';
                 $sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB($seccionProduccion->almacenDefault->id) . ', ';
@@ -13431,7 +13478,7 @@ class Mapper {
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE secciones_produccion SET ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE(), ';
+				$sql .= 'fecha_ultima_modificacion = NOW(), ';
 				$sql .= 'color = ' . Datos::objectToDB($seccionProduccion->color) . ', ';
 				$sql .= 'denom_corta = ' . Datos::objectToDB($seccionProduccion->nombreCorto) . ', ';
 				$sql .= 'denom_seccion = ' . Datos::objectToDB($seccionProduccion->nombre) . ', ';
@@ -13446,10 +13493,10 @@ class Mapper {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE secciones_produccion SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fechaBaja = GETDATE() ';
+				$sql .= 'fechaBaja = NOW() ';
 				$sql .= 'WHERE cod_seccion = ' . Datos::objectToDB($seccionProduccion->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_seccion), 0) + 1 FROM secciones_produccion;';
+				$sql .= 'SELECT IFNULL(MAX(cod_seccion), 0) + 1 FROM secciones_produccion;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -13503,7 +13550,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($socio->nombre) . ', ';
 				$sql .= Datos::objectToDB($socio->telefono) . ', ';
 				$sql .= Datos::objectToDB($socio->celular) . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE socio SET ';
@@ -13522,15 +13569,15 @@ class Mapper {
 				$sql .= 'nombre = ' . Datos::objectToDB($socio->nombre) . ', ';
 				$sql .= 'telefono = ' . Datos::objectToDB($socio->telefono) . ', ';
 				$sql .= 'celular = ' . Datos::objectToDB($socio->celular) . ', ';
-				$sql .= 'fecha_ultima_modificacion = GETDATE() ';
+				$sql .= 'fecha_ultima_modificacion = NOW() ';
 				$sql .= 'WHERE cod_socio = ' . Datos::objectToDB($socio->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE socio SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_socio = ' . Datos::objectToDB($socio->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_socio), 0) + 1 FROM socio;';
+				$sql .= 'SELECT IFNULL(MAX(cod_socio), 0) + 1 FROM socio;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -13566,7 +13613,7 @@ class Mapper {
 				$sql .= 'aprobada = ' . Datos::objectToDB($solicitudDeFondos->aprobada) . ' ';
 				$sql .= 'WHERE cod_solicitud_de_fondos = ' . Datos::objectToDB($solicitudDeFondos->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_solicitud_de_fondos), 0) + 1 FROM solicitud_de_fondos_c;';
+				$sql .= 'SELECT IFNULL(MAX(cod_solicitud_de_fondos), 0) + 1 FROM solicitud_de_fondos_c;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -13599,7 +13646,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($solicitudDeFondosItem->fechaSugerida) . ' ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_seccion), 0) + 1 FROM solicitud_de_fondos_d;';
+				$sql .= 'SELECT IFNULL(MAX(cod_seccion), 0) + 1 FROM solicitud_de_fondos_d;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -13643,7 +13690,7 @@ class Mapper {
 				$sql .= 'AND cod_color_articulo = ' . Datos::objectToDB($stock->idColorPorArticulo) . '; ';
 				//Cuando se modifica un stock, tambi�n pongo la fecha de �ltima modificaci�n en sus colores (para sincronizar luego con ecommerce)
 				$sql .= 'UPDATE colores_por_articulo SET ';
-				$sql .= 'fechaUltimaMod = GETDATE() ';
+				$sql .= 'fechaUltimaMod = NOW() ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB($stock->idArticulo) . ' ';
 				$sql .= 'AND cod_color_articulo = ' . Datos::objectToDB($stock->idColorPorArticulo) . '; ';
 
@@ -13878,7 +13925,7 @@ class Mapper {
 				$sql .= 'WHERE cod_cli = ' . Datos::objectToDB($sucursal->idCliente) . ' AND ';
 				$sql .= 'cod_suc = ' . Datos::objectToDB($sucursal->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_suc), 0) + 1 FROM sucursales_clientes ';
+				$sql .= 'SELECT IFNULL(MAX(cod_suc), 0) + 1 FROM sucursales_clientes ';
 				$sql .= 'WHERE cod_cli = ' . Datos::objectToDB($sucursal->cliente->id) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -13954,7 +14001,7 @@ class Mapper {
 				$sql .= 'WHERE nro_orden_fabricacion = ' . Datos::objectToDB($tareaProduccion->idOrdenDeFabricacion) . ' ';
 				$sql .= 'AND nro_tarea = ' . Datos::objectToDB($tareaProduccion->numero) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_tempo), 0) + 1 FROM Tareas_cabecera;';
+				$sql .= 'SELECT IFNULL(MAX(cod_tempo), 0) + 1 FROM Tareas_cabecera;';
 			*/} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14040,7 +14087,7 @@ class Mapper {
 				$sql .= 'AND cod_seccion = ' . Datos::objectToDB($tareaProduccionItem->idSeccionProduccion) . '; ';
 			/*} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_tempo), 0) + 1 FROM Tareas_cabecera;';
+				$sql .= 'SELECT IFNULL(MAX(cod_tempo), 0) + 1 FROM Tareas_cabecera;';
 			*/} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14073,7 +14120,7 @@ class Mapper {
 				$sql .= 'WHERE cod_tempo = ' . Datos::objectToDB($temporada->id) . '; ';
 			//} elseif ($modo == Modos::delete) { No se usa.
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_tempo), 0) + 1 FROM temporadas;';
+				$sql .= 'SELECT IFNULL(MAX(cod_tempo), 0) + 1 FROM temporadas;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14103,23 +14150,23 @@ class Mapper {
 				$sql .= Datos::objectToDB($tipoFactura->descripcion) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE tipo_factura SET ';
 				$sql .= 'nombre = ' . Datos::objectToDB($tipoFactura->nombre) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE(), ';
+				$sql .= 'fecha_ultima_mod = NOW(), ';
 				$sql .= 'descripcion = ' . Datos::objectToDB($tipoFactura->descripcion) . ' ';
 				$sql .= 'WHERE cod_tipo_factura = ' . Datos::objectToDB($tipoFactura->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE tipo_factura SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE(), ';
+				$sql .= 'fecha_baja = NOW(), ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE cod_tipo_factura = ' . Datos::objectToDB($tipoFactura->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_tipo_factura), 0) + 1 FROM tipo_factura;';
+				$sql .= 'SELECT IFNULL(MAX(cod_tipo_factura), 0) + 1 FROM tipo_factura;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14159,7 +14206,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($tipoNotificacion->detalle) . ', ';
 				$sql .= Datos::objectToDB($tipoNotificacion->imagen) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE tipos_notificacion SET ';
@@ -14171,7 +14218,7 @@ class Mapper {
 				$sql .= 'link = ' . Datos::objectToDB($tipoNotificacion->link) . ', ';
 				$sql .= 'detalle = ' . Datos::objectToDB($tipoNotificacion->detalle) . ', ';
 				$sql .= 'imagen = ' . Datos::objectToDB($tipoNotificacion->imagen) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_tipo_notificacion = ' . Datos::objectToDB($tipoNotificacion->id) . '; ';
 				$sql .= 'DELETE FROM usuarios_por_tipo_notificacion ';
 				$sql .= 'WHERE cod_tipo_notificacion = ' . Datos::objectToDB($tipoNotificacion->id) . '; ';
@@ -14180,10 +14227,10 @@ class Mapper {
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE tipos_notificacion SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_tipo_notificacion = ' . Datos::objectToDB($tipoNotificacion->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_tipo_notificacion), 0) + 1 FROM tipos_notificacion;';
+				$sql .= 'SELECT IFNULL(MAX(cod_tipo_notificacion), 0) + 1 FROM tipos_notificacion;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14211,22 +14258,22 @@ class Mapper {
 				$sql .= Datos::objectToDB($tipoPeriodoFiscal->nombre) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE periodos_fiscales_tipos SET ';
 				$sql .= 'nombre = ' . Datos::objectToDB($tipoPeriodoFiscal->nombre) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_tipo_periodo = ' . Datos::objectToDB($tipoPeriodoFiscal->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE periodos_fiscales_tipos SET ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_tipo_periodo = ' . Datos::objectToDB($tipoPeriodoFiscal->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_tipo_periodo), 0) + 1 FROM periodos_fiscales_tipos;';
+				$sql .= 'SELECT IFNULL(MAX(cod_tipo_periodo), 0) + 1 FROM periodos_fiscales_tipos;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14264,7 +14311,7 @@ class Mapper {
 				$sql .= 'WHERE id_Tipo_producto_Stock_nro = ' . Datos::objectToDB($tipoProductoStock->id) . '; ';
 			//} elseif ($modo == Modos::delete) { No se usa.
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id_Tipo_producto_Stock_nro), 0) + 1 FROM Tipo_producto_Stock;';
+				$sql .= 'SELECT IFNULL(MAX(id_Tipo_producto_Stock_nro), 0) + 1 FROM Tipo_producto_Stock;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14329,7 +14376,7 @@ class Mapper {
 				$sql .= 'DELETE FROM tipo_retencion ';
 				$sql .= 'WHERE cod_tipo_retencion = ' . Datos::objectToDB($tipoRetencion->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_tipo_retencion), 0) + 1 FROM tipo_retencion;';
+				$sql .= 'SELECT IFNULL(MAX(cod_tipo_retencion), 0) + 1 FROM tipo_retencion;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14391,7 +14438,7 @@ class Mapper {
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE cod_transporte_nro = ' . Datos::objectToDB($transporte->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_transporte_nro), 0) + 1 FROM transportes;';
+				$sql .= 'SELECT IFNULL(MAX(cod_transporte_nro), 0) + 1 FROM transportes;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14435,16 +14482,16 @@ class Mapper {
 				$sql .= Datos::objectToDB($transfBancariaOp->haciaDesde) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE() ';
+				$sql .= 'NOW() ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE transferencia_bancaria_operacion SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_transferencia_ban = ' . Datos::objectToDB($transfBancariaOp->numero) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_transferencia_ban), 0) + 1 FROM transferencia_bancaria_operacion;';
+				$sql .= 'SELECT IFNULL(MAX(cod_transferencia_ban), 0) + 1 FROM transferencia_bancaria_operacion;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14473,7 +14520,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($transfBancariaImp->numeroTransferenciaBancariaOperacion) . ' ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_transferencia_ban), 0) + 1 FROM transferencia_bancaria_importe;';
+				$sql .= 'SELECT IFNULL(MAX(cod_transferencia_ban), 0) + 1 FROM transferencia_bancaria_importe;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14508,7 +14555,7 @@ class Mapper {
 			//} elseif ($modo == Modos::update) {
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_transferencia_int), 0) + 1 FROM transferencia_interna_d ';
+				$sql .= 'SELECT IFNULL(MAX(cod_transferencia_int), 0) + 1 FROM transferencia_interna_d ';
 				$sql .= 'WHERE entrada_salida = ' . Datos::objectToDB($transferenciaInterna->entradaSalida) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($transferenciaInterna->empresa) . ';';
 			} else {
@@ -14543,7 +14590,7 @@ class Mapper {
 				$sql .= Datos::objectToDB($transferenciaInternaCabecera->fechaDocumento) . ', ';
 				$sql .= Datos::objectToDB($transferenciaInternaCabecera->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE transferencia_interna_c SET ';
@@ -14553,7 +14600,7 @@ class Mapper {
 				$sql .= 'AND empresa = ' . Datos::objectToDB($transferenciaInternaCabecera->empresa) . '; ';
 			//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_transferencia_int), 0) + 1 FROM transferencia_interna_c ';
+				$sql .= 'SELECT IFNULL(MAX(cod_transferencia_int), 0) + 1 FROM transferencia_interna_c ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($transferenciaInternaCabecera->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -14604,13 +14651,13 @@ class Mapper {
 				$sql .= 'WHERE cod_usuario = ' . Datos::objectToDB($usuario->id) . '; ';
 				$sql .= 'UPDATE users SET ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fechaUltimaMod = GETDATE() ';
+				$sql .= 'fechaUltimaMod = NOW() ';
 				$sql .= 'WHERE cod_usuario = ' . Datos::objectToDB($usuario->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE users SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
-				$sql .= 'fechaBaja = GETDATE() ';
+				$sql .= 'fechaBaja = NOW() ';
 				$sql .= 'WHERE cod_usuario = ' . Datos::objectToDB($usuario->id) . '; ';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -14641,7 +14688,7 @@ class Mapper {
 				$sql .= 'WHERE cod_usuarios = ' . Datos::objectToDB($usuarioCalzado->id) . '; ';
 			//} elseif ($modo == Modos::delete) { No se usa.
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_usuarios), 0) + 1 FROM usuarios;';
+				$sql .= 'SELECT IFNULL(MAX(cod_usuarios), 0) + 1 FROM usuarios;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -14678,7 +14725,7 @@ class Mapper {
 				else
 					$sql .= 'NULL, ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB('N') . ' ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
@@ -14686,7 +14733,7 @@ class Mapper {
 				$sql .= 'WHERE cod_usuario = ' . Datos::objectToDB($usuarioLogin->id) . '; ';
 				$sql .= 'UPDATE users SET ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fechaUltimaMod = GETDATE(), ';
+				$sql .= 'fechaUltimaMod = NOW(), ';
 				$sql .= 'password = ' . Datos::objectToDB($usuarioLogin->password) . ' ';
 				$sql .= 'WHERE cod_usuario = ' . Datos::objectToDB($usuarioLogin->id) . '; ';
 			} elseif ($modo == Modos::delete) {
@@ -14872,7 +14919,7 @@ class Mapper {
 				//} elseif ($modo == Modos::update) {
 				//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_venta_cheques), 0) + 1 FROM venta_cheques_d ';
+				$sql .= 'SELECT IFNULL(MAX(cod_venta_cheques), 0) + 1 FROM venta_cheques_d ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($ventaCheques->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -14906,19 +14953,19 @@ class Mapper {
 				$sql .= Datos::objectToDB($ventaChequesCabecera->observaciones) . ', ';
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB($ventaChequesCabecera->fecha) . ', ';
-				$sql .= 'GETDATE()';
+				$sql .= 'NOW()';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
 				$sql .= 'UPDATE venta_cheques_c SET ';
 				$sql .= 'cod_asiento_contable = ' . Datos::objectToDB($ventaChequesCabecera->asientoContable->id) . ', ';
 				$sql .= 'observaciones = ' .Datos::objectToDB($ventaChequesCabecera->observaciones) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_venta_cheques = ' . Datos::objectToDB($ventaChequesCabecera->numero) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($ventaChequesCabecera->empresa) . '; ';
 				//} elseif ($modo == Modos::delete) {
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_venta_cheques), 0) + 1 FROM venta_cheques_c ';
+				$sql .= 'SELECT IFNULL(MAX(cod_venta_cheques), 0) + 1 FROM venta_cheques_c ';
 				$sql .= 'WHERE empresa = ' . Datos::objectToDB($ventaChequesCabecera->empresa) . ';';
 			} else {
 				throw new FactoryException('Modo incorrecto');
@@ -14956,7 +15003,7 @@ class Mapper {
 				$sql .= Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
 				$sql .= Datos::objectToDB('N') . ', ';
-				$sql .= 'GETDATE(), ';
+				$sql .= 'NOW(), ';
 				$sql .= Datos::objectToDB($ventaChequesTemporal->empresa) . ' ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
@@ -14965,16 +15012,16 @@ class Mapper {
 				$sql .= 'cheques = ' . Datos::objectToDB($ventaChequesTemporal->idCheques) . ', ';
 				$sql .= 'confirmado = ' .Datos::objectToDB($ventaChequesTemporal->confirmado) . ', ';
 				$sql .= 'cod_usuario_ultima_mod = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
-				$sql .= 'fecha_ultima_mod = GETDATE() ';
+				$sql .= 'fecha_ultima_mod = NOW() ';
 				$sql .= 'WHERE cod_venta_cheques_temporal = ' . Datos::objectToDB($ventaChequesTemporal->id) . '; ';
 			} elseif ($modo == Modos::delete) {
 				$sql .= 'UPDATE venta_cheques_temporal SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' .Datos::objectToDB('S') . ', ';
-				$sql .= 'fecha_baja = GETDATE() ';
+				$sql .= 'fecha_baja = NOW() ';
 				$sql .= 'WHERE cod_venta_cheques_temporal = ' . Datos::objectToDB($ventaChequesTemporal->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_venta_cheques_temporal), 0) + 1 FROM venta_cheques_temporal;';
+				$sql .= 'SELECT IFNULL(MAX(cod_venta_cheques_temporal), 0) + 1 FROM venta_cheques_temporal;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
@@ -15052,7 +15099,7 @@ class Mapper {
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ' ';
 				$sql .= 'WHERE cod_zona_nro = ' . Datos::objectToDB($zonaTransporte->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(cod_zona_nro), 0) + 1 FROM zonas;';
+				$sql .= 'SELECT IFNULL(MAX(cod_zona_nro), 0) + 1 FROM zonas;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 error_reporting(E_ALL); ini_set('display_errors',1);
 echo "PHP: ".PHP_VERSION."\n";
 echo "EXT(memcache): ".(class_exists('Memcache')?'SI':'NO')."\n";

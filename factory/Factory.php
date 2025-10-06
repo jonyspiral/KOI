@@ -13,23 +13,21 @@ class Factory {
     public function __construct() {
         $this->mapper = new Mapper();
 
-        // Inicializa DB si el driver es MySQL (KOI2 en Ubuntu)
-        if (Config::DB_DRIVER === 'mysql') {
-            $this->db = new DbMysql([
-                'host'    => Config::mysql_host,
-                'port'    => Config::mysql_port,
-                'name'    => Config::mysql_db,
-                'user'    => Config::mysql_user,
-                'pass'    => Config::mysql_pass,
-                'charset' => Config::mysql_charset,
-                'timeout' => 5,
-            ]);
-        }
+        // Inicializa conexión MySQL siempre
+        $this->db = new DbMysql([
+            'host'    => Config::mysql_host,
+            'port'    => Config::mysql_port,
+            'name'    => Config::mysql_db,
+            'user'    => Config::mysql_user,
+            'pass'    => Config::mysql_pass,
+            'charset' => Config::mysql_charset,
+            'timeout' => 5,
+        ]);
     }
-	
 
-    public static function getInstance(){
-        if(!isset(self::$_factory)){
+
+    public static function getInstance() {
+        if (!isset(self::$_factory)) {
             self::$_factory = new Factory();
         }
         return self::$_factory;
@@ -37,8 +35,7 @@ class Factory {
 
     /* NUEVO: expositor de DB (para módulos que quieran usar MySQL directo) */
     public function db() {
-        if ($this->db) return $this->db;
-        throw new FactoryException('DB no inicializada para el driver actual');
+        return $this->db;
     }
 	
 
@@ -3893,28 +3890,48 @@ class Factory {
 		}
 	}
 	private function setSeguimientoCliente(SeguimientoCliente $obj) {
-		$existe = false;
-		try {
-			$mutex = new Mutex(Funciones::getType($obj));
-			$mutex->lock();
-			try {
-				if (Funciones::tieneId(array($obj->id))) {
-					$this->getSeguimientoCliente($obj->id);
-					$existe = true;
-				}
-			} catch (Exception $ex) {
-				$existe = false;
-			}
-			$this->puedePersistir($existe, $obj->modo);
-			if ($obj->modo == Modos::insert)
-				$obj->id = $this->getNextId($obj);
-			$this->push($obj);
-			$mutex->unlock();
-		} catch (Exception $ex) {
-			$mutex->unlock();
-			throw $ex;
-		}
-	}
+    $existe = false;
+    $mutex = null;
+    try {
+        // crear mutex de forma segura
+        $mutex = new Mutex(Funciones::getType($obj));
+        $mutex->lock();
+
+        try {
+            if (Funciones::tieneId(array($obj->id))) {
+                // si ya viene con id, chequeo existencia
+                $this->getSeguimientoCliente($obj->id);
+                $existe = true;
+            }
+        } catch (Exception $ex) {
+            $existe = false;
+        }
+
+        $this->puedePersistir($existe, $obj->modo);
+
+        // SOLO calcular next id si no vino seteado
+        if ($obj->modo == Modos::insert && !Funciones::tieneId(array($obj->id))) {
+            $obj->id = $this->getNextId($obj); // usa Mapper: SELECT IFNULL(MAX(id),0)+1 ...
+        }
+
+        // por tablas legacy: si anulado es NOT NULL sin default, forzar 'N'
+        if (property_exists($obj, 'anulado') && ($obj->anulado === null || $obj->anulado === '')) {
+            $obj->anulado = 'N';
+        }
+
+        $this->push($obj);
+
+    } catch (Exception $ex) {
+        // no hagas unlock acá; usá finally
+        throw $ex;
+
+    } finally {
+        if ($mutex) {
+            try { $mutex->unlock(); } catch (Exception $e) { /* swallow */ }
+        }
+    }
+}
+
 	public	function getGastito($id = -1) {
 		try {
 			$gastito = new Gastito();

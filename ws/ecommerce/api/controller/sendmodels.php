@@ -49,7 +49,7 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
 		} catch (Model_Exception_AppException $ex) {
 			return $this->response(array('response' => array('error' => $ex->getCode(), 'desc' => $ex->getMessage(), 'object' => null)), 500);
 		} catch (Exception $ex) {
-			return $this->response(array('response' => array('error' => Model_Exception_Handler::ERRORES_VARIOS, 'desc' => 'Ocurrió un error inesperado al intentar realizar la acción','object' => null)), 500);
+			return $this->response(array('response' => array('error' => Model_Exception_Handler::ERRORES_VARIOS, 'desc' => 'OcurriÃ³ un error inesperado al intentar realizar la acciÃ³n','object' => null)), 500);
 		}
 	}
 
@@ -83,7 +83,7 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
 				$colores = Factory::getInstance()->getArrayFromView('ecommerce_colores_por_articulo_v', $rt['where']);
 				$this->requests_types[$rk]['models'] = $this->forge_models_array($colores);
 			} catch (Exception $ex) {
-				$this->log(self::LOG_TIPO_ERROR, 'script', 'Array de models', 'Ocurrió un error al intentar obtener/generar un array de models para el método ' . $rk . ' (' . $ex->getMessage() . ')', $rt['where']);
+				$this->log(self::LOG_TIPO_ERROR, 'script', 'Array de models', 'OcurriÃ³ un error al intentar obtener/generar un array de models para el mÃ©todo ' . $rk . ' (' . $ex->getMessage() . ')', $rt['where']);
 			}
 		}
 
@@ -92,10 +92,10 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
 				$this->send_model($model, $rk);
 			}
 
-			$this->log(self::LOG_TIPO_INFO, 'script', 'Enviar requests', 'Se enviaron ' . count($rt['models']) . ' registros para el método ' . $rt['method'], $cxa);
+			$this->log(self::LOG_TIPO_INFO, 'script', 'Enviar requests', 'Se enviaron ' . count($rt['models']) . ' registros para el mÃ©todo ' . $rt['method'], $cxa);
 		}
 
-		$this->log(self::LOG_TIPO_INFO, 'script', 'Finalizó el proceso', 'El proceso concluyó');
+		$this->log(self::LOG_TIPO_INFO, 'script', 'FinalizÃ³ el proceso', 'El proceso concluyÃ³');
 	}
 
 	private function send_model($model, $rk) {
@@ -116,16 +116,16 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
 			if (!Sendmodels_Error_Handler::isSuccess($response)) {
 				if (Sendmodels_Error_Handler::getErrorCode($response) == Sendmodels_Error_Handler::MODEL_EXISTS_ONCREATE) {
 					$this->send_model($model, 'update');
-					throw new Ecommerce_Core_EcommerceException('el artículo ' . $model['reference'] . ' ya existía en el Ecommerce, y fue pasado como update');
+					throw new Ecommerce_Core_EcommerceException('el artÃ­culo ' . $model['reference'] . ' ya existÃ­a en el Ecommerce, y fue pasado como update');
 				} else {
 					throw new Exception($response->error);
 				}
 			}
 		} catch (Ecommerce_Core_EcommerceException $ex) {
-			$this->log(self::LOG_TIPO_INFO, 'handle_create_response', 'Info al enviar request', 'Ocurrió un evento al intentar enviar un request: ' . $ex->getMessage());
+			$this->log(self::LOG_TIPO_INFO, 'handle_create_response', 'Info al enviar request', 'OcurriÃ³ un evento al intentar enviar un request: ' . $ex->getMessage());
 			return;
 		} catch (Exception $ex) {
-			$this->log(self::LOG_TIPO_ERROR, 'handle_create_response', 'Error al enviar request', 'Ocurrió un error al intentar enviar un request: ' . $ex->getMessage());
+			$this->log(self::LOG_TIPO_ERROR, 'handle_create_response', 'Error al enviar request', 'OcurriÃ³ un error al intentar enviar un request: ' . $ex->getMessage());
 			return;
 		}
 
@@ -135,9 +135,9 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
 			$cxa->ecommerceFechaUltimaSinc = Funciones::getDate('d/m/Y H:i:s', time() + 5);
 
 			$cxa->guardar();
-			$this->log(self::LOG_TIPO_SUCCESS, 'handle_create_response', 'Actualizar última sincronización', 'Se actualizó correctamente la fecha de última sincronización del artículo ' . $model['reference'], $cxa);
+			$this->log(self::LOG_TIPO_SUCCESS, 'handle_create_response', 'Actualizar Ãºltima sincronizaciÃ³n', 'Se actualizÃ³ correctamente la fecha de Ãºltima sincronizaciÃ³n del artÃ­culo ' . $model['reference'], $cxa);
 		} catch (Exception $ex) {
-			$this->log(self::LOG_TIPO_ERROR, 'handle_create_response', 'Actualizar última sincronización', 'Ocurrió un error al intentar actualizar la fecha de última sincronización del artículo ' . $model['reference'] . ' (' . $ex->getMessage() . ')', $cxa);
+			$this->log(self::LOG_TIPO_ERROR, 'handle_create_response', 'Actualizar Ãºltima sincronizaciÃ³n', 'OcurriÃ³ un error al intentar actualizar la fecha de Ãºltima sincronizaciÃ³n del artÃ­culo ' . $model['reference'] . ' (' . $ex->getMessage() . ')', $cxa);
 		}
 	}
 
@@ -149,16 +149,16 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
 			if (!Sendmodels_Error_Handler::isSuccess($response)) {
 				if (Sendmodels_Error_Handler::getErrorCode($response) == Sendmodels_Error_Handler::MODEL_NOT_EXISTS_ONUPDATE) {
 					$this->send_model($model, 'create');
-					throw new Ecommerce_Core_EcommerceException('el artículo ' . $model['reference'] . ' no existía en el Ecommerce, y fue pasado como create');
+					throw new Ecommerce_Core_EcommerceException('el artÃ­culo ' . $model['reference'] . ' no existÃ­a en el Ecommerce, y fue pasado como create');
 				} else {
 					throw new Exception($response->error);
 				}
 			}
 		} catch (Ecommerce_Core_EcommerceException $ex) {
-			$this->log(self::LOG_TIPO_INFO, 'handle_update_response', 'Info al enviar request', 'Ocurrió un evento al intentar enviar un request: ' . $ex->getMessage());
+			$this->log(self::LOG_TIPO_INFO, 'handle_update_response', 'Info al enviar request', 'OcurriÃ³ un evento al intentar enviar un request: ' . $ex->getMessage());
 			return;
 		} catch (Exception $ex) {
-			$this->log(self::LOG_TIPO_ERROR, 'handle_update_response', 'Error al enviar request', 'Ocurrió un error al intentar enviar un request: ' . $ex->getMessage());
+			$this->log(self::LOG_TIPO_ERROR, 'handle_update_response', 'Error al enviar request', 'OcurriÃ³ un error al intentar enviar un request: ' . $ex->getMessage());
 			return;
 		}
 
@@ -167,9 +167,9 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
 			$cxa->ecommerceFechaUltimaSinc = Funciones::getDate('d/m/Y H:i:s', time() + 5);
 
 			$cxa->guardar();
-            $this->log(self::LOG_TIPO_SUCCESS, 'handle_update_response', 'Actualizar última sincronización', 'Se actualizó correctamente la fecha de última sincronización del artículo ' . $model['reference'], $cxa);
+            $this->log(self::LOG_TIPO_SUCCESS, 'handle_update_response', 'Actualizar Ãºltima sincronizaciÃ³n', 'Se actualizÃ³ correctamente la fecha de Ãºltima sincronizaciÃ³n del artÃ­culo ' . $model['reference'], $cxa);
 		} catch (Exception $ex) {
-			$this->log(self::LOG_TIPO_ERROR, 'handle_update_response', 'Actualizar última sincronización', 'Ocurrió un error al intentar actualizar la fecha de última sincronización del artículo ' . $model['reference'] . ' (' . $ex->getMessage() . ')', $cxa);
+			$this->log(self::LOG_TIPO_ERROR, 'handle_update_response', 'Actualizar Ãºltima sincronizaciÃ³n', 'OcurriÃ³ un error al intentar actualizar la fecha de Ãºltima sincronizaciÃ³n del artÃ­culo ' . $model['reference'] . ' (' . $ex->getMessage() . ')', $cxa);
 		}
 	}
 
@@ -182,7 +182,7 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
                 throw new Exception($response->error);
 			}
 		} catch (Exception $ex) {
-			$this->log(self::LOG_TIPO_ERROR, 'handle_delete_response', 'Error al enviar request', 'Ocurrió un error al intentar enviar un request: ' . $ex->getMessage());
+			$this->log(self::LOG_TIPO_ERROR, 'handle_delete_response', 'Error al enviar request', 'OcurriÃ³ un error al intentar enviar un request: ' . $ex->getMessage());
 			return;
 		}
 
@@ -191,9 +191,9 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
 			$cxa->ecommerceFechaUltimaSinc = NULL;
 
 			$cxa->guardar();
-            $this->log(self::LOG_TIPO_SUCCESS, 'handle_delete_response', 'Actualizar última sincronización', 'Se actualizó correctamente la fecha de última sincronización del artículo ' . $model['reference'], $cxa);
+            $this->log(self::LOG_TIPO_SUCCESS, 'handle_delete_response', 'Actualizar Ãºltima sincronizaciÃ³n', 'Se actualizÃ³ correctamente la fecha de Ãºltima sincronizaciÃ³n del artÃ­culo ' . $model['reference'], $cxa);
 		} catch (Exception $ex) {
-			$this->log(self::LOG_TIPO_ERROR, 'handle_delete_response', 'Actualizar última sincronización', 'Ocurrió un error al intentar actualizar la fecha de última sincronización del artículo ' . $model['reference'] . ' (' . $ex->getMessage() . ')', $cxa);
+			$this->log(self::LOG_TIPO_ERROR, 'handle_delete_response', 'Actualizar Ãºltima sincronizaciÃ³n', 'OcurriÃ³ un error al intentar actualizar la fecha de Ãºltima sincronizaciÃ³n del artÃ­culo ' . $model['reference'] . ' (' . $ex->getMessage() . ')', $cxa);
 		}
 	}
 
@@ -269,7 +269,7 @@ class Controller_Sendmodels extends Ecommerce_Core_Controller_Rest {
 			$result = file_get_contents($url, false, $context);
 			$result = Ecommerce_Core_Format::forge()->to_array(json_decode($result));
 		} catch (Exception $ex) {
-			$this->log(self::LOG_TIPO_ERROR, 'send_request', 'Enviando request', 'Ocurrió un error al enviar un request (' . $ex->getMessage() . ')', $request['data']);
+			$this->log(self::LOG_TIPO_ERROR, 'send_request', 'Enviando request', 'OcurriÃ³ un error al enviar un request (' . $ex->getMessage() . ')', $request['data']);
 		}
 		return $result;
 	}

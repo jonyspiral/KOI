@@ -127,7 +127,7 @@ class Datos {
 			$result = @mssql_query($sql);
 			if (!$result){
 				$error = @mssql_get_last_message();
-				if (true/*rango()*/) //Esto es para que no cualquiera pueda ver los errores. Cuesti�n de seguridad.
+				if (true/*rango()*/) //Esto es para que no cualquiera pueda ver los errores. CuestiỉƯơn de seguridad.
 					throw new FactoryExceptionRegistroNoExistente('Error ' . $error);
 					//return "Error " . $error . ' QUERY: ' . $sql;
 				else

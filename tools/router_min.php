@@ -2,7 +2,7 @@
 ini_set('display_errors',1); error_reporting(E_ALL);
 require __DIR__.'/../includes.php';    // carga premaster, autoload, etc.
 
-$p = 'comercial/reportes/predespachos'; // el pagename que querés
+$p = 'comercial/reportes/predespachos'; // el pagename que querĂ©s
 $f = rtrim(Config::pathBase,'/').'/content/'.$p.'.php';
 
 header('Content-Type: text/html; charset=iso-8859-1');

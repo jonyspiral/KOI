@@ -27,7 +27,7 @@ class Model_Order extends Model_Base {
 	);
 
 	protected function get_by_id($id) {
-		//Este $id vendría a ser el código de ecommerce, por eso es distinto
+		//Este $id vendrÃ­a a ser el cÃ³digo de ecommerce, por eso es distinto
 		//Si esto se empieza a usar para muchos modelos, se puede hacer una propiedad protected que se llame tipo $_GET_BY_ID_FIELD y que si tiene valor (tipo "cod_order_ecommerce") se busque con GetListObject
 		$class_name = get_class($this);
 		$orders = Factory::getInstance()->getListObject($this->_koi_class_name, 'anulado = ' . Datos::objectToDB('N') . ' AND cod_order_ecommerce = ' . $id);

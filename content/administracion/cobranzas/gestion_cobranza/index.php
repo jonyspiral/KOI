@@ -1,4 +1,20 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', '/var/www/encinitas/tmp/php_errors.log');
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR])) {
+        error_log("[gestion_cobranza/index.php:fatal] {$e['message']} in {$e['file']}:{$e['line']}");
+        if (!headers_sent()) {
+            header('Content-Type: text/plain; charset=utf-8', true, 500);
+        }
+        echo "FATAL: {$e['message']} @ {$e['file']}:{$e['line']}";
+        exit;
+    }
+});
+
 
 ?>
 
@@ -13,7 +29,7 @@
 
 <script type='text/javascript'>
 	$(document).ready(function(){
-		tituloPrograma = 'Gestión cobranza';
+		tituloPrograma = 'GestiÃ³n cobranza';
 		cambiarModo('inicio');
 		$('#inputBuscarVendedor').blur(function(){
 			if ($('#inputBuscarCliente_selectedValue').val()!= ''){
@@ -133,7 +149,7 @@
 			switch (funciones.getJSONType(json)){
 				case funciones.jsonNull:
 				case funciones.jsonEmpty:
-					$.error('Ocurrió un error');
+					$.error('Ocurriï¿½ un error');
 					break;
 				case funciones.jsonError:
 					$.error(funciones.getJSONMsg(json));
@@ -226,7 +242,7 @@
 			<input id='inputBuscarCliente' class='textbox autoSuggestBox filtroBuscar w200' name='Cliente' alt='' />
 		</div>
 		<div>
-			<label for='divCalificacion' class='filtroBuscar'>Calificación:</label>
+			<label for='divCalificacion' class='filtroBuscar'>Calificaciï¿½n:</label>
 			<div id='divCalificacion' class="filtroBuscar inline-block w215 aLeft">
 				<label for='checkbox1' class='filtroBuscar'>1 </label>
 				<input id='checkbox1' type='checkbox' class='textbox koiCheckbox' />
@@ -267,15 +283,15 @@
 		<div>
 			<label for="inputOrden" class='filtroBuscar'>Orden:</label>
 			<select id='inputOrden' class='textbox filtroBuscar w200'>
-				<option value='0'>Razón social</option>
-				<option value='1'>Calificación ascendente</option>
-				<option value='2'>Calificación descendente</option>
+				<option value='0'>Razon social</option>
+				<option value='1'>Calificacion ascendente</option>
+				<option value='2'>Calificacion descendente</option>
 				<option value='3'>Saldo ascendente</option>
 				<option value='4'>Saldo descendente</option>
 				<option value='5'>Saldo + cheques ascendente</option>
 				<option value='6'>Saldo + cheques descendente</option>
-				<option value='7'>Días promedio pago ascendente</option>
-				<option value='8'>Días promedio pago descendente</option>
+				<option value='7'>Dias promedio pago ascendente</option>
+				<option value='8'>Dias promedio pago descendente</option>
 			</select>
 		</div>
 		<div>

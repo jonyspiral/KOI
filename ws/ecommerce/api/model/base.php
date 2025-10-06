@@ -39,7 +39,7 @@ abstract class Model_Base {
 			$var = $this->_object->$objectProp; // Me ahorro un notice
 			return $var;
 		} else {
-			throw new Model_Exception_AppException('No se encontró la propiedad "' . $property . '" en la clase ' . get_called_class());
+			throw new Model_Exception_AppException('No se encontrÃ³ la propiedad "' . $property . '" en la clase ' . get_called_class());
 		}
 	}
 
@@ -56,7 +56,7 @@ abstract class Model_Base {
 			}
 		} else {
 			if (func_num_args() < 2) {
-				throw new Model_Exception_AppException('Error al llamar al método "set": se esperaba recibir dos parámetros');
+				throw new Model_Exception_AppException('Error al llamar al mÃ©todo "set": se esperaba recibir dos parÃ¡metros');
 			} elseif (array_key_exists($property, $this->_properties)) {
 				$objectProp = $this->_properties[$property];
 				$this->_object->$objectProp = $value;
@@ -92,11 +92,11 @@ abstract class Model_Base {
 				$return[] = new $class_name($object);
 			}
 		} elseif ($id === 'one' || $id === 'first' || $id === 'last') {
-			// Devuelvo el primer o último registro que cumple con el WHERE
+			// Devuelvo el primer o Ãºltimo registro que cumple con el WHERE
 			$list = $this->_factory->getListObject($this->_koi_class_name, $where_order);
 			return (!count($list) ? array() : new $class_name($id === 'last' ? $list[count($list) - 1] : $list[0]));
 		} else {
-			// Devuelvo un registro específico según el ID
+			// Devuelvo un registro especÃ­fico segÃºn el ID
 			$return = $this->get_by_id($id);
 		}
 		return $return;

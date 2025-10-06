@@ -7,13 +7,13 @@ try {
 	$gestionClientesCobranza = Factory::getInstance()->getSeguimientoCliente($id);
 	$gestionClientesCobranza->borrar();
 
-	Html::jsonSuccess('La gestión fue borrado correctamente');
+	Html::jsonSuccess('La gestiÃ³n fue borrado correctamente');
 } catch (FactoryExceptionCustomException $ex) {
 	Html::jsonError($ex->getMessage());
 } catch (FactoryExceptionRegistroNoExistente $ex) {
-	Html::jsonError('La gestión que intentó borrar no existe');
+	Html::jsonError('La gestiÃ³n que intentÃ³ borrar no existe');
 } catch (Exception $ex){
-	Html::jsonError('Ocurrió un error al intentar borrar la gestión');
+	Html::jsonError('OcurriÃ³ un error al intentar borrar la gestiÃ³n');
 }
 ?>
 <?php } ?>

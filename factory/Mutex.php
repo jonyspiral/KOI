@@ -1,74 +1,62 @@
 <?php
 
 class Mutex {
-	private	$mutex_folder;
-	private	$id;
-	//private	$mutexId;
-	private	$locked = false;
-	private	$onWindows;
-	private	$fileName;
-	private	$filePointer;
+    private $mutex_folder;
+    private $id;
+    private $filePath;
+    private $filePointer = null;
+    private $locked = false;
 
-	function __construct($mutexId) {
-		if (empty($mutexId))
-			throw new Exception('Error al crear mutex: ID vac�o');
-		$this->id = $mutexId;
-		$this->mutex_folder = Config::pathBase . 'tmp/mutex/';
-		$this->onWindows = (substr(PHP_OS, 0, 3) == 'WIN' ? true : false);
-		$this->initializeMutex();
-	}
-
-	public function getId() {
-		return $this->id;
-	}
-
-	public function initializeMutex() {
-		if($this->onWindows) {
-			$this->fileName = $this->id . '.txt';
-		} else {
-			//$this->mutexId = sem_get($this->id, 1); //La comento porque sem_get tira warning en windows (no existe)
-			//if(!($this->mutexId))
-				throw new Exception('Error al iniciar mutex ' . $this->id);
-		}
-		return true;
-	}
-
-	public function lock() {
-		if($this->onWindows) {
-			$this->filePointer = @fopen($this->mutex_folder . $this->fileName, 'w+');
-			if(!$this->filePointer)
-				throw new Exception('Error al intentar abrir archivo del mutex ' . $this->id);
-			if(!flock($this->filePointer, LOCK_EX))
-				throw new Exception('Error al intentar bloquear el mutex ' . $this->id);
-		} else {
-			//if (!sem_acquire($this->mutexId)) //La comento porque sem_acquire tira warning en windows (no existe)
-				throw new Exception('Error al intentar bloquear el mutex ' . $this->id);
-		}
-		$this->locked = true;
-		return true;
-	}
-
-	public function unlock() {
-    if (!$this->locked) return true;
-
-    if ($this->onWindows) {
-        if (!flock($this->filePointer, LOCK_UN)) {
-            throw new Exception('Error al intentar desbloquear el mutex ' . $this->id);
+    public function __construct($mutexId) {
+        if (empty($mutexId)) {
+            throw new Exception('Error al crear mutex: ID vacío');
         }
-        @fclose($this->filePointer);
-    } else {
-        if (isset($this->mutexId) && function_exists('sem_release')) {
-            if (!@sem_release($this->mutexId)) {
-                throw new Exception('Error al intentar desbloquear el mutex ' . $this->id);
-            }
-        }
-        // si no hay semáforo/lock real, no tirar excepción
+
+        $this->id = preg_replace('/[^a-zA-Z0-9_.-]/', '_', (string)$mutexId);
+        $this->mutex_folder = rtrim(Config::pathBase, '/').'/tmp/mutex/';
+        $this->initializeMutex();
     }
 
-    $this->locked = false;
-    return true;
-}
+    private function initializeMutex() {
+        if (!is_dir($this->mutex_folder)) {
+            if (!@mkdir($this->mutex_folder, 0777, true) && !is_dir($this->mutex_folder)) {
+                throw new Exception('No se pudo crear la carpeta de mutex: '.$this->mutex_folder);
+            }
+        }
+        $this->filePath = $this->mutex_folder . $this->id . '.lock';
+    }
 
+    public function lock() {
+        $fp = @fopen($this->filePath, 'c+');
+        if (!$fp) {
+            throw new Exception('No se pudo abrir archivo de lock: ' . $this->filePath);
+        }
+        if (!flock($fp, LOCK_EX)) {
+            @fclose($fp);
+            throw new Exception('No se pudo bloquear el mutex: ' . $this->filePath);
+        }
+
+        $this->filePointer = $fp;
+        $this->locked = true;
+        return true;
+    }
+
+    public function unlock() {
+        if (!$this->locked) {
+            return true; // nada que liberar
+        }
+        if (is_resource($this->filePointer)) {
+            @flock($this->filePointer, LOCK_UN);
+            @fclose($this->filePointer);
+        }
+        $this->filePointer = null;
+        $this->locked = false;
+        return true;
+    }
+
+    public function __destruct() {
+        $this->unlock(); // seguridad extra si algo explota
+    }
 }
 
 ?>

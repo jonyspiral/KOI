@@ -16,9 +16,13 @@ class Datos {
        SELECTs “crudos”
        ========================= */
 
-    /** Devuelve arreglo de filas (array<array<string,mixed>>) */
-    public static function EjecutarSQL($sql, $class = '') {
-        return self::db()->query($sql);
+    public static function EjecutarSQL($sql, $clase = null) {
+        try {
+            return Factory::getInstance()->db()->query($sql);
+        } catch (Exception $ex) {
+            Logger::addError('EjecutarSQL Error: ' . $ex->getMessage());
+            throw $ex;
+        }
     }
 
     /** Devuelve una sola fila (array<string,mixed>|null) */
@@ -29,51 +33,42 @@ class Datos {
  * Normaliza "0 filas" => null (comportamiento SQLServer),
  * y además maneja tipos variados de retorno del driver MySQL.
  */
-public static function EjecutarSQLItem($sql, $class = '')
-{
-    $raw = self::db()->queryOne($sql);
+    /** Devuelve una sola fila (array<string,mixed>|null) */
+    public static function EjecutarSQLItem($sql, $clase = null) {
+        $raw = self::EjecutarSQL($sql, $clase);
 
-    // --- DEBUG opcional
-    if (function_exists('__dbg')) {
-        $dbg = array(
-            'type'     => gettype($raw),
-            'is_array' => is_array($raw),
-            'count'    => is_array($raw) ? count($raw) : null
-        );
-        __dbg('DATOS.EjecutarSQLItem.raw', $dbg);
-    }
+        // ---------------------------
+        // Normalización + compatibilidad KOI1:
+        // Si NO hay fila, debe lanzar FactoryExceptionRegistroNoExistente
+        // para que Base::existeEnDB() funcione como antes.
+        // ---------------------------
 
-    // ---------------------------
-    // Normalización + compatibilidad KOI1:
-    // Si NO hay fila, debe lanzar FactoryExceptionRegistroNoExistente
-    // para que Base::existeEnDB() funcione como antes.
-    // ---------------------------
-
-    // 1) Sin resultados (false/null/[] ⇒ NO existe)  // <--- BLOQUE CLAVE
-    if ($raw === false || $raw === null || (is_array($raw) && count($raw) === 0)) {
-        // Mantenemos compatibilidad con el flujo legacy:
-        if (class_exists('FactoryExceptionRegistroNoExistente')) {
-            throw new FactoryExceptionRegistroNoExistente('Registro no existente');
-        } else {
-            // Fallback: lanzar una Exception genérica para no “mentir” existencia
-            throw new Exception('Registro no existente');
+        // 1) Sin resultados (false/null/[] ⇒ NO existe)
+        if ($raw === false || $raw === null || (is_array($raw) && count($raw) === 0)) {
+            // Mantenemos compatibilidad con el flujo legacy:
+            if (class_exists('FactoryExceptionRegistroNoExistente')) {
+                throw new FactoryExceptionRegistroNoExistente('Registro no existente');
+            } else {
+                // Fallback: lanzar una Exception genérica para no "mentir" existencia
+                throw new Exception('Registro no existente');
+            }
         }
-    }
 
-    // 2) Algunos drivers devuelven [[fila]] en lugar de [fila]
-    if (is_array($raw) && isset($raw[0]) && is_array($raw[0])) {
-        // si viniera envuelto, devolvemos la primera fila asociativa
-        return $raw[0];
-    }
+        // 2) Algunos drivers devuelven [[fila]] en lugar de [fila]
+        if (is_array($raw) && isset($raw[0]) && is_array($raw[0])) {
+            // si viniera envuelto, devolvemos la primera fila asociativa
+            return $raw[0];
+        }
 
-    // 3) Ya tenemos la fila asociativa
-    if (is_array($raw)) {
+        // 3) Ya tenemos la fila asociativa
+        if (is_array($raw)) {
+            return $raw;
+        }
+
+        // 4) Cualquier otro caso raro: devolver tal cual
         return $raw;
     }
 
-    // 4) Cualquier otro caso raro: devolver tal cual
-    return $raw;
-}
 
 
 
@@ -104,44 +99,17 @@ public static function EjecutarSQLItem($sql, $class = '')
     }
 
 	// En factory/Datos.php, dentro de class Datos
-public static function objectToDB($obj) {
-    try {
-        // Mantener contrato legacy: NULL literal
-        if (is_null($obj)) {
-            return 'NULL';
-        }
+public static function objectToDB($value) {
+    if (is_null($value)) return 'NULL';
+    if (is_bool($value)) return $value ? '1' : '0';
+    if (is_int($value) || is_float($value)) return $value;
 
-        switch (Funciones::getType($obj)) {
-            case 'bool':
-                // Literal SQL, sin comillas (legacy): true/false
-                if ($obj) return 'true';
-                elseif (!$obj) return 'false';
-                else return 'NULL';
-
-            case 'string':
-                // Cadena vacía -> '' y escape de comillas simples -> ''
-                if ($obj === '') return "''";
-                return "'" . str_replace("'", "''", $obj) . "'";
-
-            case 'int':
-            case 'float':
-            case 'double':
-                // Números como vienen (sin comillas)
-                return $obj;
-
-            case 'array':
-                // Arrays a JSON como hacía el framework; luego quoted via recursión
-                return self::objectToDB(Funciones::jsonEncode($obj));
-
-            default:
-                // Comportamiento legacy: si llega otro tipo (por ej. un wrapper de expresión),
-                // devolverlo crudo para que el Mapper pueda concatenarlo tal cual.
-                return ($obj == null) ? null : $obj;
-        }
-    } catch (Exception $ex) {
-        throw $ex;
-    }
+    // Escapar string usando DbMysql
+    $db = Factory::getInstance()->db();
+    $escaped = $db->escape($value);
+    return "'" . $escaped . "'";
 }
+
 
 
 

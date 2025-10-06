@@ -506,7 +506,7 @@ class Base extends BasePhp {
                 $existe = $this->existeEnDB();
             }
 
-            // (Opcional de diagnóstico)
+            // (Opcional de diagnstico)
             if (function_exists('__dbg')) {
                 __dbg('PERSISTIR_EXISTE', array('existe' => $existe));
             }
@@ -518,7 +518,7 @@ class Base extends BasePhp {
             $this->save();
             Transaction::commit();
 
-            if ($mutex && $locked) { $mutex->unlock(); } // <- sólo si lo tomamos
+            if ($mutex && $locked) { $mutex->unlock(); } // <- slo si lo tomamos
         } catch (Exception $ex) {
             if ($mutex && $locked) { $mutex->unlock(); } // <- idem
             throw $ex;
@@ -727,18 +727,13 @@ class Base extends BasePhp {
             $defaultSkip[] = $key;
         }
 
-        // Campos con valores default
-        $defaultValues = array(
-            'idUsuarioUltimaMod' => Datos::objectToDB(Usuario::logueado()->id),
-            'fechaUltimaMod' => 'GETDATE()'
-        );
-
+        // ?? LÍNEA CRÍTICA: $defaultValues NO ESTÁ DEFINIDA
         $values = array();
         foreach ($this->__dbMappings as $key => $mapping) {
 
             // Si es parte del defaultSkip, no lo metemos
             if (!in_array($key, $defaultSkip)) {
-                // Si tiene un valor default, lo usamos
+                // ?? PROBLEMA: $defaultValues no existe, provoca fatal error
                 $values[$mapping['db']] = array_key_exists($key, $defaultValues) ? $defaultValues[$key] : Datos::objectToDB($this->$key);
             }
         }

@@ -111,7 +111,7 @@ class Ecommerce_Core_Autoloader {
 	 * @return  bool    If it loaded the class
 	 */
 	public static function load($class) {
-		// Si est·n llamando a un mÈtodo con 'self::classname' entonces ya est· cargado
+		// Si est√°n llamando a un m√©todo con 'self::classname' entonces ya est√° cargado
 		if (strpos($class, 'self::') === 0) {
 			return true;
 		}

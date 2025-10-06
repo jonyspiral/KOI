@@ -104,7 +104,7 @@ abstract class Ecommerce_Core_Controller_Rest extends Ecommerce_Core_Controller 
 			$this->format = array_key_exists(Ecommerce_Core_Input::extension(), $this->_supported_formats) ? Ecommerce_Core_Input::extension() : $this->_detect_format();
 		}
 
-		//TODO: Acá meto el tema de login, validar permisos y demás. En realidad tendría que extender este método o  así así puedo manejar las exceptions
+		//TODO: AcÃ¡ meto el tema de login, validar permisos y demÃ¡s. En realidad tendrÃ­a que extender este mÃ©todo o  asÃ­ asÃ­ puedo manejar las exceptions
 		/*
 		if (Config::get('rest.auth') == 'basic') {
 			$valid_login = $this->_prepare_basic_auth();

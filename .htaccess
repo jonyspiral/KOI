@@ -1,8 +1,27 @@
-# /var/www/encinitas/.htaccess
+# =============================
+#  KOI1 - Configuración Apache
+# =============================
+
+# --- Seguridad y navegación ---
 Options -Indexes +FollowSymLinks
 DirectoryIndex master.php index.php
 ErrorDocument 404 /index/
 
+# --- Logging y debug PHP ---
+# (solo staging; desactivar en producción)
+php_flag display_errors On
+php_value error_reporting 32767
+php_flag log_errors On
+php_value error_log /var/www/encinitas/tmp/php_errors.log
+php_value upload_max_filesize 32M
+php_value post_max_size 32M
+php_value max_execution_time 120
+
+# --- Codificación unificada ---
+AddDefaultCharset UTF-8
+php_value default_charset UTF-8
+
+# --- Reescrituras principales ---
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
@@ -20,6 +39,13 @@ ErrorDocument 404 /index/
   # 3) Raíz → master
   RewriteRule ^$ /master.php [L,QSA]
 
-  # 4) Cualquier ruta con barra final → master.php?pagename=...
+  # 4) Rutas con barra final → master.php?pagename=...
   RewriteRule ^(.+)/$ /master.php?pagename=$1 [L,QSA]
 </IfModule>
+
+# --- Manejo de logs y errores internos ---
+# Todos los errores de PHP se escribirán en:
+#   /var/www/encinitas/tmp/php_errors.log
+# Asegurate de que exista:
+#   mkdir -p /var/www/encinitas/tmp
+#   chmod 777 /var/www/encinitas/tmp
