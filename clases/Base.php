@@ -671,7 +671,7 @@ class Base extends BasePhp {
         $defaultValues = array(
             'anulado' => Datos::objectToDB('N'),
             'idUsuario' => Datos::objectToDB(Usuario::logueado()->id),
-            'fechaAlta' => 'GETDATE()'
+            'fechaAlta' => 'NOW()'
         );
 
         $values = array();
@@ -785,7 +785,7 @@ class Base extends BasePhp {
         $defaultValues = array(
             'anulado' => Datos::objectToDB('S'),
             'idUsuarioBaja' => Datos::objectToDB(Usuario::logueado()->id),
-            'fechaBaja' => 'GETDATE()'
+            'fechaBaja' => 'NOW()'
         );
 
         $values = array();
@@ -819,7 +819,7 @@ class Base extends BasePhp {
                 throw new FactoryException('No se puede calcular el NextId de la clase "' . $this->getClass() . '"" porque no tiene un nico ID');
             }
 
-            return 'SELECT ISNULL(MAX(' . $this->__dbMappings[$uniqueId]['db'] . '), 0) + 1 FROM ' . $this->table() . ';';
+            return 'SELECT IFNULL(MAX(' . $this->__dbMappings[$uniqueId]['db'] . '), 0) + 1 FROM ' . $this->table() . ';';
         }
     }
 }

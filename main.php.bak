@@ -1,6 +1,3 @@
-<?php error_log("ENTER main.php"); ?>
-<?php require_once __DIR__ . '/premaster.php'; ?>
-
 <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
 <html ng-app='Koi'>
     <head>
@@ -120,7 +117,7 @@
             }
             <?php } ?>
         </style>
-        <?php
+        <?php 
         /* CON ESTO, PUEDO HACER UNA CARPETA HEAD Y METER ALGO EN EL HEADER DE CADA PROGRAMA. EJ: head/abm/clientes/index.php
         if (!findRealPath('head/' . $pagename . '.php')) {
             require_once('head/index.php');
@@ -132,11 +129,11 @@
     </head>
     <body  <? echo (Funciones::session('empresa') == '2' ? ' style="background-color: black;"' : 'style="background-color: #38d5cb29;"');?>>
     <div id='divBody'>
-        <?php error_log("ENTER header.php"); include("header.php"); error_log("LEAVE header.php"); ?>
+        <?php include('header.php'); ?>
         <div id='divContent'>
             <?php require('content/' . $pagename . '.php'); ?>
         </div>
-        <?php error_log("ENTER footer.php"); include("footer.php"); error_log("LEAVE footer.php"); ?>
+        <?php include('footer.php'); ?>
     </div>
     </body>
 </html>

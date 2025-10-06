@@ -43,7 +43,7 @@ try {
 		6 => 'importe DESC'
 	);
 	$order = ' ORDER BY ' . (!empty($orders[$order]) ? $orders[$order] : $orders[1]);
-	$where = 'GETDATE() < dbo.relativeDate(fecha_vencimiento, ' . Datos::objectToDB('tomorrow') . ', 1) AND ';
+	$where = 'NOW() < dbo.relativeDate(fecha_vencimiento, ' . Datos::objectToDB('tomorrow') . ', 1) AND ';
 	$where .= 'cod_caja_actual = ' . Datos::objectToDB($idCaja) . ' AND ';
 	$where .= 'empresa = ' . Datos::objectToDB($empresa) . ' AND ';
 	$where .= '(dias_vencimiento BETWEEN -31 AND 0) AND ';

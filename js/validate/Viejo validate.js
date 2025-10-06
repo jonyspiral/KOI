@@ -14,7 +14,7 @@ Funciones.prototype.executeFunctionByName = function(functionName /*, args */) {
 	var namespaces = functionName.split(".");
 	var func = namespaces.pop();
 	for(var i = 0; i < namespaces.length; i++) {
-		context = context[namespaces[i]];
+		context = context[namespacesi];
 	}
 	return context[func].apply(this, args);
 };

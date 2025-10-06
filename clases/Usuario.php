@@ -140,7 +140,7 @@ class Usuario extends Base {
 						}
 					}
 					if ($modo == 'A') {
-						if ($valor >= $valCol[$combinacion[0]]) {
+						if ($valor >= $valCol[$combinacion0]) {
 							for ($j = 0; $j < count($combinacion); $j++) {
 								if ($j == count($combinacion) - 1) {
 									$color = $colores[$combinacion[$j]];

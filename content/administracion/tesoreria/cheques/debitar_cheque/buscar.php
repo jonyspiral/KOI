@@ -21,7 +21,7 @@ $primeraVez = (Funciones::get('primeraVez') == 'S' ? true : false);
 $arr = array();
 
 try {
-	$where = ($primeraVez ? 'fecha_vencimiento < dbo.relativeDate(GETDATE(), ' . Datos::objectToDB('tomorrow') . ', 0) AND ' : Funciones::strFechas($fechaDesde, $fechaHasta, 'fecha_vencimiento') . 'AND ');
+	$where = ($primeraVez ? 'fecha_vencimiento < dbo.relativeDate(NOW(), ' . Datos::objectToDB('tomorrow') . ', 0) AND ' : Funciones::strFechas($fechaDesde, $fechaHasta, 'fecha_vencimiento') . 'AND ');
 	$where .= 'anulado = ' . Datos::objectToDB('N');
 	$where .= ' AND esperando_en_banco = ' . Datos::objectToDB('D');
 	$where .= ' AND cod_rechazo_cheque IS NULL';

@@ -56,13 +56,13 @@ class UsuarioLogin extends Usuario {
 					BEGIN
 						UPDATE koi_sessions 
 						SET user_id = :uid,
-							updated_at = GETDATE()
+							updated_at = NOW()
 						WHERE session_id = :sid
 					END
 					ELSE
 					BEGIN
 						INSERT INTO koi_sessions (session_id, user_id, created_at, updated_at)
-						VALUES (:sid, :uid, GETDATE(), GETDATE())
+						VALUES (:sid, :uid, NOW(), NOW())
 					END";
 
 			// Ajustar la forma de ejecutar consultas en KOI.

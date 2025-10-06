@@ -174,7 +174,6 @@ class Html {
 			}
 		}
 		if ($nivel == 0) {
-			echo "if";
 			$json = new JSONResponse();
 			$json->responseType = $responseType;
 			$json->responseMsg = Html::utfEncode($msg);
@@ -182,11 +181,8 @@ class Html {
 			echo json_encode($json);
 		} else {
 			return $aux;
-			// print_r($aux);
-			echo "else";
 		}
 	}
-
 	static function jsonSuccess($msg = 'Completado con éxito', $obj = null){
 		echo Html::jsonEncode($msg, $obj, JSONResponse::JSON_SUCCESS);
 	}

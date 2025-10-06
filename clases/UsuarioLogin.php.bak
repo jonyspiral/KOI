@@ -50,6 +50,28 @@ class UsuarioLogin extends Usuario {
 			self::$_usuarioLogueado = $usuarioLogueado;
 			$_SESSION[self::DEFAULT_SESSION_USERNAME] = $username;
 			$_SESSION[self::DEFAULT_SESSION_PASSWORD] = $password;
+// aqui comenzo el codigo de SOFIA
+/* 			$sessionId = session_id();
+			$sql = "IF EXISTS (SELECT * FROM koi_sessions WHERE session_id = :sid)
+					BEGIN
+						UPDATE koi_sessions 
+						SET user_id = :uid,
+							updated_at = NOW()
+						WHERE session_id = :sid
+					END
+					ELSE
+					BEGIN
+						INSERT INTO koi_sessions (session_id, user_id, created_at, updated_at)
+						VALUES (:sid, :uid, NOW(), NOW())
+					END";
+
+			// Ajustar la forma de ejecutar consultas en KOI.
+			$stmt = $db->prepare($sql);
+			$stmt->execute([
+				'sid' => $sessionId,
+				'uid' => $usuarioLogueado->id, // o cod_usuario
+			]);
+ */// aqui termiana SOFIA
 
 			// Cliente debe ser siempre empresa 1
 			if ($usuarioLogueado->esCliente() && $_SESSION['empresa'] != '1') {

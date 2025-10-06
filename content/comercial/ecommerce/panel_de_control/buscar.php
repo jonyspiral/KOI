@@ -31,7 +31,7 @@ try {
 		if ($fechaDesde || $fechaHasta) {
 			$where .= ' AND ' . Funciones::strFechas($fechaDesde, $fechaHasta, 'fecha_pedido');
 		} elseif (in_array($status->id, array(Ecommerce_OrderStatus_Finalizado::STATUS_ID))) {
-			$where .= ' AND fecha_pedido > dbo.relativeDate(GETDATE(), ' . Datos::objectToDB('first') . ', -6)';
+			$where .= ' AND fecha_pedido > dbo.relativeDate(NOW(), ' . Datos::objectToDB('first') . ', -6)';
 		}
 	} else {
 		if (!$idOrder) {
