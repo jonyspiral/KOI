@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW Stock_pt_real_valorizado_vASSELECT TOP 100 stock_pt.cod_almacen, stock_pt.nombre_almacen, stock_pt.cod_articulo, stock_pt.nombre_articulo, stock_pt.cod_color_articulo, stock_p;

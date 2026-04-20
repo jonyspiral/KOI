@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW Pedidos_rentabilidad_vASSELECT p.nro_pedido AS nro_pedido, p.cod_articulo, costo_producto_total_V.denom_articulo, p.cod_color_articulo, p.cantidad, p.precio_unitario, costo_producto_total_V.cod_linea;

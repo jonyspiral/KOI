@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW mp_consumos_facon_vwASSELECT fecha_ultima_modificacion AS fecha_movimiento, COD_MATERIAL, cod_color, - (1 * IFNULL(cantidad, 0)) AS cant, - (1 * IFNULL(cant_1, 0)) AS c1, - (1 * IFNULL(cant_2, 0)) AS c2, - (;

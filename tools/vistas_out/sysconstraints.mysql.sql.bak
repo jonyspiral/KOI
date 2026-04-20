@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW `sysconstraints` AS SELECT constid = CAST(id AS SIGNED),id = CAST(parent_obj AS SIGNED),colid = CAST(info AS SIGNED),spare1 = convert(tinyint, 0),status = convert(int,CASE xtypeWHEN 'PK' THEN 1 WHEN 'UQ' THEN 2 WHEN 'F' T;

@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW `ecommerce_colores_por_articulo_v` AS SELECT c.cod_articulo cod_articulo,c.cod_color_articulo cod_color_articulo,c.fechaUltimaMod fecha_ultima_mod,c.categoria_usuario categoria_usuario,c.ecommerce_existe ecommerce_existe,;

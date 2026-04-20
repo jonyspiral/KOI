@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW filas_asientos_contables_vASSELECT TOP 100 c.cod_asiento, c.empresa, c.nombre AS as unto, round(c.importe) AS importe, c.cod_ejercicio, c.fecha_asiento, d.numero_fila, d.cod_imputacion, pc.denomin;

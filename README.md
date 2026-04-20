@@ -1,2 +1,0 @@
-# KOI
-compartido con jaunca

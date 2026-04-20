@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW VIEW1ASSELECT situacion, cod_seccion, cod_articulo, denom_articulo, cod_color_articulo, SUM(cantidad) AS cantFROM tareas_incumplidas_vGROUP BY situacion, cod_seccion, cod_articulo, denom_articulo, cod_color_articulo;

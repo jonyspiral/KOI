@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW patrones_vASSELECT Patrones_mp_cabecera.cod_color_articulo, articulos.denom_articulo, Patrones_mp_cabecera.cod_articulo, Patrones_mp_cabecera.version, Patrones_mp_detalle.cod_material, db;

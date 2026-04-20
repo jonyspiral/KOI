@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW egresos_vwASSELECT gastos_rendicion.empresa, gastos_rendicion.sucursal_empresa, gastos_rendicion.gasto_fecha AS fecha, gastos_rendicion.operacion_tipo AS tipo, ordenes_de_pago.tipo_docum;
