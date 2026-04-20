@@ -1,0 +1,1 @@
+CREATE VIEW dbo.stock_menos_pendiente_vw_original AS SELECT stock_d.cod_almacen, stock_d.cod_articulo, stock_d.cod_color_articulo, SUM(stock_d.cant_s) AS cant_s, SUM(stock_d.S1) AS S1, SUM(stock_d.S2) AS S2, SUM(stock_d.S3) AS S3, SUM(stock_d.S4) AS S4, S

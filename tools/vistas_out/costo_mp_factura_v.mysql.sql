@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW costo_mp_factura_vASSELECT TOP 100 documentos_cantidades.fecha, documentos_cantidades.empresa, documentos_cantidades.punto_venta, documentos_cantidades.tipo_docum, documentos_cant;;

@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW stock_asignadosASSELECT TOP 100 as ignacion_pedidos.nro_plan, as ignacion_pedidos.nro_orden_fabricacion, as ignacion_pedidos.nro_tarea, as ignacion_pedidos.cod_articulo, as ignacion_pe;;

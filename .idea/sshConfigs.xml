@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="192.168.2.210" id="6d02c84e-26ef-43c6-b329-e1b6159d234c" port="22" customName="ubuntu con password" nameFormat="CUSTOM" username="root" useOpenSSHConfig="true">
+        <option name="customName" value="ubuntu con password" />
+      </sshConfig>
+      <sshConfig host="192.168.2.210" id="6eed1f6e-cf88-4ff2-be72-6d502f1cd932" keyPath="$USER_HOME$/.ssh/id_rsa" port="22" nameFormat="DESCRIPTIVE" username="root" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>

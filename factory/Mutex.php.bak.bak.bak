@@ -1,0 +1,62 @@
+<?php
+
+class Mutex {
+    private $mutex_folder;
+    private $id;
+    private $filePath;
+    private $filePointer = null;
+    private $locked = false;
+
+    public function __construct($mutexId) {
+        if (empty($mutexId)) {
+            throw new Exception('Error al crear mutex: ID vacío');
+        }
+
+        $this->id = preg_replace('/[^a-zA-Z0-9_.-]/', '_', (string)$mutexId);
+        $this->mutex_folder = rtrim(Config::pathBase, '/').'/tmp/mutex/';
+        $this->initializeMutex();
+    }
+
+    private function initializeMutex() {
+        if (!is_dir($this->mutex_folder)) {
+            if (!@mkdir($this->mutex_folder, 0777, true) && !is_dir($this->mutex_folder)) {
+                throw new Exception('No se pudo crear la carpeta de mutex: '.$this->mutex_folder);
+            }
+        }
+        $this->filePath = $this->mutex_folder . $this->id . '.lock';
+    }
+
+    public function lock() {
+        $fp = @fopen($this->filePath, 'c+');
+        if (!$fp) {
+            throw new Exception('No se pudo abrir archivo de lock: ' . $this->filePath);
+        }
+        if (!flock($fp, LOCK_EX)) {
+            @fclose($fp);
+            throw new Exception('No se pudo bloquear el mutex: ' . $this->filePath);
+        }
+
+        $this->filePointer = $fp;
+        $this->locked = true;
+        return true;
+    }
+
+    public function unlock() {
+        if (!$this->locked) {
+            return true; // nada que liberar
+        }
+        if (is_resource($this->filePointer)) {
+            @flock($this->filePointer, LOCK_UN);
+            @fclose($this->filePointer);
+        }
+        $this->filePointer = null;
+        $this->locked = false;
+        return true;
+    }
+
+    public function __destruct() {
+        $this->unlock(); // seguridad extra si algo explota
+    }
+}
+
+?>

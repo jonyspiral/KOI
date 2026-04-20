@@ -1,0 +1,12 @@
+vendor/
+cache/
+tmp/
+logs/
+*.log
+*.swp
+.DS_Store
+uploads/
+public/uploads/
+backup_pre_utf8_2025-10-06_015802.tar.gz
+*.tar.gz
+*.tar

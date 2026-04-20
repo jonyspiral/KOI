@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW mp_consumos_vwASSELECT Tareas_detalle.fecha_salida_real AS fecha_movimiento, Consumos_tarea.cod_material, Consumos_tarea.cod_color, - (1 * IFNULL(Consumos_tarea.cant_consumo, 0)) AS Cant, - (;;

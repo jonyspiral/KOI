@@ -1,0 +1,16 @@
+<?php
+session_start();
+header('Content-Type: application/json');
+
+if (isset($_SESSION['usuarioLogueadoUser'])) {
+    echo json_encode([
+        "status" => "success",
+        "user" => $_SESSION['usuarioLogueadoUser' ]
+     ] );
+ } else {
+    echo json_encode([
+        "status" => "error",
+        "message" => "No autenticado"
+    ]);
+}
+?> 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<loginTicketResponse version="1.0">
+    <header>
+        <source>CN=wsaa, O=AFIP, C=AR, SERIALNUMBER=CUIT 33693450239</source>
+        <destination>SERIALNUMBER=CUIT 30716182815, CN=koifacturaelectronica</destination>
+        <uniqueId>896451285</uniqueId>
+        <generationTime>2025-09-03T10:42:26.191-03:00</generationTime>
+        <expirationTime>2025-09-03T22:42:26.191-03:00</expirationTime>
+    </header>
+    <credentials>
+        <token>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pgo8c3NvIHZlcnNpb249IjIuMCI+CiAgICA8aWQgc3JjPSJDTj13c2FhLCBPPUFGSVAsIEM9QVIsIFNFUklBTE5VTUJFUj1DVUlUIDMzNjkzNDUwMjM5IiBkc3Q9IkNOPXdzZmUsIE89QUZJUCwgQz1BUiIgdW5pcXVlX2lkPSIxNjg4MDA1NTE3IiBnZW5fdGltZT0iMTc1NjkwNjg4NiIgZXhwX3RpbWU9IjE3NTY5NTAxNDYiLz4KICAgIDxvcGVyYXRpb24gdHlwZT0ibG9naW4iIHZhbHVlPSJncmFudGVkIj4KICAgICAgICA8bG9naW4gZW50aXR5PSIzMzY5MzQ1MDIzOSIgc2VydmljZT0id3NmZSIgdWlkPSJTRVJJQUxOVU1CRVI9Q1VJVCAzMDcxNjE4MjgxNSwgQ049a29pZmFjdHVyYWVsZWN0cm9uaWNhIiBhdXRobWV0aG9kPSJjbXMiIHJlZ21ldGhvZD0iMjIiPgogICAgICAgICAgICA8cmVsYXRpb25zPgogICAgICAgICAgICAgICAgPHJlbGF0aW9uIGtleT0iMzA3MTYxODI4MTUiIHJlbHR5cGU9IjQiLz4KICAgICAgICAgICAgPC9yZWxhdGlvbnM+CiAgICAgICAgPC9sb2dpbj4KICAgIDwvb3BlcmF0aW9uPgo8L3Nzbz4K</token>
+        <sign>Z9E0ZtfcXKDtTmPJuR7z/K5UtdGKcgylaw2PFnpoeKPl3rm6ck9ekQh/CdtYReqr9hOxADz8+op59nPQGzqZRoL6lpvcp/iVMPCGBqtjwcufr1QsoO8dozCo3mThD8SXv6/BVJLVAEU6xw3BIHsPCGlXE6+MgxRNOyDz9qWN+QE=</sign>
+    </credentials>
+</loginTicketResponse>

@@ -1,0 +1,94 @@
+test_dbmysql_standalone.php:11:    'host'    => Config::mysql_host,
+test_dbmysql_standalone.php:12:    'port'    => Config::mysql_port,
+test_dbmysql_standalone.php:13:    'name'    => Config::mysql_db,
+test_dbmysql_standalone.php:14:    'user'    => Config::mysql_user,
+test_dbmysql_standalone.php:15:    'pass'    => Config::mysql_pass,
+test_dbmysql_standalone.php:16:    'charset' => Config::mysql_charset,
+test_login_flow.php:47:echo "✅ OK (DB: " . Config::mysql_db . ")\n";
+encoding_detect_2025-10-06_021316.txt:92:UTF-8        ./tools/mssql_ping.php
+test_login_diagnostico.php:16:    echo "   Host: " . Config::mysql_host . "\n";
+test_login_diagnostico.php:17:    echo "   BD: " . Config::mysql_db . "\n\n";
+encoding_detect_2025-10-06_021037.txt:92:UTF-8        ./tools/mssql_ping.php
+factory/Factory.php:18:            'host'    => Config::mysql_host,
+factory/Factory.php:19:            'port'    => Config::mysql_port,
+factory/Factory.php:20:            'name'    => Config::mysql_db,
+factory/Factory.php:21:            'user'    => Config::mysql_user,
+factory/Factory.php:22:            'pass'    => Config::mysql_pass,
+factory/Factory.php:23:            'charset' => Config::mysql_charset,
+factory/Config.php:6:    const mysql_host    = '192.168.2.210';
+factory/Config.php:7:    const mysql_port    = 3306;
+factory/Config.php:8:    const mysql_user    = 'koiuser';
+factory/Config.php:9:    const mysql_pass    = 'Route667?';   // ← reemplaza por tu clave
+factory/Config.php:10:    const mysql_db      = 'koi1_stage';
+factory/Config.php:11:    const mysql_charset = 'utf8mb4';    // soporte completo para emojis y caracteres especiales
+factory/Config.php:40:        return self::mysql_db === 'desarrollo';
+factory/Config.php:44:        return self::mysql_db === 'encinitas';
+factory/Datos copy.php:9:				self::$_linkDeConexion = @mssql_connect(Config::conexion_sql_ip, Config::conexion_sql_user, Config::conexion_sql_pass);
+factory/Datos copy.php:10:				@mssql_select_db(Config::conexion_sql_db);
+factory/Datos copy.php:127:			$result = @mssql_query($sql);
+factory/Datos copy.php:129:				$error = @mssql_get_last_message();
+factory/Datos copy.php:151:			return @mssql_num_rows($resultado);
+factory/Datos copy.php:153:		return @mssql_num_rows($resultado);
+factory/Datos copy.php:158:				return @mssql_fetch_assoc($resultado);
+tools/views_apply.sh:4:SQL_SRC="/var/www/encinitas/tmp/mysql_views_auto.fixed.sql"
+tools/README_compare_tables.md:10:- (Opcional) Extensión `mssql_*` si querés leer las tablas de SQL Server directamente.
+tools/README_compare_tables.md:24:1. Asegurate de tener la extensión `mssql_*` en tu PHP legacy.
+tools/import_missing.sh:14:    --connection=sqlsrv_koi \
+tools/import_missing.sh:15:    --to=mysql_k1 \
+tools/config (2).php:7: *   - Conectar directamente vía mssql_* (FreeTDS) si tu PHP tiene php5.6-sybase instalado.
+tools/config (2).php:12://  - 'mssql'-> intentará conectarse a SQL Server usando funciones mssql_* (dblib/freetds).
+tools/fix_missing_tables.sh:5:SQL="${3:-/var/www/encinitas/tmp/mysql_views_auto.sql}"
+tools/config (3).php:7: *   - Conectar directamente vía mssql_* (FreeTDS) si tu PHP tiene php5.6-sybase instalado.
+tools/config (3).php:12://  - 'mssql'-> intentará conectarse a SQL Server usando funciones mssql_* (dblib/freetds).
+tools/list_missing_tables.sh:5:SQL_IN="${2:-/var/www/encinitas/tmp/mysql_views_auto.sql}"
+tools/compare_tables_csv_vs_mysql.php:7:const mysql_host     = '192.168.2.210';
+tools/compare_tables_csv_vs_mysql.php:8:const mysql_port     = 3306;
+tools/compare_tables_csv_vs_mysql.php:9:const mysql_user     = 'koiuser';
+tools/compare_tables_csv_vs_mysql.php:10:const mysql_pass     = 'Route667?';
+tools/compare_tables_csv_vs_mysql.php:11:const mysql_db       = 'koi1_stage';    // usa 'koi2_v1' si probás contra dev
+tools/compare_tables_csv_vs_mysql.php:12:const mysql_charset  = 'utf8';
+tools/compare_tables_csv_vs_mysql.php:46:$mysqli = new mysqli(mysql_host, mysql_user, mysql_pass, mysql_db, mysql_port);
+tools/compare_tables_csv_vs_mysql.php:51:$mysqli->set_charset(mysql_charset);
+tools/compare_tables_csv_vs_mysql.php:59:$db = mysql_db;
+tools/compare_tables_csv_vs_mysql.php:80:echo "Base MySQL: " . mysql_db . " @ " . mysql_host . ":" . mysql_port . "\n";
+tools/mssql_ping.php:2:// /var/www/encinitas/tools/mssql_ping.php
+tools/debug_view.php:194:$mysql_sql = tsql_to_mysql($tsql_def, $MYSQL_COLLATE);
+tools/debug_view.php:202:file_put_contents($fn_mysql, $mysql_sql);
+tools/debug_view.php:221:        if (preg_match('/CREATE\s+OR\s+REPLACE\s+VIEW\s+`([^`]+)`\s+AS/i', $mysql_sql, $m)) {
+tools/debug_view.php:226:        $pdoMy->exec($mysql_sql);
+tools/filelist.txt:91:./tools/mssql_ping.php
+tools/scan_migracion.sh:29:echo "[3/6] funciones mssql/sqlsrv/mysql_* legacy…"
+tools/compare_tables.php:6: * - Origen puede ser un CSV o una conexión mssql_* (FreeTDS).
+tools/compare_tables.php:95:    if (!function_exists('mssql_connect')) {
+tools/compare_tables.php:96:        throw new RuntimeException("Extensión mssql_* no disponible. Instalar php5.6-sybase (dblib/freetds) o usar CSV.");
+tools/compare_tables.php:99:    $link = @mssql_connect(MSSQL_HOST, MSSQL_USER, MSSQL_PASS);
+tools/compare_tables.php:101:    if (!@mssql_select_db(MSSQL_DB, $link)) {
+tools/compare_tables.php:107:    $res = mssql_query($sql, $link);
+tools/compare_tables.php:111:    while ($row = mssql_fetch_assoc($res)) {
+tools/compare_tables.php:114:    mssql_free_result($res);
+tools/compare_tables.php:115:    mssql_close($link);
+tools/compare_tables.php:161:    println("Listando tablas desde SQL Server (mssql_*)...");
+tools/compare_tables.php:230:writeCsv(OUT_DIR . '/extra_in_mysql.csv',   $extraInMysql,   ['mysql_table_not_in_sqlserver']);
+tools/compare_tables.php:231:writeCsv(OUT_DIR . '/case_mismatches.csv',  $caseMismatches, ['sqlserver_table', 'mysql_table']);
+tools/compare_tables.php:236:    'mysql_db' => MYSQL_DB,
+tools/compare_tables.php:239:        'mysql_tables' => count($mysqlTables),
+tools/proto_listado.php:10:$schema = (new ReflectionClass('Config'))->getConstant('mysql_db');
+.idea/php.xml:157:      <extension name="mysql_xdevapi" enabled="false" />
+clases/ColorPorArticulo.php:432:        $result = mssql_query($query, $conn);
+clases/ColorPorArticulo.php:434:            echo "Error en consulta de color_por_articulo: " . mssql_get_last_message() . "\n";
+clases/ColorPorArticulo.php:437:        $row = mssql_fetch_object($result);
+clases/ColorPorArticulo.php:438:        mssql_free_result($result);
+tools/reports/php_files.txt:1488:./tools/mssql_ping.php
+content/api/funciones.php.bak.2025-09-03_100939:25:		$link1 = @mssql_connect($host, $user, $pass);
+content/api/funciones.php.bak.2025-09-03_100939:26:		@mssql_select_db($bd);
+content/api/funciones.php.bak.2025-09-03_100939:28:		$result = @mssql_query($sql, $link1);
+content/api/funciones.php.bak.2025-09-03_100939:30:		if (mssql_num_rows($result)==0) {
+content/api/funciones.php.bak.2025-09-03_100939:34:		$row = @mssql_fetch_assoc($result);
+content/api/funciones.php.bak.2025-09-03_100939:37:		mssql_close($link1);
+content/api/funciones.php.bak.2025-09-03_100939:41:		//mssql_close($link1);
+tools/reports/tsql_hits.txt:6295:tools/mssql_ping.php:26:    echo "VERSION: ".$ver['version']."\n";
+tools/reports/tsql_hits.txt:6296:tools/mssql_ping.php:29:    // $row = $pdo->query("SELECT TOP 1 * FROM dbo.AlgunaTabla")->fetch();
+tools/reports/tsql_hits.txt:7120:tools/compare_tables.php:230:writeCsv(OUT_DIR . '/extra_in_mysql.csv',   $extraInMysql,   ['mysql_table_not_in_sqlserver']);
+tools/reports/tsql_hits.txt:7121:tools/compare_tables.php:231:writeCsv(OUT_DIR . '/case_mismatches.csv',  $caseMismatches, ['sqlserver_table', 'mysql_table']);
+tools/reports/tsql_hits.txt:7147:tools/debug_view.php:221:        if (preg_match('/CREATE\s+OR\s+REPLACE\s+VIEW\s+`([^`]+)`\s+AS/i', $mysql_sql, $m)) {
+tools/reports/tsql_hits.txt:7212:tools/scan_migracion.sh:29:echo "[3/6] funciones mssql/sqlsrv/mysql_* legacy…"

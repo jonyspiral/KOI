@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW pedidos_clientes_articulo_vendedorASSELECT TOP 100 pedidos_d.cod_articulo, pedidos_d.cod_color_articulo, pedidos_d.pendiente, pedidos_d.cantidad AS Pedido, pedidos_d.pend_1 AS P1,;;

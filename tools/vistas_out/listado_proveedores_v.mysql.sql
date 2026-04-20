@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW listado_proveedores_v AS SELECT p.*, pr.denom_provincia, l.denom_localidadFROMproveedores_v pLEFT OUTER JOIN provincias pr ON pr.cod_provincia = p.provinciaLEFT OUTER JOIN localidades l ON l.cod_localidad = p.localida;;
