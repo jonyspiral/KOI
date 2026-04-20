@@ -10,3 +10,7 @@ public/uploads/
 backup_pre_utf8_2025-10-06_015802.tar.gz
 *.tar.gz
 *.tar
+tools/reports/
+tools/run_phase*.sh
+tools/smoke_*.sh
+.htaccess.bak*
