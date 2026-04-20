@@ -17,7 +17,7 @@ class NotaDeDebito extends DocumentoDebe {
 
 			$this->tipoDocumento = TiposDocumento::notaDeDebito;
 			$this->letra = $this->getLetra();
-			$this->puntoDeVenta = ($this->empresa != 1 || $this->letra == 'E' ? 1 : (Config::encinitas() ? Config::PUNTO_VENTA_NCNTS : 2)); //Si es cuenta 2 o ncr 'E', no es electrónica
+			$this->puntoDeVenta = ($this->empresa != 1 || $this->letra == 'E' ? 1 : (Config::encinitas() ? Config::PUNTO_VENTA_NCNTS : 2)); //Si es cuenta 2 o ncr 'E', no es electrÃ³nica
 
 			$this->importePendiente = $this->importeTotal;
 
@@ -34,7 +34,7 @@ class NotaDeDebito extends DocumentoDebe {
 
 	protected function comprobaciones() {
 		if ($this->anulado == 'S')
-			throw new FactoryExceptionCustomException('No se puede generar la nota de débito porque fue anulada');
+			throw new FactoryExceptionCustomException('No se puede generar la nota de dÃ©bito porque fue anulada');
 	}
 
 	protected function crearFormulario() {

@@ -41,7 +41,7 @@ abstract class Importe extends Base {
 			$order = ' ORDER BY cod_importe_operacion DESC';
 			$arr = Factory::getInstance()->getListObject('ImportePorOperacionItem', $where . $order);
 			if (!count($arr)) {
-				throw new FactoryExceptionCustomException('El importe no tiene ninguna operación vinculada');
+				throw new FactoryExceptionCustomException('El importe no tiene ninguna operaciÃ³n vinculada');
 			}
 			$this->_importePorOperacionItem = $arr[0];
 		}

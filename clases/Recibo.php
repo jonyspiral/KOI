@@ -69,7 +69,7 @@ class Recibo extends TransferenciaBase implements DocumentoContable {
 				throw new FactoryExceptionCustomException('Debe completar el campo cliente');
 			}
 		} else {
-			throw new FactoryExceptionCustomException('Ocurrió un error de inconsistencia de datos');
+			throw new FactoryExceptionCustomException('OcurriÃ³ un error de inconsistencia de datos');
 		}
 		if(empty($fechaDocumento) || empty($idImputacion) || empty($caja)/* || empty($numeroReciboProvisorio)*/) //Ari, antes de romperme absolutamente to_do, avisame =D (rompe Ecommerce esto, haceme acordar y lo charlamos)
 			throw new FactoryExceptionCustomException('Debe completar todos los campos obligatorios');
@@ -111,7 +111,7 @@ class Recibo extends TransferenciaBase implements DocumentoContable {
 		$this->importeTotal = $t;
 		$this->importePendiente = $t;
 
-		/* Tratamiento para obtener fecha_ponderada_pago. Lo hago acá porque necesito el ->importeTotal */
+		/* Tratamiento para obtener fecha_ponderada_pago. Lo hago acÃ¡ porque necesito el ->importeTotal */
 		$acumuladoDias = 0;
 		foreach ($arrFechas as $fecha => $importe) {
 			$porcentaje = $importe / $this->importeTotal;
@@ -136,7 +136,7 @@ class Recibo extends TransferenciaBase implements DocumentoContable {
 
 	public function validarCantidadPermitidaEfectivo($cantidad) {
 		if ($cantidad > 1) {
-			throw new FactoryExceptionCustomException('Sólo se puede ingresar un importe de tipo efectivo');
+			throw new FactoryExceptionCustomException('SÃ³lo se puede ingresar un importe de tipo efectivo');
 		}
 		return true;
 	}
@@ -217,7 +217,7 @@ class Recibo extends TransferenciaBase implements DocumentoContable {
 			Factory::getInstance()->marcarParaBorrar($cheque);
 			$this->transaction()->persistir($cheque);
 		} else {
-			throw new FactoryExceptionCustomException('El recibo no puede borrarse ya que el cheque Nº ' . $cheque->numero . ' ya fue utilizado en alguna operación');
+			throw new FactoryExceptionCustomException('El recibo no puede borrarse ya que el cheque NÂº ' . $cheque->numero . ' ya fue utilizado en alguna operaciÃ³n');
 		}
 	}
 
@@ -270,7 +270,7 @@ class Recibo extends TransferenciaBase implements DocumentoContable {
 			/** @var ImportePorOperacionItem $ixod */
 			$importe = $ixod->importe;
 			$fila['numeroFila'] = $i;
-			/** @var Cheque $importe */ //PUEDE NO SER UN CHEQUE, pero lo pongo así para que me tome ->fechaVencimiento
+			/** @var Cheque $importe */ //PUEDE NO SER UN CHEQUE, pero lo pongo asÃ­ para que me tome ->fechaVencimiento
 			$fila['fechaVencimiento'] = ($importe->getTipoImporte() == TiposImporte::cheque) ? $importe->fechaVencimiento : $fecha;
 			$fila['imputacion'] = $importe->getImputacion();
 			$fila['importeDebe'] = Funciones::toFloat($ixod->importe->importe, 2);

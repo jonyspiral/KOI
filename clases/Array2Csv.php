@@ -57,7 +57,7 @@ class Array2Csv {
 
 	private function createCsv() {
 		if (!count($this->array)) {
-			throw new FactoryExceptionRegistroNoExistente('No se puede crear un CSV vacío');
+			throw new FactoryExceptionRegistroNoExistente('No se puede crear un CSV vacÃ­o');
 		}
 		if (empty($this->fileName) || !isset($this->fileName))
 			$this->fileName = $this->getRandomName();

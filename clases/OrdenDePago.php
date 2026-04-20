@@ -64,7 +64,7 @@ class OrdenDePago extends TransferenciaBase implements DocumentoContable {
 				throw new FactoryExceptionCustomException('Debe completar el campo proveedor');
 			}
 		} else {
-			throw new FactoryExceptionCustomException('Ocurrió un error de inconsistencia de datos');
+			throw new FactoryExceptionCustomException('OcurriÃ³ un error de inconsistencia de datos');
 		}
 
 		if(empty($fechaDocumento) || empty($caja))
@@ -112,7 +112,7 @@ class OrdenDePago extends TransferenciaBase implements DocumentoContable {
 
 	public function validarCantidadPermitidaEfectivo($cantidad) {
 		if ($cantidad > 1) {
-			throw new FactoryExceptionCustomException('Sólo se puede ingresar un importe de tipo efectivo');
+			throw new FactoryExceptionCustomException('SÃ³lo se puede ingresar un importe de tipo efectivo');
 		}
 		return true;
 	}
@@ -127,7 +127,7 @@ class OrdenDePago extends TransferenciaBase implements DocumentoContable {
 
 	public function validarCantidadPermitidaRetencionEfectuada($cantidad) {
 		if ($cantidad > 1) {
-			throw new FactoryExceptionCustomException('Sólo se puede ingresar una retención en una órden de pago');
+			throw new FactoryExceptionCustomException('SÃ³lo se puede ingresar una retenciÃ³n en una Ã³rden de pago');
 		}
 		return true;
 	}
@@ -215,7 +215,7 @@ class OrdenDePago extends TransferenciaBase implements DocumentoContable {
 		if ($this->tipoOperacion == 'P') {
 			$nombre = 'Pago a proveedores: "' . $this->proveedor->razonSocial . '"';
 		} elseif ($this->tipoOperacion == 'O') {
-			$nombre = 'Pago autónomo: "' . $this->beneficiario . '"';
+			$nombre = 'Pago autÃ³nomo: "' . $this->beneficiario . '"';
 		}
 		return $nombre;
 	}
@@ -236,7 +236,7 @@ class OrdenDePago extends TransferenciaBase implements DocumentoContable {
 			/** @var ImportePorOperacionItem $ixod */
 			$importe = $ixod->importe;
 			$fila['numeroFila'] = $i;
-			/** @var Cheque $importe */ //PUEDE NO SER UN CHEQUE, pero lo pongo así para que me tome ->fechaVencimiento
+			/** @var Cheque $importe */ //PUEDE NO SER UN CHEQUE, pero lo pongo asÃ­ para que me tome ->fechaVencimiento
 			$fila['fechaVencimiento'] = ($importe->getTipoImporte() == TiposImporte::cheque) ? $importe->fechaVencimiento : $fecha;
 			$fila['imputacion'] = $importe->getImputacion();
 			$fila['importeDebe'] = 0;

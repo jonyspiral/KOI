@@ -63,19 +63,19 @@ class Html2Pdf extends KoiServices {
 				. ' ' . $header . ''
 				. ' ' . $footer . ''
 				. ' ' . $margins . ''
-				//. (($this->copias > 1) ? ' --copies ' . $this->copias : '')			// Número de copias. No anda me parece, pero porque la DLL no lo soporta
-				. ' --orientation ' . $this->orientacion							// Orientación (Portrait)
-				//. ' --page-size ' . $this->tamanio									// Tamaño de la página (A4)
+				//. (($this->copias > 1) ? ' --copies ' . $this->copias : '')			// NÃºmero de copias. No anda me parece, pero porque la DLL no lo soporta
+				. ' --orientation ' . $this->orientacion							// OrientaciÃ³n (Portrait)
+				//. ' --page-size ' . $this->tamanio									// TamaÃ±o de la pÃ¡gina (A4)
 				//. ($this->tablaDeContenido ? ' --toc' : '')							// Tabla de contenidos
 				//. ($this->escalaDeGrises ? ' --grayscale' : '')						// Escala de grises
-				//. (($this->titulo != '') ? ' --title "' . $this->titulo . '"' : '')	// Título
+				//. (($this->titulo != '') ? ' --title "' . $this->titulo . '"' : '')	// TÃ­tulo
 				//. ' ' . ($this->htmlUrlBase . $this->fileName . '.html') . ' '												// Archivo HTML
 				. ' ' . $htmlPath . ' '												// Archivo HTML
 				//. ' ' . "C:\\asd.pdf" . ' '										// Path final del PDF
 				. ' ' . $this->pdfPath . ' '										// Path final del PDF
 			), ' ');
 			if ($response !== 'SUCCESS') {
-				throw new Exception('Ocurrió un error al intentar crear el PDF. ' . $response);
+				throw new Exception('OcurriÃ³ un error al intentar crear el PDF. ' . $response);
 			}
 			$this->deleteHtml();
 			$this->created = true;
@@ -206,8 +206,8 @@ class Html2Pdf extends KoiServices {
 		$footer = '';
 		if ($this->llevaFooter) {
 			$footer = '--footer-html ' . 'file://' . $this->localIncludeFolder . 'footer' . '.html';
-			//De footer uso el número de página
-			//$footer = ' --footer-center "Página [page] de [toPage]"';
+			//De footer uso el nÃºmero de pÃ¡gina
+			//$footer = ' --footer-center "PÃ¡gina [page] de [toPage]"';
 		}
 		return $footer;
 	}
@@ -271,7 +271,7 @@ class Html2Pdf extends KoiServices {
 						</td>
 						<td class="tdInfoSpiral">
 							<div class="infoSpiral">
-								<span>Chaco 2317 - Lanús</span>
+								<span>Chaco 2317 - LanÃºs</span>
 								<span>1822</span>
 								<span>Buenos Aires</span>
 								<span>1142186382</span>

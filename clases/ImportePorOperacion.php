@@ -20,7 +20,7 @@ class ImportePorOperacion extends Base {
 	private		$retencionesSufridas;
 	private		$transferencias;
 
-	//Este es un invento de Ariel para ver si la impresión en PDF puede ser mas feliz!
+	//Este es un invento de Ariel para ver si la impresiÃ³n en PDF puede ser mas feliz!
 	public function getImportes() {
 		$efectivo = array();
 		$cheques = array();

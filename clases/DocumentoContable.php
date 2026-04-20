@@ -1,7 +1,7 @@
 <?php
 
 interface DocumentoContable {
-	/* Deberá tener el ID de asiento contable también (algo así)
+	/* DeberÃ¡ tener el ID de asiento contable tambiÃ©n (algo asÃ­)
 	public		$idAsientoContable;
 	protected	$_asientoContable;
 

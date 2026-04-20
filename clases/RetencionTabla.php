@@ -43,7 +43,7 @@ class RetencionTabla extends Base {
 		$retencionesTabla = Factory::getInstance()->getListObject('RetencionTabla', 'mes_num = ' . Datos::objectToDB($mes) . ' AND ano = ' . Datos::objectToDB($anio));
 
 		if(count($retencionesTabla) > 0){
-			throw new FactoryExceptionCustomException('Ya se crearon las retenciones para el mes ' . $mes . ' año ' . $anio);
+			throw new FactoryExceptionCustomException('Ya se crearon las retenciones para el mes ' . $mes . ' aÃ±o ' . $anio);
 		}
 	}
 

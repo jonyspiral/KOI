@@ -9,7 +9,7 @@ class CurvaProduccionPorArticulo extends Base {
 	const		_primaryKey = '["id"]';
 
 	public		$id;
-	public		$tipoDeCurva;	//"C"omercial o "P"roducción ("P" no las voy a usar)
+	public		$tipoDeCurva;	//"C"omercial o "P"roducciÃ³n ("P" no las voy a usar)
 	public		$idArticulo;
 	protected	$_articulo;
     public		$orden;

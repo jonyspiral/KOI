@@ -29,8 +29,8 @@ class Documento extends Base implements DocumentoContable {
 	public		$tipoDocumento2;			//Enum TiposDocumento2
 	public		$numero;
 	public		$letra;
-	protected	$_numeroComprobante;		//Si tiene número de comprobante, lo devuelve. Sino devuelve el número de documento 
-	public		$idNumeroComprobante;		//Es el número 
+	protected	$_numeroComprobante;		//Si tiene nÃºmero de comprobante, lo devuelve. Sino devuelve el nÃºmero de documento 
+	public		$idNumeroComprobante;		//Es el nÃºmero 
 	public		$anulado;
 	public		$idCliente;
 	protected	$_cliente;
@@ -42,7 +42,7 @@ class Documento extends Base implements DocumentoContable {
 	protected	$_usuarioBaja;
 	public		$idUsuarioUltimaMod;
 	protected	$_usuarioUltimaMod;
-	public		$tieneDetalle;	//'S' cuando no tiene artículos (el detalle va en documentos_d) y 'N' cuando es con un único detalle
+	public		$tieneDetalle;	//'S' cuando no tiene artÃ­culos (el detalle va en documentos_d) y 'N' cuando es con un Ãºnico detalle
 	protected	$_detalle;
 	protected	$_detalleItems;
 	protected	$_cantidadArticulos;
@@ -71,7 +71,7 @@ class Documento extends Base implements DocumentoContable {
 	public		$caeObtencionObservaciones;
 	public		$idCaeObtencionUsuario;
 	protected	$_caeObtencionUsuario;
-	public		$mailEnviado;				//Es un S/N para saber si alguna vez ya se mandó la factura por mail
+	public		$mailEnviado;				//Es un S/N para saber si alguna vez ya se mandÃ³ la factura por mail
 	public		$idAsientoContable;
 	protected	$_asientoContable;
 	public		$observaciones;
@@ -153,7 +153,7 @@ class Documento extends Base implements DocumentoContable {
 		return $this;
 	}
 
-	//Métodos para la impresión de formularios
+	//MÃ©todos para la impresiÃ³n de formularios
 	public function abrir() {
 		//$this->comprobaciones();
 		$this->crearFormulario();
@@ -174,7 +174,7 @@ class Documento extends Base implements DocumentoContable {
 			$this->comprobacionesCae();
 
 			$this->fe = new FacturaElectronica();
-			$this->fe->llenar($this); //Mando a llenar la factura electrónica con los datos del documento
+			$this->fe->llenar($this); //Mando a llenar la factura electrÃ³nica con los datos del documento
 
 			//throw new Exception('Funcionalidad Deshabilitada por 20 min');
 
@@ -194,12 +194,12 @@ class Documento extends Base implements DocumentoContable {
 			$this->numeroComprobante = $this->fe->getNumeroComprobante();
 
 			try {
-				//Guardo la factura con el nuevo cae, el vencimiento, y el número de comprobante
+				//Guardo la factura con el nuevo cae, el vencimiento, y el nÃºmero de comprobante
 				//Esto no PUEDE tirar error, sino pierdo el CAE y to_do lo anterior.
 				Factory::getInstance()->persistir($this);
 			} catch (Exception $ex) {
 				$this->sendMailErrorCae($ex->getMessage() . ($success !== true ? ' - ' . $success : ''));
-				$success = '¡Atención! ¡No continue! ¡Error GRAVE! Se generó el CAE pero no se pudo guardar. Se envió un email con el detalle. ' . $success;
+				$success = 'Â¡AtenciÃ³n! Â¡No continue! Â¡Error GRAVE! Se generÃ³ el CAE pero no se pudo guardar. Se enviÃ³ un email con el detalle. ' . $success;
 			}
 		}
 		return $success;
@@ -259,7 +259,7 @@ class Documento extends Base implements DocumentoContable {
 		//Array de objetos [{codArt: 350, nombreArt: 'Avril Woman', codColor: 'V', 'nombreColor': 'verde',
 		// cantidad: 2, precioUnitario: 310.50, precioTotal: 721.00}, {.}]
 		$arr = array();
-		$d = $this->tieneDetalle(); //Si tiene, es una FAC/NCR sin artículos, con sólo una linea de detalle. Sino, es normal, con artículos
+		$d = $this->tieneDetalle(); //Si tiene, es una FAC/NCR sin artÃ­culos, con sÃ³lo una linea de detalle. Sino, es normal, con artÃ­culos
 		foreach ($this->getDetalleItems() as $item) {
 			$codAlm = ($d ? $item->numeroDeItem : $item->idAlmacen);
 			$codArt = ($d ? 0 : $item->idArticulo);
@@ -350,7 +350,7 @@ class Documento extends Base implements DocumentoContable {
 	public function comprobacionConfirmacionCae() {
 		foreach ($this->detalleItems as $item) {
 			if ($item->importeTotal <= 0) {
-				return 'El documento tiene detalles con importes menores o iguales a 0. ¿Desea obtener el CAE de todos modos?';
+				return 'El documento tiene detalles con importes menores o iguales a 0. Â¿Desea obtener el CAE de todos modos?';
 			}
 		}
 
@@ -371,25 +371,25 @@ class Documento extends Base implements DocumentoContable {
 		if ($this->empresa != 1)
 			throw new FactoryExceptionCustomException($errorBase . 'en la empresa 2');
 		if ($this->cliente->habilitadoCae != 'S')
-			throw new FactoryExceptionCustomException($errorBase . 'porque el cliente no está habilitado para obtener CAE');
+			throw new FactoryExceptionCustomException($errorBase . 'porque el cliente no estÃ¡ habilitado para obtener CAE');
 		if (isset($this->cliente->cuit) && !Funciones::validarCuit($this->cliente->cuit))
-			throw new FactoryExceptionCustomException($errorBase . 'porque al cliente le falta el CUIT o no es válido');
+			throw new FactoryExceptionCustomException($errorBase . 'porque al cliente le falta el CUIT o no es vÃ¡lido');
 
 		/* Por ahora todos los clientes deben tener CUIT
 		if (!$this->llevaIvaDiscriminado() && !Funciones::validarDni($this->cliente->dni))
-			throw new FactoryExceptionCustomException($errorBase . 'porque al cliente le falta el DNI o no es válido');
+			throw new FactoryExceptionCustomException($errorBase . 'porque al cliente le falta el DNI o no es vÃ¡lido');
 		*/
 	}
 
 	private function sendMailErrorCae($exMessage) {
 		//Mando mail informando el error. ES IMPORTANTE NO PERDER EL CAE!!!
 		$asunto = 'Error al persistir documento con CAE';
-		$cuerpo = 'Ocurrió un error al intentar persistir un documento una vez obtenido el CAE. ';
-		$cuerpo .= 'Se envió el documento "' . $this->tipoDocumento . '" Nº ' . $this->numero . ', letra "' . $this->letra . '", ';
+		$cuerpo = 'OcurriÃ³ un error al intentar persistir un documento una vez obtenido el CAE. ';
+		$cuerpo .= 'Se enviÃ³ el documento "' . $this->tipoDocumento . '" NÂº ' . $this->numero . ', letra "' . $this->letra . '", ';
 		$cuerpo .= 'del cliente ' . $this->cliente->razonSocial . ' (' . $this->idCliente . '). ';
 		$cuerpo .= 'El CAE obtenido fue ' . $this->cae . '.';
 		$cuerpo .= 'La fecha de vencimiento obtenida fue ' . $this->caeFechaVencimiento . '.';
-		$cuerpo .= 'El número de comprobante obtenido fue ' . $this->numeroComprobante . '.';
+		$cuerpo .= 'El nÃºmero de comprobante obtenido fue ' . $this->numeroComprobante . '.';
 		$cuerpo .= 'El error al persistir fue: ' . $exMessage . '.';
 		$para = array('alejandro@spiralshoes.com', 'gg@spiralshoes.com');
 		Email::enviar(
@@ -568,7 +568,7 @@ class Documento extends Base implements DocumentoContable {
 		return $this;
 	}
 	protected function getDetalle() {
-		//El detalle lo obtiene en la mayoría de los casos de DOCUMENTOS_D (salvo las FAC comunes)
+		//El detalle lo obtiene en la mayorÃ­a de los casos de DOCUMENTOS_D (salvo las FAC comunes)
 		if (!isset($this->_detalle)){
 			$where = 'empresa = ' . Datos::objectToDB($this->empresa) . ' AND punto_venta = ' . Datos::objectToDB($this->puntoDeVenta) . ' AND tipo_docum = ' . Datos::objectToDB($this->tipoDocumento) . ' AND nro_documento = ' . Datos::objectToDB($this->numero) . ' AND letra = ' . Datos::objectToDB($this->letra);
 			$this->_detalle = Factory::getInstance()->getListObject('DocumentoItem', $where);

@@ -38,7 +38,7 @@ class Articulo extends Base {
 	public		$precioDistribuidor;
 	public		$precioListaDistribuidor;
 	public		$precioLista;
-	public		$precioListaOriginal;		// Es una copia de precioLista. Sirve para comparar si cambió el precio.
+	public		$precioListaOriginal;		// Es una copia de precioLista. Sirve para comparar si cambiÃ³ el precio.
 	public		$precioListaAumento;
 	public		$precioListaMayorista;
 	public		$precioRecargado;

@@ -3,7 +3,7 @@
 class LineaProducto extends Base {
 	const		_primaryKey = '["id"]';
 
-	public		$id;				//También tiene un id varchar(2)
+	public		$id;				//TambiÃ©n tiene un id varchar(2)
 	public		$anulado;
 	public		$nombre;
 	public		$tituloCatalogo;

@@ -78,7 +78,7 @@ class UsuarioLogin extends Usuario {
                 $_SESSION['empresa'] = '1';
             }
 		} catch (FactoryExceptionRegistroNoExistente $ex){
-			//Va a entrar por ac· si el usuario no existe (username) o si la contraseÒa es incorrecta
+			//Va a entrar por ac√° si el usuario no existe (username) o si la contrase√±a es incorrecta
 			self::logout();
 			throw new LoginFailException('Los datos ingresados son incorrectos');
 		}

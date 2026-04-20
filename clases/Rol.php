@@ -24,7 +24,7 @@ class Rol extends Base {
 	}
 
 	public function addFuncionalidad(FuncionalidadPorRol $funcionalidad) {
-		$this->getFuncionalidades(); //En caso de nuevo, esto me va a traer un array vacío
+		$this->getFuncionalidades(); //En caso de nuevo, esto me va a traer un array vacÃ­o
 		$this->_funcionalidades[] = $funcionalidad;
 	}
 	//GETS y SETS

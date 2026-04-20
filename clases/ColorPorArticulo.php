@@ -270,7 +270,7 @@ public function getIdNombre($nameField = 'denom_color', $idField = 'id') {
         return '[' . $this->idArticulo . '-' . $this->id . '] ' . $this->articulo->nombre . ' - ' . $colorNombre;
     }
 
-    // Fallback seguro por si en algún flujo faltan props
+    // Fallback seguro por si en algÃºn flujo faltan props
     return parent::getIdNombre($nameField, $idField);
 }
 	//GETS y SETS
@@ -427,7 +427,7 @@ public function getIdNombre($nameField = 'denom_color', $idField = 'id') {
 	    return $this->referenciaWebMayorista;
 	}
 	public function obtenerPorId($id) {
-        $conn = $this->getConnection(); // Método en Base para obtener la conexión desde config/login
+        $conn = $this->getConnection(); // MÃ©todo en Base para obtener la conexiÃ³n desde config/login
         $query = "SELECT * FROM color_por_articulo WHERE id = '$id'";
         $result = mssql_query($query, $conn);
         if (!$result) {
@@ -443,7 +443,7 @@ public function getIdNombre($nameField = 'denom_color', $idField = 'id') {
             $color->referenciaWebMayorista = $row->referencia_web_mayorista ? $row->referencia_web_mayorista : 'SIN_REFERENCIA';
             return $color;
         }
-        echo "No se encontró color por id: $id\n";
+        echo "No se encontrÃ³ color por id: $id\n";
         return null;
     }
 }

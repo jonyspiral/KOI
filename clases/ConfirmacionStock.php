@@ -34,7 +34,7 @@ class ConfirmacionStock extends Base implements OperacionStock {
 			$tareaActual = Factory::getInstance()->getTareaProduccionItem($this->tareaProduccionItem->idOrdenDeFabricacion, $this->tareaProduccionItem->numeroTarea, $this->tareaProduccionItem->idSeccionProduccion);
 			for ($i = 1; $i <= 10; $i++) {
 				if ($this->cantidad[$i] > $tareaActual->pendiente[$i]) {
-					throw new FactoryExceptionCustomException('La cantidad pendiente de la tarea en la posición ' . $i . ' (' . ($tareaActual->pendiente[$i]) . ') no es menor que la cantidad que se quiere confirmar (' . $this->cantidad[$i] . ')');
+					throw new FactoryExceptionCustomException('La cantidad pendiente de la tarea en la posiciÃ³n ' . $i . ' (' . ($tareaActual->pendiente[$i]) . ') no es menor que la cantidad que se quiere confirmar (' . $this->cantidad[$i] . ')');
 				}
 				$tareaActual->pendiente[$i] -= $this->cantidad[$i];
 			}
@@ -67,7 +67,7 @@ class ConfirmacionStock extends Base implements OperacionStock {
 			$tareaActual = Factory::getInstance()->getTareaProduccionItem($this->tareaProduccionItem->idOrdenDeFabricacion, $this->tareaProduccionItem->numeroTarea, $this->tareaProduccionItem->idSeccionProduccion);
 			for ($i = 1; $i <= 10; $i++) {
 				if (($this->cantidad[$i] + $tareaActual->pendiente[$i]) > $tareaActual->cantidad[$i]) {
-					throw new FactoryExceptionCustomException('La cantidad que se intenta restablecer excede el total original de la tarea. Por favor, actualice la página e inténtelo nuevamente');
+					throw new FactoryExceptionCustomException('La cantidad que se intenta restablecer excede el total original de la tarea. Por favor, actualice la pÃ¡gina e intÃ©ntelo nuevamente');
 				}
 				$tareaActual->pendiente[$i] += $this->cantidad[$i];
 			}
@@ -90,7 +90,7 @@ class ConfirmacionStock extends Base implements OperacionStock {
 
 	protected function validarGuardar() {
 		if (!Funciones::sumaArray($this->cantidad)) {
-			throw new FactoryExceptionCustomException('No puede hacer una confirmación vacía (todas las columnas están en cero). Por favor, actualice la página e inténtelo nuevamente');
+			throw new FactoryExceptionCustomException('No puede hacer una confirmaciÃ³n vacÃ­a (todas las columnas estÃ¡n en cero). Por favor, actualice la pÃ¡gina e intÃ©ntelo nuevamente');
 		}
 	}
 
@@ -113,7 +113,7 @@ class ConfirmacionStock extends Base implements OperacionStock {
 	}
 
 	public function stockObservacion() {
-		return 'Tarea Nº ' . $this->tareaProduccionItem->idOrdenDeFabricacion . '-' . $this->tareaProduccionItem->numeroTarea . ' | Conf. Nº ' . $this->id;
+		return 'Tarea NÂº ' . $this->tareaProduccionItem->idOrdenDeFabricacion . '-' . $this->tareaProduccionItem->numeroTarea . ' | Conf. NÂº ' . $this->id;
 	}
 
 	public function stockDetalle() {

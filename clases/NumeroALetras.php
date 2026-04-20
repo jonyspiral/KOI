@@ -2,7 +2,7 @@
 
 class NumeroALetras {
 	/**
-	 * Dado un número, devuelve su valor pero por escrito
+	 * Dado un nÃºmero, devuelve su valor pero por escrito
 	 * 
 	 * @param mixed $num
 	 * @return string
@@ -177,7 +177,7 @@ class NumeroALetras {
 					$t .= ' mil';
 				}
 			} elseif ($num == 1) {
-				$t .= ' ' . $matsub[$sub] . 'ón';
+				$t .= ' ' . $matsub[$sub] . 'Ã³n';
 			} elseif ($num > 1) {
 				$t .= ' ' . $matsub[$sub] . 'ones';
 			}

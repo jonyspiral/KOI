@@ -42,7 +42,7 @@ class ManejadorFtp {
 		$intentosDeConexion = $this->intentosDeConexion;
 
 		while ($intentosDeConexion != 0) {
-			// Levanto conexión básica
+			// Levanto conexiÃ³n bÃ¡sica
 			$this->connectionId = ftp_connect($server);
 
 			// Login with user and password
@@ -51,12 +51,12 @@ class ManejadorFtp {
 			// Setear pasive mode
 			ftp_pasv($this->connectionId, $isPassive);
 
-			// Verificar conexión
+			// Verificar conexiÃ³n
 			if ((!$this->connectionId) || (!$loginResult)) {
-				$this->logMessage('La conexión al FTP falló');
-				$this->logMessage('Intento de conexión al FTP ' . $server . ' para el usuario ' . $ftpUser);
+				$this->logMessage('La conexiÃ³n al FTP fallÃ³');
+				$this->logMessage('Intento de conexiÃ³n al FTP ' . $server . ' para el usuario ' . $ftpUser);
 			} else {
-				$this->logMessage('Se conectó al ' . $server . ' con el usuario ' . $ftpUser);
+				$this->logMessage('Se conectÃ³ al ' . $server . ' con el usuario ' . $ftpUser);
 				$this->loginOk = true;
 				return true;
 			}
@@ -98,10 +98,10 @@ class ManejadorFtp {
 
 		// Verificar el estado del upload
 		if (!$upload) {
-			$this->logMessage('Falló la subida del archivo');
+			$this->logMessage('FallÃ³ la subida del archivo');
 			$flag = false;
 		} else {
-			$this->logMessage('Se subió el archivo "' . $this->localTmpFolder . $fileFrom . '" a "' . $this->ftpActualFolder . $fileTo . '"');
+			$this->logMessage('Se subiÃ³ el archivo "' . $this->localTmpFolder . $fileFrom . '" a "' . $this->ftpActualFolder . $fileTo . '"');
 			$flag = true;
 		}
 
@@ -124,7 +124,7 @@ class ManejadorFtp {
 
 		// Intentar descargar $remote_file y guardarlo en $handle
 		if (ftp_get($this->connectionId, $this->localTmpFolder . $fileTo, $fileFrom, $mode, 0)) {
-			$this->logMessage('El archivo "' . $fileTo . '" se descargó correctamente');
+			$this->logMessage('El archivo "' . $fileTo . '" se descargÃ³ correctamente');
 			return true;
 		} else {
 			$this->logMessage('Hubo un error al intentar descargar el archivo "' . $fileFrom . '" a "' . $this->localTmpFolder . $fileTo . '"');
@@ -134,7 +134,7 @@ class ManejadorFtp {
 
 	public function delete($fileName) {
 		if (ftp_delete($this->connectionId, $fileName)) {
-			$this->logMessage('El archivo "' . $fileName . '" se borró correctamente');
+			$this->logMessage('El archivo "' . $fileName . '" se borrÃ³ correctamente');
 			return true;
 		} else {
 			$this->logMessage('Hubo un error al intentar borrar el archivo "' . $fileName . '"');

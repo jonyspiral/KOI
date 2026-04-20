@@ -7,7 +7,7 @@ class DebitarChequeCabecera extends AcreditarDebitarChequeCabecera {
 
 	public function validarNuevo() {
 		if(is_null($this->datosSinValidar['fecha'])){
-			throw new FactoryExceptionCustomException('Debe completar la fecha de acreditación.');
+			throw new FactoryExceptionCustomException('Debe completar la fecha de acreditaciÃ³n.');
 		}
 		$this->fecha = $this->datosSinValidar['fecha'];
 		parent::validarNuevo();

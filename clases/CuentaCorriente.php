@@ -1,7 +1,7 @@
 <?php
 
 class CuentaCorriente extends Base {
-	//Todavía no sé para qué usar esta clase
+	//TodavÃ­a no sÃ© para quÃ© usar esta clase
 
 	public function __construct() {
 		parent::__construct();

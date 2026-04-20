@@ -66,7 +66,7 @@ class Pedido extends Base {
 	}
 
 	public function generarPredespacho() {
-		//Creo un registro de predespacho por cada artículo del pedido
+		//Creo un registro de predespacho por cada artÃ­culo del pedido
 		foreach ($this->detalle as $item) {
 			try {
 				$item->predespacho;
@@ -112,7 +112,7 @@ class Pedido extends Base {
 					$stockActual[$idArticulo][$idColor][$posicion] -= ($cantidadParaAsignar);
 					if ($stockActual[$idArticulo][$idColor][$posicion] < 0) {
 						$art = '[' . $this->almacen->id . '-' . $idArticulo . '-' . $idColor . '] ' . $item->articulo->nombre;
-						throw new FactoryExceptionCustomException('No hay stock disponible suficiente del artículo "' . $art . '" para asignar el pedido');
+						throw new FactoryExceptionCustomException('No hay stock disponible suficiente del artÃ­culo "' . $art . '" para asignar el pedido');
 					}
 					$item->pendiente[$posicion] -= $cantidadParaAsignar;
 					$item->predespacho->predespachados[$posicion] += $cantidadParaAsignar;
@@ -219,7 +219,7 @@ class Pedido extends Base {
 	}
 
 	public function addItem(PedidoItem $item) {
-		$this->getDetalle(); //En caso de pedido nuevo, esto me va a traer un array vacío
+		$this->getDetalle(); //En caso de pedido nuevo, esto me va a traer un array vacÃ­o
 		$this->_detalle[] = $item;
 	}
 
@@ -269,13 +269,13 @@ class Pedido extends Base {
 		if (!isset($this->_despacho)) {
 			$despachos = Factory::getInstance()->getListObject('DespachoItem', 'nro_pedido = ' . Datos::objectToDB($this->numero) . ' AND anulado = ' . Datos::objectToDB('N'));
 			if (!count($despachos)) {
-				throw new FactoryExceptionCustomException('El pedido no tiene ningún despacho');
+				throw new FactoryExceptionCustomException('El pedido no tiene ningÃºn despacho');
 			}
 			$anterior = 0;
 			foreach ($despachos as $despacho) {
 				/** @var DespachoItem $despacho */
 				if ($despacho->despachoNumero != $anterior) {
-					throw new FactoryExceptionCustomException('El pedido tiene múltiples despachos');
+					throw new FactoryExceptionCustomException('El pedido tiene mÃºltiples despachos');
 				}
 			}
 			$this->_despacho = $despachos[0]->despacho;
@@ -285,9 +285,9 @@ class Pedido extends Base {
 	protected function getDetalle() {
 		if (!isset($this->_detalle) && isset($this->numero)){
 			$this->_detalle = Factory::getInstance()->getListObject('PedidoItem', 'empresa = ' . Datos::objectToDB($this->empresa) . ' AND nro_pedido = ' . Datos::objectToDB($this->numero) . ' ');
-			//En realidad, en la tabla de detalles el campo ANULADO debería decir siempre 'N'
-			//Pero a veces desde hexágono (en DESPACHOS) borran una curva entera de un artículo de un pedido
-			//Eso hace que aparezca como ANULADO = 'S' en lugar de borrarlo físicamente
+			//En realidad, en la tabla de detalles el campo ANULADO deberÃ­a decir siempre 'N'
+			//Pero a veces desde hexÃ¡gono (en DESPACHOS) borran una curva entera de un artÃ­culo de un pedido
+			//Eso hace que aparezca como ANULADO = 'S' en lugar de borrarlo fÃ­sicamente
 		}
 		return $this->_detalle;
 	}

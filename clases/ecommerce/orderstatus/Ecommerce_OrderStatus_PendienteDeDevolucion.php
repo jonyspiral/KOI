@@ -9,7 +9,7 @@ class Ecommerce_OrderStatus_PendienteDeDevolucion extends Ecommerce_OrderStatus 
 		$order->servicioAndreani = Factory::getInstance()->getEcommerce_ServicioAndreani(Ecommerce_ServicioAndreani::RETIRO_EN_CLIENTE);
 	}
 
-	//No hago "DESPROCESAR" (no vuelvo atrás lo del servicio Andreani) para poder diferenciar (en la lista de finalizados) aquellos que pasaron ya por una devolución
+	//No hago "DESPROCESAR" (no vuelvo atrÃ¡s lo del servicio Andreani) para poder diferenciar (en la lista de finalizados) aquellos que pasaron ya por una devoluciÃ³n
 
 	public function getDocumentLinkObject(Ecommerce_Order $order) {
 		if ($order->tieneDependenciaCumplida(self::STATUS_ID)) {

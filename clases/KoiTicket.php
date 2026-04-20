@@ -93,7 +93,7 @@ class KoiTicket extends Base {
 
 	protected function validarGuardar() {
 		if ($this->responsable->id && $this->areaEmpresa->id && !self::usuarioEsResponsableDelArea($this->responsable->id, $this->areaEmpresa->id)) {
-			throw new FactoryExceptionCustomException('No se puede guardar el ticket dado que el responsable elegido (' . $this->responsable->id . ') no es responsable del área');
+			throw new FactoryExceptionCustomException('No se puede guardar el ticket dado que el responsable elegido (' . $this->responsable->id . ') no es responsable del Ã¡rea');
 		}
 	}
 
@@ -155,7 +155,7 @@ class KoiTicket extends Base {
 		$nuevoTicket = Factory::getInstance()->getKoiTicket();
 		$nuevoTicket->areaEmpresa = Factory::getInstance()->getAreaEmpresa($idAreaEmpresa);
 		if (!$nuevoTicket->areaEmpresa->habilitadaTicket()) {
-			throw new FactoryExceptionCustomException('No se puede delegar un ticket a un área que no está habilitada para recibir tickets');
+			throw new FactoryExceptionCustomException('No se puede delegar un ticket a un Ã¡rea que no estÃ¡ habilitada para recibir tickets');
 		}
 		$nuevoTicket->descripcion = 'Delegado de "' . $this->areaEmpresa->nombre . '" - ' . $this->descripcion;
 		$nuevoTicket->prioridadExterna = $this->prioridadExterna;
@@ -170,7 +170,7 @@ class KoiTicket extends Base {
 	private function notificarNuevo() {
 		$noti = Factory::getInstance()->getNotificacion();
 
-		$noti->detalle = 'Nuevo Ticket Nº ' . $this->id . ' de ' . $this->usuario->id;
+		$noti->detalle = 'Nuevo Ticket NÂº ' . $this->id . ' de ' . $this->usuario->id;
 		$noti->tipoNotificacion = Factory::getInstance()->getTipoNotificacion(self::COD_TIPO_NOTIFICACION);
 		$noti->keyObjeto = $this->getPKSerializada();
 		$noti->link = $this->linkApp . '?' . $this->getPKSerializada();
@@ -211,11 +211,11 @@ class KoiTicket extends Base {
 					$extra = 'delegado a ' . $this->delegadoA;
 					$this->respuesta = 'Delegado a "' . $this->delegadoA . '" - ' . $this->respuesta;
 				}
-				$notificaciones[] = 'Su ticket Nº ' . $this->id . ' fue ' . $extra;
+				$notificaciones[] = 'Su ticket NÂº ' . $this->id . ' fue ' . $extra;
 			} else {
-				$prefijo = 'Ticket Nº ' . $this->id;
+				$prefijo = 'Ticket NÂº ' . $this->id;
 				if ($cambioResponsable) {
-					$notificaciones[] = $prefijo . ' - Se asignó responsable: ' . $this->responsable->id;
+					$notificaciones[] = $prefijo . ' - Se asignÃ³ responsable: ' . $this->responsable->id;
 				}
 				if ($cambioFechaEstimada) {
 					$notificaciones[] = $prefijo . ' - Fecha estimada: ' . $this->fechaEstimadaResolucion;

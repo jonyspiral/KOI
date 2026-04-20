@@ -48,15 +48,15 @@ class MovimientoAlmacenConfirmacionMP extends Base {
 				$this->cantidad[$i] = Funciones::toFloat($this->cantidad[$i]);
 			}
 
-			//Para mayor seguridad chequeo el stock (igualmente se vuelve a chequear en el momento de la confirmación)
+			//Para mayor seguridad chequeo el stock (igualmente se vuelve a chequear en el momento de la confirmaciÃ³n)
 			$stockActual = Factory::getInstance()->getStockMP($this->almacenOrigen->id, $this->material->id, $this->colorMateriaPrima->idColor);
 			for ($i = 1; $i <= 10; $i++) {
 				if ($this->cantidad[$i] > $stockActual->cantidad[$i]) {
-					throw new FactoryExceptionCustomException('La cantidad actual en stock en la posición ' . $i . ' (' . ($stockActual->cantidad[$i]) . ') es mayor que la cantidad que se quiere mover (' . $this->cantidad[$i] . ')');
+					throw new FactoryExceptionCustomException('La cantidad actual en stock en la posiciÃ³n ' . $i . ' (' . ($stockActual->cantidad[$i]) . ') es mayor que la cantidad que se quiere mover (' . $this->cantidad[$i] . ')');
 				}
 			}
 
-			//Hay que notificar a los usuarios del almacén de destino
+			//Hay que notificar a los usuarios del almacÃ©n de destino
 			$usuariosNotificar = Factory::getInstance()->getListObject('UsuarioPorAlmacen', 'cod_almacen = ' . Datos::objectToDB($this->almacenDestino->id));
 
 			parent::guardar()->notificar('produccion/stock_mp/confirmacion_movimiento_almacen/agregar/', $usuariosNotificar);
@@ -68,7 +68,7 @@ class MovimientoAlmacenConfirmacionMP extends Base {
 	}
 
 	protected function validarGuardar() {
-		//Necesito saber si el usuario logueado tiene permiso en el almacén de origen
+		//Necesito saber si el usuario logueado tiene permiso en el almacÃ©n de origen
 		try {
 			$idUsuario = $this->usuario->id ? $this->usuario->id : Usuario::logueado()->id;
 			Factory::getInstance()->getUsuarioPorAlmacen($idUsuario, $this->almacenOrigen->id);
@@ -77,7 +77,7 @@ class MovimientoAlmacenConfirmacionMP extends Base {
 		}
 
 		if ($this->cantidadTotal <= 0) {
-			throw new FactoryExceptionCustomException('No puede hacer un movimiento de stock por 0 (cero) unidades (todas las columnas de cantidad están en cero)');
+			throw new FactoryExceptionCustomException('No puede hacer un movimiento de stock por 0 (cero) unidades (todas las columnas de cantidad estÃ¡n en cero)');
 		}
 	}
 

@@ -64,7 +64,7 @@ abstract class TransferenciaDoble extends TransferenciaBase {
 			} elseif ($this->modo == Modos::update) {
 
 			} else {
-				throw new FactoryExceptionCustomException('No se puede guardar un objeto que no esté en modo insert');
+				throw new FactoryExceptionCustomException('No se puede guardar un objeto que no estÃ© en modo insert');
 			}
 			$this->mutex(true);
 		} catch (Exception $ex) {
@@ -84,7 +84,7 @@ abstract class TransferenciaDoble extends TransferenciaBase {
 
 			$salida = clone $this;
 			//Lleno el de salida
-			//$this->validarBorrar(); (?) podría estar y llamar al validateNuevo si es que no queremos que haga algo distinto
+			//$this->validarBorrar(); (?) podrÃ­a estar y llamar al validateNuevo si es que no queremos que haga algo distinto
 			$salida->validarNuevo();
 			if($salida->beforeSave()){
 				$salida->guardarNuevo();
@@ -92,7 +92,7 @@ abstract class TransferenciaDoble extends TransferenciaBase {
 
 			$entrada = clone $this;
 			//Lleno el de entrada
-			//$this->validarBorrar(); (?) podría estar y llamar al validateNuevo si es que no queremos que haga algo distinto
+			//$this->validarBorrar(); (?) podrÃ­a estar y llamar al validateNuevo si es que no queremos que haga algo distinto
 			$entrada->validarNuevo();
 			if($entrada->beforeSave()){
 				$entrada->guardarNuevo();

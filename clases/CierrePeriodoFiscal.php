@@ -45,7 +45,7 @@ class CierrePeriodoFiscal extends Base {
 		if (count($cierres)) {
 			/** @var CierrePeriodoFiscal $cierre */
 			$cierre = $cierres[0];
-			throw new FactoryExceptionCustomException('La fecha fiscal indicada pertenece a un período fiscal "' . $cierre->tipoPeriodoFiscal->nombre . '" ya cerrado');
+			throw new FactoryExceptionCustomException('La fecha fiscal indicada pertenece a un perÃ­odo fiscal "' . $cierre->tipoPeriodoFiscal->nombre . '" ya cerrado');
 		}
 		return true;
 	}

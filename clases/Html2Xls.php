@@ -206,7 +206,7 @@ class Html2Xls {
 		if ($thead->nodeName == 'thead') {
 			$cantRowsDatos = Funciones::roundUp(count($this->datosCabecera) / 2);
 			if ($this->lastRow == 0)
-				//Título + Espacio + DATOS + Espacio + Acá arranca [+ Caption]
+				//TÃ­tulo + Espacio + DATOS + Espacio + AcÃ¡ arranca [+ Caption]
 				$this->lastRow = 1 + 1 + $cantRowsDatos + 1 + 1 + ($llevaCaption ? 1 : 0);
 			else
 				//Dos espacios antes que arranque la tabla nueva
@@ -248,7 +248,7 @@ class Html2Xls {
 		$this->lastRow++;
 		if ($this->lastRow == 1) {
 			$cantRowsDatos = Funciones::roundUp(count($this->datosCabecera) / 2);
-			//Título + Espacio + DATOS + Espacio [+ Caption] + Acá arranca
+			//TÃ­tulo + Espacio + DATOS + Espacio [+ Caption] + AcÃ¡ arranca
 			$this->lastRow = 1 + 1 + $cantRowsDatos + 1 + 1;
 		}
 		if ($llevaCaption) {

@@ -108,22 +108,22 @@ class CobroChequeVentanillaTemporal extends Base {
 				throw new FactoryExceptionCustomException('No puede utilizar cheques de diferentes cajas.');
 
 			if($cheque->diasVencimiento > 0)
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede cobrarse por ventanilla por no estar vencido');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede cobrarse por ventanilla por no estar vencido');
 
 			if(Funciones::esFechaMenor($verdaderaFechaDeVencimiento, $fechaDeHoy))
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar vencido');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar vencido');
 
 			if($cheque->rechazado())
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar rechazado');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar rechazado');
 
 			if($cheque->anulado())
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar anulado');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar anulado');
 
 			if($cheque->cruzado())
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar cruzado');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar cruzado');
 
 			if($cheque->concluido() && !(in_array($cheque->id, json_decode($this->idCheques))))
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar concluido');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar concluido');
 		}
 	}
 

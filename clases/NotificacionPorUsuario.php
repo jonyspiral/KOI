@@ -9,7 +9,7 @@ class NotificacionPorUsuario extends Usuario {
 
 	public		$idNotificacion;
 	protected	$_notificacion;
-	//public		$anulado; //Ya est· declarado en Usuario. Pero en el fill pongo el de NotifPorUsuario
+	//public		$anulado; //Ya est√° declarado en Usuario. Pero en el fill pongo el de NotifPorUsuario
 	public		$vista;
 	public		$eliminable;
 	public		$fechaUltimaMod;

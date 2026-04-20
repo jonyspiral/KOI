@@ -2,51 +2,51 @@
 
 /*
  * ESTE ARCHIVO NO VA NI SE USAAAAAAAAAAA
- * ESTÁ MAL HECHO, LE FALTA TERMINAR
+ * ESTÃ MAL HECHO, LE FALTA TERMINAR
  */
 
 
 class FacturaElectronicaExportacion {
 	const	CUIT_SPIRAL = '33710051459';
 
-	public	$tipo_cbte;			//Es un número según el tipo de documento (ver método getTipoComprobante)
+	public	$tipo_cbte;			//Es un nÃºmero segÃºn el tipo de documento (ver mÃ©todo getTipoComprobante)
 	public	$punto_vta;			//Siempre 1
-	public	$id;				//Es un campo de identificación del documento. Se puede hacer 'ANTERIOR + 1'. Debe ser único, aunque no necesariamente creciente y continuo
+	public	$id;				//Es un campo de identificaciÃ³n del documento. Se puede hacer 'ANTERIOR + 1'. Debe ser Ãºnico, aunque no necesariamente creciente y continuo
 	private $_lastId;
-	public	$cbte_nro;			//Es el número de comprobante que se va a enviar. Se puede hacer 'ANTERIOR + 1'
-	public	$fecha_cbte;		//Fecha del comprobante en formato 'Ymd' (no puede ser mayor o menor a 5 días)
+	public	$cbte_nro;			//Es el nÃºmero de comprobante que se va a enviar. Se puede hacer 'ANTERIOR + 1'
+	public	$fecha_cbte;		//Fecha del comprobante en formato 'Ymd' (no puede ser mayor o menor a 5 dÃ­as)
 	public	$imp_total;			//Importe total de la factura
-	public	$tipo_expo;			//Es el tipo de exportación. Expo de bienes es 1 (FAC o NCR de artículos), de servicios 2 (NCRs o NDBs), otros 4
-	public	$permiso_existente;	//'S' o 'N' (si se dispone o no del despacho  de exportación) o '' si Tipo_cbte es 20 (NDB) o 21 (NCR) o si Tipo_cbte es 19 (FAC) y Tipo_expo es 2 (sercivios) o 4 (otros)
-	public	$dst_cmp;			//País de destino. Se usa getPaisDestino('TF') ||| TF = Tierra del Fuego, es el más común
-	public	$cliente;			//Nombre del cliente, razón social, lo que sea (un string)
+	public	$tipo_expo;			//Es el tipo de exportaciÃ³n. Expo de bienes es 1 (FAC o NCR de artÃ­culos), de servicios 2 (NCRs o NDBs), otros 4
+	public	$permiso_existente;	//'S' o 'N' (si se dispone o no del despacho  de exportaciÃ³n) o '' si Tipo_cbte es 20 (NDB) o 21 (NCR) o si Tipo_cbte es 19 (FAC) y Tipo_expo es 2 (sercivios) o 4 (otros)
+	public	$dst_cmp;			//PaÃ­s de destino. Se usa getPaisDestino('TF') ||| TF = Tierra del Fuego, es el mÃ¡s comÃºn
+	public	$cliente;			//Nombre del cliente, razÃ³n social, lo que sea (un string)
 	public	$domicilio_cliente;	//Domicilio del cliente (un string)
 	public	$id_impositivo;		//Es el CUIT del cliente
 	public	$obs_comerciales;	//Observaciones comerciales
 	public	$obs;				//Observaciones generales
 	public	$forma_pago;		//Es un string diciendo la forma de pago (Efectivo, etc)
 	public	$incoterms;			//FCA. Solamente es obligatorio si es una factura (Cbte_Tipo = 19) y los conceptos son bienes (Tipo_expo = 1). Se usa getIncoterms()
-	public	$incoterms_ds;		//Información complementaria del incoterm (string, opcional)
+	public	$incoterms_ds;		//InformaciÃ³n complementaria del incoterm (string, opcional)
 	public	$idioma_cbte;		//Idioma del comprobante. Se usa getIdiomaCbt()
 	
 	//Hardcodeados
-	public	$cuit_pais_cliente;	//Es el CUIT del país del cliente. No se usa, se usa sólo el id_impositivo (CUIT)
+	public	$cuit_pais_cliente;	//Es el CUIT del paÃ­s del cliente. No se usa, se usa sÃ³lo el id_impositivo (CUIT)
 	public	$moneda_id;			//ID de la moneda que se usa en la factura. Se usa getMonedaId('PES')
-	public	$moneda_ctz;		//Es la cotización de la moneda. Hardcodeo, usamos siempre 1 por ahora
+	public	$moneda_ctz;		//Es la cotizaciÃ³n de la moneda. Hardcodeo, usamos siempre 1 por ahora
 	
 	public	$items;				//Array asociativo con los items de la factura
 	/*
-		codigo = "PRO1"				//Código del artículo
-		ds = "Descripción del ART"	//Descripción del artículo
-		qty = 2						//Cantidad de artículos
+		codigo = "PRO1"				//CÃ³digo del artÃ­culo
+		ds = "DescripciÃ³n del ART"	//DescripciÃ³n del artÃ­culo
+		qty = 2						//Cantidad de artÃ­culos
 		precio = "130.00"			//Precio unitario
 		umed = 1					//Unidad de medida. Se usa getUnidadMedida
-		imp_total = "250.00"		//Importe final del artículo (cant x precio)
-		bonif = "10.00"				//Bonificación final por esa línea
+		imp_total = "250.00"		//Importe final del artÃ­culo (cant x precio)
+		bonif = "10.00"				//BonificaciÃ³n final por esa lÃ­nea
 	*/
 
-	private	$WSAA;				//Objeto interface Web Service Autenticación y Autorización
-	private	$WSFEX;				//Objeto interface Web Service de Factura Electrónica Exportacion
+	private	$WSAA;				//Objeto interface Web Service AutenticaciÃ³n y AutorizaciÃ³n
+	private	$WSFEX;				//Objeto interface Web Service de Factura ElectrÃ³nica Exportacion
 	private $pathCertificado;	//Certificado: certificado es el firmado por la AFIP
 	private $pathKey;			//ClavePrivada: la clave privada usada para crear el certificado
 	private	$errorBase;
@@ -62,7 +62,7 @@ class FacturaElectronicaExportacion {
 		$this->WSFEX = new COM('WSFEXv1');
 		$this->pathCertificado = Config::pathBase . '\\includes\\fe\\desarrollo.crt';
 		$this->pathKey = Config::pathBase . '\\includes\\fe\\desarrollo.key';
-		$this->errorBase = 'Ocurrió un error al conectar con el Web Service de Facturación Exportación';
+		$this->errorBase = 'OcurriÃ³ un error al conectar con el Web Service de FacturaciÃ³n ExportaciÃ³n';
 
 		//Valores por defecto
 		$this->conectado = false;
@@ -111,23 +111,23 @@ class FacturaElectronicaExportacion {
 		$this->agregarCbtAsociado();
 		
 		
-		//Llamo al WebService de Autorización para obtener el CAE
+		//Llamo al WebService de AutorizaciÃ³n para obtener el CAE
 		$this->cae = $this->WSFEX->Authorize($this->id);
 		
 		//Verifico que no haya rechazo o dado una advertencia al generar el CAE
 		if ($this->cae == '') {
 			throw new Exception($this->errorBase . ': getCae()');
 		} /** @noinspection PhpUndefinedFieldInspection */ elseif ($cae == 'NULL' || $this->WSFEX->Resultado != 'A') {
-			throw new Exception('No se asignó CAE (Rechazado). Motivos: ' . $this->getMotivo());
+			throw new Exception('No se asignÃ³ CAE (Rechazado). Motivos: ' . $this->getMotivo());
 		} /** @noinspection PhpUndefinedFieldInspection */ elseif ($this->WSFEX->Motivo != 'NULL' && $this->WSFEX->Motivo != '00') {
-			throw new FactoryExceptionCustomException('Se asignó CAE pero con advertencias. Motivos: ' . $this->getMotivo());
+			throw new FactoryExceptionCustomException('Se asignÃ³ CAE pero con advertencias. Motivos: ' . $this->getMotivo());
 		}
 
 		return $this->cae;
 	}
 
 	public function getVencimientoAutorizacion() {
-		//Devuelve la fecha de vencimiento de la autorización
+		//Devuelve la fecha de vencimiento de la autorizaciÃ³n
 		if (isset($this->cae))
 			/** @noinspection PhpUndefinedFieldInspection */
 			return $this->WSFEX->Vencimiento;
@@ -135,7 +135,7 @@ class FacturaElectronicaExportacion {
 	}
 
 	private function getLastId() {
-		//Recupera último número de secuencia ID
+		//Recupera Ãºltimo nÃºmero de secuencia ID
 		if (!$this->conectado)
 			$this->establecerConexion();
 		if (!isset($this->_lastId))
@@ -144,11 +144,11 @@ class FacturaElectronicaExportacion {
 	}
 
 	public function getLastCBT() {
-		//Recupero último número de comprobante para un tipo de comprobante y un punto de venta (opcional)
+		//Recupero Ãºltimo nÃºmero de comprobante para un tipo de comprobante y un punto de venta (opcional)
 		if (!$conectado)
 			$this->establecerConexion();
 		if (!isset($this->punto_vta) || !isset($this->tipo_cbte))
-			throw new Exception('Para obtener el último número de comprobante debe setear el punto de venta y el tipo de comprobante (getLastCBT)');
+			throw new Exception('Para obtener el Ãºltimo nÃºmero de comprobante debe setear el punto de venta y el tipo de comprobante (getLastCBT)');
 		if (!isset($this->_lastCBT))
 			$this->_lastCBT = $this->WSFEX->RecuperaLastCMP($this->punto_vta, $this->tipo_cbte);
 		return $this->_lastCBT;
@@ -169,14 +169,14 @@ class FacturaElectronicaExportacion {
 			//Genero el mensaje firmado (CMS)
 			$cms = $this->WSAA->SignTRA($tra, $this->pathCertificado, $this->pathKey);
 			//Llamo al web service para autenticar
-			$this->WSAA->CallWSAA($cms); //homologación/desarrollo
-			//$ta = $this->WSAA->CallWSAA($cms, "https://wsaa.afip.gov.ar/ws/services/LoginCms?wsdl") //producción
+			$this->WSAA->CallWSAA($cms); //homologaciÃ³n/desarrollo
+			//$ta = $this->WSAA->CallWSAA($cms, "https://wsaa.afip.gov.ar/ws/services/LoginCms?wsdl") //producciÃ³n
 		}
 	}
 
 	private function conectar() {
 		if (!$conectado) {
-			//Seteo el token y sign de autorización (pasos previos) Y CUIT del emisor
+			//Seteo el token y sign de autorizaciÃ³n (pasos previos) Y CUIT del emisor
 			/** @noinspection PhpUndefinedFieldInspection */
 			$this->WSFEX->Token = $this->WSAA->Token;
 			/** @noinspection PhpUndefinedFieldInspection */
@@ -184,11 +184,11 @@ class FacturaElectronicaExportacion {
 			/** @noinspection PhpUndefinedFieldInspection */
 			$this->WSFEX->Cuit = self::CUIT_SPIRAL;
 
-			//Conecto con el Web Service de Facturación
+			//Conecto con el Web Service de FacturaciÃ³n
 			$ok = $this->WSFEX->Conectar($this->cache, 'https://wswhomo.afip.gov.ar/WSFEXv1/service.asmx?WSDL'); //desarrollo
-			//$ok = $this->WSFEX->Conectar("https://wsw.afip.gov.ar/WSFEXv1/service.asmx?WSDL"); //producción
+			//$ok = $this->WSFEX->Conectar("https://wsw.afip.gov.ar/WSFEXv1/service.asmx?WSDL"); //producciÃ³n
 	
-			//Si ocurrió un error en la conexión, tiro exception
+			//Si ocurriÃ³ un error en la conexiÃ³n, tiro exception
 			if (!$ok)
 				throw new Exception($this->errorBase . ': WSFE->Conectar');
 		}
@@ -197,7 +197,7 @@ class FacturaElectronicaExportacion {
 	private function comprobarEstado() {
 		if (!$conectado) {
 			//Llamo a un servicio nulo, para obtener el estado del servidor (opcional)
-			//Si alguno está caido, devuelvo el error
+			//Si alguno estÃ¡ caido, devuelvo el error
 			$this->WSFEX->Dummy();
 			/** @noinspection PhpUndefinedFieldInspection */
 			if ($this->WSFEX->AppServerStatus != 'OK')
@@ -225,7 +225,7 @@ class FacturaElectronicaExportacion {
 	}
 
 	private function checkDatos() {
-		//Acá compruebo que todos los datos necesarios estén asignados
+		//AcÃ¡ compruebo que todos los datos necesarios estÃ©n asignados
 		$array = array(
 				'tipo_cbte', 'punto_vta', 'id', 'presta_serv', 'tipo_doc', 'nro_doc',
 				'cbt_desde', 'cbt_hasta', 'imp_neto', 'impto_liq',
@@ -233,7 +233,7 @@ class FacturaElectronicaExportacion {
 			);
 		foreach ($array as $attr) {
 			if (!isset($this->$attr))
-				throw new FactoryException('No están completos todos los datos para obtener el CAE (' . $attr . ')');
+				throw new FactoryException('No estÃ¡n completos todos los datos para obtener el CAE (' . $attr . ')');
 		}
 	}
 
@@ -256,7 +256,7 @@ class FacturaElectronicaExportacion {
 		if (false) {
 		//if ($this->permiso_existente == 'S') {
 			$id = '99999AAXX999999A';
-			$dst = 225; //País de destino de la mercaderia
+			$dst = 225; //PaÃ­s de destino de la mercaderia
 			$this->WSFEX->AgregarPermiso($id, $dst);
 		}
 	}
@@ -264,7 +264,7 @@ class FacturaElectronicaExportacion {
 	private function agregarCbtAsociado() {
 		//?? Agrego un comprobante asociado (ver manual para el desarrollador)
 		if (false) {
-		//if ($this->tipo_cbte != $this->getTipoComprobante('FAC')) { //Así estaba en la documentación: $this->tipo_cbte != 19
+		//if ($this->tipo_cbte != $this->getTipoComprobante('FAC')) { //AsÃ­ estaba en la documentaciÃ³n: $this->tipo_cbte != 19
 			$tipo_cbte_asoc = 19;
 			$punto_vta_asoc = 2;
 			$cbte_nro_asoc = 1;
@@ -278,28 +278,28 @@ class FacturaElectronicaExportacion {
 		switch ($this->WSFEX->Motivo) {
 			case '00': case 'NULL': return 'No hay error (solo como referencia)';
 			case '01': return 'CUIT informada no es R.I.';
-			case '02': return 'CUIT no autorizada a facturar electrónicamente';
+			case '02': return 'CUIT no autorizada a facturar electrÃ³nicamente';
 			case '03': return 'CUIT registra inconvenientes con domicilio fiscal';
 			case '04': return 'Punto de venta no se encuentra declarado';
 			case '05': return 'Fecha del comprobante incorrecta';
 			case '06': return 'CUIT no puede emitir comprobantes clase A';
 			case '07': return 'Para comprobantes clase A debe indicar CUIT';
-			case '08': return 'CUIT informada es inválida';
-			case '09': return 'CUIT informada no existe en el padrón';
+			case '08': return 'CUIT informada es invÃ¡lida';
+			case '09': return 'CUIT informada no existe en el padrÃ³n';
 			case '10': return 'CUIT informada no corresponde a un R.I.';
-			case '11': return 'El Nº de comprobante no es correlativo o la fecha no corresponde';
+			case '11': return 'El NÂº de comprobante no es correlativo o la fecha no corresponde';
 			case '12': return 'El rango informado se encuentra autorizado';
-			case '13': return 'CUIT indicada se encuentra comprendida en el régimen establecido por la resolución general N° 2177 y/o en el título I de la resolución general N° 1361 art. 24 de la RG N° 2177-';
+			case '13': return 'CUIT indicada se encuentra comprendida en el rÃ©gimen establecido por la resoluciÃ³n general NÂ° 2177 y/o en el tÃ­tulo I de la resoluciÃ³n general NÂ° 1361 art. 24 de la RG NÂ° 2177-';
 			default: return 'Hubo un warning que no se pudo parsear';
 		}
 	}
 
 	public function getTipoComprobante($tipoDocum) {
 		/* tipo_cbte
-			19	Facturas de Exportación
-			20	Nota de Débito por Operaciones con el Exterior
-			21	Nota de Crédito por Operaciones con el Exterior
-			88	Remito Electrónico (solo para comprobantes asociados, Nuevo WSFEXv1! )
+			19	Facturas de ExportaciÃ³n
+			20	Nota de DÃ©bito por Operaciones con el Exterior
+			21	Nota de CrÃ©dito por Operaciones con el Exterior
+			88	Remito ElectrÃ³nico (solo para comprobantes asociados, Nuevo WSFEXv1! )
 			89	Resumen de Datos (solo para comprobantes asociados, Nuevo WSFEXv1! )
 		*/
 		switch ($tipoDocum) {
@@ -318,12 +318,12 @@ class FacturaElectronicaExportacion {
 			89 - LE
 			90 - LC
 			91 - CI extranjera
-			92 - en trámite
+			92 - en trÃ¡mite
 			93 - Acta nacimiento
 			95 - CI Bs. As. RNP
 			96 - DNI
 			94 - Pasaporte
-			00 - CI Policía Federal
+			00 - CI PolicÃ­a Federal
 			01 - CI Buenos Aires
 			07 - CI Mendoza
 			08 - CI La Rioja
@@ -332,12 +332,12 @@ class FacturaElectronicaExportacion {
 			11 - CI San Luis
 			12 - CI Santa Fe
 			13 - CI Santiago del Estero
-			14 - CI Tucumán
+			14 - CI TucumÃ¡n
 			16 - CI Chaco
 			17 - CI Chubut
 			18 - CI Formosa
 			19 - CI Misiones
-			20 - CI Neuquén
+			20 - CI NeuquÃ©n
 		*/
 		switch ($id) {
 			case 'CUIT': return 80;
@@ -379,13 +379,13 @@ class FacturaElectronicaExportacion {
 	public function getMonedaId($id) {
 		/*
 			PES	Pesos Argentinos
-			DOL	Dólar Estadounidense
-			002	Dólar Libre EEUU
+			DOL	DÃ³lar Estadounidense
+			002	DÃ³lar Libre EEUU
 			010	Pesos Mejicanos
 			011	Pesos Uruguayos
 			021	Libra Esterlina
-			023	Bolívar Venezolano
-			029	Güaraní
+			023	BolÃ­var Venezolano
+			029	GÃ¼aranÃ­
 			031	Peso Boliviano
 			032	Peso Colombiano
 			033	Peso Chileno
@@ -428,9 +428,9 @@ class FacturaElectronicaExportacion {
 
 	public function getIdiomaCbt($id) {
 		/*
-			1	Español
-			2	Inglés
-			3	Portugués
+			1	EspaÃ±ol
+			2	InglÃ©s
+			3	PortuguÃ©s
 		*/
 		switch ($id) {
 			case 'ESP': return 1;

@@ -76,13 +76,13 @@ class Ecommerce_Order extends Base {
 	}
 
 	public function avanzarStatus(Ecommerce_OrderStatus $proximoStatus = null) {
-		//El par�metro es para cuando quiero forzarlo a llegar hasta un determinado status o para cuando puede tener dos proximos status posibles
-		//IMPORTANTE: Tener en cuenta que si no est�n cumplidas las dependencias esto intentar� cumplirlas
+		//El parï¿½metro es para cuando quiero forzarlo a llegar hasta un determinado status o para cuando puede tener dos proximos status posibles
+		//IMPORTANTE: Tener en cuenta que si no estï¿½n cumplidas las dependencias esto intentarï¿½ cumplirlas
 		try {
 			Factory::getInstance()->beginTransaction();
 
 			if (is_null($proximoStatus)) {
-				//Tengo que preguntar ac� si tieneProximoStatus y no antes de procesar ya que a veces necesito procesar uno que no tiene proximoStatus (por dependencias)
+				//Tengo que preguntar acï¿½ si tieneProximoStatus y no antes de procesar ya que a veces necesito procesar uno que no tiene proximoStatus (por dependencias)
 				if ($this->status->tieneProximoStatus()) {
 					$proximoStatus = $this->status->proximoStatus;
 				}
@@ -100,7 +100,7 @@ class Ecommerce_Order extends Base {
 		try {
 			Factory::getInstance()->beginTransaction();
 
-			//El comentario que est� en avanzarStatus vale para esto tambi�n
+			//El comentario que estï¿½ en avanzarStatus vale para esto tambiï¿½n
 			if ($this->status->esReversible()) {
 				$this->status->desprocesar($this);
 			}
@@ -140,7 +140,7 @@ class Ecommerce_Order extends Base {
 	}
 
 	public function guardar() {
-		//�CUIDADO! Si vas a usar esta funci�n, verific� que efectivamente se est� llegando en modo UPDATE
+		//ï¿½CUIDADO! Si vas a usar esta funciï¿½n, verificï¿½ que efectivamente se estï¿½ llegando en modo UPDATE
 		if ($this->modo == Modos::insert) {
 			$this->agregar();
 		} elseif ($this->modo == Modos::update) {
@@ -203,10 +203,10 @@ class Ecommerce_Order extends Base {
 		}
 
 		try {
-			//Una vez generados los status obligatorios, paso a generar los autom�ticos pero opcionales
+			//Una vez generados los status obligatorios, paso a generar los automï¿½ticos pero opcionales
 			$this->avanzarHasta(Ecommerce_Configuration::ECOMMERCE_ID_STATUS_HASTA_INTENTAR);
 		} catch (Exception $ex) {
-			//No hago nada, no me importa si tira error ac�, se ver� despu�s
+			//No hago nada, no me importa si tira error acï¿½, se verï¿½ despuï¿½s
 		}
 
 		return $this;
@@ -224,7 +224,7 @@ class Ecommerce_Order extends Base {
 	}
 
 	private function asignarServicioAndreani() {
-		//Reviso si vino alg�n cup�n de cambio, entonces seteo este pedido como de cambio.
+		//Reviso si vino algï¿½n cupï¿½n de cambio, entonces seteo este pedido como de cambio.
 		foreach ($this->coupons as $coupon) {
 			$orders = Factory::getInstance()->getListObject('Ecommerce_Order', 'anulado = ' . Datos::objectToDB('N') . ' AND cod_cupon_cambio = ' . Datos::objectToDB($coupon->code));
 			if (count($orders)) {
@@ -232,8 +232,8 @@ class Ecommerce_Order extends Base {
 				/** @var Ecommerce_Order $order */
 				$order = $orders[0];
 				$order->cuponDeCambioUtilizado = 'S';
-				//$order->retrocederStatus(); //Debo dejar el pedido en CAMBIO para que puedan ingresar las garant�as
-				$order->guardar(); //Esto adem�s hace el GUARDAR
+				//$order->retrocederStatus(); //Debo dejar el pedido en CAMBIO para que puedan ingresar las garantï¿½as
+				$order->guardar(); //Esto ademï¿½s hace el GUARDAR
 			}
 			break;
 		}
@@ -350,7 +350,7 @@ class Ecommerce_Order extends Base {
 		if (!isset($this->_despacho) && isset($this->id)){
 			$despachos = Factory::getInstance()->getListObject('Despacho', 'cod_ecommerce_order = ' . Datos::objectToDB($this->id) . ' AND anulado = ' . Datos::objectToDB('N'));
 			if (count($despachos) != 1) {
-				throw new FactoryExceptionCustomException('No se pudo encontrar un despacho �nico para el "Order" buscado');
+				throw new FactoryExceptionCustomException('No se pudo encontrar un despacho único para el "Order" buscado');
 			}
 			$this->_despacho = $despachos[0];
 		}
@@ -364,7 +364,7 @@ class Ecommerce_Order extends Base {
 		if (!isset($this->_factura) && isset($this->id)){
 			$facturas = Factory::getInstance()->getListObject('Factura', 'cod_ecommerce_order = ' . Datos::objectToDB($this->id) . ' AND tipo_docum = ' . Datos::objectToDB('FAC') . ' AND anulado = ' . Datos::objectToDB('N'));
 			if (count($facturas) != 1) {
-				throw new FactoryExceptionCustomException('No se pudo encontrar una factura �nica para el "Order" buscado');
+				throw new FactoryExceptionCustomException('No se pudo encontrar una factura única para el "Order" buscado');
 			}
 			$this->_factura = $facturas[0];
 		}
@@ -388,7 +388,7 @@ class Ecommerce_Order extends Base {
 		if (!isset($this->_pedido) && isset($this->id)){
 			$pedidos = Factory::getInstance()->getListObject('Pedido', 'cod_ecommerce_order = ' . Datos::objectToDB($this->id) . ' AND anulado = ' . Datos::objectToDB('N'));
 			if (count($pedidos) != 1) {
-				throw new FactoryExceptionCustomException('No se pudo encontrar un pedido �nico para el "Order" buscado');
+				throw new FactoryExceptionCustomException('No se pudo encontrar un pedido único para el "Order" buscado');
 			}
 			$this->_pedido = $pedidos[0];
 		}
@@ -402,7 +402,7 @@ class Ecommerce_Order extends Base {
 		if (!isset($this->_recibo) && isset($this->id)){
 			$recibos = Factory::getInstance()->getListObject('Recibo', 'cod_ecommerce_order = ' . Datos::objectToDB($this->id) . ' AND anulado = ' . Datos::objectToDB('N'));
 			if (count($recibos) > 1) {
-				throw new FactoryExceptionCustomException('No se pudo encontrar un recibo �nico para el "Order" buscado');
+				throw new FactoryExceptionCustomException('No se pudo encontrar un recibo único para el "Order" buscado');
 			}
 			if (count($recibos) == 1) {
 				$this->_recibo = $recibos[0];
@@ -418,7 +418,7 @@ class Ecommerce_Order extends Base {
 		if (!isset($this->_remito) && isset($this->id)){
 			$remitos = Factory::getInstance()->getListObject('Remito', 'cod_ecommerce_order = ' . Datos::objectToDB($this->id) . ' AND anulado = ' . Datos::objectToDB('N'));
 			if (count($remitos) != 1) {
-				throw new FactoryExceptionCustomException('No se pudo encontrar un remito �nico para el "Order" buscado');
+				throw new FactoryExceptionCustomException('No se pudo encontrar un remito único para el "Order" buscado');
 			}
 			$this->_remito = $remitos[0];
 		}

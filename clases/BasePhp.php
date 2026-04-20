@@ -7,7 +7,7 @@ class BasePhp {
 	{
 		$method = 'get' . $name;
 		if (!method_exists($this, $method)) {
-			throw new FactoryExceptionCustomException('No existe el m�todo ' . $method . ' en la clase "' . get_class($this) . '"');
+			throw new FactoryExceptionCustomException('No existe el metodo ' . $method . ' en la clase "' . get_class($this) . '"');
 		}
 		return $this->$method();
 	}
@@ -16,7 +16,7 @@ class BasePhp {
 	{
 		$method = 'set' . $name;
 		if (!method_exists($this, $method)) {
-			throw new FactoryExceptionCustomException('No existe el m�todo ' . $method . ' en la clase "' . get_class($this) . '"');
+			throw new FactoryExceptionCustomException('No existe el metodo ' . $method . ' en la clase "' . get_class($this) . '"');
 		}
 		$this->$method($value);
 	}

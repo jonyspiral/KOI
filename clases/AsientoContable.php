@@ -68,7 +68,7 @@ class AsientoContable extends Base {
 
 	private function validar() {
 		if (count($this->detalle) < 2) {
-			throw new FactoryExceptionCustomException('Un asiento contable deberá tener al menos 2 (dos) filas');
+			throw new FactoryExceptionCustomException('Un asiento contable deberÃ¡ tener al menos 2 (dos) filas');
 		}
 		$cantDebe = 0;
 		$cantHaber = 0;
@@ -92,7 +92,7 @@ class AsientoContable extends Base {
 
 	private function ajustar($dif, $ajustarDebe) {
 		//Si $dif < 0, entonces Debe es menor que Haber
-		//Si $ajustarDebe es TRUE, entonces deberá ajustarse el Debe. Si no, el haber
+		//Si $ajustarDebe es TRUE, entonces deberÃ¡ ajustarse el Debe. Si no, el haber
 		$importeDebe = 0;
 		$importeHaber = 0;
 		$ajustado = false;

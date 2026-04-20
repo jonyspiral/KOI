@@ -1,7 +1,7 @@
 <?php
 
 class FormularioRotulos extends Formulario {
-	//Los que están comentados es porque están definidos en la clase padre, Formulario
+	//Los que estÃ¡n comentados es porque estÃ¡n definidos en la clase padre, Formulario
 
 	public	$razonSocial;
 

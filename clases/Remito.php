@@ -1,13 +1,13 @@
 <?php
 
 class ExceptionRemitoExcedeArticulos extends Exception {
-	public function __construct($msg = 'La cantidad de artículo del remito excede el límite permitido'){
+	public function __construct($msg = 'La cantidad de artÃ­culo del remito excede el lÃ­mite permitido'){
 		parent::__construct($msg);
 	}
 }
 
 class ExceptionRemitoObservacionObligatoria extends Exception {
-	public function __construct($msg = 'Deberá ingresar una observación para el remito'){
+	public function __construct($msg = 'DeberÃ¡ ingresar una observaciÃ³n para el remito'){
 		parent::__construct($msg);
 	}
 }
@@ -93,8 +93,8 @@ class Remito extends Base implements OperacionStock {
 
 	public static function remitir($datos, $funcionalidad = false) {
 		/*
-			Esta función se encargará de generar un remito de uno o más items de despacho.
-			$datos será un array de distintos DespachoItem a remitir (los DespachoItem se remiten ENTEROS). Ejemplo:
+			Esta funciÃ³n se encargarÃ¡ de generar un remito de uno o mÃ¡s items de despacho.
+			$datos serÃ¡ un array de distintos DespachoItem a remitir (los DespachoItem se remiten ENTEROS). Ejemplo:
 				array(
 					'empresa' => 1,
 					'idCliente' => 33,
@@ -138,7 +138,7 @@ class Remito extends Base implements OperacionStock {
 	}
 
 	public function facturar() {
-		$observaciones = (($this->cliente->id == 291 || $this->cliente->id == 589) ? $this->observaciones : ''); //Hardcodeo a clientes varios por la observación obligatoria
+		$observaciones = (($this->cliente->id == 291 || $this->cliente->id == 589) ? $this->observaciones : ''); //Hardcodeo a clientes varios por la observaciÃ³n obligatoria
 		$datos = array(
 			'empresa' => $this->empresa,
 			'idCliente' => $this->cliente->id,
@@ -162,15 +162,15 @@ class Remito extends Base implements OperacionStock {
 			/** @var DespachoItem $item */
 
 			if ($item->empresa != $this->empresa) {
-				throw new FactoryExceptionCustomException('Alguno de los items seleccionados no corresponde a la empresa con la que está trabajando. Por favor recargue la página e inténtelo nuevamente');
+				throw new FactoryExceptionCustomException('Alguno de los items seleccionados no corresponde a la empresa con la que estÃ¡ trabajando. Por favor recargue la pÃ¡gina e intÃ©ntelo nuevamente');
 			}
 
 			if ($item->cliente->id != $this->cliente->id) {
-				throw new FactoryExceptionCustomException('Alguno de los items seleccionados no corresponde al cliente del remito. Por favor recargue la página e inténtelo nuevamente');
+				throw new FactoryExceptionCustomException('Alguno de los items seleccionados no corresponde al cliente del remito. Por favor recargue la pÃ¡gina e intÃ©ntelo nuevamente');
 			}
 
 			if ($item->sucursal->id != $this->sucursal->id) {
-				throw new FactoryExceptionCustomException('Alguno de los items seleccionados no corresponde a la sucursal del remito. Por favor recargue la página e inténtelo nuevamente');
+				throw new FactoryExceptionCustomException('Alguno de los items seleccionados no corresponde a la sucursal del remito. Por favor recargue la pÃ¡gina e intÃ©ntelo nuevamente');
 			}
 
 			if ($this->cantidadArticulos > self::CANT_MAX_DETALLE) {
@@ -185,7 +185,7 @@ class Remito extends Base implements OperacionStock {
 
 	private function comprobaciones() {
 		if ($this->getCantidadArticulos() > self::CANT_MAX_DETALLE)
-			throw new FactoryExceptionCustomException('No se puede generar el remito porque tiene un detalle de más de ' . self::CANT_MAX_DETALLE . ' artículos');
+			throw new FactoryExceptionCustomException('No se puede generar el remito porque tiene un detalle de mÃ¡s de ' . self::CANT_MAX_DETALLE . ' artÃ­culos');
 	}
 
 	public function abrir() {
@@ -295,7 +295,7 @@ class Remito extends Base implements OperacionStock {
 	}
 
 	public function stockObservacion() {
-		return 'REM Nº ' . $this->empresa . '-' . $this->numero . '-' . $this->letra;
+		return 'REM NÂº ' . $this->empresa . '-' . $this->numero . '-' . $this->letra;
 	}
 
 	public function stockDetalle() {

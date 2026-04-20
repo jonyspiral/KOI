@@ -3,9 +3,9 @@
 class Curva extends Base {
 	const		_primaryKey = '["id"]';
 
-	public		$id;			//Es un autonumérico
+	public		$id;			//Es un autonumÃ©rico
 	public		$nombre;
-	public		$tipoDeCurva;	//"C"omercial o "P"roducción ("P" no las voy a usar)
+	public		$tipoDeCurva;	//"C"omercial o "P"roducciÃ³n ("P" no las voy a usar)
 	public		$anulado;
 	public		$cantidad;		//Array de 1 a 10
 

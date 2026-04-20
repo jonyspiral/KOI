@@ -60,7 +60,7 @@ class Prestamo extends TransferenciaBase implements DocumentoContable {
 
 	public function validarCantidadPermitidaEfectivo($cantidad) {
 		if ($cantidad > 1) {
-			throw new FactoryExceptionCustomException('Sólo se puede ingresar un importe de tipo efectivo');
+			throw new FactoryExceptionCustomException('SÃ³lo se puede ingresar un importe de tipo efectivo');
 		}
 		return true;
 	}
@@ -109,7 +109,7 @@ class Prestamo extends TransferenciaBase implements DocumentoContable {
 	}
 
 	public function contabilidadNombre() {
-		$nombre = 'Préstamo' . ($this->observaciones ? ' (' . $this->observaciones . ')' : '');
+		$nombre = 'PrÃ©stamo' . ($this->observaciones ? ' (' . $this->observaciones . ')' : '');
 		return $nombre;
 	}
 

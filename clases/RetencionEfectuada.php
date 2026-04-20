@@ -35,7 +35,7 @@ class RetencionEfectuada extends Retencion {
 		parent::validar($obj);
 		$returnObj = Factory::getInstance()->getRetencionEfectuada();
 		if (!isset($obj['proveedor']['id']) && $obj['proveedor']['id'] != 'null') {
-			throw new FactoryExceptionCustomException('No se reconoce el formato de una retención. Debe seleccionar proveedor');
+			throw new FactoryExceptionCustomException('No se reconoce el formato de una retenciÃ³n. Debe seleccionar proveedor');
 		} else {
 			$returnObj->proveedor = Factory::getInstance()->getProveedor($obj['proveedor']['id']);
 		}

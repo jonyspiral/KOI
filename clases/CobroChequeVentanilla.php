@@ -14,7 +14,7 @@ class CobroChequeVentanilla extends TransferenciaDoble {
 			if($cheque->esPropio()){
 				$debitarCheque = Factory::getInstance()->getDebitarCheque();
 				$debitarCheque->datosSinValidar = array(
-					'observaciones' => 'Débito por cobro de cheque por ventanilla',
+					'observaciones' => 'DÃ©bito por cobro de cheque por ventanilla',
 					'fecha' => $this->cabecera->fecha,
 					'fecha_debito' => $this->cabecera->fecha,
 					'usuario' => Usuario::logueado(),
@@ -48,13 +48,13 @@ class CobroChequeVentanilla extends TransferenciaDoble {
 		foreach($this->importesSinValidar[$this->entradaSalida]['C'] as $cheque){
 			/** @var Cheque $cheque */
 			if($cheque->diasVencimiento > 0)
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede cobrarse por ventanilla por no estar vencido');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede cobrarse por ventanilla por no estar vencido');
 
 			if(abs($cheque->diasVencimiento) > 30)
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar vencido');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar vencido');
 
 			if($cheque->cruzado())
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar cruzado');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede cobrarse por ventanilla por estar cruzado');
 		}
 	}
 

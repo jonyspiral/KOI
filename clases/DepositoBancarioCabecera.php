@@ -18,7 +18,7 @@ class DepositoBancarioCabecera extends TransferenciaDobleCabecera implements Doc
 
 	public function validarNuevo() {
 		if(!$this->datosSinValidar['esVentaDeCheque'] && (is_null($this->datosSinValidar['numeroTransaccion']) || $this->datosSinValidar['numeroTransaccion'] < 0 || is_float($this->datosSinValidar['numeroTransaccion']))){
-			throw new FactoryExceptionCustomException('Debe completar el número de transacción.');
+			throw new FactoryExceptionCustomException('Debe completar el nÃºmero de transacciÃ³n.');
 		}
 		$this->fecha = $this->datosSinValidar['fecha'];
 		$this->numeroTransaccion = $this->datosSinValidar['numeroTransaccion'];
@@ -87,7 +87,7 @@ class DepositoBancarioCabecera extends TransferenciaDobleCabecera implements Doc
 	}
 
 	public function contabilidadNombre() {
-		$nombre = 'Depósito bancario' . ($this->observaciones ? ' (' . $this->observaciones . ')' : '');
+		$nombre = 'DepÃ³sito bancario' . ($this->observaciones ? ' (' . $this->observaciones . ')' : '');
 		return $nombre;
 	}
 

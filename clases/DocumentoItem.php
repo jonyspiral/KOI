@@ -49,7 +49,7 @@ class DocumentoItem extends Base {
 
 	public function getPorcentajeIva() {
 		if (!isset($this->empresa)) {
-			throw new FactoryExceptionCustomException('Para llamar al método getPorcentajeIva de la clase DocumentoItem primero deberá tener asignado "empresa", "cliente" y "artículo"');
+			throw new FactoryExceptionCustomException('Para llamar al mÃ©todo getPorcentajeIva de la clase DocumentoItem primero deberÃ¡ tener asignado "empresa", "cliente" y "artÃ­culo"');
 		}
 		if ($this->empresa != 1) {
 			return 0;

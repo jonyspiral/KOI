@@ -62,7 +62,7 @@ class HtmlTableRow extends Html {
 	private function getDataType($nroCol, $arrayHeads = null){
 		if ($arrayHeads == null)
 			return false;
-		$arrayHeads = $arrayHeads[count($arrayHeads) - 1]->cells; //La última fila de los headers es la que tiene que tener los datatypes
+		$arrayHeads = $arrayHeads[count($arrayHeads) - 1]->cells; //La Ãºltima fila de los headers es la que tiene que tener los datatypes
 		$i = 0;
 		while($i <= $nroCol) {
 			if (isset($arrayHeads[$i])){

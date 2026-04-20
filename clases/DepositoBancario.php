@@ -21,10 +21,10 @@ class DepositoBancario extends TransferenciaDoble {
 			foreach($this->importesSinValidar[$this->entradaSalida]['C'] as $cheque){
 				/** Cheque $cheque */
 				if(Funciones::esFechaMenor(Funciones::hoy(), $cheque->fechaVencimiento))
-					throw new FactoryExceptionCustomException('El cheque número ' . $cheque->numero . ' no puede ser depositado ya que no está vencido.');
+					throw new FactoryExceptionCustomException('El cheque nÃºmero ' . $cheque->numero . ' no puede ser depositado ya que no estÃ¡ vencido.');
 
 				if(Funciones::diferenciaFechas($cheque->fechaVencimiento, Funciones::hoy()) >= 31)
-					throw new FactoryExceptionCustomException('El cheque número ' . $cheque->numero . ' no puede ser depositado ya que pasaron 30 días desde su fecha de vencimiento.');
+					throw new FactoryExceptionCustomException('El cheque nÃºmero ' . $cheque->numero . ' no puede ser depositado ya que pasaron 30 dÃ­as desde su fecha de vencimiento.');
 			}
 		}
 

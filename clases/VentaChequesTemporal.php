@@ -109,16 +109,16 @@ class VentaChequesTemporal extends Base {
 				throw new FactoryExceptionCustomException('No puede utilizar cheques de diferentes cajas.');
 
 			if(Funciones::esFechaMenor($verdaderaFechaDeVencimiento, $fechaDeHoy))
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede depositarse por estar vencido');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede depositarse por estar vencido');
 
 			if($cheque->rechazado())
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede depositarse por estar rechazado');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede depositarse por estar rechazado');
 
 			if($cheque->anulado())
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede depositarse por estar anulado');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede depositarse por estar anulado');
 
 			if($cheque->concluido() && !(in_array($cheque->id, json_decode($this->idCheques))))
-				throw new FactoryExceptionCustomException('El cheque Nº ' . $cheque->numero . ' no puede depositarse por estar concluido');
+				throw new FactoryExceptionCustomException('El cheque NÂº ' . $cheque->numero . ' no puede depositarse por estar concluido');
 		}
 	}
 

@@ -20,7 +20,7 @@ class SeccionProduccion extends Base {
 	public		$interrumpible;
 	public		$color;
 	public		$imprimeStickers;
-	public		$jerarquiaSeccion;		// "P"rincipal o "S"ubordinado. No est·n bien los datos en la DB
+	public		$jerarquiaSeccion;		// "P"rincipal o "S"ubordinado. No est√°n bien los datos en la DB
 	//public $tieneSubordinadas;	// No lo necesito. Uso el count de _subordinadas
 	protected	$_subordinadas;
 	public		$idSeccionSuperior;

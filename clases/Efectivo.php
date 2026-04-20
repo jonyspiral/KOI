@@ -31,7 +31,7 @@ class Efectivo extends Importe {
 
 	public static function validarExistencia(Caja $caja, $importe, $validarEfectivoParcial) {
 		if (($validarEfectivoParcial ? ($caja->importeEfectivo) : $caja->importeEfectivoFinal) + abs($caja->importeDescubierto) < $importe) {
-			throw new FactoryExceptionCustomException('La caja no tiene el efectivo suficiente para realizar esta operación');
+			throw new FactoryExceptionCustomException('La caja no tiene el efectivo suficiente para realizar esta operaciÃ³n');
 		}
 		return true;
 	}

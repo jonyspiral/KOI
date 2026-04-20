@@ -26,7 +26,7 @@ class TransferenciaBancariaOperacion extends TransferenciaBase {
 
 	public function validarCantidadPermitidaEfectivo($cantidad) {
 		if ($cantidad != 1) {
-			throw new FactoryExceptionCustomException('Sólo se puede ingresar un importe de tipo efectivo');
+			throw new FactoryExceptionCustomException('SÃ³lo se puede ingresar un importe de tipo efectivo');
 		}
 		return true;
 	}

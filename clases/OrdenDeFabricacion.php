@@ -43,9 +43,9 @@ class OrdenDeFabricacion extends Base {
         Factory::getInstance()->beginTransaction();
         try {
             if (!$this->articulo->idRutaProduccion) {
-                throw new FactoryExceptionCustomException('Para lanzar las tareas del artículo ' . $this->articulo->getIdNombre() . ' deberá configurarle una ruta');
+                throw new FactoryExceptionCustomException('Para lanzar las tareas del artÃ­culo ' . $this->articulo->getIdNombre() . ' deberÃ¡ configurarle una ruta');
             }
-            // Armo un detalle modelo según el artículo
+            // Armo un detalle modelo segÃºn el artÃ­culo
             $detalleModelo = array();
             foreach ($this->articulo->rutaProduccion->pasos as $paso) {
                 $tareaDetalle = Factory::getInstance()->getTareaProduccionItem();
@@ -80,7 +80,7 @@ class OrdenDeFabricacion extends Base {
                 for ($i = 1; $i <= 10; $i++) {
                     $c = $totalAux > $this->cantidadOptimaProduccion ? $this->curvaDeProduccion->cantidad[$i] : $cantidadAux[$i];
                     if ($c > $cantidadAux[$i]) {
-                        throw new FactoryExceptionCustomException('Hay un error con las cantidades de la orden de producción Nº ' . $this->id . '. Por favor, edite la orden y vuelva a intentarlo');
+                        throw new FactoryExceptionCustomException('Hay un error con las cantidades de la orden de producciÃ³n NÂº ' . $this->id . '. Por favor, edite la orden y vuelva a intentarlo');
                     }
                     $cAuxs[$i] = $c;
                     $cantidadAux[$i] -= $c;

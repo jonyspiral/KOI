@@ -43,7 +43,7 @@ class ConsumoStockMP extends Base implements OperacionStock {
 	}
 
 	protected function validarGuardar() {
-        //Necesito saber si el usuario logueado tiene permiso en el almacén a realizar el consumo
+        //Necesito saber si el usuario logueado tiene permiso en el almacÃ©n a realizar el consumo
         try {
             $idUsuario = $this->usuario->id ? $this->usuario->id : Usuario::logueado()->id;
             Factory::getInstance()->getUsuarioPorAlmacen($idUsuario, $this->almacen->id);
@@ -51,7 +51,7 @@ class ConsumoStockMP extends Base implements OperacionStock {
             throw new FactoryExceptionCustomException('No tiene permiso para realizar consumos de stock del almacen "' . $this->almacen->getIdNombre() . '"');
         }
 		if ($this->cantidadTotal <= 0) {
-			throw new FactoryExceptionCustomException('No puede hacer un consumo por 0 (cero) unidades (todas las columnas de cantidad están en cero)');
+			throw new FactoryExceptionCustomException('No puede hacer un consumo por 0 (cero) unidades (todas las columnas de cantidad estÃ¡n en cero)');
 		}
 	}
 
@@ -74,7 +74,7 @@ class ConsumoStockMP extends Base implements OperacionStock {
 	}
 
 	public function stockObservacion() {
-		return 'Consumo MP Nº ' . $this->id;
+		return 'Consumo MP NÂº ' . $this->id;
 	}
 
 	public function stockDetalle() {

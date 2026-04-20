@@ -10,7 +10,7 @@
 class NotaDeCredito extends DocumentoHaber implements OperacionStock {
 	public		$cancelNumero;
 	protected	$_documentoCancelatorio;
-	public		$idCausa;		//Es exclusivo de las NCR. Es la causa que generó la NCR. Hay una tabla/ABM
+	public		$idCausa;		//Es exclusivo de las NCR. Es la causa que generÃ³ la NCR. Hay una tabla/ABM
 	protected	$_causa;
 	protected	$_cantidadPares;
 
@@ -20,7 +20,7 @@ class NotaDeCredito extends DocumentoHaber implements OperacionStock {
 
 			$this->tipoDocumento = TiposDocumento::notaDeCredito;
 			$this->letra = $this->getLetra();
-			$this->puntoDeVenta = ($this->empresa != 1 || $this->letra == 'E' ? 1 : (Config::encinitas() ? Config::PUNTO_VENTA_NCNTS : 2)); //Si es cuenta 2 o ncr 'E', no es electrónica
+			$this->puntoDeVenta = ($this->empresa != 1 || $this->letra == 'E' ? 1 : (Config::encinitas() ? Config::PUNTO_VENTA_NCNTS : 2)); //Si es cuenta 2 o ncr 'E', no es electrÃ³nica
 
 			//$this->descuentoComercialImporte = Funciones::toFloat($this->importeNeto * $this->descuentoComercialPorc / 100, 2);
 
@@ -99,12 +99,12 @@ class NotaDeCredito extends DocumentoHaber implements OperacionStock {
 		parent::validarGuardar();
 
 		if (self::CANT_MAX_DETALLE && $this->cantidadArticulos > self::CANT_MAX_DETALLE) {
-			throw new FactoryExceptionCustomException('La nota de crédito que se intenta crear supera el máximo de artículos permitidos (' . self::CANT_MAX_DETALLE . ')');
+			throw new FactoryExceptionCustomException('La nota de crÃ©dito que se intenta crear supera el mÃ¡ximo de artÃ­culos permitidos (' . self::CANT_MAX_DETALLE . ')');
 		}
 
-		//Hardcodeado a Clientes Varios (observación obligatoria)
+		//Hardcodeado a Clientes Varios (observaciÃ³n obligatoria)
 		if (($this->cliente->id == 291 || $this->cliente->id == 589) && (is_null($this->observaciones) || empty($this->observaciones))) {
-			throw new FactoryExceptionCustomException('La nota de crédito debe tener el nombre del empleado en "observaciones"');
+			throw new FactoryExceptionCustomException('La nota de crÃ©dito debe tener el nombre del empleado en "observaciones"');
 		}
 	}
 
@@ -137,7 +137,7 @@ class NotaDeCredito extends DocumentoHaber implements OperacionStock {
 	}
 
 	public function stockObservacion() {
-		return 'NCR Nº ' . $this->empresa . '-' . $this->numeroComprobante . '-' . $this->letra;
+		return 'NCR NÂº ' . $this->empresa . '-' . $this->numeroComprobante . '-' . $this->letra;
 	}
 
 	public function stockDetalle() {

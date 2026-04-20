@@ -84,7 +84,7 @@ class DevolucionACliente extends Base implements OperacionStock {
 	}
 
 	public function stockObservacion() {
-		return 'Devolución Nº ' . $this->id;
+		return 'DevoluciÃ³n NÂº ' . $this->id;
 	}
 
 	public function stockDetalle() {

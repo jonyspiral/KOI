@@ -43,7 +43,7 @@ class GarantiaItem extends Base implements OperacionStock {
 	}
 
 	public function stockObservacion() {
-		return 'Garantía Nº ' . $this->idGarantia;
+		return 'GarantÃ­a NÂº ' . $this->idGarantia;
 	}
 
 	public function stockDetalle() {

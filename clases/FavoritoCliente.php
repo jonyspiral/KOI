@@ -32,7 +32,7 @@ class FavoritoCliente extends Base {
         'idCliente',
         'idArticulo',
         'idColorPorArticulo' => array('db' => 'cod_color_articulo'),
-        // 'cant_N', // Esto lo manejo extendiendo algunos m�todos (fill, getQueryX)
+        // 'cant_N', // Esto lo manejo extendiendo algunos mï¿½todos (fill, getQueryX)
         'curvas',
         'idUsuario',
         'fechaAlta',
@@ -52,7 +52,7 @@ class FavoritoCliente extends Base {
         $this->cantidades = array();
     }
     for ($i = 1; $i <= 10; $i++) {
-        // Si la columna no está en $dr, dejo NULL (se cargará más adelante)
+        // Si la columna no estÃ¡ en $dr, dejo NULL (se cargarÃ¡ mÃ¡s adelante)
         $this->cantidades[$i] = isset($dr['cant_' . $i]) ? $dr['cant_' . $i] : null;
     }
 
@@ -72,7 +72,7 @@ class FavoritoCliente extends Base {
         $this->cantidades = array();
     }
     for ($i = 1; $i <= 10; $i++) {
-        // si no está definida, va NULL en el INSERT/UPDATE (no 0, salvo que lo prefieras)
+        // si no estÃ¡ definida, va NULL en el INSERT/UPDATE (no 0, salvo que lo prefieras)
         $val = isset($this->cantidades[$i]) && $this->cantidades[$i] !== '' ? $this->cantidades[$i] : null;
         $values['cant_' . $i] = Datos::objectToDB($val);
     }

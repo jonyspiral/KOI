@@ -100,7 +100,7 @@ class Garantia extends Base {
 
 	protected function validarGuardar() {
 		if ($this->cantidadPares <= 0) {
-			throw new FactoryExceptionCustomException('No puede hacer una garantÌa sin pares');
+			throw new FactoryExceptionCustomException('No puede hacer una garant√≠a sin pares');
 		}
 
 		foreach ($this->detalle as $item) {
@@ -109,7 +109,7 @@ class Garantia extends Base {
 			}
 
 			if ($item->cantidadTotal <= 0 && $this->modo == Modos::insert) {
-				throw new FactoryExceptionCustomException('No puede hacer una garantÌa con alg˙n item en 0 (cero) pares (todas las columnas de cantidad est·n en cero)');
+				throw new FactoryExceptionCustomException('No puede hacer una garant√≠a con alg√∫n item en 0 (cero) pares (todas las columnas de cantidad est√°n en cero)');
 			}
 		}
 	}
@@ -121,7 +121,7 @@ class Garantia extends Base {
 			if ($llevaNcr) {
 				$this->generarNcr($cantidadesCuenta1, $ncr1, $ncr2);
 				if (!$ncr1 && !$ncr2) {
-					throw new FactoryExceptionCustomException('No se pudieron generar las notas de crÈdito correspondientes. Por favor, recargue la p·gina');
+					throw new FactoryExceptionCustomException('No se pudieron generar las notas de cr√©dito correspondientes. Por favor, recargue la p√°gina');
 				}
 
 				// Pongo que la garant?a fue aprobada (con NCR) y guardo
@@ -174,7 +174,7 @@ class Garantia extends Base {
 				$movimiento->almacenDestino = Factory::getInstance()->getAlmacen($detalle['idAlmacenDestino']);
 				$movimiento->articulo = Factory::getInstance()->getArticulo($detalle['idArticulo']);
 				$movimiento->colorPorArticulo = Factory::getInstance()->getColorPorArticulo($detalle['idArticulo'], $detalle['idColorPorArticulo']);
-				$movimiento->motivo = ($this->idOrder ? 'Por ecommerce N∫ ' . $this->order->idEcommerce : 'Del cliente ' . $this->cliente->getIdNombre());
+				$movimiento->motivo = ($this->idOrder ? 'Por ecommerce N¬∫ ' . $this->order->idEcommerce : 'Del cliente ' . $this->cliente->getIdNombre());
 				$movimiento->cantidad = $detalle['cantidad'];
 				$movimiento->usuario = $this->usuario;
 
@@ -185,11 +185,11 @@ class Garantia extends Base {
 		} catch (Exception $ex){
 			$nombreCliente = ($this->esEcommerce() ? 'de Ecommerce "' . $this->order->customer->fullname() . '"' : '"' . $this->cliente->razonSocial . '"');
 			//Mando mail informando el error. Es importante notificar que los pares no pudieron moverse de almac?n y que deber? hacer a mano desde el almac?n de calidad
-			$asunto = 'Error al intentar mover pares luego de garantÌa';
-			$cuerpo = 'OcurriÛ un error al intentar mover los pares a sus almacenes correspondientes (seg˙n clasificÛ el sector de "Calidad").<br>';
-			$cuerpo .= 'El error se produjo luego de aprobarse la garantÌa N∫ ' . $this->id . ' del cliente ' . $nombreCliente . '.<br>';
-			$cuerpo .= 'La nota de crÈdito se generÛ correctamente.<br>';
-			$cuerpo .= 'Deber· revisarse cu·l fue el motivo del error y realizar los movimientos de manera manual desde el almacÈn de "Calidad".<br><br>';
+			$asunto = 'Error al intentar mover pares luego de garant√≠a';
+			$cuerpo = 'Ocurri√≥ un error al intentar mover los pares a sus almacenes correspondientes (seg√∫n clasific√≥ el sector de "Calidad").<br>';
+			$cuerpo .= 'El error se produjo luego de aprobarse la garant√≠a N¬∫ ' . $this->id . ' del cliente ' . $nombreCliente . '.<br>';
+			$cuerpo .= 'La nota de cr√©dito se gener√≥ correctamente.<br>';
+			$cuerpo .= 'Deber√° revisarse cu√°l fue el motivo del error y realizar los movimientos de manera manual desde el almac√©n de "Calidad".<br><br>';
 			$cuerpo .= 'El error obtenido fue "' . $ex->getMessage() . '".';
 			$para = array('sistemas@spiralshoes.com', 'calidad@spiralshoes.com');
 			Email::enviar(
@@ -199,8 +199,8 @@ class Garantia extends Base {
 					 'contenido' => $cuerpo
 				 )
 			);
-			$msg = 'La garantÌa ' . ($llevaNcr ? 'y la nota de crÈdito se generaron' : 'se generÛ') . ' correctamente, pero ocurriÛ un error al mover los pares de almacÈn. ';
-			$msg .= 'Se enviÛ un mail a sistemas con m·s informaciÛn. Por favor, vuelva a cargar la p·gina para continuar. Info: ' . $ex->getMessage();
+			$msg = 'La garant√≠a ' . ($llevaNcr ? 'y la nota de cr√©dito se generaron' : 'se gener√≥') . ' correctamente, pero ocurri√≥ un error al mover los pares de almac√©n. ';
+			$msg .= 'Se envi√≥ un mail a sistemas con m√°s informaci√≥n. Por favor, vuelva a cargar la p√°gina para continuar. Info: ' . $ex->getMessage();
 			throw new FactoryExceptionCustomException($msg);
 		}
 	}
@@ -224,7 +224,7 @@ class Garantia extends Base {
 		$items = array('1' => false, '2' => false);
 		foreach ($this->detalle as $item) {
 			if (count($cantidadesCuenta1) && !isset($cantidadesCuenta1[$item->id])) {
-				throw new FactoryExceptionCustomException('Deben distribuirse todos los pares de la garantÌa');
+				throw new FactoryExceptionCustomException('Deben distribuirse todos los pares de la garant√≠a');
 			}
 
 			$cantidades1 = array();
@@ -386,7 +386,7 @@ class Garantia extends Base {
 			$devolucion->detalle = $detalle;
 
 			if ($devolucion->cantidadPares <= 0) {
-				throw new FactoryExceptionCustomException('No se puede generar una devoluciÛn con CERO pares');
+				throw new FactoryExceptionCustomException('No se puede generar una devoluci√≥n con CERO pares');
 			}
 
 			$devolucion->guardar();
