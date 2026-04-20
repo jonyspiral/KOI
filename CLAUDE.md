@@ -4,6 +4,12 @@
 Sistema de gestión interno de **SPIRAL SHOES (Encinitas S.A.S.)**.  
 Legacy PHP 5.6 corriendo en Docker en Ubuntu. Reemplaza al servidor Windows Server 2003 + SQL Server 2000 + PHP 5.2 que corre en `192.168.2.100`.
 
+## Planes activos
+Al iniciar cada sesión: leer todos los archivos en `plans/` con `status: active`
+en su frontmatter para entender el estado actual antes de trabajar.
+
+Usar `/update-plan` para actualizar el estado de los planes tras implementar.
+
 ## Repositorio
 - **Git:** `git@github.com:jonyspiral/KOI.git`
 - **Rama activa:** `main`
