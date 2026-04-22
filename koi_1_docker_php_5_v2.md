@@ -1,4 +1,4 @@
-# KOI1 – Docker PHP 5.6 (Documentación v2 — Restauración)
+cd# KOI1 – Docker PHP 5.6 (Documentación v2 — Restauración)
 
 > **Estado: ACTIVO — 2026-04-21**
 > **Referencia base**: [[koi_1_docker_php_5.md]](file:///c:/dev/encinitas/koi_1_docker_php_5.md)
