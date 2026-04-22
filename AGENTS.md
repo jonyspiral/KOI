@@ -1,4 +1,4 @@
-# KOI1 — CLAUDE.md
+# KOI1 — AGENTS.md
 
 ## Proyecto
 Sistema de gestión interno de **SPIRAL SHOES (Encinitas S.A.S.)**.  
