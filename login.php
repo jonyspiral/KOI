@@ -20,8 +20,6 @@ $file_mobile = './img/fondos/login/' . (isset($image_files[1]) ? $image_files[1]
 // Depuración (compatible con PHP 5.2.9)
 echo "<!-- Debug: Desktop file = $file_desktop, Mobile file = $file_mobile -->";
 
-// Si hay error de login desde master.php, mostrarlo
-$errorMessage = isset($loginError) ? $loginError : '';
 ?>
 <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
 <html>
@@ -194,10 +192,6 @@ $errorMessage = isset($loginError) ? $loginError : '';
 						}
 					}
 				);
-				<?php if (!empty($errorMessage)): ?>
-				// Mostrar error desde PHP
-				loginFail('<?php echo addslashes($errorMessage); ?>');
-				<?php endif; ?>
 			});
 			function ifEnter(e){
 				if (e.keyCode == 13)

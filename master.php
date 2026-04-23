@@ -19,28 +19,6 @@ if (isset($_GET['debug']) && $_GET['debug']==='sid') {
 }
 /* --- /DEBUG HOOK --- */
 
-// ===================================
-// PROCESAR LOGIN SI HAY POST
-// ===================================
-if (isset($_POST['user']) && isset($_POST['pass'])) {
-    try {
-        // Intentar login
-        UsuarioLogin::login();
-
-        // Si llegamos aquí sin excepción, el login fue exitoso
-        // Redirigir para evitar resubmit del formulario
-        header('Location: ' . Config::siteRoot);
-        exit;
-
-    } catch (LoginFailException $e) {
-        // Login falló, guardar mensaje de error en variable
-        $loginError = $e->getMessage();
-    } catch (Exception $e) {
-        // Error inesperado
-        $loginError = 'Error del sistema. Por favor contacte al administrador.';
-        error_log('[MASTER] Login error: ' . $e->getMessage());
-    }
-}
 
 function puedeSinLoguear($pagename) {
     //Esto es para las funcionalidades que no necesitan login
