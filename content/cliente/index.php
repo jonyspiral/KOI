@@ -128,11 +128,11 @@
     }
 </style>
 <script>
-    var bgImages = <? echo ($files ? json_encode($files) : '""'); ?>;
+    var bgImages = <?= json_encode(($files ? array_values($files) : array()), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
     $('#full-bg').backgroundRotator({
       images: bgImages,
-      initialImage: bgImages[0]
+      initialImage: (bgImages && bgImages.length ? bgImages[0] : '')
     });
 </script>
 

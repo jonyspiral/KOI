@@ -360,10 +360,10 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
       $scope.funciones = funciones;
       $scope.imagesUrl = 'http://www.spiralshoes.com/zapatillas/jpg/';
 
-      $scope.descuento = <? echo Funciones::toFloat(Usuario::logueado()->cliente->creditoDescuentoEspecial); ?>;
-      $scope.favoritos = <? echo json_encode($arrayFavoritos); ?>;
-      $scope.sucursales = <? echo json_encode($sucursales); ?>;
-      $scope.idSucursalPedido = '<? echo $idSucursalDefault; ?>';
+      $scope.descuento = <?= Funciones::toFloat(Usuario::logueado()->cliente->creditoDescuentoEspecial); ?>;
+      $scope.favoritos = <?= json_encode($arrayFavoritos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+      $scope.sucursales = <?= json_encode($sucursales, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+      $scope.idSucursalPedido = <?= json_encode($idSucursalDefault, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
       var commonCallback = function (err, result) {
         if (err) {

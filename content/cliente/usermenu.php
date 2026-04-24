@@ -10,7 +10,7 @@
 
 <ul class="user-menu nav navbar-nav navbar-right hidden-xs">
     <li class="navbar-company">
-        <? echo Usuario::logueado()->contacto->nombre; ?>
+        <?= Usuario::logueado()->contacto->nombre; ?>
     </li>
     <li>
         <a href="/favoritos/" class="navbar-favorites">
@@ -24,7 +24,7 @@
         </a>
         <ul class="dropdown-menu animated fadeInDown">
             <li class="arrow"></li>
-            <!--<li><a href="/perfil/"><i class="fa fa-fw fa-user"></i> <? echo Usuario::logueado()->contacto->nombre; ?></a></li>-->
+            <!--<li><a href="/perfil/"><i class="fa fa-fw fa-user"></i> <?= Usuario::logueado()->contacto->nombre; ?></a></li>-->
             <li><a href="/favoritos/"><i class="fa fa-fw fa-star-half-empty fa-star"></i> Favoritos</a></li>
             <li><a href="/pedidos/"><i class="fa fa-fw fa-shopping-cart"></i> Mis pedidos</a></li>
             <li class="divider"></li>

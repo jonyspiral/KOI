@@ -97,7 +97,7 @@ if ($filtrosSession = Funciones::session('catalogo_filtros')) {
         return ServiceCatalogo.filtros.show;
       };
 
-      $scope.tiposProductoStock = <? echo json_encode($arrayTipos) ?>;
+      $scope.tiposProductoStock = <?= json_encode($arrayTipos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
       $scope.filtros = {
         tipoProductoStock: {}
@@ -126,7 +126,7 @@ if ($filtrosSession = Funciones::session('catalogo_filtros')) {
       };
 
       $timeout(function () {
-        $scope.filtrosDefault = <? echo json_encode($filtrosDefault); ?>;
+        $scope.filtrosDefault = <?= json_encode($filtrosDefault, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
         angular.forEach($scope.filtrosDefault, function (filtro) {
           $scope.filtros.tipoProductoStock[filtro] = true; // '1'
         });

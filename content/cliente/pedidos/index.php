@@ -9,7 +9,7 @@ foreach ($pedidos as $pedido) {
 
     $detallePorRangoTalle = array();
     foreach ($pedido->detalle as $detalle) {
-        // Datos básicos
+        // Datos bÃ¡sicos
         $item = array(
             'idArticulo' => $detalle->idArticulo,
             'idColorPorArticulo' => $detalle->idColorPorArticulo,
@@ -48,7 +48,7 @@ foreach ($pedidos as $pedido) {
         $detallePorRangoTalle[$detalle->articulo->rangoTalle->id]['items'][] = $item;
     }
 
-    // Datos básicos
+    // Datos bÃ¡sicos
     $ped = array(
         'id' => $pedido->id,
         'anulado' => $pedido->anulado(),
@@ -148,7 +148,7 @@ foreach ($pedidos as $pedido) {
     Koi.controller('PedidosCtrl', function ($scope, ServiceCliente) {
 
       $scope.funciones = funciones;
-      $scope.pedidos = <? echo json_encode($arrayPedidos); ?>;
+      $scope.pedidos = <?= json_encode($arrayPedidos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
       $scope.toggleDetalle = function (pedido) {
         pedido.abierto = !pedido.abierto;
@@ -177,7 +177,7 @@ foreach ($pedidos as $pedido) {
     <h2 class="text-center visible-xs">Mis pedidos</h2>
     <div ng-if="!pedidos.length">
         <div class="well big">
-            <h1>Aún no se han realizado pedidos</h1>
+            <h1>AÃºn no se han realizado pedidos</h1>
         </div>
     </div>
     <div ng-if="pedidos.length">
@@ -198,7 +198,7 @@ foreach ($pedidos as $pedido) {
                     <td><a href="javascript:;" ng-click="toggleDetalle(pedido)"><i class="fa fa-fw" ng-class="pedido.abierto ? 'fa-caret-down' : 'fa-caret-right'"></i></a></td>
                     <td ng-click="toggleDetalle(pedido)">{{ pedido.id }}</td>
                     <td ng-class="pedido.estado == 'C' ? 'pedido-encurso' : 'pedido-pendiente'" ng-click="toggleDetalle(pedido)">
-                        {{ pedido.anulado ? 'Cancelado' : (pedido.estado == 'C' ? 'En curso' : 'Pendiente de aprobación') }}
+                        {{ pedido.anulado ? 'Cancelado' : (pedido.estado == 'C' ? 'En curso' : 'Pendiente de aprobaciÃ³n') }}
                     </td>
                     <td ng-click="toggleDetalle(pedido)">[{{ pedido.sucursal.id }}] {{ pedido.sucursal.nombre }} - {{ pedido.sucursal.direccion }}</td>
                     <td class="bigger" ng-click="toggleDetalle(pedido)">{{ pedido.cantidadPares }}</td>
@@ -213,7 +213,7 @@ foreach ($pedidos as $pedido) {
                             </button>
                         </div>
                         <div ng-show="pedido.confirmandoBorrar && !pedido.anulado && pedido.estado != 'C'">
-                            <div class="bold">¿Borrar?</div>
+                            <div class="bold">Â¿Borrar?</div>
                             <button type="button" class="btn btn-danger" ng-click="cancelarPedido(pedido)"><i class="fa fa-fw fa-check"></i></button>
                             <button type="button" class="btn" ng-click="pedido.confirmandoBorrar = false"><i class="fa fa-fw fa-times"></i></button>
                         </div>
