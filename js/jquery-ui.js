@@ -237,7 +237,7 @@
 				call : function(a, b, d) {
 					if ((b = a.plugins[b]) && a.element[0].parentNode)
 						for ( var e = 0; e < b.length; e++)
-							a.options[b[e]0] && b[e][1].apply(a.element, d)
+							a.options[b[e][0]] && b[e][1].apply(a.element, d)
 				}
 			},
 			contains : function(a, b) {
@@ -683,7 +683,7 @@
 						top : i.top - q
 					};
 					c.each([ "left", "top" ], function(s, x) {
-						c.ui.position[gs] && c.ui.position[gs][x](i, {
+						c.ui.position[g[s]] && c.ui.position[g[s]][x](i, {
 							targetWidth : h,
 							targetHeight : k,
 							elemWidth : l,
@@ -9598,7 +9598,7 @@ jQuery.effects
 			function o() {
 				var c = document.defaultView ? document.defaultView
 						.getComputedStyle(this, null) : this.currentStyle, a = {}, b, d;
-				if (c && c.length && c[0] && c[c0])
+				if (c && c.length && c[0] && c[c[0]])
 					for ( var e = c.length; e--;) {
 						b = c[e];
 						if (typeof c[b] == "string") {
@@ -9826,7 +9826,7 @@ jQuery.effects
 					for ( var b = 0; b < a.length; b++)
 						a[b] !== null
 								&& c.data("ec.storage." + a[b],
-										c[0].style[ab])
+										c[0].style[a[b]])
 				},
 				restore : function(c, a) {
 					for ( var b = 0; b < a.length; b++)
@@ -10616,8 +10616,8 @@ jQuery.effects
 						});
 					h = {};
 					i = {};
-					h[l0] = d == "show" ? f[0] : g;
-					i[l1] = d == "show" ? f[1] : 0;
+					h[l[0]] = d == "show" ? f[0] : g;
+					i[l[1]] = d == "show" ? f[1] : 0;
 					e.animate(h, k, a.options.easing)
 							.animate(
 									i,
