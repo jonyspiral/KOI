@@ -363,7 +363,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
       $scope.descuento = <?php echo @json_encode((float) str_replace(",", ".", Usuario::logueado()->cliente->creditoDescuentoEspecial)); ?>;
       $scope.favoritos = <?php echo @json_encode($arrayFavoritos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_PARTIAL_OUTPUT_ON_ERROR) ?: "{}"; ?>;
       $scope.sucursales = <?php echo @json_encode($sucursales, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_PARTIAL_OUTPUT_ON_ERROR) ?: "[]"; ?>;
-      $scope.idSucursalPedido = '<?php echo $idSucursalDefault; ?>';
+      $scope.idSucursalPedido = <?php echo @json_encode($idSucursalDefault, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_PARTIAL_OUTPUT_ON_ERROR) ?: '""'; ?>;
 
       var commonCallback = function (err, result) {
         if (err) {
@@ -392,7 +392,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
       $scope.updateLibre = function (articulo, index, talle) {
         //editado
         if (!articulo.paresLibres[index]._prevValue) {
-        // Guarda el valor inicial al cargar la p├ígina
+        // Guarda el valor inicial al cargar la página
             articulo.paresLibres[index]._prevValue = articulo.paresLibres[index];
         }
         var allGood = true;
@@ -412,7 +412,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
             
             if (!disponible || disponible.cantidad < articulo.paresLibres[index]) {
                 $.growl.error(`La cantidad ingresada supera el disponible (${disponible ? disponible.cantidad : 0})`);
-                articulo.paresLibres[index] = disponible ? disponible.cantidad : 0; // Revertir al valor anterior o al m├íximo permitido
+                articulo.paresLibres[index] = disponible ? disponible.cantidad : 0; // Revertir al valor anterior o al máximo permitido
                 return false;
             }
         }
@@ -639,7 +639,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
         });
       };
 
-      /* No funcionar├¡a si lo descomentara, porque cambi├│ la estructura de $scope.favoritos (ahora tiene idLinea)
+      /* No funcionaría si lo descomentara, porque cambió la estructura de $scope.favoritos (ahora tiene idLinea)
       $scope.limpiarCantidades = function () {
         angular.forEach($scope.favoritos, function (articulo, i) {
           angular.forEach(articulo.paresLibres, function (parLibre, j) {
@@ -845,6 +845,3 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
         </div>
     </div>
 </div>
-
-
-
