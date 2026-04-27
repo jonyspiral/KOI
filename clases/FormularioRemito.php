@@ -1,7 +1,7 @@
 <?php
 
 class FormularioRemito extends Formulario {
-	//Los que estÃ¡n comentados es porque estÃ¡n definidos en la clase padre, Formulario
+	//Los que están comentados es porque están definidos en la clase padre, Formulario
 
 	//public	$empresa;
 	//public	$numero;
@@ -26,7 +26,7 @@ class FormularioRemito extends Formulario {
 	}
 
 	protected function enviarDatos() {
-		$_POST['form_empresa'] = $this->empresa; //No sale impreso, pero es para saber quÃ© documento se imprime
+		$_POST['form_empresa'] = $this->empresa; //No sale impreso, pero es para saber qué documento se imprime
 		$_POST['form_numero'] = $this->numero; //No sale impreso, pero es para el nombre del archivo
 		$_POST['form_fecha'] = $this->fecha;
 		$_POST['form_nombreCliente'] = $this->nombreCliente;
@@ -50,7 +50,7 @@ class FormularioRemito extends Formulario {
 			$this->pdf = new Html2Pdf();
 			$this->enviarDatos();
 
-			//AcÃ¡ hay que definir quÃ© modelo de Factura se usa segÃºn si es empresa 1 o 2, o si eso se lo delego al documento!!!
+			//Acá hay que definir qué modelo de Factura se usa según si es empresa 1 o 2, o si eso se lo delego al documento!!!
 			$this->pdf->html = Html2Pdf::getHtmlFromPhp(Config::pathBase . 'includes/modelosFormularios/modeloRemito.php');
 			$this->pdf->llevaHeader = false;
 			$this->pdf->llevaFooter = false;

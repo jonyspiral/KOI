@@ -3,7 +3,7 @@
 class JSONResponse {
 	const	JSON_NULL = -1;
 	const	JSON_EMPTY = 0;
-	const	JSON_OBJECT = 1; //TambiÃ©n puede ser un array
+	const	JSON_OBJECT = 1; //También puede ser un array
 	const	JSON_ERROR = 2;
 	const	JSON_SUCCESS = 3;
 	const	JSON_CONFIRM = 4;

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="PhpServers">
-    <server host="192.168.2.210" id="encinitas-8195" name="encinitas-8195" port="8195" debugger_id="php.debugger.XDebug">
-      <mapping local="$PROJECT_DIR$" remote="/var/www/encinitas" />
-    </server>
-  </component>
-</project>

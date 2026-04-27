@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW pedidos_clientes_sin_mora_vwASSELECT TOP 100 pedidos_detalle.cod_articulo, pedidos_detalle.cod_color_articulo, SUM(pedidos_detalle.cantidad_pendiente) AS Pendiente, SUM(pedidos_detall;;

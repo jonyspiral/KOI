@@ -166,10 +166,10 @@ class Cheque extends Importe {
 			throw new FactoryExceptionCustomException('Los cheques no pueden tener un importe menor o igual a cero.');
 
 		if(Funciones::esFechaMenor($obj['fechaVencimiento'], $obj['fechaEmision']))
-			throw new FactoryExceptionCustomException('Cheque nÃºmero ' . Funciones::padLeft($obj['numero'], 8, 0) . ': la fecha de emisiÃ³n no puede ser mayor a la de vencimiento.');
+			throw new FactoryExceptionCustomException('Cheque número ' . Funciones::padLeft($obj['numero'], 8, 0) . ': la fecha de emisión no puede ser mayor a la de vencimiento.');
 
 		if(Funciones::diferenciaFechas($obj['fechaVencimiento'], $obj['fechaEmision']) > 365)
-			throw new FactoryExceptionCustomException('Cheque nÃºmero ' . Funciones::padLeft($obj['numero'], 8, 0) . ': la diferencia entre la fecha de vencimiento y de emisiÃ³n no puede superar 1 aÃ±o.');
+			throw new FactoryExceptionCustomException('Cheque número ' . Funciones::padLeft($obj['numero'], 8, 0) . ': la diferencia entre la fecha de vencimiento y de emisión no puede superar 1 año.');
 
 		$obj['importe'] && $returnObj->importe = Funciones::toFloat($obj['importe']);
 		$obj['fechaEmision'] && $returnObj->fechaEmision = $obj['fechaEmision'];
@@ -189,11 +189,11 @@ class Cheque extends Importe {
 			$cheque = $caja->tieneCheque($idCheque);
 			if ($cheque) {
 				if ($cheque->rechazado() || $cheque->anulado == 'S') {
-					throw new FactoryExceptionCustomException('El cheque nÃºmero ' . $cheque->numero . ' estÃ¡ anulado o rechazado');
+					throw new FactoryExceptionCustomException('El cheque número ' . $cheque->numero . ' está anulado o rechazado');
 				}
 			} else {
 				$cheque = Factory::getInstance()->getCheque($idCheque);
-				throw new FactoryExceptionCustomException('El cheque nÃºmero ' . $cheque->numero . ' no pertenece a la caja');
+				throw new FactoryExceptionCustomException('El cheque número ' . $cheque->numero . ' no pertenece a la caja');
 			}
 		}
 		return true;
@@ -212,7 +212,7 @@ class Cheque extends Importe {
 	}
 
 	public function getObservacionContabilidad() {
-		return 'NÂº de cheque: ' . $this->numero . ' (' . $this->libradorNombre . ')';
+		return 'Nº de cheque: ' . $this->numero . ' (' . $this->libradorNombre . ')';
 	}
 
 	//GETS y SETS

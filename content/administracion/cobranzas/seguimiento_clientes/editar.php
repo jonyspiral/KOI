@@ -13,13 +13,13 @@ try {
 
 	$gestionClientesCobranza->guardar();
 
-	Html::jsonSuccess('La gestiÃ³n se editÃ³ correctamente', $gestionClientesCobranza->expand());
+	Html::jsonSuccess('La gestión se editó correctamente', $gestionClientesCobranza->expand());
 } catch (FactoryExceptionCustomException $ex) {
 	Html::jsonError($ex->getMessage());
 } catch (FactoryExceptionRegistroNoExistente $ex) {
-	Html::jsonError('No tine permisos para editar la gestiÃ³n');
+	Html::jsonError('No tine permisos para editar la gestión');
 } catch (Exception $ex){
-	Html::jsonError('OcurriÃ³ un error al intentar editar la gestiÃ³n NÂº "' . $gestionClientesCobranza->id . '"');
+	Html::jsonError('Ocurrió un error al intentar editar la gestión Nº "' . $gestionClientesCobranza->id . '"');
 }
 
 ?>

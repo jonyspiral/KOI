@@ -21,7 +21,7 @@ class WS {
 		$this->log_path = Config::pathBase . '/tmp/logs/';
 	}
 
-	//TODO: Hacer alguna validaciÃ³n para ver si tengo los datos necesarios antes de hacer un request (como el ws_path, base_url, etc)
+	//TODO: Hacer alguna validación para ver si tengo los datos necesarios antes de hacer un request (como el ws_path, base_url, etc)
 
 	public function post($action, $data, $data_id = null) {
 		return $this->send_request($this->forge_request($action, 'POST', $data, $data_id));
@@ -46,7 +46,7 @@ class WS {
 		 * 		'url'		=> $url,
 		 * 		'method'	=> 'POST',
 		 * 		'data'		=> $obj,
-		 * 		'data_id'	=> $obj->id (Opcional. Si estÃ¡, le pega a /$url/ID )
+		 * 		'data_id'	=> $obj->id (Opcional. Si está, le pega a /$url/ID )
 		 * )
 		 */
 		$result = null;

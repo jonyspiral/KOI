@@ -318,8 +318,8 @@ foreach ($arrayFavoritos as &$favPorTipo) {
       $scope.funciones = funciones;
       $scope.imagesUrl = 'http://www.spiralshoes.com/zapatillas/jpg/';
 
-      $scope.descuento = <?= Funciones::toFloat(Usuario::logueado()->cliente->creditoDescuentoEspecial); ?>;
-      $scope.favoritos = <?= json_encode($arrayFavoritos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+      $scope.descuento = <? echo Funciones::toFloat(Usuario::logueado()->cliente->creditoDescuentoEspecial); ?>;
+      $scope.favoritos = <? echo json_encode($arrayFavoritos); ?>;
 
       var commonCallback = function (err, result) {
         if (err) {

@@ -12,7 +12,7 @@ class ManejadorDeImagenes {
 			$array = array();
 			$rutas = Factory::getInstance()->getArrayFromView('ruta_imagenes');
 			if (count($rutas) == 0) {
-				throw new FactoryExceptionCustomException('No existen rutas de im√°genes cargadas');
+				throw new FactoryExceptionCustomException('No existen rutas de im·genes cargadas');
 			}
 
 			foreach ($rutas as $ruta) {

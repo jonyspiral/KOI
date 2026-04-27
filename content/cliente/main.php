@@ -1,6 +1,4 @@
 <?php
-
-
 $css = array(
     'css/bootstrap.min.css',
     'css/jquery-ui/jquery-ui.css',
@@ -22,7 +20,6 @@ $css = array(
     'css/gallery-modal.css',
     'css/spinner.css'
 );
-
 $js = array(
     'pre' => array(
         'js/jquery-1.9.js',
@@ -59,9 +56,7 @@ $js = array(
         'js/services/catalogo.js'
     )
 );
-  ?>   
-
-
+?>
 
 <!DOCTYPE html>
 <html ng-app='Koi'>
@@ -125,7 +120,7 @@ $js = array(
 
             $('#page-modal').unbind('click').bind('click', hideModal);
           });
-          //Prevengo que apretar BACKSPACE vuelva a la pï¿½gina anterior
+          //Prevengo que apretar BACKSPACE vuelva a la página anterior
           $(document).unbind('keydown').bind('keydown', function (event) {
             var doPrevent = false;
             if (event.keyCode === 8) {
@@ -148,7 +143,7 @@ $js = array(
         <div class="div-loader"><div class="loader">Loading...</div></div>
         <div id="full-bg"></div>
         <div id="page-container" class="page-header-fixed">
-            <a href="#" id="dummy-link">ï¿½</a>
+            <a href="#" id="dummy-link"> </a>
             <?php include('content/cliente/menu.php'); ?>
             <?php include('content/cliente/usermenu.php'); ?>
             <div id='divContentCliente' class="content">

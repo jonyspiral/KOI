@@ -1,5 +1,5 @@
-<?php 
-  /**
+<?php
+    /**
      * Función simple para detectar si es un dispositivo móvil.
      * Retorna true si encuentra alguna palabra clave propia de un user-agent móvil.
      */
@@ -14,24 +14,15 @@
         return false;
     }
 
-
     /**
      * Determinar la carpeta según si el usuario navega en móvil o no.
      */
     if (esDispositivoMovil()) {
         $carpeta = Config::pathBase . 'img/fondos/catalogo_inicio_mobile';
         $rutaRelativa = '../img/fondos/catalogo_inicio_mobile/';
-
-
-    } else {  
-                
-                
-                
+    } else {
         $carpeta = Config::pathBase . 'img/fondos/catalogo_inicio';
-
-
         $rutaRelativa = '../img/fondos/catalogo_inicio/';
-        
     }
 
     /**
@@ -128,11 +119,11 @@
     }
 </style>
 <script>
-    var bgImages = <?= json_encode(($files ? array_values($files) : array()), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    var bgImages = <? echo ($files ? json_encode($files) : '""'); ?>;
 
     $('#full-bg').backgroundRotator({
       images: bgImages,
-      initialImage: (bgImages && bgImages.length ? bgImages[0] : '')
+      initialImage: bgImages[0]
     });
 </script>
 

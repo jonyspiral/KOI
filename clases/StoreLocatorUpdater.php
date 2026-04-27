@@ -44,7 +44,7 @@ class StoreLocatorUpdater {
 			$original->direccionLatitud != $sucursal->direccionLatitud ||
 			$original->direccionLongitud != $sucursal->direccionLongitud
 		) {
-			//En el caso de las comparaciones del cliente (razÃ³n social y nombre de fantasÃ­a), lo que viene en el $original es en realidad el Ãºltimo (ver lo que hago en el guardar de clientes) y lo que viene
+			//En el caso de las comparaciones del cliente (razón social y nombre de fantasía), lo que viene en el $original es en realidad el último (ver lo que hago en el guardar de clientes) y lo que viene
 			// en $sucursal es en realidad lo original. Por eso hago la siguiente linea:
 			$sucursal->cliente = $original->cliente;
 			self::send_model($sucursal, 'update');
@@ -67,21 +67,21 @@ class StoreLocatorUpdater {
 			try {
 				if (!StoreLocatorUpdater_ErrorHandler::isSuccess($response)) {
 					if (StoreLocatorUpdater_ErrorHandler::getErrorCode($response) == StoreLocatorUpdater_ErrorHandler::MODEL_EXISTS_ONCREATE) {
-						throw new FactoryExceptionCustomException('Se intentÃ³ crear la sucursal ' . $model['NOMSUC'] . ' del cliente ' . $model['RZNSOCIAL'] . ' pero ya existÃ­a en el store locator y fue pasado como UPDATE');
+						throw new FactoryExceptionCustomException('Se intentó crear la sucursal ' . $model['NOMSUC'] . ' del cliente ' . $model['RZNSOCIAL'] . ' pero ya existía en el store locator y fue pasado como UPDATE');
 					} elseif (StoreLocatorUpdater_ErrorHandler::getErrorCode($response) == StoreLocatorUpdater_ErrorHandler::MODEL_NOT_EXISTS_ONUPDATE) {
-						throw new FactoryExceptionCustomException('Se intentÃ³ actualizar la sucursal ' . $model['NOMSUC'] . ' del cliente ' . $model['RZNSOCIAL'] . ' pero no existÃ­a en el store locator y fue pasado como CREATE');
+						throw new FactoryExceptionCustomException('Se intentó actualizar la sucursal ' . $model['NOMSUC'] . ' del cliente ' . $model['RZNSOCIAL'] . ' pero no existía en el store locator y fue pasado como CREATE');
 					} elseif (StoreLocatorUpdater_ErrorHandler::getErrorCode($response) == StoreLocatorUpdater_ErrorHandler::MODEL_NOT_EXISTS_ONDELETE) {
-						throw new FactoryExceptionCustomException('Se intentÃ³ eliminar la sucursal ' . $model['NOMSUC'] . ' del cliente ' . $model['RZNSOCIAL'] . ' pero no existÃ­a en el store locator');
+						throw new FactoryExceptionCustomException('Se intentó eliminar la sucursal ' . $model['NOMSUC'] . ' del cliente ' . $model['RZNSOCIAL'] . ' pero no existía en el store locator');
 					}
 				}
 			} catch (FactoryExceptionCustomException $ex) {
-				self::log(self::LOG_TIPO_INFO, 'send_model', 'Info al enviar request', 'OcurriÃ³ un evento al intentar enviar un request: ' . $ex->getMessage());
+				self::log(self::LOG_TIPO_INFO, 'send_model', 'Info al enviar request', 'Ocurrió un evento al intentar enviar un request: ' . $ex->getMessage());
 			}
 		} catch (Exception $ex) {
-			self::log(self::LOG_TIPO_ERROR, 'send_model', 'Error al enviar request', 'OcurriÃ³ un error y el proceso fue finalizado: ' . $ex->getMessage());
+			self::log(self::LOG_TIPO_ERROR, 'send_model', 'Error al enviar request', 'Ocurrió un error y el proceso fue finalizado: ' . $ex->getMessage());
 		}
 
-		self::log(self::LOG_TIPO_SUCCESS, 'send_model', 'Enviar request', 'Se enviÃ³ correctamente la sucursal ' . $model['NOMSUC'] . ' del cliente ' . $model['RZNSOCIAL'] . ' con el mÃ©todo ' . $method, $sucursal);
+		self::log(self::LOG_TIPO_SUCCESS, 'send_model', 'Enviar request', 'Se envió correctamente la sucursal ' . $model['NOMSUC'] . ' del cliente ' . $model['RZNSOCIAL'] . ' con el método ' . $method, $sucursal);
 
 		self::log_results();
 	}
@@ -131,7 +131,7 @@ class StoreLocatorUpdater {
 			$result = file_get_contents($url, false, $context);
 			$result = json_decode($result, true);
 		} catch (Exception $ex) {
-			self::log(self::LOG_TIPO_ERROR, 'send_request', 'Enviando request', 'OcurriÃ³ un error al enviar un request (' . $ex->getMessage() . ')', $request['data']);
+			self::log(self::LOG_TIPO_ERROR, 'send_request', 'Enviando request', 'Ocurrió un error al enviar un request (' . $ex->getMessage() . ')', $request['data']);
 		}
 		return $result;
 	}

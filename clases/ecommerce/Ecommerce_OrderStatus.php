@@ -47,7 +47,7 @@ class Ecommerce_OrderStatus extends Base {
 	);
 
 	public static function forge($idStatus) {
-		//TambiÃ©n se podrÃ­a hacer pidiendo un OrderStatus comÃºn y despuÃ©s casteando
+		//También se podría hacer pidiendo un OrderStatus común y después casteando
 		$nombreMetodoGetStatus = 'getEcommerce_OrderStatus' . (isset(self::$idNombreMapper[$idStatus]) ? '_' . self::$idNombreMapper[$idStatus] : '');
 		$status = Factory::getInstance()->$nombreMetodoGetStatus($idStatus);
 		return $status;
@@ -62,7 +62,7 @@ class Ecommerce_OrderStatus extends Base {
 	}
 
 	public final function procesar(Ecommerce_Order &$order) {
-		//No puedo preguntar acÃ¡ si tieneProximoStatus ya que a veces necesito procesar uno que no tiene proximoStatus (por dependencias)
+		//No puedo preguntar acá si tieneProximoStatus ya que a veces necesito procesar uno que no tiene proximoStatus (por dependencias)
 		$this->cumplirDependencias($order);
 		$this->procesarEsteStatus($order);
 		$order->registrarStatusProcesado($this);
@@ -96,7 +96,7 @@ class Ecommerce_OrderStatus extends Base {
 	//GETS y SETS
 	protected function getProximoStatus() {
 		if (!isset($this->_proximoStatus)){
-			//Hago esto para que el prÃ³ximo status sea de la clase que corresponde
+			//Hago esto para que el próximo status sea de la clase que corresponde
 			$this->_proximoStatus = self::forge($this->idProximoStatus);
 		}
 		return $this->_proximoStatus;
@@ -107,7 +107,7 @@ class Ecommerce_OrderStatus extends Base {
 	}
 	protected function getStatusAnterior() {
 		if (!isset($this->_statusAnterior)){
-			//Hago esto para que el prÃ³ximo status sea de la clase que corresponde
+			//Hago esto para que el próximo status sea de la clase que corresponde
 			$this->_statusAnterior = self::forge($this->idStatusAnterior);
 		}
 		return $this->_statusAnterior;

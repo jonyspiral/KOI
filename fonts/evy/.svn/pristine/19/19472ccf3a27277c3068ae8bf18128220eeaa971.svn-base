@@ -1,0 +1,33 @@
+.jPopUp {
+	background: #FFFFFF url(images/background.png) repeat-x left bottom;
+	padding-bottom: 55px;
+	font: normal 15px Calibri, sans-serif;
+	line-height: 18px;
+	text-align: left;
+	min-width: 210px;	
+}
+
+.jPopUp-wrapper {
+	padding: 5px 5px 5px 5px;
+}
+
+.jPopUp-buttons {
+	padding: 15px;
+	text-align: right;
+	position: absolute;
+	bottom: 0;
+	right: 0;
+}
+
+.jPopUp-buttons button,
+.jPopUp-buttons input {
+	min-width: 85px;
+	padding: 0 14px 2px;
+	height: 24px;
+	cursor: pointer;
+}
+
+.jPopUp-label {
+	font-weight: bold;
+	font-size: 11px;
+}

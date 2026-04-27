@@ -56,7 +56,7 @@ class RendicionGastos extends TransferenciaBase implements DocumentoContable {
 
 	public function validarCantidadPermitidaEfectivo($cantidad) {
 		if ($cantidad > 1) {
-			throw new FactoryExceptionCustomException('SÃ³lo se puede ingresar un importe de tipo efectivo');
+			throw new FactoryExceptionCustomException('Sólo se puede ingresar un importe de tipo efectivo');
 		}
 		return true;
 	}
@@ -143,7 +143,7 @@ class RendicionGastos extends TransferenciaBase implements DocumentoContable {
 	}
 
 	public function contabilidadNombre() {
-		$nombre = 'RendiciÃ³n de gastos' . ($this->observaciones ? ' (' . $this->observaciones . ')' : '');
+		$nombre = 'Rendición de gastos' . ($this->observaciones ? ' (' . $this->observaciones . ')' : '');
 		return $nombre;
 	}
 

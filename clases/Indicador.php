@@ -17,9 +17,9 @@ class Indicador extends Base {
 	public		$valor1; //Verde1
 	public		$valor2; //Amarillo
 	public		$valor3; //Rojo
-	public		$where;	//Es una clÃ¡usula WHERE para mandarle a la view. Su scope es Usuario::logueado(). Puede ser NULL. (Ej: cod_cli=///contacto->cliente->id///)
-	public		$fields; //Es un campo varchar en el que se ponen los campos que van a generar el indicador (pueden ser mÃ¡s de un nÃºmero) separados por coma (Ej: pares_39, pares_40)
-	public		$query;	//Puede ponerse una query en lugar de una view (no harÃ­a falta poner ni view, ni where, pero sÃ­ fields)
+	public		$where;	//Es una cláusula WHERE para mandarle a la view. Su scope es Usuario::logueado(). Puede ser NULL. (Ej: cod_cli=///contacto->cliente->id///)
+	public		$fields; //Es un campo varchar en el que se ponen los campos que van a generar el indicador (pueden ser más de un número) separados por coma (Ej: pares_39, pares_40)
+	public		$query;	//Puede ponerse una query en lugar de una view (no haría falta poner ni view, ni where, pero sí fields)
 	protected	$_roles;
 	public		$anulado;
 	public		$fechaAlta;
@@ -33,7 +33,7 @@ class Indicador extends Base {
 	public function addRol(Rol $rol) {
 		$ixr = Factory::getInstance()->getIndicadorPorRol();
 		$ixr->id = $rol->id;
-		$this->getRoles(); //En caso de indicador nuevo, esto me va a traer un array vacÃ­o
+		$this->getRoles(); //En caso de indicador nuevo, esto me va a traer un array vacío
 		$this->_roles[] = $ixr;
 	}
 

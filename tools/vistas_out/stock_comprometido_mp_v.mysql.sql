@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW stock_comprometido_mp_vASSELECT TOP 100 Patrones_mp_detalle.cod_material, Patrones_mp_detalle.cod_color_material, SUM(IFNULL(Patrones_mp_detalle.consumo_par, 0) * IFNULL(tareas_incump;;

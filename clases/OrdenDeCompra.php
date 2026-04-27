@@ -87,7 +87,7 @@ class OrdenDeCompra extends Base {
 						}
 					}
 					$ajusteStockMateriaPrima->operador = Factory::getInstance()->getOperador('V00108');
-					$ajusteStockMateriaPrima->motivacion = 'Ajuste negativo por generaciÃ³n de Ã³rden de compra NÂº ' . $this->id . ' (semielaborados)';
+					$ajusteStockMateriaPrima->motivacion = 'Ajuste negativo por generación de órden de compra Nº ' . $this->id . ' (semielaborados)';
 					$ajusteStockMateriaPrima->almacen = $this->almacen;
 
 					$ajusteStockMateriaPrima->guardar();
@@ -102,12 +102,12 @@ class OrdenDeCompra extends Base {
 			if($item->material->usaRango()){
 				for($i = 1; $i < 11; $i++){
 					if($item->cantidades[$i] != $item->cantidadesPendientes[$i]){
-						throw new FactoryExceptionCustomException('No puede borrar una orden de compra que contenga artÃ­culos saciados');
+						throw new FactoryExceptionCustomException('No puede borrar una orden de compra que contenga artículos saciados');
 					}
 				}
 			}else {
 				if($item->cantidad != $item->cantidadPendiente){
-					throw new FactoryExceptionCustomException('No puede borrar una orden de compra que contenga artÃ­culos saciados');
+					throw new FactoryExceptionCustomException('No puede borrar una orden de compra que contenga artículos saciados');
 				}
 			}
 
@@ -141,7 +141,7 @@ class OrdenDeCompra extends Base {
 						}
 					}
 					$ajusteStockMateriaPrima->operador = Factory::getInstance()->getOperador('V00108');
-					$ajusteStockMateriaPrima->motivacion = 'Ajuste positivo por anulado de Ã³rden de compra NÂº ' . $this->id . ' (semielaborados)';
+					$ajusteStockMateriaPrima->motivacion = 'Ajuste positivo por anulado de órden de compra Nº ' . $this->id . ' (semielaborados)';
 					$ajusteStockMateriaPrima->almacen = $this->almacen;
 
 					$ajusteStockMateriaPrima->guardar();

@@ -1,44 +1,18 @@
 <?php
-require_once __DIR__.'/Mapper.php';
-require_once __DIR__.'/Config.php';
-require_once __DIR__ .'/drivers/DbMysql.php';   
 
 class Factory {
-    private static $_factory = null;
-    private $mapper = null;
+	private static $_factory = null;
+	private $mapper = null;
 
-    /* NUEVO: handler DB cuando usamos MySQL */
-    private $db = null;
-
-    public function __construct() {
-        $this->mapper = new Mapper();
-
-        // Inicializa conexión MySQL siempre
-        $this->db = new DbMysql([
-            'host'    => Config::mysql_host,
-            'port'    => Config::mysql_port,
-            'name'    => Config::mysql_db,
-            'user'    => Config::mysql_user,
-            'pass'    => Config::mysql_pass,
-            'charset' => Config::mysql_charset,
-            'timeout' => 5,
-        ]);
-    }
-
-
-    public static function getInstance() {
-        if (!isset(self::$_factory)) {
-            self::$_factory = new Factory();
-        }
-        return self::$_factory;
-    }
-
-    /* NUEVO: expositor de DB (para módulos que quieran usar MySQL directo) */
-    public function db() {
-        return $this->db;
-    }
-	
-
+	public	function __construct() {
+		$this->mapper = new Mapper();
+	}
+	public static function getInstance(){
+		if(!isset(self::$_factory)){
+			self::$_factory = new Factory();
+		}
+		return self::$_factory;
+	}
 	public	function marcarParaBorrar(&$obj) {
 		try {
 			$obj->modo = Modos::delete;
@@ -3890,48 +3864,28 @@ class Factory {
 		}
 	}
 	private function setSeguimientoCliente(SeguimientoCliente $obj) {
-    $existe = false;
-    $mutex = null;
-    try {
-        // crear mutex de forma segura
-        $mutex = new Mutex(Funciones::getType($obj));
-        $mutex->lock();
-
-        try {
-            if (Funciones::tieneId(array($obj->id))) {
-                // si ya viene con id, chequeo existencia
-                $this->getSeguimientoCliente($obj->id);
-                $existe = true;
-            }
-        } catch (Exception $ex) {
-            $existe = false;
-        }
-
-        $this->puedePersistir($existe, $obj->modo);
-
-        // SOLO calcular next id si no vino seteado
-        if ($obj->modo == Modos::insert && !Funciones::tieneId(array($obj->id))) {
-            $obj->id = $this->getNextId($obj); // usa Mapper: SELECT IFNULL(MAX(id),0)+1 ...
-        }
-
-        // por tablas legacy: si anulado es NOT NULL sin default, forzar 'N'
-        if (property_exists($obj, 'anulado') && ($obj->anulado === null || $obj->anulado === '')) {
-            $obj->anulado = 'N';
-        }
-
-        $this->push($obj);
-
-    } catch (Exception $ex) {
-        // no hagas unlock acá; usá finally
-        throw $ex;
-
-    } finally {
-        if ($mutex) {
-            try { $mutex->unlock(); } catch (Exception $e) { /* swallow */ }
-        }
-    }
-}
-
+		$existe = false;
+		try {
+			$mutex = new Mutex(Funciones::getType($obj));
+			$mutex->lock();
+			try {
+				if (Funciones::tieneId(array($obj->id))) {
+					$this->getSeguimientoCliente($obj->id);
+					$existe = true;
+				}
+			} catch (Exception $ex) {
+				$existe = false;
+			}
+			$this->puedePersistir($existe, $obj->modo);
+			if ($obj->modo == Modos::insert)
+				$obj->id = $this->getNextId($obj);
+			$this->push($obj);
+			$mutex->unlock();
+		} catch (Exception $ex) {
+			$mutex->unlock();
+			throw $ex;
+		}
+	}
 	public	function getGastito($id = -1) {
 		try {
 			$gastito = new Gastito();
@@ -8225,4 +8179,4 @@ class Factory {
 	}
 }
 
-
+?>

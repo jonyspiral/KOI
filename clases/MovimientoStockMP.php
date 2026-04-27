@@ -14,8 +14,8 @@ class MovimientoStockMP extends Base {
 	public		$id;
 	public		$tipoMovimiento; //Es 'INI', 'POS' o 'NEG'
 	public		$tipoOperacion; //Es alguno de los valores del enum TiposOperacionStock
-	public		$keyObjeto;	//Es la PK serializada del objeto en cuestiÃ³n. Puede ser NULL. (Ej: id=15&tipo=M)
-	public		$observaciones; //AcÃ¡ va el dato del nÃºmero de tarea o documento. Es sÃ³lo para tener una referencia en el reporte
+	public		$keyObjeto;	//Es la PK serializada del objeto en cuestión. Puede ser NULL. (Ej: id=15&tipo=M)
+	public		$observaciones; //Acá va el dato del número de tarea o documento. Es sólo para tener una referencia en el reporte
 	public		$idAlmacen;
 	protected	$_almacen;
 	public		$idMaterial;

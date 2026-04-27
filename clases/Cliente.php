@@ -69,8 +69,8 @@ class Cliente extends Base {
 	public		$marcasQueComercializa;
 	public		$observaciones;
 	public		$observacionesCobranza;
-	public		$observacionesGestionCobranza;	//Para el reporte de gestiÃ³n cobranzas
-	public		$observacionesVendedor;			//Para el reporte de gestiÃ³n cobranzas
+	public		$observacionesGestionCobranza;	//Para el reporte de gestión cobranzas
+	public		$observacionesVendedor;			//Para el reporte de gestión cobranzas
 	public		$razonSocial;
 	public		$referenciasBancarias;
 	public		$referenciasComerciales;
@@ -122,19 +122,19 @@ class Cliente extends Base {
 
 	public function comprobarHabilitadoDespachar() {
 		if (Funciones::toInt($this->calificacion) > 2) {
-			throw new FactoryExceptionCustomException('El cliente ' . $this->getIdNombre() . ' no cumple los requisitos de calificaciÃ³n para despachar');
+			throw new FactoryExceptionCustomException('El cliente ' . $this->getIdNombre() . ' no cumple los requisitos de calificación para despachar');
 		}
 	}
 
 	public function comprobarHabilitadoRemitir() {
 		if (Funciones::toInt($this->calificacion) > 2) {
-			throw new FactoryExceptionCustomException('El cliente ' . $this->getIdNombre() . ' no cumple los requisitos de calificaciÃ³n para remitir');
+			throw new FactoryExceptionCustomException('El cliente ' . $this->getIdNombre() . ' no cumple los requisitos de calificación para remitir');
 		}
 	}
 
 	public function comprobarHabilitadoFacturar() {
 		if (Funciones::toInt($this->calificacion) > 2) {
-			throw new FactoryExceptionCustomException('El cliente ' . $this->getIdNombre() . ' no cumple los requisitos de calificaciÃ³n para facturar');
+			throw new FactoryExceptionCustomException('El cliente ' . $this->getIdNombre() . ' no cumple los requisitos de calificación para facturar');
 		}
 	}
 
@@ -142,10 +142,9 @@ class Cliente extends Base {
 		return ($this->vendedor->id == $vendedor->id);
 	}
 
-// En clases/Cliente.php
-public function getIdNombre($nameField = 'razonSocial', $idField = 'id') {
-  return parent::getIdNombre($nameField, $idField);
-}
+	public function getIdNombre() {
+		return parent::getIdNombre('razonSocial');
+	}
 
 	public function tieneSucursalEntrega() {
 		return isset($this->idSucursalEntrega);
@@ -212,7 +211,7 @@ public function getIdNombre($nameField = 'razonSocial', $idField = 'id') {
 		if (!isset($this->_direccion)){
 			$dir = $this->direccionCalle . ' ';
 			$dir .= $this->direccionNumero . ' ';
-			$dir .= ($this->direccionPiso ? $this->direccionPiso . 'Âº ' : '');
+			$dir .= ($this->direccionPiso ? $this->direccionPiso . 'º ' : '');
 			$dir .= ($this->direccionDepartamento ? $this->direccionDepartamento . ' - ' : '- ');
 			$dir .= $this->direccionLocalidad->nombre . ', ';
 			$dir .= $this->direccionProvincia->nombre . ', ';

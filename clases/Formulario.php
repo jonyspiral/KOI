@@ -42,7 +42,7 @@ class Formulario extends Base {
 	public function abrir(){
 		$this->crearPdf();
 		$this->pdf->open(false);
-		//$this->pdf->deleteFiles();//Lo dejo? Lo saco? Lo guardo en otro lado el PDF? SÃ­, guardarlo en otro lado serÃ­a lo mejor!
+		//$this->pdf->deleteFiles();//Lo dejo? Lo saco? Lo guardo en otro lado el PDF? Sí, guardarlo en otro lado sería lo mejor!
 	}
 
 	protected function crearPdf(){
@@ -57,7 +57,7 @@ class Formulario extends Base {
 					$letra = Funciones::toUpper($this->letra);
 					break;
 				default:
-					throw new FactoryExceptionCustomException('La letra del documento es invÃ¡lida');
+					throw new FactoryExceptionCustomException('La letra del documento es inválida');
 			}
 			switch ($this->empresa) {
 				case 1:
@@ -65,9 +65,9 @@ class Formulario extends Base {
 					$empresa = $this->empresa;
 					break;
 				default:
-					throw new FactoryExceptionCustomException('El nÃºmero de empresa es invÃ¡lido');
+					throw new FactoryExceptionCustomException('El número de empresa es inválido');
 			}
-			//AcÃ¡ hay que definir quÃ© modelo de Factura se usa segÃºn si es empresa 1 o 2, o si eso se lo delego al documento!!!
+			//Acá hay que definir qué modelo de Factura se usa según si es empresa 1 o 2, o si eso se lo delego al documento!!!
 			$this->pdf->html = Html2Pdf::getHtmlFromPhp(Config::pathBase . 'includes/modelosFormularios/modelo' . $this->nombreDocumento . $letra . '_' . $empresa . (!$this->cae && $empresa == 1 ? '_I' : '') . (Config::encinitas() ? '_ncnts' : '') . '.php');
 			$this->pdf->llevaHeader = false;
 			$this->pdf->llevaFooter = false;
@@ -80,7 +80,7 @@ class Formulario extends Base {
 	}
 
 	protected function enviarDatos() {
-		$_POST['form_empresa'] = $this->empresa; //No sale impreso, pero es para saber quÃ© documento se imprime
+		$_POST['form_empresa'] = $this->empresa; //No sale impreso, pero es para saber qué documento se imprime
 		$_POST['form_letra'] = $this->letra;
 		$_POST['form_numero'] = $this->numero;
 		$_POST['form_fecha'] = $this->fecha;

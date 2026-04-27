@@ -1,2 +1,0 @@
-CREATE OR REPLACE VIEW tmp_auto AS 
-CREATE OR REPLACE VIEW facturas_detalleASSELECT TOP 100 Despachos_detalle.nro_despacho_nro AS nro_despacho, Despachos_detalle.nro_item_despacho AS nro_item, Despachos_detalle.cod_empresa_despacho AS empresa, Despachos_detalle.cod_empresa_despacho = remitos_c.empresaWHERE (Despachos_detalle.anulado = 'N');;

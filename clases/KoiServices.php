@@ -1,10 +1,10 @@
 <?php
 
 abstract class KoiServices {
-	const SOCKET_IP = 'localhost';		//IP en la que estÃ¡ escuchando el socket de KoiServices
-	const SOCKET_PORT = '8000';			//Puerto en el que estÃ¡ escuchando el socket de KoiServices
+	const SOCKET_IP = 'localhost';		//IP en la que está escuchando el socket de KoiServices
+	const SOCKET_PORT = '8000';			//Puerto en el que está escuchando el socket de KoiServices
 	const EOF_MARK = '<EOF>';			//Marca que delimita el final de stream. En KoiServices se espera a la llegada de esta marca
-	const READ_BUFFER_SIZE = 512;		//TamaÃ±o del buffer de lectura (se lee cada X bytes)
+	const READ_BUFFER_SIZE = 512;		//Tamaño del buffer de lectura (se lee cada X bytes)
 
 	protected	$service;				//Es un string con el nombre del servicio a llamar de KoiServices. Por ej: 'HTML2PDF'
 	private		$socket = false;
@@ -22,7 +22,7 @@ abstract class KoiServices {
 	private function createSocket() {
 		$this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 		if ($this->socket === false) {
-			throw new Exception($this->getExceptionMsg('OcurriÃ³ un error al intentar crear el socket'));
+			throw new Exception($this->getExceptionMsg('Ocurrió un error al intentar crear el socket'));
 		}
 		return $this->socket;
 	}
@@ -30,7 +30,7 @@ abstract class KoiServices {
 	private function connectSocket() {
 		$result = socket_connect($this->socket, self::SOCKET_IP, self::SOCKET_PORT);
 		if ($result === false) {
-			throw new Exception($this->getExceptionMsg('OcurriÃ³ un error al intentar conectar el socket'));
+			throw new Exception($this->getExceptionMsg('Ocurrió un error al intentar conectar el socket'));
 		}
 		return $this->connected = true;
 	}
@@ -63,7 +63,7 @@ abstract class KoiServices {
 	protected function getExceptionMsg($msg = '') {
 		$errorcode = socket_last_error();
 		$errormsg = socket_strerror($errorcode);
-		return (!$msg ? 'OcurriÃ³ un error en la conexiÃ³n con KoiServices: ' : $msg) . '[' . $errorcode . '] ' . $errormsg;
+		return (!$msg ? 'Ocurrió un error en la conexión con KoiServices: ' : $msg) . '[' . $errorcode . '] ' . $errormsg;
 	}
 
 	protected function execute($args = '') {
@@ -72,7 +72,7 @@ abstract class KoiServices {
 		$this->sendRequest($args);
 		$response = $this->getResponse();
 		if ($response === false) {
-			$error = $this->getExceptionMsg('OcurriÃ³ un error al recibir una respuesta de KoiServices');
+			$error = $this->getExceptionMsg('Ocurrió un error al recibir una respuesta de KoiServices');
 		}
 		$this->closeSocket();
 		if ($error) {

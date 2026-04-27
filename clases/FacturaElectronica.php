@@ -4,37 +4,37 @@ class FacturaElectronica {
 	//Nombre original del CRT: KoiFacturaElectronica__5f90f4cb0e48f6fa.crt
 	public	$errorCae;
 
-	private	$tipo_cbte;			//Es un nÃºmero segÃºn el tipo de documento (ver mÃ©todo getTipoComprobante)
+	private	$tipo_cbte;			//Es un número según el tipo de documento (ver método getTipoComprobante)
 	private	$punto_vta;			//Para FE es el 2 ('0002')
 	private	$concepto;			//Si es una factura de productos va 1, servicios 2, ambas 3
-	private	$tipo_doc;			//El tipo de documento del cliente, si es DNI, CUIT, CUIL, etc. Para la mayorÃ­a serÃ¡ CUIT (factura 'A')
-	private	$nro_doc;			//Es el nÃºmero de documento del cliente (DNI, CUIT, CUIL, etc)
-								//Para facturas B a consumidor final (menores a $1000) el campo nro_doc deberÃ¡ ser cero (0) y el campo tipo_doc 99
-	private	$cbt_desde;			//Es el nÃºmero inicial de comprobante que se va a enviar. Se puede hacer 'ANTERIOR + 1'
-	private	$cbt_hasta;			//Es el nÃºmero final de comprobante que se va a enviar. Si no es por lote, es el mismo que el inicial
+	private	$tipo_doc;			//El tipo de documento del cliente, si es DNI, CUIT, CUIL, etc. Para la mayoría será CUIT (factura 'A')
+	private	$nro_doc;			//Es el número de documento del cliente (DNI, CUIT, CUIL, etc)
+								//Para facturas B a consumidor final (menores a $1000) el campo nro_doc deberá ser cero (0) y el campo tipo_doc 99
+	private	$cbt_desde;			//Es el número inicial de comprobante que se va a enviar. Se puede hacer 'ANTERIOR + 1'
+	private	$cbt_hasta;			//Es el número final de comprobante que se va a enviar. Si no es por lote, es el mismo que el inicial
 	private $_lastCBT;
-	private	$imp_neto;			//Importe neto que luego serÃ¡ GRAVADO por el IVA
+	private	$imp_neto;			//Importe neto que luego será GRAVADO por el IVA
 	private	$imp_iva;			//Importe TOTAL del IVA
 	private	$imp_trib;			//Importe total de otros impuestos
 	private	$imp_op_ex;			//Importe de operaciones exentas (?)
 	private	$imp_total;			//Importe total de la factura
 	private	$imp_tot_conc;		//Importe total de conceptos NO GRAVADOS por el IVA
 	private	$moneda_id;			//Id de la moneda de la factura. Se usa getIdMoneda('PES')
-	private	$moneda_ctz;		//Es la cotizaciÃ³n de la moneda. Uso siempre 1
-	private	$fecha_cbte;		//Fecha del comprobante en formato 'Ymd' (no puede ser mayor o menor a 5 dÃ­as)
-	private	$fecha_venc_pago;	//Fecha lÃ­mite de vencimiento para el pago de la factura (SÃ³lo si concepto es 2 o 3)
-	private	$fecha_serv_desde;	//Fechas del perÃ­odo de servicios prestado (sÃ³lo si presta_serv = 1)
-	private	$fecha_serv_hasta;	//Fechas del perÃ­odo de servicios prestado (sÃ³lo si presta_serv = 1)
+	private	$moneda_ctz;		//Es la cotización de la moneda. Uso siempre 1
+	private	$fecha_cbte;		//Fecha del comprobante en formato 'Ymd' (no puede ser mayor o menor a 5 días)
+	private	$fecha_venc_pago;	//Fecha límite de vencimiento para el pago de la factura (Sólo si concepto es 2 o 3)
+	private	$fecha_serv_desde;	//Fechas del período de servicios prestado (sólo si presta_serv = 1)
+	private	$fecha_serv_hasta;	//Fechas del período de servicios prestado (sólo si presta_serv = 1)
 
-	private	$WSAA;				//Objeto interface Web Service AutenticaciÃ³n y AutorizaciÃ³n
-	private	$WSFE;				//Objeto interface Web Service de Factura ElectrÃ³nica
+	private	$WSAA;				//Objeto interface Web Service Autenticación y Autorización
+	private	$WSFE;				//Objeto interface Web Service de Factura Electrónica
 	private $pathCertificado;	//Certificado: certificado es el firmado por la AFIP
 	private $pathKey;			//ClavePrivada: la clave privada usada para crear el certificado
 	private $pathTa;			//Ticket de acceso: es el XML que guarda la info de acceso para ser reutilizada
 	private	$token;				//Token de acceso para el WSN (reutilizable)
 	private	$sign;				//Sign de acceso para el WSN (reutilizable)
-	private $urlAutenticacion;	//DirecciÃ³n del WebService de autenticaciÃ³n
-	private $urlConexion;		//DirecciÃ³n del WebService para conectar
+	private $urlAutenticacion;	//Dirección del WebService de autenticación
+	private $urlConexion;		//Dirección del WebService para conectar
 	private	$errorBase;
 	private $conectado;
 	private $llenado;
@@ -67,7 +67,7 @@ class FacturaElectronica {
 			$this->urlAutenticacion = 'https://wsaa.afip.gov.ar/ws/services/LoginCms';
 			$this->urlConexion = 'https://servicios1.afip.gov.ar/wsfev1/service.asmx?WSDL';
 		}
-		$this->errorBase = 'OcurriÃ³ un error al conectar con el Web Service de FacturaciÃ³n';
+		$this->errorBase = 'Ocurrió un error al conectar con el Web Service de Facturación';
 		$this->conectado = false;
 		$this->llenado = false;
 		$this->checkeado = false;
@@ -108,7 +108,7 @@ class FacturaElectronica {
 	public function getCae() {
 		if (!isset($this->cae)) {
 			if (!($this->conectado && $this->llenado && $this->checkeado && $this->creado && $this->ivaAgregado))
-				throw new FactoryExceptionCustomException('Debe llenar la factura electrÃ³nica antes de pedir el CAE (->llenar($documento))');
+				throw new FactoryExceptionCustomException('Debe llenar la factura electrónica antes de pedir el CAE (->llenar($documento))');
 			$this->obtenerCae();
 			$this->errorCae = $this->verificarCae();
 		}
@@ -116,21 +116,21 @@ class FacturaElectronica {
 	}
 
 	public function getVencimientoAutorizacion() {
-		//Devuelve la fecha de vencimiento de la autorizaciÃ³n
+		//Devuelve la fecha de vencimiento de la autorización
 		if (!isset($this->cae))
-			throw new FactoryExceptionCustomException('Debe obtenerse el CAE antes de pedir el vencimiento de la autorizaciÃ³n');
+			throw new FactoryExceptionCustomException('Debe obtenerse el CAE antes de pedir el vencimiento de la autorización');
 		/** @noinspection PhpUndefinedFieldInspection */
 		return $this->WSFE->Vencimiento;
 	}
 
 	public function getNumeroComprobante() {
 		if (!isset($this->cae))
-			throw new FactoryExceptionCustomException('Debe obtenerse el CAE antes de pedir el nÃºmero de comprobante');
+			throw new FactoryExceptionCustomException('Debe obtenerse el CAE antes de pedir el número de comprobante');
 		return $this->cbt_desde;
 	}
 
 	/*
-	 * MÃ¡todos privados para el funcionamiento
+	 * Mátodos privados para el funcionamiento
 	 */
 
 	private function establecerConexion() {
@@ -145,7 +145,7 @@ class FacturaElectronica {
 	private function autenticar() {
 		if (!$this->conectado) {
 			if (file_exists($this->pathTa) && $ta = file_get_contents($this->pathTa)) {
-				$ok = $this->WSAA->AnalizarXml($ta); //Esto parsea el $ta y lo mete en el WSAA. Si devuelve TRUE es porque estÃ¡ OK
+				$ok = $this->WSAA->AnalizarXml($ta); //Esto parsea el $ta y lo mete en el WSAA. Si devuelve TRUE es porque está OK
 				if (!$this->WSAA->Expirado()) {
 					$this->token = $this->WSAA->ObtenerTagXml("token");
 					$this->sign = $this->WSAA->ObtenerTagXml("sign");
@@ -164,7 +164,7 @@ class FacturaElectronica {
 					$err = $this->WSAA->Excepcion;
 					//$req = $this->WSAA->XmlRequest;
 					//$res = $this->WSAA->XmlResponse;
-                    throw new Exception('Error en la autenticaciÃ³n WSAA: ' . $err . ' - ' . $ex->getMessage());
+                    throw new Exception('Error en la autenticación WSAA: ' . $err . ' - ' . $ex->getMessage());
 				}
 				if ($ta) {
 					file_put_contents($this->pathTa, $ta);
@@ -180,7 +180,7 @@ class FacturaElectronica {
 
 	private function conectar() {
 		if (!$this->conectado) {
-			//Seteo el token y sign de autorizaciÃ³n (pasos previos) Y CUIT del emisor
+			//Seteo el token y sign de autorización (pasos previos) Y CUIT del emisor
 			/** @noinspection PhpUndefinedFieldInspection */
 			$this->WSFE->Token = $this->token;
 			/** @noinspection PhpUndefinedFieldInspection */
@@ -188,7 +188,7 @@ class FacturaElectronica {
 			/** @noinspection PhpUndefinedFieldInspection */
 			$this->WSFE->Cuit = Config::encinitas() ? Config::CUIT_NCNTS : Config::CUIT_SPIRAL;
 
-			//Conecto con el Web Service de FacturaciÃ³n
+			//Conecto con el Web Service de Facturación
 			if (!$this->WSFE->Conectar('', $this->urlConexion))
 				throw new FactoryExceptionCustomException($this->errorBase . ': WSFE->Conectar');
 		}
@@ -197,7 +197,7 @@ class FacturaElectronica {
 	private function comprobarEstado() {
 		if (!$this->conectado) {
 			//Llamo a un servicio nulo, para obtener el estado del servidor (opcional)
-			//Si alguno estÃ¡ caido, devuelvo el error
+			//Si alguno está caido, devuelvo el error
 			$this->WSFE->Dummy();
 			/** @noinspection PhpUndefinedFieldInspection */
 			if ($this->WSFE->AppServerStatus != 'OK')
@@ -214,9 +214,9 @@ class FacturaElectronica {
 	private function llenarDatos(Documento $documento) {
 		$this->punto_vta = $documento->puntoDeVenta;
 		$this->tipo_cbte = $this->getTipoComprobante($documento->tipoDocumento, $documento->letra);
-		if (false) { //ACÃ VA UNA CONDICIÃ“N PARA SABER CUÃNDO ES FACTURA DE SERVICIO Y CUÃNDO NO!
+		if (false) { //ACÁ VA UNA CONDICIÓN PARA SABER CUÁNDO ES FACTURA DE SERVICIO Y CUÁNDO NO!
 			$this->concepto = 2;
-			//Fechas del perÃ³odo del servicio facturado (solo si presta_serv = 1)
+			//Fechas del peróodo del servicio facturado (solo si presta_serv = 1)
 			$this->fecha_serv_desde = Funciones::hoy('Ymd');
 			$this->fecha_serv_hasta = Funciones::hoy('Ymd');
 			$this->fecha_venc_pago = Funciones::hoy('Ymd');
@@ -235,7 +235,7 @@ class FacturaElectronica {
 		$this->imp_trib = 0;
 		$this->moneda_id = $this->getIdMoneda('PES');
 		$this->moneda_ctz = 1;
-		$this->imp_op_ex = 0; //No sÃ© quÃ© diferencia tiene con NO GRAVADOS
+		$this->imp_op_ex = 0; //No sé qué diferencia tiene con NO GRAVADOS
 		$this->imp_tot_conc = Funciones::toFloat($documento->importeNoGravado - (($documento->importeNoGravado) * $documento->descuentoComercialPorc / 100), 2);
 		$this->imp_total = Funciones::toFloat($documento->importeTotal, 2);
 
@@ -255,7 +255,7 @@ class FacturaElectronica {
 		);
 		foreach ($array as $attr) {
 			if (!isset($this->$attr))
-				throw new FactoryException('No estÃ¡n completos todos los datos para obtener el CAE (' . $attr . ')');
+				throw new FactoryException('No están completos todos los datos para obtener el CAE (' . $attr . ')');
 		}
 
 		$this->checkeado = true;
@@ -287,15 +287,15 @@ class FacturaElectronica {
 				$ivas[] = array('id' => $id, 'base_imp' => $base_imp, 'importe' => $importe, 'porcentaje' => $documento->$porcentaje);
 			}
 		}
-		//Me fijo si hay algÃºn importe de IVA
+		//Me fijo si hay algún importe de IVA
 		if (count($ivas) > 0) {
-			//CHequeo que los decimales estÃ¡n bien (la sumatoria de las base_imp debe ser igual al importe_neto)
+			//CHequeo que los decimales están bien (la sumatoria de las base_imp debe ser igual al importe_neto)
 			$diferencia  = $this->imp_neto - $sumBaseImp;
 			if ($diferencia != 0) {
 				$ivas[0]['base_imp'] += $diferencia;
 				$ivas[0]['importe'] = Funciones::toFloat($ivas[0]['base_imp'] * ($ivas[0]['porcentaje'] / 100), 2);
 			}
-			//Agrego por separado las alÃ­cuotas de IVA
+			//Agrego por separado las alícuotas de IVA
 			foreach ($ivas as $iva) {
 				$this->WSFE->AgregarIva($iva['id'], $iva['base_imp'], $iva['importe']);
 			}
@@ -313,18 +313,18 @@ class FacturaElectronica {
 		/** @noinspection PhpUndefinedFieldInspection */
 		$msg = ($this->WSFE->ErrMsg == '' ? $this->WSFE->Obs : $this->WSFE->ErrMsg);
 		if ($this->cae == '') {
-			throw new FactoryExceptionCustomException('No se asignÃ³ CAE (rechazado). Motivos: ' . $msg);
+			throw new FactoryExceptionCustomException('No se asignó CAE (rechazado). Motivos: ' . $msg);
 		} elseif (($this->cae != '') && ($msg != '')) {
-			return 'Se asignÃ³ CAE pero con advertencias. Motivos: ' . $msg;
+			return 'Se asignó CAE pero con advertencias. Motivos: ' . $msg;
 		}
 		return false;
 	}
 
 	private function getLastCBT() {
-		//Recupero Ãºltimo nÃºmero de comprobante para un tipo de comprobante y un punto de venta (opcional)
+		//Recupero último número de comprobante para un tipo de comprobante y un punto de venta (opcional)
 		if (!isset($this->_lastCBT)) {
 			if (!isset($this->punto_vta) || !isset($this->tipo_cbte))
-				throw new FactoryExceptionCustomException('Para obtener el Ãºltimo nÃºmero de comprobante debe setear el punto de venta y el tipo de comprobante (getLastCBT)');
+				throw new FactoryExceptionCustomException('Para obtener el último número de comprobante debe setear el punto de venta y el tipo de comprobante (getLastCBT)');
 			$this->_lastCBT = $this->WSFE->CompUltimoAutorizado($this->tipo_cbte, $this->punto_vta);
 		}
 		return $this->_lastCBT;
@@ -340,21 +340,21 @@ class FacturaElectronica {
 	private function getTipoComprobante($tipoDocum, $letra) {
 		/* tipo_cbte
 			1 Facturas A
-			2 Notas de DÃ©bito A
-			3 Notas de CrÃ©dito A
+			2 Notas de Débito A
+			3 Notas de Crédito A
 			4 Recibos A
 			5 Notas de Venta al contado A
 			6 Facturas B
-			7 Notas de DÃ©bito B
-			8 Notas de CrÃ©dito B
+			7 Notas de Débito B
+			8 Notas de Crédito B
 			9 Recibos B
 			10 Notas de Venta al contado B
-			39 Otros comprobantes A que cumplan con la R.G. NÂº 3419
-			40 Otros comprobantes B que cumplan con la R.G. NÂº 3419
-			60 Cuenta de Venta y LÃ­quido producto A
-			61 Cuenta de Venta y LÃ­quido producto B
-			63 LiquidaciÃ³n A
-			64 LiquidaciÃ³n B
+			39 Otros comprobantes A que cumplan con la R.G. Nº 3419
+			40 Otros comprobantes B que cumplan con la R.G. Nº 3419
+			60 Cuenta de Venta y Líquido producto A
+			61 Cuenta de Venta y Líquido producto B
+			63 Liquidación A
+			64 Liquidación B
 		*/
 		switch ($tipoDocum) {
 			case 'FAC':
@@ -389,7 +389,7 @@ class FacturaElectronica {
 			87 - CDI
 			89 - LE
 			90 - LC
-			92 - en trÃ¡mite
+			92 - en trámite
 			94 - Pasaporte
 			99 - Consumidor final (nro_doc = 0)
 		*/
@@ -422,13 +422,13 @@ class FacturaElectronica {
 	public function getIdMoneda($id) {
 		/*
 			PES	Pesos Argentinos
-			DOL	DÃ³lar Estadounidense
-			002	DÃ³lar Libre EEUU
+			DOL	Dólar Estadounidense
+			002	Dólar Libre EEUU
 			010	Pesos Mejicanos
 			011	Pesos Uruguayos
 			021	Libra Esterlina
-			023	BolÃ­var Venezolano
-			029	GuaranÃ­
+			023	Bolívar Venezolano
+			029	Guaraní
 			031	Peso Boliviano
 			032	Peso Colombiano
 			033	Peso Chileno

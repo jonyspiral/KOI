@@ -1,8 +1,5 @@
 <?php
 
-require_once __DIR__ . '/Base.php';
-require_once __DIR__ . '/BasePhp.php';
-
 /**
  * @property ClienteTodos		$cliente
  * @property Articulo			$articulo
@@ -32,7 +29,7 @@ class FavoritoCliente extends Base {
         'idCliente',
         'idArticulo',
         'idColorPorArticulo' => array('db' => 'cod_color_articulo'),
-        // 'cant_N', // Esto lo manejo extendiendo algunos mï¿½todos (fill, getQueryX)
+        // 'cant_N', // Esto lo manejo extendiendo algunos m�todos (fill, getQueryX)
         'curvas',
         'idUsuario',
         'fechaAlta',
@@ -45,43 +42,21 @@ class FavoritoCliente extends Base {
     }
 
     protected function fill($dr) {
-    parent::fill($dr);
-
-    // Aseguro estructura de cantidades
-    if (!isset($this->cantidades) || !is_array($this->cantidades)) {
-        $this->cantidades = array();
-    }
-    for ($i = 1; $i <= 10; $i++) {
-        // Si la columna no estÃ¡ en $dr, dejo NULL (se cargarÃ¡ mÃ¡s adelante)
-        $this->cantidades[$i] = isset($dr['cant_' . $i]) ? $dr['cant_' . $i] : null;
-    }
-
-    // Curvas puede venir como string JSON, array o null
-    if (is_string($this->curvas)) {
+        parent::fill($dr);
+        for ($i = 1; $i <= 10; $i++) {
+            $this->cantidades[$i] = $dr['cant_' . $i];
+        }
         $this->curvas = json_decode($this->curvas, true);
-    } elseif (!is_array($this->curvas)) {
-        $this->curvas = null;
+        return $this;
     }
 
-    return $this;
-}
-
- private function cantidadesToDB($values) {
-    // Aseguro estructura de cantidades antes de mapear a columnas
-    if (!isset($this->cantidades) || !is_array($this->cantidades)) {
-        $this->cantidades = array();
+    private function cantidadesToDB($values) {
+        for ($i = 1; $i <= 10; $i++) {
+            $values['cant_' . $i] = Datos::objectToDB($this->cantidades[$i]);
+        }
+        $values['curvas'] = is_string($values['curvas']) ? $values['curvas'] : json_encode($values['curvas']);
+        return $values;
     }
-    for ($i = 1; $i <= 10; $i++) {
-        // si no estÃ¡ definida, va NULL en el INSERT/UPDATE (no 0, salvo que lo prefieras)
-        $val = isset($this->cantidades[$i]) && $this->cantidades[$i] !== '' ? $this->cantidades[$i] : null;
-        $values['cant_' . $i] = Datos::objectToDB($val);
-    }
-
-    // Curvas a JSON si hace falta (DB espera string)
-    $values['curvas'] = is_string($values['curvas']) ? $values['curvas'] : json_encode($values['curvas']);
-
-    return $values;
-}
 
     protected function getQueryInsertValues() {
         $values = parent::getQueryInsertValues();

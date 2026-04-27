@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW consumos_comprometidos_vASSELECT tareas_incumplidas_v.nro_plan, tareas_incumplidas_v.nro_orden_fabricacion, tareas_incumplidas_v.nro_tarea, tareas_incumplidas_v.cantidad, patrones_v.cod_a;;

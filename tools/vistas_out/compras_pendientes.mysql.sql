@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW compras_pendientesASSELECT TOP 100 Ordenes_compra_detalle.cod_material, Ordenes_compra_detalle.cod_color, SUM(Ordenes_compra_detalle.cantidad_pendiente) AS pendienteFROM Ord;;

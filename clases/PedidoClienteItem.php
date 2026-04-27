@@ -30,7 +30,7 @@ class PedidoClienteItem extends Base {
         'idArticulo',
         'idColorPorArticulo' => array('db' => 'cod_color_articulo'),
         'precioUnitario',
-        // 'cant_N', // Esto lo manejo extendiendo algunos mÃ©todos (fill, getQueryX)
+        // 'cant_N', // Esto lo manejo extendiendo algunos métodos (fill, getQueryX)
         'idUsuario',
         'fechaAlta'
     );

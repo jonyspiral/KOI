@@ -80,7 +80,7 @@
             $('#inputBuscar').blur(function(){funciones.delay('buscar();');});
               <?php if (!empty($onDocumentReady)) echo $onDocumentReady; ?>
           });
-          //Prevengo que apretar BACKSPACE vuelva a la pï¿½gina anterior
+          //Prevengo que apretar BACKSPACE vuelva a la página anterior
           $(document).unbind('keydown').bind('keydown', function (event) {
             var doPrevent = false;
             if (event.keyCode === 8) {
@@ -117,7 +117,7 @@
             }
             <?php } ?>
         </style>
-        <?php 
+        <?php
         /* CON ESTO, PUEDO HACER UNA CARPETA HEAD Y METER ALGO EN EL HEADER DE CADA PROGRAMA. EJ: head/abm/clientes/index.php
         if (!findRealPath('head/' . $pagename . '.php')) {
             require_once('head/index.php');

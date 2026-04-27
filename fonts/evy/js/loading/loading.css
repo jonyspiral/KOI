@@ -1,0 +1,21 @@
+/* Loading Popup CSS */
+
+.loadingPopUp {
+	display: none;
+	position: absolute;
+	z-index: 10003;
+	padding: 10px;
+	background-color: black;
+	width: 32px;
+	height: 32px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+}
+.loadingPopUpBg {
+	display: none;
+	opacity: 1;
+	position: absolute;
+	z-index: 10002;
+	background: -webkit-radial-gradient(rgba(127, 127, 127, 0.5), rgba(127, 127, 127, 0.5) 35%, rgba(0, 0, 0, 0.7))
+}

@@ -98,7 +98,7 @@ class PedidoCliente extends Base {
 	}
 
 	public function addItem(PedidoClienteItem $item) {
-		$this->getDetalle(); //En caso de pedido nuevo, esto me va a traer un array vacÃ­o
+		$this->getDetalle(); //En caso de pedido nuevo, esto me va a traer un array vacío
 		$this->_detalle[] = $item;
 	}
 

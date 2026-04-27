@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Este webservice no estÃ¡ en KOI sino en spiralshoes.com
+ * Este webservice no está en KOI sino en spiralshoes.com
  * Sirve para actualizar los stores/sucursales cuando hay cambios en Koi
  */
 
@@ -33,7 +33,7 @@ function response($code = 0, $message = 'Success') {
 $input = json_decode(file_get_contents('php://input'), true);
 $request = $input['request'];
 if (!isset($request['sessionkey']) || !isset($request['model'])) {
-	logg('ERROR', 'Bad request', '(400) El request no tiene un formato vÃ¡lido');
+	logg('ERROR', 'Bad request', '(400) El request no tiene un formato válido');
 	throw new Exception('La clave de acceso es incorrecta', 400);
 }
 if ($request['sessionkey'] !== 'ACAUNACLAVE') {

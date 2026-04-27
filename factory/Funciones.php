@@ -11,20 +11,20 @@ class Funciones {
 		return str_replace($buscarEsto, $reemplazarPorEsto, $enEsteString);
 	}
 	static function sacarTildes($str) {
-		$str = str_replace('√Å', 'A', $str);
-		$str = str_replace('√â', 'E', $str);
-		$str = str_replace('√ç', 'I', $str);
-		$str = str_replace('√ì', 'O', $str);
-		$str = str_replace('√ö', 'U', $str);
-		$str = str_replace('√ë', 'N', $str);
-		$str = str_replace('√°', 'a', $str);
-		$str = str_replace('√©', 'e', $str);
-		$str = str_replace('√≠', 'i', $str);
-		$str = str_replace('√≥', 'o', $str);
-		$str = str_replace('√∫', 'u', $str);
-		$str = str_replace('√±', 'n', $str);
-		$str = str_replace('√º', 'u', $str);
-		$str = str_replace('√ú', 'U', $str);
+		$str = str_replace('¡', 'A', $str);
+		$str = str_replace('…', 'E', $str);
+		$str = str_replace('Õ', 'I', $str);
+		$str = str_replace('”', 'O', $str);
+		$str = str_replace('⁄', 'U', $str);
+		$str = str_replace('—', 'N', $str);
+		$str = str_replace('·', 'a', $str);
+		$str = str_replace('È', 'e', $str);
+		$str = str_replace('Ì', 'i', $str);
+		$str = str_replace('Û', 'o', $str);
+		$str = str_replace('˙', 'u', $str);
+		$str = str_replace('Ò', 'n', $str);
+		$str = str_replace('¸', 'u', $str);
+		$str = str_replace('‹', 'U', $str);
 		return $str;
 	}
 	static function limpiarNombreDeArchivo($str) {
@@ -41,7 +41,7 @@ class Funciones {
 		$puntoPosDos = (strlen($numero) > ($puntoPos + 1)) ? strpos($numero, ',', $puntoPos + 1) : false;
 		if ($comaPosDos && $puntoPosDos) {
 			if ($exceptions) {
-				throw new FactoryExceptionCustomException('Formato de n√∫mero no reconocido (tiene m√°s de una coma y un punto)');
+				throw new FactoryExceptionCustomException('Formato de n˙mero no reconocido (tiene m·s de una coma y un punto)');
 			}
 			return '';
 		}
@@ -76,10 +76,10 @@ class Funciones {
 			throw new FactoryExceptionCustomException('Debe ingresar una fecha "hasta"');
 		}
 		if (is_null($desde) && is_null($hasta) && ($maxDias || $minDias)) {
-			throw new FactoryExceptionCustomException('No se puede limitar la cantidad de d√≠as sin una fecha "desde" o "hasta"');
+			throw new FactoryExceptionCustomException('No se puede limitar la cantidad de dÌas sin una fecha "desde" o "hasta"');
 		}
 
-		$error = 'El rango de fechas no puede superar los ' . $maxDias . ' d√≠as';
+		$error = 'El rango de fechas no puede superar los ' . $maxDias . ' dÌas';
 
 		if ($maxDias) {
 			$desdeMasMaxDias = Funciones::sumarTiempo($desde, $maxDias, 'days');
@@ -143,8 +143,8 @@ class Funciones {
 	}
 
 	/**
-	 * Devuelve la cantidad de d√≠as que hay entre la fecha 1 y la fecha 2
-	 * Si el tercer par√°metro es FALSE, devuelve positivo si la primer fecha es mayor
+	 * Devuelve la cantidad de dÌas que hay entre la fecha 1 y la fecha 2
+	 * Si el tercer par·metro es FALSE, devuelve positivo si la primer fecha es mayor
 	 *
 	 * @param      $fecha1
 	 * @param      $fecha2
@@ -201,7 +201,7 @@ class Funciones {
 			$fecha = strtotime(str_replace('/', '-', $fecha));
 		}
 		if (!$fecha) {
-			throw new FactoryExceptionCustomException('La fecha no tiene un formato v√°lido, o es posterior al a√±o 2037');
+			throw new FactoryExceptionCustomException('La fecha no tiene un formato v·lido, o es posterior al aÒo 2037');
 		}
 		return date($formato, $fecha);
 	}
@@ -340,7 +340,7 @@ class Funciones {
 		(!is_null($asignar)) && $_SESSION[$valor] = $asignar;
 		if ((!isset($_SESSION[$valor])) || (($obj = $_SESSION[$valor]) == ''))
 			return null;
-		return Html::utfDecode($obj);
+		return HTML::utfDecode($obj);
 	}
 	static function iIsSet($var, $returnIfNotSet = '') {
 		if (isset($var))
@@ -396,7 +396,7 @@ class Funciones {
 	static function padBoth($obj, $cantidad, $charRelleno = '0') {
 		if (!isset($obj) || is_null($obj))
 			return null;
-		//Si tiene que rellenar m√°s de un lado que del otro, rellena m√°s del right
+		//Si tiene que rellenar m·s de un lado que del otro, rellena m·s del right
 		return str_pad($obj, $cantidad, $charRelleno, STR_PAD_BOTH);
 	}
 	static function toLower($str) {
@@ -416,7 +416,7 @@ class Funciones {
 		$macAddr = false;
 		//Comando externo
 		$ipAddress = self::getIpAddress();
-		$arp = `arp -a $ipAddress`; //LAS COMILLAS VAN AS√ç!!!
+		$arp = `arp -a $ipAddress`; //LAS COMILLAS VAN ASÕ!!!
 		$lines = explode('\n', $arp);
 		//Busco la linea que tiene la IP que busco
 		foreach($lines as $line) {

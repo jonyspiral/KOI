@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW documento_proveedor_aplicacion_haber_v AS SELECT * FROM documento_proveedor_aplicacion_v WHERE tipo_docum = 'OP' OR tipo_docum = 'NCR' OR tipo_docum = 'REN';;

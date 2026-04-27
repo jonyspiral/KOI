@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW despachos_d_v AS SELECT d.nro_despacho nro_despacho,d.nro_item nro_item,d.empresa empresa,d.anulado anulado,cli.razon_social razon_social,c.cod_cliente cod_cliente,c.cod_sucursal cod_sucursal,c.cod_ecommerce_order cod_;;

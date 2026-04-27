@@ -18,7 +18,7 @@ class DebitarCheque extends AcreditarDebitarCheque {
 		parent::validarNuevo();
 
 		if(is_null($this->datosSinValidar['fecha_debito']))
-			throw new FactoryExceptionCustomException('Debe especificar la fecha de dÃ©bito.');
+			throw new FactoryExceptionCustomException('Debe especificar la fecha de débito.');
 	}
 
 	public function getCodigoPermiso() {

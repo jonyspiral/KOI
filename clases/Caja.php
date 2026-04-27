@@ -29,7 +29,7 @@ class Caja extends Base {
 	protected 	$_cajasPosiblesTransferenciaInterna;
 	public		$idResponsable;
 	public		$esCajaBanco;
-	protected	$_responsable; //dueÃ±o de la caja
+	protected	$_responsable; //dueño de la caja
 	protected	$_importeEfectivo;
 	protected	$_importeEfectivoFinal;
 	protected	$_importeGastitos;
@@ -132,7 +132,7 @@ class Caja extends Base {
 			$importeEfectivo = 0;
 		}
 		if ($importeEfectivo > $this->importeMaximo) {
-			throw new FactoryExceptionCustomException('No se puede superar el monto mÃ¡ximo de la caja (' . Funciones::formatearMoneda($this->importeMaximo) . ')');
+			throw new FactoryExceptionCustomException('No se puede superar el monto máximo de la caja (' . Funciones::formatearMoneda($this->importeMaximo) . ')');
 		}
 		if ($importeEfectivo < 0 && abs($importeEfectivo) > $this->importeDescubierto) {
 			throw new FactoryExceptionCustomException('No se puede operar por debajo del descubierto (' . Funciones::formatearMoneda(abs($this->importeDescubierto)) . ')');

@@ -38,7 +38,7 @@ class Presupuesto extends Base {
 		if($this->tieneDetallesSaciados()){
 			throw new FactoryExceptionCustomException('No puede anular un presupuesto que contenga detalles utilizados en alguna orden de compra');
 		}
-		//TODO lÃ³ica de rollback para el presupuesto generado por explosiÃ³n
+		//TODO lóica de rollback para el presupuesto generado por explosión
 
 		foreach($this->detalle as $item){
 			$item->borrar();

@@ -11,9 +11,9 @@ class Autorizaciones extends Base {
 	public		$idEspecifico;
 	public		$idAutorizacionTipo;
 	protected	$_autorizacionTipo;
-	protected	$_autorizaciones;					//Array por definici贸n. El 铆ndice es el n煤mero de autorizaci贸n (Ej: $aut[2]->idEspecifico)
-	protected	$_autorizacionesPendientes;			//Array con los n煤meros de autorizaciones pendientes
-	protected	$_personasAutorizacionesPendientes;	//Array (por definici贸n) de AutorizacionesPersonas con las pendientes. El 铆ndice es el n煤mero de autorizaci贸n (Ej: $pap[3]->usuario)
+	protected	$_autorizaciones;					//Array por definici髇. El 韓dice es el n鷐ero de autorizaci髇 (Ej: $aut[2]->idEspecifico)
+	protected	$_autorizacionesPendientes;			//Array con los n鷐eros de autorizaciones pendientes
+	protected	$_personasAutorizacionesPendientes;	//Array (por definici髇) de AutorizacionesPersonas con las pendientes. El 韓dice es el n鷐ero de autorizaci髇 (Ej: $pap[3]->usuario)
 
 	public function __construct($idAutorizacionTipo, $idEspecifico = null) {
 		parent::__construct();

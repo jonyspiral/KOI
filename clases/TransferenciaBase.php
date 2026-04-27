@@ -151,7 +151,7 @@ abstract class TransferenciaBase extends Base {
 				$this->beforeCommit();
 				$this->transaction(true);
 			} else {
-				throw new FactoryExceptionCustomException('No se puede guardar un objeto que no estÃ© en modo insert o update');
+				throw new FactoryExceptionCustomException('No se puede guardar un objeto que no esté en modo insert o update');
 			}
 			$this->mutex(true);
 		} catch (Exception $ex) {
@@ -166,7 +166,7 @@ abstract class TransferenciaBase extends Base {
 		foreach($this->importesSinValidar[$this->entradaSalida]['C'] as $cheque){
 			/** Cheque $cheque */
 			if($cheque->concluido == 'S'){
-				throw new FactoryExceptionCustomException('El cheque nÃºmero ' . $cheque->numero . ' estÃ¡ concluido.');
+				throw new FactoryExceptionCustomException('El cheque número ' . $cheque->numero . ' está concluido.');
 			}
 		}
 	}
@@ -187,10 +187,10 @@ abstract class TransferenciaBase extends Base {
 
 		//Valido que al menos me mande 1 importe
 		if(!(count($this->importesSinValidar['E']) > 0) && !(count($this->importesSinValidar['S']) > 0)) {
-			throw new FactoryExceptionCustomException('No puede realizar una operaciÃ³n sin importes');
+			throw new FactoryExceptionCustomException('No puede realizar una operación sin importes');
 		}
 
-		//Valido las cantidades de importes que estoy recibiendo. Por ejemplo, sÃ³lo puedo recibir 1 efectivo, en un recibo.
+		//Valido las cantidades de importes que estoy recibiendo. Por ejemplo, sólo puedo recibir 1 efectivo, en un recibo.
 		$this->validarCantidadPermitidaEfectivo(count($this->importesSinValidar[$this->getEntradaSalida()][TiposImporte::efectivo]));
 		$this->validarCantidadPermitidaCheque(count($this->importesSinValidar[$this->getEntradaSalida()][TiposImporte::cheque]));
 		$this->validarCantidadPermitidaTransferenciaBancaria(count($this->importesSinValidar[$this->getEntradaSalida()][TiposImporte::transferenciaBancariaImporte]));
@@ -199,14 +199,14 @@ abstract class TransferenciaBase extends Base {
 
 		//Si es una transferencia doble, no se valida la parte de entrada, ya que el usuario MUY probablemente no tenga permisos sobre la caja de destino
 		if ($this->esOperacionSalida() || !($this instanceof TransferenciaDoble)) {
-			//Valido si el usuario puede hacer la operaciÃ³n en esta caja
+			//Valido si el usuario puede hacer la operación en esta caja
 			$caja = Factory::getInstance()->getCaja($this->datosSinValidar['idCaja_' . $this->getEntradaSalida()]);
 			if(!($caja->usuarioPuede($this->datosSinValidar['usuario']->id, $this->getCodigoPermiso()))){
-				throw new FactoryExceptionCustomException('No tiene permiso para realizar la operaciÃ³n ' . $this->getCodigoPermiso() . ' sobre la caja ' . $caja->nombre);
+				throw new FactoryExceptionCustomException('No tiene permiso para realizar la operación ' . $this->getCodigoPermiso() . ' sobre la caja ' . $caja->nombre);
 			}
 		}
 
-		//Lleno los datos que tienen en comÃºn todas las TransferenciaBase y que luego no se van
+		//Lleno los datos que tienen en común todas las TransferenciaBase y que luego no se van
 		if ($this->modo == Modos::insert) {
 			$this->usuario = $this->datosSinValidar['usuario'];
 		}
@@ -245,7 +245,7 @@ abstract class TransferenciaBase extends Base {
 		$impPorOpC->idImportePorOperacion = $this->getIds($impPorOpC);
 		$impPorOpC->tipoOperacion = $this->getTipoTransferenciaBase();
 		$impPorOpC->caja = $this->getCaja($this->datosSinValidar['idCaja_' . $this->getEntradaSalida()]);
-		//$impPorOpC->fechaCaja = ''; REVISAR! ES IMPORTANTE. TIENE QUE IR EL PRÃ“XIMO DÃA HÃBIL LUEGO DEL ÃšLTIMO CIERRE. Y si el cierre fue hace 1 semana... LUEGO DE HOY(?) Pensar
+		//$impPorOpC->fechaCaja = ''; REVISAR! ES IMPORTANTE. TIENE QUE IR EL PRÓXIMO DÍA HÁBIL LUEGO DEL ÚLTIMO CIERRE. Y si el cierre fue hace 1 semana... LUEGO DE HOY(?) Pensar
 		$this->transaction()->persistir($impPorOpC);
 
 		if (count($this->importesSinValidar[$this->getEntradaSalida()][TiposImporte::transferenciaBancariaImporte]) > 0) {
@@ -261,7 +261,7 @@ abstract class TransferenciaBase extends Base {
 				$tIxOC->idImportePorOperacion = $this->getIds($tIxOC);
 				$tIxOC->tipoOperacion = TiposTransferenciaBase::transferenciaBancariaOperacion;
 				$tIxOC->caja = $this->getCaja($tbImp->cuentaBancaria->caja->id);
-				//$tIxOC->fechaCaja = ''; REVISAR! ES IMPORTANTE. TIENE QUE IR EL PRÃ“XIMO DÃA HÃBIL LUEGO DEL ÃšLTIMO CIERRE. Y si el cierre fue hace 1 semana... LUEGO DE HOY(?) Pensar
+				//$tIxOC->fechaCaja = ''; REVISAR! ES IMPORTANTE. TIENE QUE IR EL PRÓXIMO DÍA HÁBIL LUEGO DEL ÚLTIMO CIERRE. Y si el cierre fue hace 1 semana... LUEGO DE HOY(?) Pensar
 				$this->transaction()->persistir($tIxOC);
 
 				$tIxOD = Factory::getInstance()->getImportePorOperacionItem();
@@ -382,9 +382,9 @@ abstract class TransferenciaBase extends Base {
 
 	protected function validarBorrar() {
 		parent::validarBorrar();
-		//Valido si el usuario puede hacer la operaciÃ³n sobre la caja
+		//Valido si el usuario puede hacer la operación sobre la caja
 		if (!($this->importePorOperacion->caja->usuarioPuede(Usuario::logueado()->id, $this->getCodigoPermiso()))) {
-			throw new FactoryExceptionCustomException('No tiene permiso para realizar la operaciÃ³n ' . $this->getCodigoPermiso() . ' sobre la caja ' . $this->importePorOperacion->caja->nombre);
+			throw new FactoryExceptionCustomException('No tiene permiso para realizar la operación ' . $this->getCodigoPermiso() . ' sobre la caja ' . $this->importePorOperacion->caja->nombre);
 		}
 
 		$this->importesSinValidarBorrar = $this->importesSinValidar;
@@ -540,7 +540,7 @@ abstract class TransferenciaBase extends Base {
 	}
 
 	/**
-	 * Este mÃ©todo devuelve la fecha del documento (si es que tiene).
+	 * Este método devuelve la fecha del documento (si es que tiene).
 	 * De lo contrario devuelve la fechaAlta
 	 *
 	 * @return string
@@ -607,8 +607,8 @@ abstract class TransferenciaBase extends Base {
 				$clase = ucfirst($clase);
 				$list = Factory::getInstance()->getListObject($clase, 'cod_importe_operacion = ' . Datos::objectToDB($idImportePorOperacion));
 				if (count($list) != 1) {
-					$err = 'OcurriÃ³ un error al intentar obtener la operaciÃ³n del tipo "' . $clase . '":';
-					$err .= 'existen ' . count($list) . ' operaciones con el cÃ³digo de importe por operaciÃ³n NÂº ' . $idImportePorOperacion;
+					$err = 'Ocurrió un error al intentar obtener la operación del tipo "' . $clase . '":';
+					$err .= 'existen ' . count($list) . ' operaciones con el código de importe por operación Nº ' . $idImportePorOperacion;
 					throw new FactoryExceptionCustomException($err);
 				}
 				$obj = $list[0];
@@ -616,7 +616,7 @@ abstract class TransferenciaBase extends Base {
 			}
 		}
 		if (is_null($obj)) {
-			throw new FactoryExceptionCustomException('OcurriÃ³ un error al intentar obtener la operaciÃ³n del tipo NÂº ' . $tipoTransferencia);
+			throw new FactoryExceptionCustomException('Ocurrió un error al intentar obtener la operación del tipo Nº ' . $tipoTransferencia);
 		}
 		return $obj;
 	}

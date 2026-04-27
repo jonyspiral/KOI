@@ -131,7 +131,7 @@ class RemitoProveedor extends Base implements OperacionStock {
 	}
 
 	public function stockObservacion() {
-		return 'Remito NÂº ' . $this->getNroCompletoRemito() . ' - Prov. ' . $this->proveedor->id;
+		return 'Remito Nº ' . $this->getNroCompletoRemito() . ' - Prov. ' . $this->proveedor->id;
 	}
 
 	public function stockDetalle() {

@@ -35,12 +35,12 @@ class TipoNotificacion extends Base {
 	}
 
 	public function addUsuario(UsuarioPorTipoNotificacion $usuario) {
-		$this->getUsuarios(); //En caso de nuevo, esto me va a traer un array vacÃ­o
+		$this->getUsuarios(); //En caso de nuevo, esto me va a traer un array vacío
 		$this->_usuarios[] = $usuario;
 	}
 
 	public function addRol(RolPorTipoNotificacion $rol) {
-		$this->getRoles(); //En caso de nuevo, esto me va a traer un array vacÃ­o
+		$this->getRoles(); //En caso de nuevo, esto me va a traer un array vacío
 		$this->_roles[] = $rol;
 	}
 

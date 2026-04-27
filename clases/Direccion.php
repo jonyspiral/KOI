@@ -34,9 +34,9 @@ class Direccion extends BasePhp {
 		$array = array();
 		foreach($this as $key => $val){
 			if (substr($key, 0, 1) == '_') {
-				//Esta funciÃ³n se usa para listar las variables y pasarlas en el ECHOJSON que estÃ¡ en HTML.
+				//Esta función se usa para listar las variables y pasarlas en el ECHOJSON que está en HTML.
 				//Si el atributo empieza con _ es porque es un valor de LazyLoading, y si
-				//es NULL es porque todavÃ­a no fue seteado, entonces no lo devuelvo como valor.
+				//es NULL es porque todavía no fue seteado, entonces no lo devuelvo como valor.
 				//Para que un valor de LazyLoading pase a JSON hay que pedirlo antes (Ej: $notaDePedido->detalle)
 				$key = substr($key, 1);
 			}

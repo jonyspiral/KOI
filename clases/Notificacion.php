@@ -11,7 +11,7 @@ class Notificacion extends Base {
 	public		$id;
 	public		$idTipoNotificacion;
 	protected	$_tipoNotificacion;
-	public		$keyObjeto;	//Es la PK serializada del objeto en cuestiÃ³n. Puede ser NULL. (Ej: id=15&tipo=M)
+	public		$keyObjeto;	//Es la PK serializada del objeto en cuestión. Puede ser NULL. (Ej: id=15&tipo=M)
 	public		$link;
 	public		$detalle;
 	protected	$_usuarios;
@@ -23,14 +23,14 @@ class Notificacion extends Base {
 	/**
 	 * @param       $obj
 	 * @param       $funcionalidad
-	 * @param array $usuarios Esta lista serÃ¡ anexada a la establetica por el tipo de notificaciÃ³n.
-	 *                        Si se quiere especificar el atributo "eliminable", deberÃ¡ ser una lista de UsuarioPorTipoNotificacion
+	 * @param array $usuarios Esta lista será anexada a la establetica por el tipo de notificación.
+	 *                        Si se quiere especificar el atributo "eliminable", deberá ser una lista de UsuarioPorTipoNotificacion
 	 *
 	 * @return bool
 	 */
 	public static function accionNotificar($obj, $funcionalidad, $usuarios = array()) {
 		if ($funcionalidad) {
-			//Verifico si la funcionalidad debe dar como cumplida alguna notificaciÃ³n. De ser asÃ­, esas notif las pongo como eliminables
+			//Verifico si la funcionalidad debe dar como cumplida alguna notificación. De ser así, esas notif las pongo como eliminables
 			$cumplidos = Factory::getInstance()->getListObject('TipoNotificacion', 'anulado = \'N\' AND accion_cumplido = ' . Datos::objectToDB($funcionalidad));
 			foreach ($cumplidos as $tipoCumplido) {
 				/** @var $tipoCumplido TipoNotificacion */
@@ -50,7 +50,7 @@ class Notificacion extends Base {
 				}
 			}
 
-			//Verifico si la funcionalidad debe eliminar alguna notificaciÃ³n. De ser asÃ­, esas notif las pongo como anuladas
+			//Verifico si la funcionalidad debe eliminar alguna notificación. De ser así, esas notif las pongo como anuladas
 			$anulados = Factory::getInstance()->getListObject('TipoNotificacion', 'anulado = \'N\' AND accion_anular = ' . Datos::objectToDB($funcionalidad));
 			foreach ($anulados as $tipoAnulado) {
 				$where = 'tipo_notificacion = ' . Datos::objectToDB($tipoAnulado->id) . ' AND key_objeto = ' . Datos::objectToDB($obj->getPKSerializada());
@@ -63,7 +63,7 @@ class Notificacion extends Base {
 				}
 			}
 
-			//Verifico si la funcionalidad debe disparar alguna notificaciÃ³n
+			//Verifico si la funcionalidad debe disparar alguna notificación
 			$notificar = Factory::getInstance()->getListObject('TipoNotificacion', 'anulado = \'N\' AND accion_notificacion = ' . Datos::objectToDB($funcionalidad));
 			if (count($notificar) == 1) {
 				$tipoNotificar = $notificar[0];
@@ -111,7 +111,7 @@ class Notificacion extends Base {
 		/** @var TipoNotificacion $tipoNoti */
 		$a = array();
 		$return = array();
-		//Le doy prioridad a ->usuarios. Si superponen roles y usuarios con distinta acciÃ³n (eliminable) se prioriza el usuario
+		//Le doy prioridad a ->usuarios. Si superponen roles y usuarios con distinta acción (eliminable) se prioriza el usuario
 		foreach($tipoNoti->usuarios as $usu) {
 			if (!isset($a[$usu->id])) {
 				$nxu = Factory::getInstance()->getNotificacionPorUsuario();
