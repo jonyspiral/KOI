@@ -1,5 +1,4 @@
-<<?php require_once('../../../premaster.php');
-print_r($_POST);
+<?php require_once('../../../premaster.php');
 error_log('[cliente/pedidos/agregar.php] IN ' . (isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'no-ct'));
 if (!empty($_SERVER['CONTENT_TYPE']) && stripos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
     $raw = file_get_contents('php://input');
