@@ -22,10 +22,26 @@ try {
     }
 
     $favorito->guardar();
+    // Compatibilidad MySQL KOI1:
+    // Garantiza persistencia de cantidades libres en favoritos_cliente.cant_1 ... cant_10
+    // antes de confirmar el pedido.
+    $set = array();
+    for ($i = 1; $i <= 10; $i++) {
+        $set[] = 'cant_' . $i . ' = ' . Datos::objectToDB(Funciones::toInt(Funciones::keyIsSet($favorito->cantidades, $i, 0)));
+    }
+    $set[] = 'fecha_ultima_mod = NOW()';
+
+    Datos::EjecutarSQLsinQuery(
+        'UPDATE favoritos_cliente SET ' . implode(', ', $set) .
+        ' WHERE cod_cliente = ' . Datos::objectToDB($idCliente) .
+        ' AND cod_articulo = ' . Datos::objectToDB($idArticulo) .
+        ' AND cod_color_articulo = ' . Datos::objectToDB($idColor)
+    );
+
 
     Html::jsonSuccess('El favorito fue modificado correctamente');
 } catch (Exception $ex) {
-    Html::jsonError('Ocurrió un error al intentar modificar el favorito. ' . $ex->getMessage());
+    Html::jsonError('Ocurriï¿½ un error al intentar modificar el favorito. ' . $ex->getMessage());
 }
 
 ?>
