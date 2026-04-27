@@ -363,7 +363,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
       $scope.descuento = <?php echo json_encode((float) str_replace(",", ".", Usuario::logueado()->cliente->creditoDescuentoEspecial)); ?>;
       $scope.favoritos = <?php echo json_encode($arrayFavoritos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
       $scope.sucursales = <?php echo json_encode($sucursales, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-      $scope.idSucursalPedido = '<? echo $idSucursalDefault; ?>';
+      $scope.idSucursalPedido = <?php echo json_encode($idSucursalDefault, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
       var commonCallback = function (err, result) {
         if (err) {
