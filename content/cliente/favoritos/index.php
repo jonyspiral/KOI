@@ -102,8 +102,8 @@ foreach ($favoritos as $favorito) {
         'formaDeComercializacion' => $favorito->colorPorArticulo->formaDeComercializacion,
         'stock' => $stockInterno,
         'stockTotal' => $stockInternoTotal,
-        'primerTalle' => $cantidadTalles[0]['talle'],
-        'ultimoTalle' => $cantidadTalles[count($cantidadTalles)-1]['talle'],
+        'primerTalle' => count($cantidadTalles) ? $cantidadTalles[0]['talle'] : '',
+        'ultimoTalle' => count($cantidadTalles) ? $cantidadTalles[count($cantidadTalles)-1]['talle'] : '',
         'cantidadTalles' => $cantidadTalles,
     );
 
