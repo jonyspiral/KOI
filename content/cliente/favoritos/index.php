@@ -102,8 +102,8 @@ foreach ($favoritos as $favorito) {
         'formaDeComercializacion' => $favorito->colorPorArticulo->formaDeComercializacion,
         'stock' => $stockInterno,
         'stockTotal' => $stockInternoTotal,
-        'primerTalle' => $cantidadTalles[0]['talle'],
-        'ultimoTalle' => $cantidadTalles[count($cantidadTalles)-1]['talle'],
+        'primerTalle' => count($cantidadTalles) ? $cantidadTalles[0]['talle'] : '',
+        'ultimoTalle' => count($cantidadTalles) ? $cantidadTalles[count($cantidadTalles)-1]['talle'] : '',
         'cantidadTalles' => $cantidadTalles,
     );
 
@@ -360,10 +360,10 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
       $scope.funciones = funciones;
       $scope.imagesUrl = 'http://www.spiralshoes.com/zapatillas/jpg/';
 
-      $scope.descuento = <? echo Funciones::toFloat(Usuario::logueado()->cliente->creditoDescuentoEspecial); ?>;
-      $scope.favoritos = <? echo json_encode($arrayFavoritos); ?>;
-      $scope.sucursales = <? echo json_encode($sucursales); ?>;
-      $scope.idSucursalPedido = '<? echo $idSucursalDefault; ?>';
+      $scope.descuento = <?php echo @json_encode((float) str_replace(",", ".", Usuario::logueado()->cliente->creditoDescuentoEspecial)); ?>;
+      $scope.favoritos = <?php echo @json_encode($arrayFavoritos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_PARTIAL_OUTPUT_ON_ERROR) ?: "{}"; ?>;
+      $scope.sucursales = <?php echo @json_encode($sucursales, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_PARTIAL_OUTPUT_ON_ERROR) ?: "[]"; ?>;
+      $scope.idSucursalPedido = <?php echo @json_encode($idSucursalDefault, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_PARTIAL_OUTPUT_ON_ERROR) ?: '""'; ?>;
 
       var commonCallback = function (err, result) {
         if (err) {
