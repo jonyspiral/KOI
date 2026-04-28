@@ -1,167 +1,202 @@
 <?php
-
+/**
+ * Datos
+ * Fachada de acceso a datos independiente de motor.
+ * Delegamos en el driver configurado (Factory::getInstance()->db()).
+ * Mantiene los nombres/firmas usados por el código legacy de KOI1.
+ */
 class Datos {
-	private static $_linkDeConexion;
 
-	static protected function abrirConexion() {
-		try {
-			if (!isset(self::$_linkDeConexion)){
-				self::$_linkDeConexion = @mssql_connect(Config::conexion_sql_ip, Config::conexion_sql_user, Config::conexion_sql_pass);
-				@mssql_select_db(Config::conexion_sql_db);
-			}
-		} catch (Exception $ex) {
-			throw new Exception("Error cuando se intentaba conectar a la base de datos. Message: " . $ex->getMessage());
-		}
-	}
-	static function EjecutarSQLsinQuery($sSql) {
-		try {
-			if (!empty($sSql)) {
-				Datos::abrirConexion();
-				Datos::getQuery($sSql);
-			}
-		} catch (Exception $ex) {
-			$msg = "Error al tratar de ejecutar la sentencia: " . $sSql . ". Message: " . $ex->getMessage();
-			Logger::addError($msg);
-			throw new Exception($msg);
-		}
-	}
-	static function EjecutarSQLItem($sSql, $cacheTag = null) {
-		$items = self::EjecutarSQL($sSql, $cacheTag);
-		if (count($items) != 1) {
-			throw new FactoryExceptionRegistroNoExistente();
-		} else {
-			return $items[0];
-		}
-	}
-	static function EjecutarSQL($sSql, $cacheTag = null) {
-		try {
-			if (!is_string($cacheTag)) {
-				$cacheTag = null;
-			}
-			$resultados = array();
+    /** @return mixed Driver actual (DbMysql, DbMssql, etc.) */
+    private static function db() {
+        return Factory::getInstance()->db();
+    }
 
-			Datos::abrirConexion();
+    /* =========================
+       SELECTs “crudos”
+       ========================= */
 
-			// Check if cache is required by the class
-			$cacheTime = -1;
-			if (class_exists($cacheTag) && property_exists($cacheTag, '__CACHE_TIME')) {
-				$cacheTagClass = new $cacheTag();
-				$cacheTime = $cacheTagClass->__CACHE_TIME;
-			}
+    public static function EjecutarSQL($sql, $clase = null) {
+        try {
+            return Factory::getInstance()->db()->query($sql);
+        } catch (Exception $ex) {
+            Logger::addError('EjecutarSQL Error: ' . $ex->getMessage());
+            throw $ex;
+        }
+    }
 
-			if ($cacheTag && $cacheTime !== false) {
-				$cacheHash = Funciones::hash($sSql);
-				$result = Cache::get($cacheHash, $cacheTag);
-				if ($result) {
-					return $result;
-				}
-			}
+    /** Devuelve una sola fila (array<string,mixed>|null) */
+ // factory/Datos.php
 
-			$dbResults = Datos::getQuery($sSql);
-			for ($i = 0; $i < Datos::getNumRows($dbResults); $i++) {
-				$resultados[] = Datos::getRow($dbResults);
-			}
+/**
+ * Devuelve una sola fila (array<string,mixed>|null)
+ * Normaliza "0 filas" => null (comportamiento SQLServer),
+ * y además maneja tipos variados de retorno del driver MySQL.
+ */
+    /** Devuelve una sola fila (array<string,mixed>|null) */
+    public static function EjecutarSQLItem($sql, $clase = null) {
+        $raw = self::EjecutarSQL($sql, $clase);
 
-			if ($cacheTag && $cacheTime !== false) {
-				Cache::set($cacheHash, $resultados, $cacheTag, $cacheTime);
-			}
+        // ---------------------------
+        // Normalización + compatibilidad KOI1:
+        // Si NO hay fila, debe lanzar FactoryExceptionRegistroNoExistente
+        // para que Base::existeEnDB() funcione como antes.
+        // ---------------------------
 
-			return $resultados;
-		} catch (Exception $ex) {
-			$msg = "Error al tratar de ejecutar la sentencia: " . $sSql . ". Message: " . $ex->getMessage();
-			Logger::addError($msg);
-			throw new Exception($msg);
-			
-		}
-	}
-	static function EjecutarSQL2($sSql, $cacheTag = null) {
-		try {
-			Datos::abrirConexion();
-			return Datos::getQuery($sSql);
-		} catch (Exception $ex) {
-			$msg = "Error al tratar de ejecutar la sentencia: " . $sSql . ". Message: " . $ex->getMessage();
-			Logger::addError($msg);
-			throw new Exception($msg);
-		}
-	}
-	static function EjecutarTransaccion($sentencia) {
-		Datos::abrirConexion();
-		try {
-			Datos::EjecutarSQL($sentencia);
-		} catch (Exception $ex) {
-			throw new TransactionException($ex);
-		}
-	}
-	static function objectToDB($obj) {
-		try {
-			if (is_null($obj)/* || (!(is_scalar($obj) && ($obj != 0)))*/)
-				return 'NULL';
-			switch (Funciones::getType($obj)){
-				case 'bool':
-					if ($obj) return 'true';
-					elseif(!$obj) return 'false';
-					else return 'NULL';
-				case 'string':
-					if ($obj == null || $obj == '') return "''";
-					else return "'" . str_replace("'", "''", $obj) . "'";
-				case 'int':
-				case 'float':
-				case 'double':
-					return $obj;
-				case 'array':
-					return self::objectToDB(Funciones::jsonEncode($obj));
-				default:
-					if ($obj == null)
-						return null;
-					else
-						return $obj;
-			}
-		} catch (Exception $ex) {
-			throw $ex;
-		}
-	}
-	static private function getQuery($sql){
-		try {
-			//Cuando hay un error devuelve "Error " al principio para que el getNumRows devuelva 0
-			//cuando le llega un error en lugar de resultados correctos (sino crashea el getNumRows).
-			$result = @mssql_query($sql);
-			if (!$result){
-				$error = @mssql_get_last_message();
-				if (true/*rango()*/) //Esto es para que no cualquiera pueda ver los errores. Cuesti�n de seguridad.
-					throw new FactoryExceptionRegistroNoExistente('Error ' . $error);
-					//return "Error " . $error . ' QUERY: ' . $sql;
-				else
-					throw new FactoryExceptionRegistroNoExistente('Error inesperado. Contacte al administrador.');
-					//return "Error inesperado. Contacte al administrador.";
-			} else
-				if ($result == "true") //Esto es lo que devuelven las consultas como UPDATE o INSERT o DELETE cuando salen bien.
-					return true;
-				else
-					return $result;
-		} catch (FactoryExceptionRegistroNoExistente $eex) {
-			throw $eex;
-		} catch (Exception $ex) {
-			throw $ex;
-		}
-	}
-	static function getNumRows($resultado){
-/*		if ($resultado == '' || substr($resultado . '', 0, 6) == "Error ")
-			return 0;
-		else
-			return @mssql_num_rows($resultado);
-*/
-		return @mssql_num_rows($resultado);
-	}
-	static function getRow($resultado){
-		try {
-			if (Datos::getNumRows($resultado) > 0)
-				return @mssql_fetch_assoc($resultado);
-			else
-				throw new FactoryExceptionRegistroNoExistente();
-		} catch (Exception $ex) {
-			throw new FactoryExceptionRegistroNoExistente();
-		}
-	}
+        // 1) Sin resultados (false/null/[] ⇒ NO existe)
+        if ($raw === false || $raw === null || (is_array($raw) && count($raw) === 0)) {
+            // Mantenemos compatibilidad con el flujo legacy:
+            if (class_exists('FactoryExceptionRegistroNoExistente')) {
+                throw new FactoryExceptionRegistroNoExistente('Registro no existente');
+            } else {
+                // Fallback: lanzar una Exception genérica para no "mentir" existencia
+                throw new Exception('Registro no existente');
+            }
+        }
+
+        // 2) Algunos drivers devuelven [[fila]] en lugar de [fila]
+        if (is_array($raw) && isset($raw[0]) && is_array($raw[0])) {
+            // si viniera envuelto, devolvemos la primera fila asociativa
+            return $raw[0];
+        }
+
+        // 3) Ya tenemos la fila asociativa
+        if (is_array($raw)) {
+            return $raw;
+        }
+
+        // 4) Cualquier otro caso raro: devolver tal cual
+        return $raw;
+    }
+
+
+
+
+    /** Devuelve un valor escalar (mixed|null) */
+    public static function EjecutarScalar($sql) {
+        return self::db()->value($sql);
+    }
+
+    /* =========================
+       Con parámetros
+       ========================= */
+
+    /** SELECT con parámetros (array) */
+    public static function EjecutarSQLParams($sql, $params = array()) {
+        return self::db()->query($sql, is_array($params) ? $params : array());
+    }
+
+    /** No-SELECT (INSERT/UPDATE/DELETE) con o sin parámetros */
+    public static function EjecutarCommand($sql, $params = array()) {
+        // Algunos drivers exponen exec(); si no existe, usamos query() y devolvemos filas afectadas si está disponible.
+        $db = self::db();
+        if (method_exists($db, 'exec')) {
+            return $db->exec($sql, is_array($params) ? $params : array());
+        }
+        $res = $db->query($sql, is_array($params) ? $params : array());
+        // Compat: si no hay filas afectadas, retornamos 0.
+        return is_int($res) ? $res : 0;
+    }
+
+	// En factory/Datos.php, dentro de class Datos
+public static function objectToDB($value) {
+    if (is_null($value)) return 'NULL';
+    if (is_bool($value)) return $value ? '1' : '0';
+    if (is_int($value) || is_float($value)) return $value;
+
+    // Escapar string usando DbMysql
+    $db = Factory::getInstance()->db();
+    $escaped = $db->escape($value);
+    return "'" . $escaped . "'";
 }
 
-?>
+
+
+
+    /* =========================
+       Stored Procedures
+       ========================= */
+
+    /**
+     * Ejecuta un SP y devuelve arreglo de filas.
+     * $params puede ser array (se usan placeholders ?) o string ya formateado.
+     */
+    public static function EjecutarStoredProcedure($name, $params = array()) {
+        if (is_array($params)) {
+            $placeholders = implode(',', array_fill(0, count($params), '?'));
+            $sql = 'CALL ' . $name . '(' . $placeholders . ')';
+            return self::db()->query($sql, $params);
+        } else {
+            $paramStr = trim((string)$params);
+            $sql = 'CALL ' . $name . (strlen($paramStr) ? '(' . $paramStr . ')' : '()');
+            return self::db()->query($sql);
+        }
+    }
+
+    /** Ejecuta un SP y devuelve una fila */
+    public static function EjecutarStoredProcedureItem($name, $params = array()) {
+        $rows = self::EjecutarStoredProcedure($name, $params);
+        return (is_array($rows) && count($rows)) ? $rows[0] : null;
+    }
+
+    /** Ejecuta un SP y devuelve el primer valor de la primera fila */
+    public static function EjecutarStoredProcedureScalar($name, $params = array()) {
+        $row = self::EjecutarStoredProcedureItem($name, $params);
+        return is_array($row) ? reset($row) : null;
+    }
+
+    /* =========================
+       Transacciones (alias)
+       ========================= */
+
+    public static function BeginTransaction() {
+        return method_exists(self::db(), 'beginTransaction')
+            ? self::db()->beginTransaction()
+            : null;
+    }
+
+    public static function CommitTransaction() {
+        return method_exists(self::db(), 'commit')
+            ? self::db()->commit()
+            : null;
+    }
+
+    public static function RollbackTransaction() {
+        return method_exists(self::db(), 'rollBack')
+            ? self::db()->rollBack()
+            : (method_exists(self::db(), 'rollback') ? self::db()->rollback() : null);
+    }
+
+    /* =========================
+       Aliases de compatibilidad
+       ========================= */
+
+    public static function EjecutarSQLWithParams($sql, $params = array()) {
+        return self::EjecutarSQLParams($sql, $params);
+    }
+
+    public static function Exec($sql, $params = array()) {
+        return self::EjecutarCommand($sql, $params);
+    }
+    public static function EjecutarSQLsinQuery($sql) {
+    // Si tenés un shim T-SQL→MySQL, aplicalo acá
+    if (method_exists('Datos', '_shimTSql')) { $sql = self::_shimTSql($sql); }
+
+    if (function_exists('__dbg')) { __dbg('DATOS.EjecutarSQLsinQuery.sql', mb_substr($sql,0,500)); }
+
+    // Ejecuta con el driver actual (DbMysql->exec)
+    $db = self::db();
+    $ok = $db->exec($sql);
+
+    if ($ok === false && function_exists('__dbg')) {
+        $driverErr = null;
+        if (is_object($db)) {
+            if (method_exists($db, 'lastError'))       $driverErr = $db->lastError();
+            elseif (property_exists($db, 'lastError')) $driverErr = $db->lastError;
+        }
+        __dbg('DATOS.EjecutarSQLsinQuery.err', array('driverErr'=>$driverErr));
+    }
+    return $ok;
+}
+
+}
