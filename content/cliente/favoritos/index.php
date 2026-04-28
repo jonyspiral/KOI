@@ -395,6 +395,10 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
         // Guarda el valor inicial al cargar la página
             articulo.paresLibres[index]._prevValue = articulo.paresLibres[index];
         }
+        for (var k = 0; k < articulo.paresLibres.length; k++) {
+          articulo.paresLibres[k] = funciones.toInt(articulo.paresLibres[k]);
+        }
+
         var allGood = true;
         //console.log('typeof talle', typeof talle)
         if (talle == 'X') {
