@@ -113,11 +113,28 @@ removeAllFavs: async function () {
         callback
       );
     },
-
     updateLibre: function (articulo, callback) {
+      var art = articulo && articulo.fav ? articulo.fav : articulo;
+
+      if ((!art || !art.idArticulo || !art.idColorPorArticulo || !art.paresLibres) &&
+          articulo && articulo.subArticulos && articulo.subArticulos.length === 1) {
+        art = articulo.subArticulos[0];
+      }
+
+      var cantidades = [];
+      if (art && art.paresLibres) {
+        for (var i = 0; i < 10; i++) {
+          cantidades[i] = funciones.toInt(art.paresLibres[i] || 0);
+        }
+      }
+
       this.post(
         this.basePath + 'favoritos/editarLibre.php',
-        {idArticulo: articulo.idArticulo, idColor: articulo.idColorPorArticulo, cantidades: articulo.paresLibres},
+        {
+          idArticulo: art ? art.idArticulo : null,
+          idColor: art ? art.idColorPorArticulo : null,
+          cantidades: cantidades
+        },
         callback
       );
     },
