@@ -787,15 +787,17 @@ class Base extends BasePhp {
      * @throws FactoryException
      */
     protected function getQueryNextId() {
-        if ($this->autoIncrement()) {
-            return 'SELECT IDENT_CURRENT(\'' . $this->table() . '\') + IDENT_INCR(\'' . $this->table() . '\');';
-        } else {
-            if (!($uniqueId = $this->getUniqueId())) {
-                throw new FactoryException('No se puede calcular el NextId de la clase "' . $this->getClass() . '"" porque no tiene un único ID');
-            }
-
-            return 'SELECT ISNULL(MAX(' . $this->__dbMappings[$uniqueId]['db'] . '), 0) + 1 FROM ' . $this->table() . ';';
+        if (!($uniqueId = $this->getUniqueId())) {
+            throw new FactoryException('No se puede calcular el NextId de la clase "' . $this->getClass() . '" porque no tiene un unico ID');
         }
+
+        if (!isset($this->__dbMappings[$uniqueId]) || !isset($this->__dbMappings[$uniqueId]['db'])) {
+            throw new FactoryException('No existe mapping DB para la clave primaria "' . $uniqueId . '" en la clase "' . $this->getClass() . '"');
+        }
+
+        $dbField = $this->__dbMappings[$uniqueId]['db'];
+
+        return 'SELECT COALESCE(MAX(CAST(' . $dbField . ' AS UNSIGNED)), 0) + 1 AS computed FROM ' . $this->table() . ';';
     }
 }
 

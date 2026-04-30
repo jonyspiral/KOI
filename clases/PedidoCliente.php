@@ -16,6 +16,7 @@ class PedidoCliente extends Base {
 
     protected	$__table = 'pedidos_cliente_c';
     protected	$__primaryKey = array('id');
+    protected    $__autoIncrement = false;
 
     public		$id;
     public		$idCliente;
