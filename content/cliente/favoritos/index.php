@@ -36,7 +36,7 @@ foreach ($favoritos as $favorito) {
 
     /** @var FavoritoCliente $favorito */
     $lin = $favorito->articulo->lineaProducto;
-    
+
     //print_r('<br>$lin->tituloEcommerce');
     //print_r($lin);
     $articulo = $favorito;
@@ -159,7 +159,7 @@ foreach ($favoritos as $favorito) {
         'idColorPorArticulo' => $favorito->idColorPorArticulo,
         // Add more data for sub-articulo here...
     );
-    
+
     // Example: Add this subArticulo to the 'subArticulos' array under the same uniqueKey
     $arrayFavoritos[$lin->tituloEcommerce]['items'][$uniqueKey]['subArticulos'][] = $fav;
 }
@@ -387,7 +387,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
           curva.unidadesSeleccionadas--;
           ServiceCliente.updateCurva(articulo, curva, commonCallback);
         }
-      };    
+      };
 
       $scope.updateLibre = function (articulo, index, talle) {
         //editado
@@ -409,7 +409,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
             disponible = articulo.cantidadTalles.find(item => {
                 return item.talle == talle
             })
-            
+
             if (!disponible || disponible.cantidad < articulo.paresLibres[index]) {
                 $.growl.error(`La cantidad ingresada supera el disponible (${disponible ? disponible.cantidad : 0})`);
                 articulo.paresLibres[index] = disponible ? disponible.cantidad : 0; // Revertir al valor anterior o al máximo permitido
@@ -583,7 +583,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
 
     $scope.isLoading = false;
     $scope.removeAllFavs = async function () {
-        $scope.isLoading = true; 
+        $scope.isLoading = true;
            try {
             let res = await ServiceCliente.removeAllFavs();
             console.log(res);
@@ -607,7 +607,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
           })
         }
         console.log("favorites", favorites)
-        
+
         if (articulo.favorito) {
           let res = await ServiceCliente.removeFavoritoBatch(favorites);
           if (res.status == 200) {
@@ -622,8 +622,8 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
             articulo.favorito = true;
           });
           }
-        }     
-        //window.location('/favoritos/')   
+        }
+        //window.location('/favoritos/')
       };
 
       $scope.showSucursales = false;
@@ -737,13 +737,13 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
                             <div class="item-precios">
                              <!--<span>{{ funciones.formatearMoneda(getPrecioMayorista(articulo)) }} / {{ funciones.formatearMoneda(getPrecioMinorista(articulo)) }}</span> -->
                                 <span class="subarticulo sub-inline-grid" ng-repeat="subArticulo in articulo.subArticulos">
-                                
+
                                   <span>{{ subArticulo.nombre + ' - ' + subArticulo.idArticulo + ' ' + subArticulo.idColorPorArticulo }}</span>
                                   <span>
                                     <span data-toggle="popover" data-html="true" data-placement="bottom" tabindex="0"  item-stock={{subArticulo.cantidadTalles}}>
                                       <span class="badge item-stock-badge">Stock: {{ subArticulo.stockTotal }}</span>
                                     </span>
-                                       <span class="badge">Pronto: <span class="stock-produccion" stock-produccion={{getArticuloCodigoColor(subArticulo)}}>0</span> </span> 
+                                       <span class="badge">Pronto: <span class="stock-produccion">0</span> </span>
                                  </span>
                                 </span>
                             </div>
@@ -757,10 +757,10 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
                                     <span>
                                         <span class="badge"  class="{'badge-danger': subarticuloi.colorPorArticulo.tipoProductoStock.id == '1'}">{{ subarticuloi.colorPorArticulo.tipoProductoStock.nombre }}</span>
                                         <span class="badge badge-danger" ng-if="subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc">-{{ subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc }}%</span>
-                                    </span> 
+                                    </span>
                                     <span>  | {{ funciones.formatearMoneda(getPrecioMayorista(subarticuloi)) }} </span>
-                                </span> 
-                            </div>  
+                                </span>
+                            </div>
                             <!--<div class="item-name">
                                 {{getName(articulo.fav)}}
                             </div>-->
@@ -768,7 +768,7 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
                     </div>
                     <div class="col-sm-7">
                       <div ng-repeat="subArticulo in articulo.subArticulos">
-                        
+
                         <table class="tabla-curvas">
                             <thead>
                             <tr class="row-talles">
