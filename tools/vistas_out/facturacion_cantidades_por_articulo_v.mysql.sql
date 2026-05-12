@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW facturacion_cantidades_por_articulo_vASSELECT documentos_cantidades.fecha, documentos_cantidades.empresa, documentos_cantidades.cod_almacen, documentos_cantidades.cod_articulo, articulos.;;

@@ -97,7 +97,7 @@ if ($filtrosSession = Funciones::session('catalogo_filtros')) {
         return ServiceCatalogo.filtros.show;
       };
 
-      $scope.tiposProductoStock = <?= json_encode($arrayTipos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+      $scope.tiposProductoStock = <? echo json_encode($arrayTipos) ?>;
 
       $scope.filtros = {
         tipoProductoStock: {}
@@ -126,7 +126,7 @@ if ($filtrosSession = Funciones::session('catalogo_filtros')) {
       };
 
       $timeout(function () {
-        $scope.filtrosDefault = <?= json_encode($filtrosDefault, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+        $scope.filtrosDefault = <? echo json_encode($filtrosDefault); ?>;
         angular.forEach($scope.filtrosDefault, function (filtro) {
           $scope.filtros.tipoProductoStock[filtro] = true; // '1'
         });
@@ -175,7 +175,7 @@ if ($filtrosSession = Funciones::session('catalogo_filtros')) {
 
             <?php
             // Lista de palabras clave para marcar como NEW
-            $keywords = array('drop', 'trip', 'y2', 'g.o.a.t basic', 'pow aircush',  );
+            $keywords = array('drop', 'trip', 'y2', 'g.o.a.t basic', 'pow aircush' );
 
             foreach ($catalogo->secciones as $seccion) {
                 $menuActive = $menuactual == $seccion->idLineaProducto;

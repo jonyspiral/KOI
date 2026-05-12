@@ -7,7 +7,7 @@ class Ecommerce_OrderStatus_Pedido extends Ecommerce_OrderStatus {
 		//Genero el pedido y mando a guardar
 		$pedido = $this->generarPedido($order);
 		$pedido->guardar()->notificar('comercial/ecommerce/panel_de_control/');
-		$pedido->generarPredespacho(); //Es necesario porque normalmente se hace en la autorizaciÃ³n, pero acÃ¡ no vamos a tener ese proceso
+		$pedido->generarPredespacho(); //Es necesario porque normalmente se hace en la autorización, pero acá no vamos a tener ese proceso
 
 		$order->pedido = $pedido;
 	}
@@ -31,7 +31,7 @@ class Ecommerce_OrderStatus_Pedido extends Ecommerce_OrderStatus {
 		$pedido = Factory::getInstance()->getPedido();
 
 		$pedido->empresa = $order->customer->usergroup->empresa;
-		$pedido->aprobado = 'S'; //Genero el pedido como aprobado directamente, sin autorizaciÃ³n de nadie, y el predespacho lo creo manualmente
+		$pedido->aprobado = 'S'; //Genero el pedido como aprobado directamente, sin autorización de nadie, y el predespacho lo creo manualmente
 		$pedido->cliente = Factory::getInstance()->getCliente(Ecommerce_Configuration::ECOMMERCE_ID_CLIENTE);
 		$pedido->sucursal = Factory::getInstance()->getSucursal(Ecommerce_Configuration::ECOMMERCE_ID_CLIENTE, Ecommerce_Configuration::ECOMMERCE_ID_SUCURSAL);
 		$pedido->vendedor = $pedido->cliente->vendedor;
@@ -40,7 +40,7 @@ class Ecommerce_OrderStatus_Pedido extends Ecommerce_OrderStatus {
 		$pedido->precioAlFacturar = 'N';
 		//$pedido->importeTotal = $order->grandTotal; Se calcula el total abajo
 		$pedido->ecommerceOrder = $order;
-		$pedido->observaciones = 'Pedido por ECOMMERCE - NÂº ORDER: ' . $order->idEcommerce . ' - De: ' . $order->customer->fullname();
+		$pedido->observaciones = 'Pedido por ECOMMERCE - Nº ORDER: ' . $order->idEcommerce . ' - De: ' . $order->customer->fullname();
 
 		$nroItem = 1;
 		$detalles = array();
@@ -68,7 +68,7 @@ class Ecommerce_OrderStatus_Pedido extends Ecommerce_OrderStatus {
 			$detalle->cantidad = $cantidad;
 			$detalle->pendiente = $cantidad;
 			if ($detalle->getTotalCantidad() == 0) {
-				throw new FactoryExceptionCustomException('No se encontrÃ³ ninguna coincidencia entre los talles pedidos y los correspondientes al artÃ­culo');
+				throw new FactoryExceptionCustomException('No se encontró ninguna coincidencia entre los talles pedidos y los correspondientes al artículo');
 			}
 
 			$detalle->numeroDeItem = $nroItem;

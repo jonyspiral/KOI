@@ -1,13 +1,13 @@
 <?php
 
 class TransactionException extends Exception {
-    public function __construct($msg = 'OcurriÃ³ un error en la transacciÃ³n'){
+    public function __construct($msg = 'Ocurrió un error en la transacción'){
         parent::__construct($msg);
 	}
 }
 
 class LoginFailException extends Exception {
-	public function __construct($msg = 'OcurriÃ³ un error al intentar realizar el login'){
+	public function __construct($msg = 'Ocurrió un error al intentar realizar el login'){
 		parent::__construct($msg);
 	}
 }
@@ -31,13 +31,13 @@ class FactoryExceptionTipoDeObjetoDesconocido extends Exception {
 }
 
 class FactoryExceptionStoredProcedureDesconocido extends Exception {
-    public function __construct($msg = 'El stored procedure nÃºmero no es conocido en este entorno'){
+    public function __construct($msg = 'El stored procedure número no es conocido en este entorno'){
         parent::__construct($msg);
 	}
 }
 
 class FactoryExceptionCustomException extends Exception {
-    public function __construct($msg = 'OcurriÃ³ un error'){
+    public function __construct($msg = 'Ocurrió un error'){
         parent::__construct($msg);
 	}
 }

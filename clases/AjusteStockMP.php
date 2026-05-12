@@ -50,7 +50,7 @@ class AjusteStockMP extends Base implements OperacionStock {
 		}
 
 		if ($this->cantidadTotal <= 0 && $this->tipoMovimiento != TiposMovimientoStock::inicial) {
-			throw new FactoryExceptionCustomException('No puede hacer un ajuste por 0 (cero) unidades (todas las columnas de cantidad estÃ¡n en cero)');
+			throw new FactoryExceptionCustomException('No puede hacer un ajuste por 0 (cero) unidades (todas las columnas de cantidad están en cero)');
 		}
 	}
 
@@ -73,7 +73,7 @@ class AjusteStockMP extends Base implements OperacionStock {
 	}
 
 	public function stockObservacion() {
-		return 'Ajuste MP ' . $this->tipoMovimiento . ' NÂº ' . $this->id;
+		return 'Ajuste MP ' . $this->tipoMovimiento . ' Nº ' . $this->id;
 	}
 
 	public function stockDetalle() {

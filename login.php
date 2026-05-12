@@ -19,7 +19,6 @@ $file_mobile = './img/fondos/login/' . (isset($image_files[1]) ? $image_files[1]
 
 // Depuración (compatible con PHP 5.2.9)
 echo "<!-- Debug: Desktop file = $file_desktop, Mobile file = $file_mobile -->";
-
 ?>
 <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
 <html>

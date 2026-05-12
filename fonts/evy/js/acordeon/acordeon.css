@@ -1,0 +1,27 @@
+.divAcordeon {
+	background-color: #FFFFFF;
+	padding-right: 10px;
+}
+.tituloSeccion {
+	font: bold 15px Calibri;
+	color: #EF942F;
+	cursor: pointer;
+	padding: 4px 0 3px 20px;
+	border: 1px solid #EF942F;
+	border-radius: 4px 4px 4px 4px;
+}
+.tituloSeccion.selected {
+	color: #FFFFFF;
+	background-color: #EF942F;
+	border-radius: 4px 4px 0 0;
+}
+.tituloSeccion label {
+	cursor: pointer;
+}
+.contenidoSeccion {
+	display: none;
+}
+.contenidoSeccion.selected {
+	border: 1px solid #EF942F;
+	border-radius: 0 0 4px 4px;
+}

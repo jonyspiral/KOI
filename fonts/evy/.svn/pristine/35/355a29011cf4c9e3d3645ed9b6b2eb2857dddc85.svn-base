@@ -1,0 +1,135 @@
+.classMenu {
+	width: 100%;
+	height: 41px;
+	text-align: center;
+	font: bold 15px Arial;
+	background-color: #C55A29;
+	background-image: -webkit-gradient(linear, left center, right center, from(#C55A29), to(#E67B19));
+	background-image: -webkit-linear-gradient(left, #C55A29, #E67B19 83%);
+	background-image:    -moz-linear-gradient(left, #C55A29, #E67B19 83%);
+	background-image:      -o-linear-gradient(left, #C55A29, #E67B19 83%);
+	background-image:         linear-gradient(to right, #C55A29 16%, #E67B19 83%);
+	border-radius: 8px 8px 0 0;
+}
+
+/* Main off */
+.menu_koi, .menu_empresa {width: 100px; height: 41px;}
+.menu_1, .menu_2, .menu_3, .menu_4, .menu_5 {width: 160px; height: 41px;}
+/*.classMenu ul .menu_koi {background: url('/img/menu/menu_koi_navidad.gif');}*/
+.classMenu ul .menu_koi {background: url('/img/menu/menu_koi.gif');}
+.classMenu ul .menu_1 {background: url('/img/menu/menu_1_off.gif');}
+.classMenu ul .menu_2 {background: url('/img/menu/menu_2_off.gif');}
+.classMenu ul .menu_3 {background: url('/img/menu/menu_3_off.gif');}
+.classMenu ul .menu_4 {background: url('/img/menu/menu_4_off.gif');}
+.classMenu ul .menu_5 {background: url('/img/menu/menu_5_off.gif');}
+.classMenu ul .menu_empresa a {padding: 0}
+
+/* Main hover, selected y actual */
+.classMenu ul .menu_1:hover, .classMenu ul .menu_1.selected, .classMenu ul .menu_1.actual {background: url('/img/menu/menu_1_on.gif'); cursor: pointer;}
+.classMenu ul .menu_2:hover, .classMenu ul .menu_2.selected, .classMenu ul .menu_2.actual {background: url('/img/menu/menu_2_on.gif'); cursor: pointer;}
+.classMenu ul .menu_3:hover, .classMenu ul .menu_3.selected, .classMenu ul .menu_3.actual {background: url('/img/menu/menu_3_on.gif'); cursor: pointer;}
+.classMenu ul .menu_4:hover, .classMenu ul .menu_4.selected, .classMenu ul .menu_4.actual {background: url('/img/menu/menu_4_on.gif'); cursor: pointer;}
+.classMenu ul .menu_5:hover, .classMenu ul .menu_5.selected, .classMenu ul .menu_5.actual {background: url('/img/menu/menu_5_on.gif'); cursor: pointer;}
+
+.classMenu ul {
+	z-index: 100;
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	display: inline-block;
+}
+
+/* Main */
+.classMenu ul li {
+	position: relative;
+	display: inline;
+	float: left;
+	background: #E67B19;
+}
+
+/* Main links */
+.classMenu ul li a {
+	display: block;
+	color: white;
+	padding: 12px 0;
+	text-align: center;
+	text-decoration: none;
+	height: 18px;
+}
+
+/* Correción para IE6 para los links de SubMenu */
+* html .classMenu ul li a { 
+	display: inline-block;
+}
+
+.classMenu ul li a:link, .classMenu ul li a:visited {
+	color: white;
+}
+
+/* SubMenu Selected */
+.classMenu ul li li a.selected {
+	background: #C55A29;
+	color: white;
+}
+
+/* SubMenu BG hover */
+.classMenu ul li li a:hover {
+	background: #C55A29;
+}
+	
+/* SubMenu nivel 1 */
+.classMenu ul li ul {
+	position: absolute;
+	margin-top: 1px;
+	left: 0;
+	display: none;
+	visibility: hidden;
+}
+
+/* SubMenu nivel 1 links */
+.classMenu ul li ul li {
+	display: list-item;
+	float: none;
+}
+
+/* SubMenu nivel 2 */
+.classMenu ul li ul li ul {
+	top: 0;
+}
+
+/* SubMenu nivel 2 links */
+.classMenu ul li ul li a {
+	font: bold 13px Arial;
+	width: 150px;
+	padding: 8px 5px;
+	margin: 0;
+	text-align: left;
+	border-top-width: 0;
+	border-bottom: 1px solid gray;
+}
+
+/* Arreglo IE7 */
+* html .classMenu {
+	height: 1%;
+}
+
+/* Right Arrow */
+.rightarrowclass {
+	position: absolute;
+	top: 10px;
+	right: 3px;
+}
+
+/* Shadow para los Browsers que no soportan CSS3 */
+.ddshadow {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 0;
+	height: 0;
+	background: silver;
+}
+
+.toplevelshadow {
+	opacity: 0.8;
+}

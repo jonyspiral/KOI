@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW stock_ptASSELECT s.cod_almacen, s.cod_articulo, s.cod_color_articulo, IFNULL(s.cant_1, 0) AS S1, IFNULL(s.cant_2, 0) AS S2, IFNULL(s.cant_3, 0) AS S3, IFNULL(s.cant_4, 0) AS S4, IFNULL(s.cant_5, 0) AS S5, IS;;

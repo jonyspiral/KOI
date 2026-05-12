@@ -14,8 +14,8 @@ class MovimientoStock extends Base {
 	public		$id;
 	public		$tipoMovimiento; //Es 'INI', 'POS' o 'NEG'
 	public		$tipoOperacion; //Es alguno de los valores del enum TiposOperacionStock
-	public		$keyObjeto;	//Es la PK serializada del objeto en cuestiÃ³n. Puede ser NULL. (Ej: id=15&tipo=M)
-	public		$observaciones; //AcÃ¡ va el dato del nÃºmero de tarea o documento. Es sÃ³lo para tener una referencia en el reporte
+	public		$keyObjeto;	//Es la PK serializada del objeto en cuestión. Puede ser NULL. (Ej: id=15&tipo=M)
+	public		$observaciones; //Acá va el dato del número de tarea o documento. Es sólo para tener una referencia en el reporte
 	public		$idAlmacen;
 	protected	$_almacen;
 	public		$idArticulo;
@@ -47,14 +47,14 @@ class MovimientoStock extends Base {
 				$stockActual->cantidad[$posicion] += (($this->tipoMovimiento == TiposMovimientoStock::negativo ? -1 : 1) * $cantMovimiento);
 				if ($stockActual->cantidad[$posicion] < 0 && $this->tipoMovimiento != TiposMovimientoStock::inicial) {
 					$art = '[' . $this->almacen->id . '-' . $this->articulo->id . '-' . $this->colorPorArticulo->id . '] ' . $this->articulo->nombre;
-					throw new FactoryExceptionCustomException('No hay stock suficiente del artÃ­culo "' . $art . '" para realizar el movimiento');
+					throw new FactoryExceptionCustomException('No hay stock suficiente del artículo "' . $art . '" para realizar el movimiento');
 				}
 			}
 			$stockActual->guardar();
 
 			parent::guardar();
 		} catch (FactoryExceptionRegistroNoExistente $ex) {
-			throw new FactoryExceptionCustomException('No existe el artÃ­culo [' . $this->almacen->id . '_' . $this->articulo->id . '_' . $this->colorPorArticulo->id . '] en la tabla de stock');
+			throw new FactoryExceptionCustomException('No existe el artículo [' . $this->almacen->id . '_' . $this->articulo->id . '_' . $this->colorPorArticulo->id . '] en la tabla de stock');
 		}
 
 		return $this;

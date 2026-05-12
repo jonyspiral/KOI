@@ -35,9 +35,9 @@ class Ecommerce_WS extends WS {
 				$model_name = str_replace($action . '_', '', $name);
 				return $this->$action($model_name, $arguments[0]);
 			}
-			throw new Exception('No existe el mÃ©todo ' . $action . ' en la clase "' . get_class($this) . '"');
+			throw new Exception('No existe el método ' . $action . ' en la clase "' . get_class($this) . '"');
 		}
-		throw new Exception('No se ha logrado encontrar un mÃ©todo vÃ¡lido para ' . $name . ' en la clase "' . get_class($this) . '" que admita ' . count($arguments) . ' parÃ¡metros');
+		throw new Exception('No se ha logrado encontrar un método válido para ' . $name . ' en la clase "' . get_class($this) . '" que admita ' . count($arguments) . ' parámetros');
 	}
 
 	protected function create($model_name, $data) {
@@ -56,14 +56,14 @@ class Ecommerce_WS extends WS {
 				throw new Exception('no se puede comprender el mensaje de respuesta del servidor');
 			} elseif (!Ecommerce_WS_Error_Handler::isSuccess($response)) {
 				if (Ecommerce_WS_Error_Handler::getErrorCode($response) == Ecommerce_WS_Error_Handler::MODEL_EXISTS_ONCREATE) {
-					throw new WS_Exception_ModelExists('el objeto que intentÃ³ guardar ya existe en el Ecommerce');
+					throw new WS_Exception_ModelExists('el objeto que intentó guardar ya existe en el Ecommerce');
 				} elseif (Ecommerce_WS_Error_Handler::getErrorCode($response) == Ecommerce_WS_Error_Handler::MODEL_NOT_EXISTS_ONUPDATE) {
-					throw new WS_Exception_ModelNotExists('el objeto que intentÃ³ guardar no existe en el Ecommerce');
+					throw new WS_Exception_ModelNotExists('el objeto que intentó guardar no existe en el Ecommerce');
 				} else {
 					throw new FactoryExceptionCustomException($response['response']['message']);
 				}
 			}
-			$this->log(self::LOG_TIPO_SUCCESS, $action, 'Se enviÃ³ correctamente el request');
+			$this->log(self::LOG_TIPO_SUCCESS, $action, 'Se envió correctamente el request');
 		} catch (Exception $ex) {
 			$this->log(self::LOG_TIPO_ERROR, $action, 'Error al enviar el request: ' . $ex->getMessage());
 			throw $ex;

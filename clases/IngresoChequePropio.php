@@ -20,7 +20,7 @@ class IngresoChequePropio extends TransferenciaBase {
 			Factory::getInstance()->marcarParaBorrar($cheque);
 			$this->transaction()->persistir($cheque);
 		}else{
-			throw new FactoryExceptionCustomException('El recibo no puede borrarse ya que el cheque NÂº ' . $cheque->numero . ' ya fue utilizado en alguna operaciÃ³n');
+			throw new FactoryExceptionCustomException('El recibo no puede borrarse ya que el cheque Nº ' . $cheque->numero . ' ya fue utilizado en alguna operación');
 		}
 	}
 

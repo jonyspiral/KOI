@@ -49,7 +49,7 @@ class HtmlTable extends Html {
 		if (isset($this->caption))
 			$echo .= '<caption class="caption' . ($this->captionClass ? ' ' . $this->captionClass : '') . '">' . $this->caption . '</caption>';
 		$echo .= $this->header->create();
-		$echo .= $this->body->create($this->header->rows); //Para que el create de CELL pueda formatear el contenido segï¿½n el dataType del header
+		$echo .= $this->body->create($this->header->rows); //Para que el create de CELL pueda formatear el contenido seg�n el dataType del header
 		$echo .= $this->foot->create();
 		$echo .= '</table>';
 		if ($return)
@@ -110,7 +110,7 @@ class HtmlTable extends Html {
 			}
 			$rows[$i] = &$this->body->rows[$i];
 		}
-		//Al volver de esta funciï¿½n, en $rows y en $cells hay punteros
+		//Al volver de esta funci�n, en $rows y en $cells hay punteros
 		//directos a las filas y celdas de la tabla
 	}
 	public function getHeadArray(&$ths) {
@@ -135,7 +135,7 @@ class HtmlTable extends Html {
 	//############### Crea el contenido a partir de un array sin formato ###############//
 	public function createBodyFromArray($array){
 		$this->body = new HtmlTableBody();
-		//Tiene que aplicar formatos segï¿½n los head
+		//Tiene que aplicar formatos seg�n los head
 		foreach($array as $row){
 			$tr = new HtmlTableRow();
 			foreach($row as $attr => $value){

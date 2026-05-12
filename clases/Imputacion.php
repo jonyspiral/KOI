@@ -48,7 +48,7 @@ class Imputacion extends Base {
 		$imputacionesHija = Factory::getInstance()->getListObject('Imputacion', $where);
 
 		if (count($imputacionesHija) == 0) {
-			throw new FactoryExceptionCustomException('La imputaciÃ³n seleccionada no posee sub-cuentas asociadas');
+			throw new FactoryExceptionCustomException('La imputación seleccionada no posee sub-cuentas asociadas');
 		}
 
 		return $imputacionesHija;

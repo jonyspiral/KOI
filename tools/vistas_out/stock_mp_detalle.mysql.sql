@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW stock_mp_detalleASSELECT TOP 100 fecha_movimiento, cod_material, cod_color, cantidad, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, cod_almacen, Motivo, nro_operacion, efecto_movimientoFROM (SEL;;

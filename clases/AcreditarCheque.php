@@ -19,7 +19,7 @@ class AcreditarCheque extends AcreditarDebitarCheque {
 		//$this->validarSiHayChequesConcluidos();
 
 		if(is_null($this->datosSinValidar['fecha_credito']))
-			throw new FactoryExceptionCustomException('Debe especificar la fecha de crÃ©dito.');
+			throw new FactoryExceptionCustomException('Debe especificar la fecha de crédito.');
 	}
 
 	public function getCodigoPermiso() {

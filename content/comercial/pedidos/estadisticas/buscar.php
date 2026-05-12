@@ -52,7 +52,7 @@ function getItemsEstadistica() {
 					}
 				}
 
-				//Inicializo el prï¿½ximo item
+				//Inicializo el próximo item
 				$i++;
 				$item = $items[$i];
 				$arrIdC = getArrayIdC($modo, $item);
@@ -79,7 +79,7 @@ function comprobarFechas(&$desde, &$hasta) {
 		throw new FactoryExceptionCustomException('La fecha "desde" no puede ser posterior a la fecha "hasta"');
 
 	if (Funciones::diferenciaFechas($hasta, $desde) > $dias)
-		throw new FactoryExceptionCustomException('El rango de fechas no puede superar los ' . $dias . ' dï¿½as');
+		throw new FactoryExceptionCustomException('El rango de fechas no puede superar los ' . $dias . ' días');
 }
 
 function strFechas($desde, $hasta, $campoFecha = 'fecha_pedido'){
@@ -135,25 +135,25 @@ function getArrayIdC($modo, $item) {
 				'idC2' => $item->idCliente,
 				'titulo' => '[' . $item->vendedor->id . '] ' . $item->vendedor->nombreApellido,
 				'tituloDetalle' => 'Cliente',
-				'detalleItem' => '[' . $item->idCliente . '] ' . $item->cliente->razonSocial . '<label class="fRight pRight5">Calificaciï¿½n: ' . $item->cliente->calificacion . '</label>'
+				'detalleItem' => '[' . $item->idCliente . '] ' . $item->cliente->razonSocial . '<label class="fRight pRight5">Calificación: ' . $item->cliente->calificacion . '</label>'
 			);
-		case 2: //ENCABEZADO: || DETALLE: Artï¿½culo
+		case 2: //ENCABEZADO: || DETALLE: Artículo
 			return array(
 				'idC1' => 0,
 				'idC2' => $item->idAlmacen . '_' . $item->idArticulo . '_' . $item->idColorPorArticulo,
 				'titulo' => '',
-				'tituloDetalle' => 'Artï¿½culo',
+				'tituloDetalle' => 'Artículo',
 				'detalleItem' => '[' . $item->getIdCombinado('-') . '] ' . $item->articulo->nombre . ' ' . $item->colorPorArticulo->nombre
 			);
-		case 3: //ENCABEZADO: Cliente || DETALLE: Artï¿½culo
+		case 3: //ENCABEZADO: Cliente || DETALLE: Artículo
 			return array(
 				'idC1' => $item->idCliente,
 				'idC2' => $item->idAlmacen . '_' . $item->idArticulo . '_' . $item->idColorPorArticulo,
 				'titulo' => '[' . $item->idCliente . '] ' . $item->cliente->razonSocial,
-				'tituloDetalle' => 'Artï¿½culo',
+				'tituloDetalle' => 'Artículo',
 				'detalleItem' => '[' . $item->getIdCombinado('-') . '] ' . $item->articulo->nombre . ' ' . $item->colorPorArticulo->nombre
 			);
-		case 4: //ENCABEZADO: Artï¿½culo || DETALLE: Cliente
+		case 4: //ENCABEZADO: Artículo || DETALLE: Cliente
 		default:
 			return array(
 				'idC1' => $item->idAlmacen . '_' . $item->idArticulo . '_' . $item->idColorPorArticulo,
@@ -168,7 +168,7 @@ function getArrayIdC($modo, $item) {
 				'idC2' => $item->idCliente,
 				'titulo' => '',
 				'tituloDetalle' => 'Cliente',
-				'detalleItem' => '[' . $item->idCliente . '] ' . $item->cliente->razonSocial . '<label class="fRight pRight5">Calificaciï¿½n: ' . $item->cliente->calificacion . '</label>'
+				'detalleItem' => '[' . $item->idCliente . '] ' . $item->cliente->razonSocial . '<label class="fRight pRight5">Calificación: ' . $item->cliente->calificacion . '</label>'
 			);
 	}
 }
@@ -208,7 +208,7 @@ function meterEnArray(&$array, $arrIdC, $item) {
 				'cantDespachados' => 0,
 				'cantDevueltos' => 0
 		);
-		//La cantidad devuelta de ese artï¿½culo debe setearse una ï¿½nica vez. El resto se va sumando
+		//La cantidad devuelta de ese artículo debe setearse una única vez. El resto se va sumando
 		$array[$arrIdC['idC1']]['detalle'][$arrIdC['idC2']]['cantDevueltos'] = getDevueltos($filtros);
 	}
 	$array[$arrIdC['idC1']]['detalle'][$arrIdC['idC2']]['cantPedidos'] += $item->getTotalCantidad();

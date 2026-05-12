@@ -50,7 +50,7 @@ abstract class Contabilidad {
 		$where = 'anulado = ' . Datos::objectToDB('N') . ' AND fecha_desde <= dbo.toDate(' . Datos::objectToDB($fecha) . ') AND fecha_hasta >= dbo.toDate(' . Datos::objectToDB($fecha) . ')';
 		$ejercicios = Factory::getInstance()->getListObject('EjercicioContable', $where);
 		if (count($ejercicios) != 1) {
-			throw new FactoryExceptionCustomException('OcurriÃ³ un error al intentar obtener el ejercicio contable correspondiente a la fecha "' . $fecha . '". Por favor revise el ABM de ejercicios contables');
+			throw new FactoryExceptionCustomException('Ocurrió un error al intentar obtener el ejercicio contable correspondiente a la fecha "' . $fecha . '". Por favor revise el ABM de ejercicios contables');
 		}
 		return $ejercicios[0];
 	}
@@ -80,7 +80,7 @@ abstract class Contabilidad {
 			$ejerciciosContables = Factory::getInstance()->getListObject('EjercicioContable', $where);
 
 			if (count($ejerciciosContables) == 0){
-				throw new FactoryExceptionCustomException('No existe un ejercicio contable para el perÃ­odo actual');
+				throw new FactoryExceptionCustomException('No existe un ejercicio contable para el período actual');
 			}
 			if (count($ejerciciosContables) > 1){
 				throw new FactoryExceptionCustomException('Existen ejercicios contables conflictivos');

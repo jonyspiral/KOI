@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW stock_mp_sin_rango AS SELECT cod_material, cod_color, SUM(cant) AS cant FROM (SELECT materias_primas_movim_extraor.cod_material, materias_primas_movim_extraor.cod_color_material AS cod_color, SUM(- mater;;

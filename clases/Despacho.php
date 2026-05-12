@@ -12,7 +12,7 @@
 
 class Despacho extends Base {
 	const		_primaryKey = '["numero"]';
-	const		CANT_MAX_DETALLE = 99; //EstÃ¡ al pedo este nÃºmero
+	const		CANT_MAX_DETALLE = 99; //Está al pedo este número
 
 	public		$numero;
 	public		$empresa;
@@ -26,7 +26,7 @@ class Despacho extends Base {
 	public		$idUsuarioBaja;
 	protected	$_usuarioBaja;
 	protected	$_detalle;
-	public		$cantidad;				//NÃºmero total de items
+	public		$cantidad;				//Número total de items
 	protected	$_cantidadArticulos;
 	public		$idEcommerceOrder;
 	protected	$_ecommerceOrder;
@@ -45,14 +45,14 @@ class Despacho extends Base {
 	}
 
 	public function addItem(DespachoItem $item) {
-		$this->getDetalle(); //En caso de nuevo, esto me va a traer un array vacÃ­o
+		$this->getDetalle(); //En caso de nuevo, esto me va a traer un array vacío
 		$this->_detalle[] = $item;
 	}
 
 	public static function despachar($datos, $funcionalidad = false) {
 		/*
-			Esta funciÃ³n se encargarÃ¡ de generar un despacho de uno o mÃ¡s predespachos.
-			$datos serÃ¡ un array de distintos predespachos con las cantidades a despachar. Ejemplo:
+			Esta función se encargará de generar un despacho de uno o más predespachos.
+			$datos será un array de distintos predespachos con las cantidades a despachar. Ejemplo:
 				array(
 					'empresa' => 1,
 					'idCliente' => 33,
@@ -84,7 +84,7 @@ class Despacho extends Base {
 		$arrPredespachos = array();
 		foreach ($datos['predespachos'] as $predesp) {
 			$predespacho = Factory::getInstance()->getPredespacho($predesp['pedidoNumero'], $predesp['pedidoNumeroDeItem']);
-			//AcÃ¡ en realidad hay q llenar un array de DespachoItem
+			//Acá en realidad hay q llenar un array de DespachoItem
 			$despachoItem = Factory::getInstance()->getDespachoItem();
 			$despachoItem->numeroDeItem = $nroItem;
 			$despachoItem->empresa = $despacho->empresa;
@@ -102,7 +102,7 @@ class Despacho extends Base {
 			$despachoItem->precioUnitario = $predespacho->pedidoItem->precioUnitario;
 			$despachoItem->precioUnitarioFinal = $despachoItem->calcularPrecioUnitarioFinal();
 			for ($z = 1; $z <= 10; $z++) {
-				//Calculo cuÃ¡nto puedo despachar segÃºn lo predespachado
+				//Calculo cuánto puedo despachar según lo predespachado
 				$propuesto = Funciones::toInt($predesp['cant'][$z]);
 				$predespachado = $predespacho->predespachados[$z];
 				$despachoItem->cantidad[$z] = (($propuesto <= $predespachado && $propuesto >= 0) ? $propuesto : ($propuesto >= $predespachado ? $predespachado : 0));
@@ -118,7 +118,7 @@ class Despacho extends Base {
 			throw new FactoryExceptionCustomException('No se puede generar un despacho con CERO pares');
 		}
 		if ($despacho->cantidadArticulos > Despacho::CANT_MAX_DETALLE) {
-			throw new FactoryExceptionCustomException('No se puede generar el despacho ya que tiene mÃ¡s de ' . Despacho::CANT_MAX_DETALLE . ' artÃ­culos');
+			throw new FactoryExceptionCustomException('No se puede generar el despacho ya que tiene más de ' . Despacho::CANT_MAX_DETALLE . ' artículos');
 		}
 
 		try {
@@ -204,7 +204,7 @@ class Despacho extends Base {
 			$anterior = 0;
 			foreach ($this->detalle as $despachoItem) {
 				if ($despachoItem->remitoNumero != $anterior) {
-					throw new FactoryExceptionCustomException('El despacho tiene mÃºltiples remitos');
+					throw new FactoryExceptionCustomException('El despacho tiene múltiples remitos');
 				}
 			}
 			$this->_remito = $this->detalle[0]->remito;

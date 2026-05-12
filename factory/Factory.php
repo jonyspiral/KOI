@@ -95,7 +95,12 @@ class Factory {
 			$row = Datos::EjecutarSQLItem($this->mapper->getQueryInstancia($obj, Modos::id));
 			if (count($row) != 1)
 				throw new FactoryException('No se encontr� el pr�ximo ID');
-			return $row['computed'];
+			if (array_key_exists('computed', $row)) {
+                return $row['computed'];
+            }
+
+            $values = array_values($row);
+            return count($values) ? $values[0] : null;
 		} catch (Exception $ex) {
 			throw $ex;
 		}

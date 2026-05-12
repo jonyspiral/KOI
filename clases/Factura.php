@@ -17,8 +17,8 @@ class Factura extends DocumentoDebe {
 
 	public static function facturar($datos, $funcionalidad = false) {
 		/*
-			Esta funciÃ³n se encargarÃ¡ de generar una factura de uno o mÃ¡s remitos.
-			$datos serÃ¡ un array de distintos Remito a facturar (los Remito se facturan ENTEROS). Ejemplo:
+			Esta función se encargará de generar una factura de uno o más remitos.
+			$datos será un array de distintos Remito a facturar (los Remito se facturan ENTEROS). Ejemplo:
 				array(
 					'empresa' => 1,
 					'idCliente' => 33,
@@ -59,7 +59,7 @@ class Factura extends DocumentoDebe {
 		}
 		$factura->importeNeto = $importeNeto;
 
-		//Este precio (descuentoDespachoImporte) tiene los descuentos Y LOS RECARGOS! Pero como sÃ³lo se usa para acÃ¡,
+		//Este precio (descuentoDespachoImporte) tiene los descuentos Y LOS RECARGOS! Pero como sólo se usa para acá,
 		//agrupo to_do en el campo DESCUENTO (si es negativo es porque fue recargo)
 		$factura->descuentoDespachoImporte = Funciones::toFloat($importeNeto - $importeConDescuento);
 		$factura->descuentoComercialPorc = $factura->cliente->creditoDescuentoEspecial;
@@ -96,7 +96,7 @@ class Factura extends DocumentoDebe {
 		$factura->importeTotal = $factura->importeNeto + $factura->importeNoGravado - $factura->descuentoComercialImporte - $factura->descuentoDespachoImporte + $factura->ivaImporte1 + $factura->ivaImporte2 + $factura->ivaImporte3;
 		$factura->importePendiente = $factura->importeTotal;
 		$factura->letra = $factura->getLetra();
-		$factura->puntoDeVenta = Config::encinitas() ? Config::PUNTO_VENTA_NCNTS : ($factura->empresa != 1 || $factura->letra == 'E' ? 1 : 2); //Si es cuenta 2 o factura 'E', no es electrÃ³nica
+		$factura->puntoDeVenta = Config::encinitas() ? Config::PUNTO_VENTA_NCNTS : ($factura->empresa != 1 || $factura->letra == 'E' ? 1 : 2); //Si es cuenta 2 o factura 'E', no es electrónica
 		$factura->tipoDocumento = TiposDocumento::factura;
 
 		if ($factura->getCantidadPares() <= 0) {
@@ -130,7 +130,7 @@ class Factura extends DocumentoDebe {
 	}
 
 	private function armoRemitosParaFormulario() {
-		//Array con los nÃºmero de remitos que componen la factura
+		//Array con los número de remitos que componen la factura
 		//No hace falta la letra (siempre R), ni la empresa (es la misma que la factura) ni nada
 		$arr = array();
 		if (!$this->tieneDetalle()) {

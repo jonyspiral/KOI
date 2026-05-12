@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW tmp_auto AS;;

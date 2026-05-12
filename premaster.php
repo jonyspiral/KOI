@@ -3,15 +3,11 @@
 session_start();
 session_cache_limiter("nocache");
 error_reporting(0);
-
-if (!headers_sent()) header('Content-Type: text/html; charset=UTF-8'); 
-
-// header('Content-type: text/html; charset=iso-8859-1;');
-
+//header('Content-type: text/html; charset=utf-8;');
+header('Content-type: text/html; charset=iso-8859-1;');
 require_once('includes.php');
 
 function fatal_handler() {
-	
 	if(($error = error_get_last()) !== null) {
 		Logger::addError('[' . get_err_type($error["type"]) . '] "' . $error["message"] . '" in file ' . $error["file"] . ' at line ' . $error["line"]);
 	}
@@ -21,14 +17,12 @@ register_shutdown_function('fatal_handler');
 
 //Login
 try {
-
-    UsuarioLogin::login(); 
-	
+    UsuarioLogin::login();
     if ($_SERVER['REMOTE_ADDR'] == '190.104.245.136' || $_SERVER['REMOTE_ADDR'] == '190.190.22.173') {
 		Logger::addInfo('U: ' . Usuario::logueado()->id);
 	}
 } catch (LoginFailException $ex){
-    $onDocumentReady = 'loginFail("' . $ex->getMessage() . '");'; 
+    $onDocumentReady = 'loginFail("' . $ex->getMessage() . '");';
 } catch (Exception $ex){
     throw $ex;
 }
@@ -66,8 +60,6 @@ function get_err_type($type) {
 		case E_USER_DEPRECATED:
 			return 'E_USER_DEPRECATED';
 	}
-	
 	return $type;
 }
-
 ?>

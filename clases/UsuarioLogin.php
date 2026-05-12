@@ -56,13 +56,13 @@ class UsuarioLogin extends Usuario {
 					BEGIN
 						UPDATE koi_sessions 
 						SET user_id = :uid,
-							updated_at = NOW()
+							updated_at = GETDATE()
 						WHERE session_id = :sid
 					END
 					ELSE
 					BEGIN
 						INSERT INTO koi_sessions (session_id, user_id, created_at, updated_at)
-						VALUES (:sid, :uid, NOW(), NOW())
+						VALUES (:sid, :uid, GETDATE(), GETDATE())
 					END";
 
 			// Ajustar la forma de ejecutar consultas en KOI.
@@ -78,7 +78,7 @@ class UsuarioLogin extends Usuario {
                 $_SESSION['empresa'] = '1';
             }
 		} catch (FactoryExceptionRegistroNoExistente $ex){
-			//Va a entrar por ac√° si el usuario no existe (username) o si la contrase√±a es incorrecta
+			//Va a entrar por ac· si el usuario no existe (username) o si la contraseÒa es incorrecta
 			self::logout();
 			throw new LoginFailException('Los datos ingresados son incorrectos');
 		}

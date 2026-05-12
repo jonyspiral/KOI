@@ -1,0 +1,30 @@
+.solapas {
+}
+.solapas ul {
+	margin: 0;
+	padding: 0;
+    overflow: hidden;
+    height: auto !important;
+}
+.tituloSolapa {
+	font-weight: bold;
+	font-size: 14px;
+	font-family: Calibri,sans-serif;
+	color: #EF942F;
+	cursor: pointer;
+	padding: 4px 10px 3px 15px;
+	border: 1px solid #EF942F;
+	border-bottom-width: 3px;
+	border-radius: 4px 4px 0 0;
+	display: inline;
+	float: left;
+	text-align: center;
+}
+.tituloSolapa.selected {
+	color: #FFFFFF;
+	background-color: #EF942F;
+	border-radius: 4px 4px 0 0;
+}
+.contenidoSolapa {
+	display: none;
+}

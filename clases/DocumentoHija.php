@@ -10,7 +10,7 @@ class DocumentoHija extends Base {
 	const		_primaryKey = '["id"]';
 	const		deltaErrorDesaplicar = 0.03;
 
-	public		$id;						//Es clave_access, el autonumÃ©rico
+	public		$id;						//Es clave_access, el autonumérico
 	public		$anulado;
 	public		$importe;
 	public		$empresa;

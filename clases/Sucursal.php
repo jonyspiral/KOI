@@ -127,7 +127,7 @@ class Sucursal extends Base {
 
 	protected function validarGuardar() {
 		if ($this->esPuntoDeVenta == 'S' && (!isset($this->direccionLatitud) || !isset($this->direccionLongitud))) {
-			throw new FactoryExceptionCustomException('Si la sucursal es punto de venta deber√° completar los campos "latitud" y "longitud" para el Store Locator');
+			throw new FactoryExceptionCustomException('Si la sucursal es punto de venta deber· completar los campos "latitud" y "longitud" para el Store Locator');
 		}
 	}
 

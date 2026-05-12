@@ -18,7 +18,7 @@ class Usuario extends Base {
 
 	public		$id;
 	protected	$_tipoUsuario;	//Personal (P) para P-O-V o Contacto (C) para C-R-X en TipoPersona
-	public		$tipoPersona;	//"P"ersonal, "O"perador o "V"endedor || "C"liente, Proveedor ("R") u Otro ("X") Â¡HAY ENUM!
+	public		$tipoPersona;	//"P"ersonal, "O"perador o "V"endedor || "C"liente, Proveedor ("R") u Otro ("X") ¡HAY ENUM!
 	public		$anulado;
 	public		$idContacto;
 	protected	$_contacto;
@@ -39,7 +39,7 @@ class Usuario extends Base {
 	protected	$_nombreApellido;
 	public		$idPersonal;
 	protected	$_personal;
-	protected	$_codigoPersonal; //AcÃ¡ voy a devolver el ID Personal si es un personal o el ID de operador si es Operador o Vendedor. Si es contacto, el id.
+	protected	$_codigoPersonal; //Acá voy a devolver el ID Personal si es un personal o el ID de operador si es Operador o Vendedor. Si es contacto, el id.
 	protected	$_roles;
 	public		$mensajeHome;
 
@@ -80,7 +80,7 @@ class Usuario extends Base {
 					break;
 				case TiposPersonal::operador:
 				case TiposPersonal::vendedor:
-					return $this->getPersonal()->id; //Problemas. AcÃ¡ deberÃ­a ir ID pq si no no anda la cta cte
+					return $this->getPersonal()->id; //Problemas. Acá debería ir ID pq si no no anda la cta cte
 					break;
 				default:
 					return $this->getContacto()->id;
@@ -140,7 +140,7 @@ class Usuario extends Base {
 						}
 					}
 					if ($modo == 'A') {
-						if ($valor >= $valCol[$combinacion0]) {
+						if ($valor >= $valCol[$combinacion[0]]) {
 							for ($j = 0; $j < count($combinacion); $j++) {
 								if ($j == count($combinacion) - 1) {
 									$color = $colores[$combinacion[$j]];
@@ -206,12 +206,12 @@ class Usuario extends Base {
 		$where = 'cod_usuario = ' . Datos::objectToDB($this->id) . ' ';
 		//$where .= 'AND anulado = \'N\' AND (vista = \'N\' OR eliminable = \'N\')';
 		if (!empty($fechaHora)) {
-			//Hay que mandarle sÃ³lo las notificaciones posteriores a la hora enviada
+			//Hay que mandarle sólo las notificaciones posteriores a la hora enviada
 			$where .= ' AND dbo.toDate(fecha_ultima_mod) > dbo.toDate(' . Datos::objectToDB($fechaHora) . ')';
 		} else {
 			$temp = Factory::getInstance()->getListObject('NotificacionPorUsuario', $where . $order, '1');//Esto es para que la primera vez tenga
-			if (count($temp) > 0)															// la fecha de la Ãºltima notif modificada 
-				$ultimaHora = $temp[0]->fechaUltimaMod; 									// asÃ­ no se mandan despuÃ©s
+			if (count($temp) > 0)															// la fecha de la última notif modificada 
+				$ultimaHora = $temp[0]->fechaUltimaMod; 									// así no se mandan después
 			$where .= ' AND anulado = \'N\'';
 		}
 		$arr = array();
@@ -228,7 +228,7 @@ class Usuario extends Base {
 				'fechaUltimaMod' => $notif->fechaUltimaMod
 			);
 		}
-		if (isset($ultimaHora) && count($arr) > 0) { //Entra sÃ³lo la primera vez.
+		if (isset($ultimaHora) && count($arr) > 0) { //Entra sólo la primera vez.
 			$arr[0]['fechaUltimaMod'] = $ultimaHora;
 		}
 		return $arr;

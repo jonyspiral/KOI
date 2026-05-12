@@ -12,7 +12,7 @@ class Ecommerce_OrderStatus_Cobrado extends Ecommerce_OrderStatus {
 				'idImputacion' => Ecommerce_Configuration::ECOMMERCE_ID_IMPUTACION,
 				'recibidoDe' => $order->customer->fullname(),
 				'fechaDocumento' => $order->fechaPedido,
-				'observaciones' => 'Recibo por ECOMMERCE - NÂº ORDER: ' . $order->idEcommerce . ' - De: ' . $order->customer->fullname(),
+				'observaciones' => 'Recibo por ECOMMERCE - Nº ORDER: ' . $order->idEcommerce . ' - De: ' . $order->customer->fullname(),
 				'idCaja_E' => Ecommerce_Configuration::ECOMMERCE_ID_CAJA_COBRANZA,
 				'usuario' => Usuario::logueado()
 			);

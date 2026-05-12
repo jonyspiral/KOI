@@ -6,7 +6,7 @@ function goMail($msg) {
 	$mail->Subject = 'Error al actualizar clientes en la web';
 	$mail->AddAddress('jony@spiralshoes.com.ar');
 	$mail->AddAddress('leandro@spiralshoes.com.ar');
-	$mail->Body = 'OcurriÃ³ un error al intentar actualizar el archivo de clientes de la web: ' . $msg;
+	$mail->Body = 'Ocurrió un error al intentar actualizar el archivo de clientes de la web: ' . $msg;
 	$mail->IsHTML(true);
 	$mail->Send();
 	$mail->ClearAddresses();
@@ -39,7 +39,7 @@ try {
 	$sucs['capital'] = Factory::getInstance()->getListObject('Sucursal', 'anulado = \'N\' AND (cod_zona = \'01\')');
 	$sucs['norte'] = Factory::getInstance()->getListObject('Sucursal', 'anulado = \'N\' AND (cod_zona = \'04\')');
 	$sucs['oeste'] = Factory::getInstance()->getListObject('Sucursal', 'anulado = \'N\' AND (cod_zona = \'06\')');
-	//Localidad 54 es La Plata, que es el Ãºnico que en ZONA tiene expreso
+	//Localidad 54 es La Plata, que es el único que en ZONA tiene expreso
 	//El resto de los expresos son INTERIOR
 	$sucs['sur'] = Factory::getInstance()->getListObject('Sucursal', 'anulado = \'N\' AND (cod_zona = \'02\' OR cod_zona = \'03\' OR cod_localidad_nro = 54)');
 	$sucs['interior'] = Factory::getInstance()->getListObject('Sucursal', 'anulado = \'N\' AND (cod_zona = \'05\' AND cod_localidad_nro <> 54)');

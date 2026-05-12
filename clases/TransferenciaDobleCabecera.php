@@ -4,7 +4,7 @@ abstract class TransferenciaDobleCabecera extends TransferenciaBase {
 	protected	$_detalle;
 
 	public function validarNuevo() {
-		//Lleno los datos que tienen en comÃºn todas las TransferenciaBase
+		//Lleno los datos que tienen en común todas las TransferenciaBase
 		$this->empresa = $this->datosSinValidar['empresa'];
 		$this->usuario = $this->datosSinValidar['usuario'];
 		$this->observaciones = $this->datosSinValidar['observaciones'];

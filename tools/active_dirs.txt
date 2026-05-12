@@ -1,9 +1,0 @@
-factory
-content
-clases
-js
-.htaccess
-master.php
-premaster.php
-main.php
-login.php

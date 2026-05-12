@@ -1,0 +1,34 @@
+.draggableDialog {
+	position: absolute;
+	float: left;
+	margin-top: 10px;
+	width: auto;
+	background: #DDDDDD;
+	border: solid 1px #B6B6BF;
+	border-radius: 10px;
+	cursor: move;
+	z-index: 200;
+	padding-bottom: 2px;
+	opacity: 0.9;
+}
+.draggableDialog>div {
+	padding: 2px 2px 0 2px;
+}
+.draggableDialog>div>label {
+	margin-right: 5px;
+	margin-left: 15px;
+}
+.draggableDialog label {
+	font-size: 14px;
+	cursor: move;
+}
+.draggableDialog span.ui-button-text {
+	cursor: pointer;
+}
+.draggableCloseButton {
+	cursor: pointer;
+	font-family: Calibri, sans-serif;
+	padding-right: 5px;
+	color: white;
+	font-weight: bold;	
+}

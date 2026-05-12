@@ -21,15 +21,13 @@ function autoload($class) {
 
 require_once('factory/Config.php'); //Necesito que config se cargue primero para que ande el Autoload.
 require_once('factory/Enums.php'); //No carga con el Autoload.
+
 require_once('factory/Datos.php');
 require_once('factory/Funcionalidades.php');
 require_once('factory/Factory.php');
 require_once('factory/FactoryExceptions.php');
 require_once('factory/Funciones.php');
 require_once('factory/Mapper.php');
-require_once('factory/drivers/DbMysql.php');
-// en includes.php (o donde centralices las clases base)
-
 
 /*
 require_once('clases/Base.php');

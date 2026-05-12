@@ -1,0 +1,121 @@
+.importes-container {
+	position: absolute;
+	width: 98%;
+	bottom: 0;
+}
+.importes-popups {
+	display: none;
+}
+.importes-title > div {
+	cursor: pointer;
+	color: #FFFFFF;
+	display: inline-block;
+	border-radius: 4px 4px 0 0;
+	padding: 2px 8px;
+	background-color: #E67B19;
+	min-width: 80px;
+	text-align: center;
+}
+.importes-title > div > span:nth-child(1) {
+	font-family: marlett, sans-serif;
+	display: inline-table;
+	vertical-align: middle;
+	margin-bottom: 3px;
+}
+.importes-toggle {
+	background-color: #EEEFFF;
+	border: 1px solid #E67B19;
+	border-radius: 0 5px 0 0;
+	padding: 5px 10px;
+	overflow-y: scroll;
+}
+.importes-toggle::-webkit-scrollbar {
+	width: 9px;
+	height: 9px;
+}
+.importes-toggle::-webkit-scrollbar-thumb {
+	background-color: #E67B19;
+}
+
+/* Table */
+.importes-striped {
+	width: 100%;
+	padding-top: 5px;
+}
+.importes-striped td {
+	font-size: 15px;
+}
+.importes-striped > tbody > tr:nth-child(odd){
+	background-color: #DDDDDD;
+}
+.importes-striped > tbody > tr:nth-child(even){
+	background-color: #FFFFFF;
+}
+.importes-striped th {
+	text-align: center;
+	background-color: #EF942F;
+	color: #FFFFFF;
+	padding: 3px 4px;
+}
+.importes-striped th:first-of-type {
+	border-top-left-radius: 4px;
+}
+.importes-striped th:last-of-type {
+	border-top-right-radius: 4px;
+}
+
+/* Popup */
+.importes-popup-title {
+	padding: 10px;
+	text-align: right;
+	font-weight: bold;
+}
+.importes-popup-content {
+	padding: 10px;
+}
+.importes-popup-content table {
+	width: 100%;
+}
+.importes-input-numeric {
+	text-align: right;
+}
+.importes-popup-content-filtros {
+	padding: 12px 19px;
+	border: 1px solid #e3e3e3;
+	border-radius: 4px;
+	background-color: rgba(247, 247, 247, 0.8);
+}
+.importes-popup-lista {
+	height: 260px;
+	overflow-y: scroll;
+}
+.importes-popup-lista::-webkit-scrollbar {
+	width: 9px;
+	height: 9px;
+}
+.importes-popup-lista::-webkit-scrollbar-thumb {
+	background-color: #E67B19;
+}
+.importes-popup-lista-totales {
+	float: right;
+	margin: 4px;
+	padding: 5px;
+}
+.importes-popup-lista-totales>span {
+	padding: 3px 6px;
+	background-color: #E67B19;
+	font-weight: bold;
+	border: solid 1px #C55A29;
+	border-radius: 5px;
+}
+#importes-popup-cheque-body>tr>td {
+	height: 25px;
+}
+
+/* Otros */
+.btn {
+	min-width: 92px;
+	margin: 0 5px;
+}
+/* */
+

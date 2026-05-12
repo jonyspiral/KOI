@@ -1,4 +1,0 @@
-CREATE VIEW dbo.stock_menos_asignado_vw
-AS
-SELECT     cod_almacen, cod_articulo, cod_color_articulo, SUM(cant_s) AS cant_s, SUM(S1) AS S1, SUM(S2) AS S2, SUM(S3) AS S3, SUM(S4) AS S4, SUM(S5) 
-                      AS S5, SUM(S6) AS S6, SUM(S7) AS S7, 

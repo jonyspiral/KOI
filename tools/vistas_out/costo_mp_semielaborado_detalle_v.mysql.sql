@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW costo_mp_semielaborado_detalle_vASSELECT patrones_se_vigentes_v.cod_articulo, patrones_se_vigentes_v.denom_articulo, patrones_se_vigentes_v.cod_color_articulo, patrones_se_vigentes_v.tipo_pat;;

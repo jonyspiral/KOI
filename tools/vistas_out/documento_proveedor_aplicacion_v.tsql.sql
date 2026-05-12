@@ -1,5 +1,0 @@
-
-CREATE VIEW [dbo].[documento_proveedor_aplicacion_v] AS
-	SELECT cod_documento_proveedor AS id, empresa, punto_venta, tipo_docum, nro_documento, letra,
-			factura_gastos, cod_proveedor, fecha, importe_total, importe_pendiente
-	FROM dbo.documento_prove

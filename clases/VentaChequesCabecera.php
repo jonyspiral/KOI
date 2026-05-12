@@ -95,7 +95,7 @@ class VentaChequesCabecera extends TransferenciaDobleCabecera implements Documen
 					/** @var ImportePorOperacionItem $ixod */
 					$importe = $ixod->importe;
 					$fila['numeroFila'] = $i;
-					/** @var Cheque $importe */ //PUEDE NO SER UN CHEQUE, pero lo pongo asÃ­ para que me tome ->fechaVencimiento
+					/** @var Cheque $importe */ //PUEDE NO SER UN CHEQUE, pero lo pongo así para que me tome ->fechaVencimiento
 					$fila['fechaVencimiento'] = ($importe->getTipoImporte() == TiposImporte::cheque) ? $importe->fechaVencimiento : $fecha;
 					$fila['imputacion'] = $importe->getImputacion();
 					$fila['importeDebe'] = 0;

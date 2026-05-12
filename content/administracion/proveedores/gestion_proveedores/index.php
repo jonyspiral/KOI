@@ -128,7 +128,6 @@
 		funciones.cambiarModo(modo);
 		switch (modo){
 			case 'inicio':
-				$('#divSaldoFechaHasta').hide();
 				break;
 			case 'buscar':
 				funciones.cambiarTitulo(tituloPrograma);

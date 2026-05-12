@@ -47,7 +47,7 @@ class MovimientoAlmacenMP extends Base implements OperacionStock {
 			$stockActual = Factory::getInstance()->getStockMP($this->almacenOrigen->id, $this->material->id, $this->colorMateriaPrima->idColor);
 			for ($i = 1; $i <= 10; $i++) {
 				if ($this->cantidad[$i] > $stockActual->cantidad[$i]) {
-					throw new FactoryExceptionCustomException('La cantidad actual en stock en la posiciÃ³n ' . $i . ' (' . ($stockActual->cantidad[$i]) . ') es mayor que la cantidad que se quiere mover (' . $this->cantidad[$i] . ')');
+					throw new FactoryExceptionCustomException('La cantidad actual en stock en la posición ' . $i . ' (' . ($stockActual->cantidad[$i]) . ') es mayor que la cantidad que se quiere mover (' . $this->cantidad[$i] . ')');
 				}
 			}
 
@@ -78,7 +78,7 @@ class MovimientoAlmacenMP extends Base implements OperacionStock {
 
 	protected function validarGuardar() {
 		if ($this->cantidadTotal <= 0) {
-			throw new FactoryExceptionCustomException('No puede hacer un movimiento de stock por 0 (cero) unidades (todas las columnas de cantidad estÃ¡n en cero)');
+			throw new FactoryExceptionCustomException('No puede hacer un movimiento de stock por 0 (cero) unidades (todas las columnas de cantidad están en cero)');
 		}
 	}
 
@@ -101,7 +101,7 @@ class MovimientoAlmacenMP extends Base implements OperacionStock {
 	}
 
 	public function stockObservacion() {
-		return 'Mov. almacÃ©n MP NÂº ' . $this->id;
+		return 'Mov. almacén MP Nº ' . $this->id;
 	}
 
 	public function stockDetalle() {

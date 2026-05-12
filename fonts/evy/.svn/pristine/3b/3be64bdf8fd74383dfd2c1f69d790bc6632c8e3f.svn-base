@@ -1,0 +1,29 @@
+#tree {
+	font: normal 18px Calibri;
+}
+
+#tree ul {
+	margin: 0!important;
+	padding-top: 3px;
+}
+
+#tree li {
+	list-style: none;
+	padding-bottom: 3px;
+}
+
+#tree li ul li {
+	padding-left: 23px;
+}
+
+#tree ul.hide {
+	display: none;
+}
+
+#tree span.treeControl {
+	color: #999;
+	font-family: Courier, serif;
+	font-size: 20px;
+	padding-right: 5px;	
+	cursor: pointer;
+}

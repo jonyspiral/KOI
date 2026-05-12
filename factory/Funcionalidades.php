@@ -1,5 +1,5 @@
 <?php 
-	//ATENCIÃ“N! Los nÃºmeros de las funcionalidades deben ser correlativos, sino rompe =S
+	//ATENCIÓN! Los números de las funcionalidades deben ser correlativos, sino rompe =S
 
 class Funcionalidades {
 	static function get($id){
@@ -827,7 +827,7 @@ class Funcionalidades {
 			582		=> 'sistema/tickets/agregar/',
 			583		=> 'sistema/tickets/editar/',
 			584		=> 'sistema/tickets/borrar/',
-            7		=> 'ws/', // El 6 es LISTAR (estÃ¡ al comienzo)
+            7		=> 'ws/', // El 6 es LISTAR (está al comienzo)
 			71		=> 'ws/ecommerce/',
 			711		=> 'ws/ecommerce/orders/',
 			7111	=> 'ws/ecommerce/orders/buscar/',

@@ -1,173 +1,170 @@
 <?php
-/*************************************************************
- * KOI1 - Clientes / Catálogo
- * Archivo: content/cliente/catalogo/index.php
- * NOTA: Versión ORIGINAL con solo comentarios e identación.
- *       - No se cambió lógica ni orden
- *       - No se agregaron ni quitaron helpers/métodos
- * Fecha/hora (America/Argentina/Buenos_Aires): 2025-09-05
- *************************************************************/
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-/* -----------------------------------------------------------
- * Parámetros de navegación recibidos por GET/POST:
- *   c => sección (menú)
- *   f => familia (submenú) o 'all' para todas
- * ----------------------------------------------------------- */
-$menuactual    = (array_key_exists('c', $_REQUEST)) ? $_REQUEST['c'] : '';
-$submenuactual = (array_key_exists('f', $_REQUEST)) ? $_REQUEST['f'] : '';
+$menuactual    = array_key_exists('c', $_REQUEST) ? $_REQUEST['c'] : '';
+$submenuactual = array_key_exists('f', $_REQUEST) ? $_REQUEST['f'] : '';
 
-/* -----------------------------------------------------------
- * Catálogo activo y contexto de cabecera
- * ----------------------------------------------------------- */
 $catalogo = Catalogo::ultimo();
 
 $tituloCatalogo     = '';
 $familiaProducto    = '';
 $familiaDescripcion = '';
-$articulosTodos     = array();
+$imagenLateral      = null;
+
+// ---------- SELECCIÓN DE ARTÍCULOS (FILTRADO SEGURO) ----------
+$articulosTodos = array();
 
 if ($submenuactual != 'all') {
+    // Familia específica dentro de la sección
+    $familia = CatalogoSeccionFamilia::find($catalogo->id, $menuactual, $submenuactual);
 
-    /* Caso: familia puntual */
-    $familia            = CatalogoSeccionFamilia::find($catalogo->id, $menuactual, $submenuactual); // WARNING: original
-    $articulosTodos     = $familia->articulos;
-    $tituloCatalogo     = $familia->lineaProducto->tituloCatalogo;
-    $familiaProducto    = $familia->familiaProducto->nombre;
-    $familiaDescripcion = $familia->descripcion;
-    $imagenLateral      = $familia->imagenLateral;
-
-} else {
-
-    /* Caso: todas las familias de la sección */
-    $catSec = CatalogoSeccion::find($catalogo->id, $menuactual);
-
-    foreach ($catSec->familias as $fams) {
-        foreach ($fams->articulos as $articulo) {
-            $articulosTodos[] = $articulo;
+    if ($familia) {
+        foreach ($familia->articulos as $a) {
+            /** @var CatalogoSeccionFamiliaArticulo $a */
+            if ((int)$a->idCatalogo === (int)$catalogo->id
+                && (int)$a->idLineaProducto === (int)$menuactual
+                && (int)$a->idFamiliaProducto === (int)$submenuactual) {
+                $articulosTodos[] = $a;
+            }
         }
-        if ($fams->imagenLateral) {
-            $imagenLateral = $fams->imagenLateral;
-        }
+
+        // Metadatos de la familia (aunque no haya matches, para no romper)
+        $tituloCatalogo     = $familia->lineaProducto->tituloCatalogo;
+        $familiaProducto    = $familia->familiaProducto->nombre;
+        $familiaDescripcion = $familia->descripcion;
+        $imagenLateral      = $familia->imagenLateral;
     }
 
-    $tituloCatalogo  = $catSec->lineaProducto->tituloCatalogo;
-    $familiaProducto = 'Todos';
+} else {
+    // “Todos” dentro de una sección
+    $catSec = CatalogoSeccion::find($catalogo->id, $menuactual);
+
+    if ($catSec) {
+        foreach ($catSec->familias as $fams) {
+            foreach ($fams->articulos as $articulo) {
+                /** @var CatalogoSeccionFamiliaArticulo $articulo */
+                if ((int)$articulo->idCatalogo === (int)$catalogo->id
+                    && (int)$articulo->idLineaProducto === (int)$menuactual) {
+                    $articulosTodos[] = $articulo;
+                }
+            }
+            if (!empty($fams->imagenLateral)) {
+                $imagenLateral = $fams->imagenLateral;
+            }
+        }
+        $tituloCatalogo  = $catSec->lineaProducto->tituloCatalogo;
+        $familiaProducto = 'Todos';
+    }
 }
 
-/* -----------------------------------------------------------
- * Lista aplicable para precios (Distribuidor / No distribuidor)
- * ----------------------------------------------------------- */
-$distribuidor = Usuario::logueado()->cliente->listaAplicable == 'D';
+// ---------- CONTEXTO DE USUARIO ----------
+$distribuidor = (Usuario::logueado()->cliente->listaAplicable == 'D');
 
-/* -----------------------------------------------------------
- * Favoritos del cliente logueado
- * ----------------------------------------------------------- */
-$favoritos      = Base::getListObject('FavoritoCliente', 'cod_cliente = ' . Datos::objectToDB(Usuario::logueado()->cliente->id));
+// ---------- FAVORITOS DEL USUARIO ----------
+$favoritos = Base::getListObject(
+    'FavoritoCliente',
+    'cod_cliente = ' . Datos::objectToDB(Usuario::logueado()->cliente->id)
+);
 $arrayFavoritos = array();
 foreach ($favoritos as $favorito) {
     $arrayFavoritos[] = $favorito->idArticulo . '_' . $favorito->idColorPorArticulo;
 }
 
-/* -----------------------------------------------------------
- * Stock (por artículo/color/talle) y armado de WHEREs
- * ----------------------------------------------------------- */
-$stock         = array();
-$where         = '';
-$whereImagenes = ' articulo in (';
+// ---------- STOCK ----------
+$stock          = array(); // [articulo][color][talleIndex] => cantidad
+$where          = '';
+$whereImagenes  = ' articulo in (';
 
-$x        = 0;
+$x = 0;
 $conector = '';
 
 foreach ($articulosTodos as $articulo) {
-    $x++;
     /** @var CatalogoSeccionFamiliaArticulo $articulo */
+    $x++;
     $where .= '(cod_articulo = ' . Datos::objectToDB($articulo->idArticulo) .
               ' AND cod_color_articulo = ' . Datos::objectToDB($articulo->idColorPorArticulo) . ') OR ';
-    if ($x > 1) {
-        $conector = ',';
-    }
-    // $whereImagenes .= $conector . Datos::objectToDB($articulo->idArticulo . $articulo->idColorPorArticulo);
+    if ($x > 1) $conector = ',';
     $whereImagenes .= $conector . Datos::objectToDB($articulo->idArticulo);
 }
 
 $whereImagenes .= ')';
-// $where = '(cod_almacen = ' . Datos::objectToDB('01') .') OR cod_almacen = ('. Datos::objectToDB('14') .') AND (' . trim($where, ' OR ') . ')';
 
-/* Consultar stocks contra vista stock_menos_pendiente_vw (sólo si hay WHERE) */
-$stocks = array();
-if ($where) {
-    // print_r('where ->' . $where);
-    $where  = 'cod_almacen = ' . Datos::objectToDB('01') . ' AND (' . trim($where, ' OR ') . ')';
+// Consultar stocks solo si hay artículos
+if (!empty($where)) {
+    $where = 'cod_almacen = ' . Datos::objectToDB('01') . ' AND (' . rtrim($where, ' OR ') . ')';
     $stocks = Factory::getInstance()->getArrayFromView('stock_menos_pendiente_vw', $where);
 
     foreach ($stocks as $item) {
+        $art = $item['cod_articulo'];
+        $col = $item['cod_color_articulo'];
+        if (!isset($stock[$art])) $stock[$art] = array();
+        if (!isset($stock[$art][$col])) $stock[$art][$col] = array();
         for ($j = 1; $j <= 10; $j++) {
-            if (!array_key_exists($item['cod_articulo'], $stock)) {
-                $stock[$item['cod_articulo']] = array();
-            }
-            if (!array_key_exists($item['cod_color_articulo'], $stock[$item['cod_articulo']])) {
-                $stock[$item['cod_articulo']][$item['cod_color_articulo']] = array();
-            }
-            $stock[$item['cod_articulo']][$item['cod_color_articulo']][$j] =
-                Funciones::toNatural(Funciones::keyIsSet($item, 'S' . $j, 0));
+            $clave = 'S' . $j;
+            $stock[$art][$col][$j] = Funciones::toNatural(Funciones::keyIsSet($item, $clave, 0));
         }
     }
 }
 
-/* -----------------------------------------------------------
- * Imágenes por producto/artículo/color
- * ----------------------------------------------------------- */
-$imagenesColor     = array();
-$imagenesItem      = array();
-$imagenesSoloColor = array();
+// ---------- IMÁGENES ----------
+// OJO: NO pisar variables; usar mapas con nombres únicos
+$mapImagenesColor     = array(); // [producto][] = {ruta,lado,tipo}
+$mapImagenesItem      = array(); // [articulo][] = {ruta,lado,tipo}
+$mapImagenesSoloColor = array(); // [articulo+codigo_color][] = {ruta,lado,tipo}
 
-/* Consultar imágenes si hay artículos */
 if ($x > 0) {
     $articulosImagenes = Factory::getInstance()->getArrayFromView('articulos_imagenes_v', $whereImagenes);
-
     foreach ($articulosImagenes as $item) {
-        // print_r($item['producto'] . '-' . $item['articulo'] . '-' . $item['codigo_color']  . '-' . $item['imagen'] . '<br>');
-        $imagenesColor[$item['producto']][]                          = array('ruta' => $item['imagen'], 'lado_imagen' => $item['lado_imagen'], 'tipo' => $item['tipo']);
-        $imagenesItem[$item['articulo']][]                           = array('ruta' => $item['imagen'], 'lado_imagen' => $item['lado_imagen'], 'tipo' => $item['tipo']);
-        $imagenesSoloColor[$item['articulo'] . $item['codigo_color']][] = array('ruta' => $item['imagen'], 'lado_imagen' => $item['lado_imagen'], 'tipo' => $item['tipo']);
+        $prodKey = $item['producto'];
+        $artKey  = $item['articulo'];
+        $colKey  = $item['codigo_color'];
+
+        $img = array(
+            'ruta'        => $item['imagen'],
+            'lado_imagen' => $item['lado_imagen'],
+            'tipo'        => $item['tipo']
+        );
+
+        $mapImagenesColor[$prodKey][]                  = $img;
+        $mapImagenesItem[$artKey][]                    = $img;
+        $mapImagenesSoloColor[$artKey . $colKey][]     = $img;
     }
 }
 
-/* -----------------------------------------------------------
- * Normalización a $articulos (estructura consumida por Angular)
- *   - Calcula stock por talles
- *   - Define primer/último talle
- *   - Agrupa subArticulos por referencia mayorista + color
- * ----------------------------------------------------------- */
-$articulos       = array();
-$articulosUnicos = array();
+// ---------- ARMADO DE RESULTADO ----------
+$articulos        = array();
+$articulosUnicos  = array();
 
 foreach ($articulosTodos as $articulo) {
+    /** @var CatalogoSeccionFamiliaArticulo $articulo */
+
+    // Seguridad extra: no dejar pasar “otros” por si viene ensuciado
+    if ((int)$articulo->idCatalogo !== (int)$catalogo->id) continue;
+    if ((int)$articulo->idLineaProducto !== (int)$menuactual) continue;
+    if ($submenuactual != 'all' && (int)$articulo->idFamiliaProducto !== (int)$submenuactual) continue;
 
     $cantidadTalles  = array();
     $imagenesItemI   = array();
-    $imagenesArticulo = array();
-    $imagenesColor    = array();
-    $stockInterno     = 0;   // Stock total del artículo principal
-    $primerTalle      = '';
-    $ultimoTalle      = '';
+    $imagenesArticulo= array();
+    $imagenesColorDeEste = array();
+    $stockInterno    = 0;
+    $primerTalle     = '';
+    $ultimoTalle     = '';
 
-    /* Calcular stock y talles para este artículo */
-    foreach ($articulo->articulo->rangoTalle->posicion as $key => $talle) {
-        if ($talle != 'X' && $talle != '0' && $talle != '' &&
-            isset($stock[$articulo->articulo->id]) &&
-            isset($stock[$articulo->articulo->id][$articulo->idColorPorArticulo])) {
-
-            $cantidadTalles[] = array(
-                'talle'    => $talle,
-                'cantidad' => $stock[$articulo->articulo->id][$articulo->idColorPorArticulo][$key],
-            );
-
-            $stockInterno += intval($stock[$articulo->articulo->id][$articulo->idColorPorArticulo][$key]);
+    // Talles/Stock
+    if (isset($articulo->articulo->rangoTalle->posicion) && is_array($articulo->articulo->rangoTalle->posicion)) {
+        foreach ($articulo->articulo->rangoTalle->posicion as $key => $talle) {
+            if ($talle !== 'X' && $talle !== '0' && $talle !== '') {
+                $cant = 0;
+                if (isset($stock[$articulo->articulo->id][$articulo->idColorPorArticulo][$key])) {
+                    $cant = (int)$stock[$articulo->articulo->id][$articulo->idColorPorArticulo][$key];
+                }
+                $cantidadTalles[] = array('talle' => $talle, 'cantidad' => $cant);
+                $stockInterno += $cant;
+            }
         }
     }
 
@@ -176,36 +173,34 @@ foreach ($articulosTodos as $articulo) {
         $ultimoTalle = $cantidadTalles[count($cantidadTalles) - 1]['talle'];
     }
 
-    if (isset($imagenesColor[$articulo->articulo->id . $articulo->idColorPorArticulo])) {
-        $imagenesItemI = $imagenesColor[$articulo->articulo->id . $articulo->idColorPorArticulo];
+    // Imágenes
+    if (isset($mapImagenesSoloColor[$articulo->articulo->id . $articulo->idColorPorArticulo])) {
+        $imagenesItemI = $mapImagenesSoloColor[$articulo->articulo->id . $articulo->idColorPorArticulo];
+    }
+    if (isset($mapImagenesItem[$articulo->articulo->id])) {
+        $imagenesArticulo = $mapImagenesItem[$articulo->articulo->id];
+    }
+    if (isset($mapImagenesSoloColor[$articulo->articulo->id . $articulo->colorPorArticulo->id])) {
+        $imagenesColorDeEste = $mapImagenesSoloColor[$articulo->articulo->id . $articulo->colorPorArticulo->id];
     }
 
-    if (isset($imagenesItem[$articulo->articulo->id])) {
-        $imagenesArticulo = $imagenesItem[$articulo->articulo->id];
-    }
+    $keyUnico = $articulo->colorPorArticulo->referenciaWebMayorista . $articulo->colorPorArticulo->id;
 
-    if (isset($imagenesSoloColor[$articulo->articulo->id . $articulo->colorPorArticulo->id])) {
-        $imagenesColor = $imagenesSoloColor[$articulo->articulo->id . $articulo->colorPorArticulo->id];
-    }
-
-    /* Si no existe el artículo único, crearlo con el stock total */
-    if (!isset($articulosUnicos[$articulo->colorPorArticulo->referenciaWebMayorista . $articulo->colorPorArticulo->id])) {
-
+    // Crear artículo “único” (grupo de subArtículos por color/ref)
+    if (!isset($articulosUnicos[$keyUnico])) {
         $subArticulos = array();
 
-        if ($articulo->colorPorArticulo->tipoProductoStock->nombreCatalogo) {
+        if (!empty($articulo->colorPorArticulo->tipoProductoStock->nombreCatalogo)) {
             $subArticulos[] = array(
-                'idArticulo'             => $articulo->idArticulo,
-                'nombre'                 => $articulo->articulo->nombre,
-                'idColorPorArticulo'     => $articulo->idColorPorArticulo,
-                'formaDeComercializacion'=> $articulo->colorPorArticulo->formaDeComercializacion,
-                'precioMayorista'        => $distribuidor ? $articulo->colorPorArticulo->precioDistribuidor
-                                                          : $articulo->colorPorArticulo->precioMayoristaDolar,
-                'precioMinorista'        => $distribuidor ? $articulo->colorPorArticulo->precioDistribuidorMinorista
-                                                          : $articulo->colorPorArticulo->precioMinoristaDolar,
-                'stock'                  => $stockInterno, // Stock del subartículo
-                'cantidadTalles'         => $cantidadTalles,
-                'colorPorArticulo'       => array(
+                'idArticulo'              => $articulo->idArticulo,
+                'nombre'                  => $articulo->articulo->nombre,
+                'idColorPorArticulo'      => $articulo->idColorPorArticulo,
+                'formaDeComercializacion' => $articulo->colorPorArticulo->formaDeComercializacion,
+                'precioMayorista'         => ($distribuidor ? $articulo->colorPorArticulo->precioDistribuidor : $articulo->colorPorArticulo->precioMayoristaDolar),
+                'precioMinorista'         => ($distribuidor ? $articulo->colorPorArticulo->precioDistribuidorMinorista : $articulo->colorPorArticulo->precioMinoristaDolar),
+                'stock'                   => $stockInterno,
+                'cantidadTalles'          => $cantidadTalles,
+                'colorPorArticulo'        => array(
                     'nombre'            => $articulo->colorPorArticulo->nombre,
                     'id'                => $articulo->colorPorArticulo->id,
                     'tipoProductoStock' => array(
@@ -214,17 +209,15 @@ foreach ($articulosTodos as $articulo) {
                         'descuentoPorc' => $articulo->colorPorArticulo->tipoProductoStock->descuentoPorc,
                     ),
                 ),
-                'primerTalle'            => $primerTalle,
-                'ultimoTalle'            => $ultimoTalle,
+                'primerTalle'             => $primerTalle,
+                'ultimoTalle'             => $ultimoTalle,
             );
         }
 
-        $articulosUnicos[$articulo->colorPorArticulo->referenciaWebMayorista . $articulo->colorPorArticulo->id] = array(
+        $articulosUnicos[$keyUnico] = array(
             'idArticulo'         => $articulo->idArticulo,
             'idColorPorArticulo' => '',
-            'articulo'           => array(
-                'nombre' => $articulo->articulo->nombre
-            ),
+            'articulo'           => array('nombre' => $articulo->articulo->nombre),
             'colorPorArticulo'   => array(
                 'nombre'            => $articulo->colorPorArticulo->nombre,
                 'id'                => $articulo->colorPorArticulo->id,
@@ -236,29 +229,27 @@ foreach ($articulosTodos as $articulo) {
             ),
             'categoria'               => $articulo->articulo->nombre,
             'formaDeComercializacion' => $articulo->colorPorArticulo->formaDeComercializacion,
-            'stock'                   => $stockInterno, // Stock total del artículo principal (inicialmente el mismo que $stockInterno)
+            'stock'                   => $stockInterno, // inicial
             'favorito'                => in_array($articulo->idArticulo . '_' . $articulo->idColorPorArticulo, $arrayFavoritos),
             'filtros'                 => false,
             'cantidadTalles'          => $cantidadTalles,
-            'imagenesArticulo'        => $imagenesColor,
+            'imagenesArticulo'        => $imagenesColorDeEste,
             'rutaIframe3D'            => $articulo->colorPorArticulo->ecommerceImage1,
             'subArticulos'            => $subArticulos,
         );
 
-    } elseif ($articulo->colorPorArticulo->tipoProductoStock->nombreCatalogo) {
-
-        $articulosUnicos[$articulo->colorPorArticulo->referenciaWebMayorista . $articulo->colorPorArticulo->id]['subArticulos'][] = array(
-            'idArticulo'             => $articulo->idArticulo,
-            'nombre'                 => $articulo->articulo->nombre,
-            'idColorPorArticulo'     => $articulo->idColorPorArticulo,
-            'formaDeComercializacion'=> $articulo->colorPorArticulo->formaDeComercializacion,
-            'precioMayorista'        => $distribuidor ? $articulo->colorPorArticulo->precioDistribuidor
-                                                      : $articulo->colorPorArticulo->precioMayoristaDolar,
-            'precioMinorista'        => $distribuidor ? $articulo->colorPorArticulo->precioDistribuidorMinorista
-                                                      : $articulo->colorPorArticulo->precioMinoristaDolar,
-            'stock'                  => $stockInterno, // Stock del subartículo
-            'cantidadTalles'         => $cantidadTalles,
-            'colorPorArticulo'       => array(
+    } elseif (!empty($articulo->colorPorArticulo->tipoProductoStock->nombreCatalogo)) {
+        // Agregar otro subArtículo al grupo
+        $articulosUnicos[$keyUnico]['subArticulos'][] = array(
+            'idArticulo'              => $articulo->idArticulo,
+            'nombre'                  => $articulo->articulo->nombre,
+            'idColorPorArticulo'      => $articulo->idColorPorArticulo,
+            'formaDeComercializacion' => $articulo->colorPorArticulo->formaDeComercializacion,
+            'precioMayorista'         => ($distribuidor ? $articulo->colorPorArticulo->precioDistribuidor : $articulo->colorPorArticulo->precioMayoristaDolar),
+            'precioMinorista'         => ($distribuidor ? $articulo->colorPorArticulo->precioDistribuidorMinorista : $articulo->colorPorArticulo->precioMinoristaDolar),
+            'stock'                   => $stockInterno,
+            'cantidadTalles'          => $cantidadTalles,
+            'colorPorArticulo'        => array(
                 'nombre'            => $articulo->colorPorArticulo->nombre,
                 'id'                => $articulo->colorPorArticulo->id,
                 'tipoProductoStock' => array(
@@ -267,127 +258,212 @@ foreach ($articulosTodos as $articulo) {
                     'descuentoPorc' => $articulo->colorPorArticulo->tipoProductoStock->descuentoPorc
                 )
             ),
-            'primerTalle'            => $primerTalle,
-            'ultimoTalle'            => $ultimoTalle,
+            'primerTalle'             => $primerTalle,
+            'ultimoTalle'             => $ultimoTalle,
         );
     }
 }
 
-/* -----------------------------------------------------------
- * $newItems: totaliza stock principal + subArticulos
- * ----------------------------------------------------------- */
+// Normalización final de items (sumo stock de subartículos)
 $newItems = array();
 foreach ($articulosUnicos as $idArticulo => $articulo) {
-
-    $totalStock = $articulo['stock']; // Stock inicial del artículo principal
-
+    $totalStock = (int)$articulo['stock'];
     if (!empty($articulo['subArticulos'])) {
-        // Sumar el stock de todos los subArticulos al stock del artículo principal
         foreach ($articulo['subArticulos'] as $sub) {
-            $totalStock += $sub['stock'];
+            $totalStock += (int)$sub['stock'];
         }
     }
 
     $newItems[] = array(
-        'idArticulo'         => $articulo['idArticulo'],
-        'idColorPorArticulo' => '',
-        'articulo'           => $articulo['articulo'],
-        'colorPorArticulo'   => $articulo['colorPorArticulo'],
-        'categoria'          => $articulo['categoria'],
-        'formaDeComercializacion' => $articulo['formaDeComercializacion'],
-        'stock'              => $totalStock, // Stock total (principal + subArticulos)
-        'favorito'           => $articulo['favorito'],
-        'filtros'            => $articulo['filtros'],
-        'cantidadTalles'     => $articulo['cantidadTalles'],
-        'imagenesArticulo'   => $articulo['imagenesArticulo'],
-        'rutaIframe3D'       => $articulo['rutaIframe3D'],
-        'subArticulos'       => $articulo['subArticulos'],
+        'idArticulo'            => $articulo['idArticulo'],
+        'idColorPorArticulo'    => '',
+        'articulo'              => $articulo['articulo'],
+        'colorPorArticulo'      => $articulo['colorPorArticulo'],
+        'categoria'             => $articulo['categoria'],
+        'formaDeComercializacion'=> $articulo['formaDeComercializacion'],
+        'stock'                 => $totalStock,
+        'favorito'              => $articulo['favorito'],
+        'filtros'               => $articulo['filtros'],
+        'cantidadTalles'        => $articulo['cantidadTalles'],
+        'imagenesArticulo'      => $articulo['imagenesArticulo'],
+        'rutaIframe3D'          => $articulo['rutaIframe3D'],
+        'subArticulos'          => $articulo['subArticulos'],
     );
 }
 
-/* Dataset final para Angular */
 $articulos = $newItems;
+
 ?>
 
+
 <style>
-  .item-star i { cursor:pointer; }
-  .item-star i.fa-star   { color: #ffcc00; }   /* dorado ON */
-.item-star i.fa-star-o { color: #bdbdbd; }   /* gris OFF  */
 
-.star-on  { color:#f5c518; }  /* dorado */
-.star-off { color:#bbb;    }  /* gris   */
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+    h1 {
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
 
-a { text-decoration: none; color: inherit; }
-h1 { margin-top: 10px; margin-bottom: 20px; }
+    .item-stock {
+      font-size: 100%;
+      cursor: pointer;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+    }
 
-.item-stock { font-size: 100%; cursor: pointer; left: 0; right: 0; display: flex; flex-direction: row; justify-content: space-around; }
-.tipo-boton { cursor: pointer; }
-span.item-stock-badge { color: #5DB44C; }
-.item-stock-produccion { top: 66px; }
+    .tipo-boton {
+      cursor: pointer;
+    }
 
-div.modal-body iframe { width: 100%; }
-.descripcion_lateral {
-  padding-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  padding-top: 3.666667%;
-  padding-left: 5px;
+    span.item-stock-badge {
+      color: #5DB44C;
+    }
+
+    .item-stock-produccion {
+      top: 66px;
+    }
+
+    div.modal-body iframe {
+      width: 100%;
+    }
+    .descripcion_lateral {
+      font-size: large;
+    font-weight: 400;
+      padding-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+     flex-wrap: wrap;
+     padding-top: 3.666667%;
+     padding-left: 5px;
+	 }
+   .subarticulo {
+     /* display: block; */
+     display: flex;
+     justify-content: space-between;
+   }
+   .subarticulo.sub-inline-grid {
+     display: grid;
+     justify-content: center;
+   }
+
+   .subarticulo .badge {
+     background-color: #cacaca;
+     margin-bottom: 2px;
+   }
+   .subarticulo .badge.badge-danger {
+     background-color: #d9534f;
+   }
+   .subarticulo .badge.inverted {
+     border: 1px solid #afafaf;
+     color: #afafaf;
+     background: none;
+   }
+   .subitem-talles {
+     position: absolute;
+     bottom: 0;
+     left: 10px;
+     right: 10px;
 }
-.subarticulo { /* display: block; */ display: flex; justify-content: space-between; }
-.subarticulo.sub-inline-grid { display: grid; justify-content: center; }
-.subarticulo .badge { background-color: #cacaca; margin-bottom: 2px; }
-.subarticulo .badge.badge-danger { background-color: #d9534f; }
-.subarticulo .badge.inverted { border: 1px solid #afafaf; color: #afafaf; background: none; }
-.subitem-talles { position: absolute; bottom: 0; left: 10px; right: 10px; }
 
+img {
+  max-width: 100%;
+}
+
+    @media (min-width: 786px) { /* Para smartphones */
+    }
 .familia-header {
-  display: flex; flex-direction: column; align-items: center; width: 100%;
-  /* max-width: 480px;  /* Se adapta a teléfonos grandes */ */
-  min-width: 320px;  /* Se adapta a teléfonos pequeños */
-  margin: 0 auto; padding: 10px; background-color: #f4f4f4;
+  display: flex
+;
+  /* flex-direction: column; */
+  /* align-items: center; */
+  width: 100%;
+  /* margin: 0 auto; */
+  /* padding: 10px; */
+  background-color: #black;
 }
+  
+    @media (max-width: 480px) { /* Para smartphones */
 
-img { max-width: 100%; }
+    .skip-row-top {
+        padding-top:4%;
+    }
 
-@media (max-width: 480px) { /* Para smartphones */
-  .skip-row-top { padding-top:4%; }
-  div.modal-body iframe { height: 270px; }
-  .familia-header {
-    width: 100%;
-    /* height: 200px; /* Ajusta según necesidad */ */
-    overflow: hidden; display: flex; padding: 0px; align-items: center; justify-content: center;
-    background-color: #f4f4f4; /* Fondo en caso de que la imagen no cargue */
-  }
+        div.modal-body iframe {
+          height: 270px;
+        }
+        .familia-header {
+            width: 100%;
+            /* height: 200px; /* Ajusta según necesidad */ */
+            overflow: hidden;
+            display: flex;
+            padding: 0px;
+            align-items: center;
+            justify-content: center;
+            background-color: #f4f4f4; /* Fondo en caso de que la imagen no cargue */
+
+
+        }
+    }
+
+    @media (max-width: 768px) {
+
+
+
+        .skip-row-top {
+            padding-top:4%;
+        }
+        div.modal-body iframe {
+          height: 350px;
+        }
+        .familia-header {
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f4f4f4; /* Fondo en caso de que la imagen no cargue */
+        }
+    }
+
+
+
+    @media (max-width: 1200px) {
+        .familia-header {
+          max-width: 100%;   /* Para que no se desborde */
+      }
+      .familia-header {
+
+            .skip-row-top {
+            padding-top: 4%;
+        }
+        .row{    width: 100%;
 }
+        .descripcion_lateral {
+            width: 100%;
+      display: flex  ;
+      flex-direction: column;
+      flex-wrap: wrap;
+      padding-top: 3.666667%;
+      margin-bottom: 4%;
+      background-color: #black; /* Fondo en caso de que la imagen no cargue */
+        }
 
-@media (max-width: 768px) {
-  .skip-row-top { padding-top:4%; }
-  div.modal-body iframe { height: 350px; }
-}
-
-@media (max-width: 1200px) {
-  .skip-row-top { padding-top: 4%; }
-  .descripcion_lateral {
-    display: flex; flex-direction: column; flex-wrap: wrap; padding-top: 3.666667%;
-    margin-bottom: 4%; background-color: #f4f4f4; /* Fondo en caso de que la imagen no cargue */
-  }
-}
+  }}
 </style>
 
-<script>
-/* Redirección si faltan parámetros */
+
+
+  <script>
 $(document).ready(function() {
-  <?php
-  if (!$menuactual || !$submenuactual) {
-      echo 'window.location.href = "/";';
-  }
-  ?>
+    <?php if (!$menuactual || !$submenuactual) echo 'window.location.href = "/";'; ?>
 });
 
-/* ------------------------------------------------------------
- * Controller Angular del Catálogo (usa servicios existentes)
- * ------------------------------------------------------------ */
 Koi.controller('CatalogoCtrl', function ($scope, $filter, $timeout, ServiceCliente, ServiceCatalogo) {
     ServiceCatalogo.filtros.show = true;
 
@@ -438,290 +514,128 @@ $scope.favoriteMenuVisible = false;
         favoritesMenu.classList.toggle('equal-favorites-items-hover');
     };
 
+
 function actualizarIconoFavorito(articulo, estadoForzado = null) {
   const idArticulo = articulo.idArticulo || articulo?.articulo?.id;
   const idColor    = articulo.idColorPorArticulo || articulo?.colorPorArticulo?.id;
+
   if (!idArticulo || !idColor) return;
 
-  const el = document.querySelector('#star-' + idArticulo + '-' + idColor + ' i'); // <- el <i>
-  const on = (estadoForzado !== null) ? !!estadoForzado : !!articulo.favorito;
-  if (!el) return;
+  const id    = `star-${idArticulo}-${idColor}`;
+  const icon  = document.getElementById(id);
+  const estado = (estadoForzado !== null ? estadoForzado : articulo.favorito) ? true : false;
 
-  el.classList.toggle('fa-star',   on);
-  el.classList.toggle('fa-star-o', !on);
-  el.classList.toggle('star-on',   on);
-  el.classList.toggle('star-off',  !on);
+  if (!icon) return; // <- si no hay icono (subArt), no ensuciamos consola
+
+  icon.classList.remove("fa-star", "fa-star-o", "star-on", "star-off");
+  icon.classList.add(estado ? "fa-star" : "fa-star-o");
+  icon.classList.add(estado ? "star-on" : "star-off");
 }
+
+
     
     // Toggle individual
 $scope.toggleFavorito = function (articulo) {
-    if (!articulo?.subArticulos?.length) {
-        console.error("❌ Artículo sin subArticulos:", articulo);
-        return;
-    }
+  if (!articulo) return;
 
-    const esFavorito = articulo.favorito;
+  const estaba = !!articulo.favorito;
+  const nuevo  = !estaba;
 
-    // Cambia visual y lógica de todos los subArticulos
-    articulo.subArticulos.forEach(sa => {
-        sa.favorito = !esFavorito;
-        actualizarIconoFavorito(sa);
-    });
-    articulo.favorito = !esFavorito;
-    actualizarIconoFavorito(articulo); // También el principal
+  // Actualizar modelo (esto pinta el ícono vía ng-class de inmediato)
+  articulo.favorito = nuevo;
+  if (articulo.subArticulos && articulo.subArticulos.length) {
+    articulo.subArticulos.forEach(sa => sa.favorito = nuevo);
+  }
+  $scope.$applyAsync(); // asegurar digest
 
-    const payload = articulo.subArticulos.map(sa => ({
+  // Armar payload
+  const payload = (articulo.subArticulos && articulo.subArticulos.length)
+    ? articulo.subArticulos.map(sa => ({
         idArticulo: sa.idArticulo,
         idColorPorArticulo: sa.colorPorArticulo?.id
-    })).filter(p => p.idArticulo && p.idColorPorArticulo);
+      })).filter(p => p.idArticulo && p.idColorPorArticulo)
+    : [{ idArticulo: articulo.idArticulo, idColorPorArticulo: articulo.colorPorArticulo?.id }];
 
-    setTimeout(async () => {
-        try {
-            const res = esFavorito
-                ? await ServiceCliente.removeFavoritoBatch(payload)
-                : await ServiceCliente.addFavoritoBatch(payload);
+  // Llamada a backend
+  const p = estaba
+    ? ServiceCliente.removeFavoritoBatch(payload)
+    : ServiceCliente.addFavoritoBatch(payload);
 
-            console.log("✔️ Backend confirmó favoritos:", res);
-
-            // Reforzar íconos visuales (por si acaso)
-            articulo.subArticulos.forEach(sa => actualizarIconoFavorito(sa));
-            actualizarIconoFavorito(articulo);
-            if (!$scope.$$phase) $scope.$apply();
-        } catch (err) {
-            console.error("🔥 Error desde backend, revirtiendo...", err);
-
-            // Restaurar visualmente
-            articulo.subArticulos.forEach(sa => {
-                sa.favorito = esFavorito;
-                actualizarIconoFavorito(sa);
-            });
-            articulo.favorito = esFavorito;
-            actualizarIconoFavorito(articulo);
-            if (!$scope.$$phase) $scope.$apply();
-        }
-    }, 50);
-};
-
-$scope.toggleFavorito2 = async function (articulo) {
-  // Construir payload desde subArticulos (o el propio si no hay subArticulos)
-  const buildFavs = (a) => {
-    if (Array.isArray(a.subArticulos) && a.subArticulos.length) {
-      return a.subArticulos
-        .map(sa => ({
-          idArticulo: sa.idArticulo,
-          idColorPorArticulo: (sa.colorPorArticulo && sa.colorPorArticulo.id) || sa.idColorPorArticulo
-        }))
-        .filter(x => x.idArticulo && x.idColorPorArticulo);
-    }
-    return [{
-      idArticulo: articulo.idArticulo,
-      idColorPorArticulo: (articulo.colorPorArticulo && articulo.colorPorArticulo.id) || articulo.idColorPorArticulo
-    }];
-  };
-
-  const favs = buildFavs(articulo);
-  const wasFav = !!articulo.favorito;
-
-  // 1) UI optimista inmediata
-  articulo.favorito = !wasFav;
-  if (Array.isArray(articulo.subArticulos)) {
-    articulo.subArticulos.forEach(sa => { sa.favorito = articulo.favorito; });
-  }
-  $scope.$applyAsync(); // <-- fuerza el repaint YA
-
-  try {
-    // 2) Llamada a backend
-    const resp = wasFav
-      ? await ServiceCliente.removeFavoritoBatch(favs)
-      : await ServiceCliente.addFavoritoBatch(favs);
-
-    if (!(resp && resp.status === 200)) {
-      throw new Error('Respuesta no OK del backend');
-    }
-    // 3) Nada más: UI ya quedó OK por el paso 1
-  } catch (e) {
-    console.error('toggleFavorito2 error, revertiendo:', e);
-
-    // Revertir UI si falló el backend
-    articulo.favorito = wasFav;
-    if (Array.isArray(articulo.subArticulos)) {
-      articulo.subArticulos.forEach(sa => { sa.favorito = wasFav; });
+  p.then(res => {
+    console.log("✔️ Backend confirmó favoritos:", res);
+    $scope.$applyAsync();
+  }).catch(err => {
+    console.error("🔥 Error desde backend, revirtiendo...", err);
+    // Revertir si falló
+    articulo.favorito = estaba;
+    if (articulo.subArticulos && articulo.subArticulos.length) {
+      articulo.subArticulos.forEach(sa => sa.favorito = estaba);
     }
     $scope.$applyAsync();
-  }
+  });
 };
 
 
-$scope.toggleFavoritoSimple = async function (articulo) {
-  // 1) Determinar IDs de forma compatible
-  var idArticulo = articulo.idArticulo || (articulo.articulo ? articulo.articulo.id : null);
-  var idColor    = articulo.idColorPorArticulo || (articulo.colorPorArticulo ? articulo.colorPorArticulo.id : null);
-
-  if (!idArticulo || !idColor) {
-    console.warn('Faltan claves para favorito', { idArticulo: idArticulo, idColorPorArticulo: idColor, articulo: articulo });
-    return; // No intentes llamar al backend si faltan claves
-  }
-
-  var wasFav = !!articulo.favorito;
-
-  // 2) Cambio optimista de UI
-  articulo.favorito = !wasFav;
-  $scope.$applyAsync(); // fuerza el digest de Angular para que la estrella cambie YA
-
-  // 3) Armar payload con un solo item
-  var fav = { idArticulo: idArticulo, idColorPorArticulo: idColor };
-
-  try {
-    // 4) Llamar backend (reutilizo los batch con 1 solo elemento)
-    var res = wasFav
-      ? await ServiceCliente.removeFavoritoBatch([fav])
-      : await ServiceCliente.addFavoritoBatch([fav]);
-
-    if (!res || res.status !== 200) {
-      throw new Error('Respuesta no OK');
-    }
-    // éxito: no hacemos nada, ya quedó actualizado
-  } catch (e) {
-    console.error('toggleFavoritoSimple ERR', e);
-    // 5) Revertir UI si falló
-    articulo.favorito = wasFav;
-    $scope.$applyAsync();
-  }
-};
-
-
-
-
-
-
-
-    // Acción múltiple: seleccionar TODOS como favoritos
+    // Acción múltiple: seleccionar favoritos
 $scope.addFavoriteButton = async function () {
-  console.log("🟡 addFavoriteButton");
-
-  // 1) UI: marcar todo optimistamente
-  let before = [];
+  spinner.style.display = 'block';
   let favorites = [];
-  let dedup = Object.create(null);
+
+  $scope.articulos.forEach(art => {
+    art.favorito = true;
+    // sactualizarIconoFavorito(art); 
+
+    if (art.subArticulos?.length) {
+      art.subArticulos.forEach(sa => {
+        sa.favorito = true;
+        favorites.push({ idArticulo: sa.idArticulo, idColorPorArticulo: sa.colorPorArticulo?.id });
+      });
+    } else {
+      favorites.push({ idArticulo: art.idArticulo, idColorPorArticulo: art.colorPorArticulo?.id });
+    }
+  });
+
 
   try {
-    if (spinner) spinner.style.display = 'block';
-
-    ($scope.articulos || []).forEach(articulo => {
-      // guardo estado previo por si hay que revertir
-      before.push({ obj: articulo, fav: !!articulo.favorito });
-
-      // marcar artículo padre
-      articulo.favorito = true;
-      actualizarIconoFavorito && actualizarIconoFavorito(articulo);
-
-      // recorrer subArticulos (si hay)
-      if (articulo.subArticulos && articulo.subArticulos.length) {
-        articulo.subArticulos.forEach(sa => {
-          before.push({ obj: sa, fav: !!sa.favorito });
-          sa.favorito = true;
-          actualizarIconoFavorito && actualizarIconoFavorito(sa);
-
-          var idArt  = sa.idArticulo || (sa.articulo && sa.articulo.id);
-          var idColor = sa.idColorPorArticulo || (sa.colorPorArticulo && sa.colorPorArticulo.id);
-          if (!idArt || !idColor) return;
-          var key = idArt + '_' + idColor;
-          if (!dedup[key]) {
-            dedup[key] = 1;
-            favorites.push({ idArticulo: idArt, idColorPorArticulo: idColor });
-          }
-        });
-      } else {
-        // sin subArticulos: usar el propio
-        var idArt  = articulo.idArticulo || (articulo.articulo && articulo.articulo.id);
-        var idColor = articulo.idColorPorArticulo || (articulo.colorPorArticulo && articulo.colorPorArticulo.id);
-        if (!idArt || !idColor) return;
-        var key = idArt + '_' + idColor;
-        if (!dedup[key]) {
-          dedup[key] = 1;
-          favorites.push({ idArticulo: idArt, idColorPorArticulo: idColor });
-        }
-      }
-    });
-
-    // 2) Backend
-    const res = await ServiceCliente.addFavoritoBatch(favorites);
-    console.log("✅ addFavoritoBatch ←", res);
-    if (!res || res.status !== 200) throw new Error('Respuesta no OK');
-
+    await ServiceCliente.addFavoritoBatch(favorites);
+    console.log("✅ Todos marcados como favoritos.");
+    if (!$scope.$$phase) $scope.$apply();
   } catch (e) {
-    console.error("🔥 Error addFavoriteButton, revirtiendo UI:", e);
-    // 3) revertir UI
-    before.forEach(s => { s.obj.favorito = s.fav; actualizarIconoFavorito && actualizarIconoFavorito(s.obj); });
+    console.error("🔥 Error al agregar favoritos:", e);
   } finally {
-    if (spinner) spinner.style.display = 'none';
-    $scope.$applyAsync(); // fuerza repaint inmediato
+    spinner.style.display = 'none';
   }
 };
+$scope.articulos = <?php echo json_encode($articulos); ?>;
+$scope.articulos.forEach(a => { a.favorito = !!a.favorito; });
 
 
-
-// Acción múltiple: quitar TODOS los favoritos
 $scope.removeFavoriteButton = async function () {
-  console.log("🧹 removeFavoriteButton");
-
-  // 1) UI: desmarcar todo optimistamente
-  let before = [];
+  spinner.style.display = 'block';
   let favorites = [];
-  let dedup = Object.create(null);
+
+  $scope.articulos.forEach(art => {
+    art.favorito = false;
+    // actualizarIconoFavorito(art); 
+
+    if (art.subArticulos?.length) {
+      art.subArticulos.forEach(sa => {
+        sa.favorito = false;
+        favorites.push({ idArticulo: sa.idArticulo, idColorPorArticulo: sa.colorPorArticulo?.id });
+      });
+    } else {
+      favorites.push({ idArticulo: art.idArticulo, idColorPorArticulo: art.colorPorArticulo?.id });
+    }
+  });
 
   try {
-    if (spinner) spinner.style.display = 'block';
-
-    ($scope.articulos || []).forEach(articulo => {
-      // guardo estado previo por si hay que revertir
-      before.push({ obj: articulo, fav: !!articulo.favorito });
-
-      // desmarcar artículo padre
-      articulo.favorito = false;
-      actualizarIconoFavorito && actualizarIconoFavorito(articulo);
-
-      // recorrer subArticulos (si hay)
-      if (articulo.subArticulos && articulo.subArticulos.length) {
-        articulo.subArticulos.forEach(sa => {
-          before.push({ obj: sa, fav: !!sa.favorito });
-          sa.favorito = false;
-          actualizarIconoFavorito && actualizarIconoFavorito(sa);
-
-          var idArt  = sa.idArticulo || (sa.articulo && sa.articulo.id);
-          var idColor = sa.idColorPorArticulo || (sa.colorPorArticulo && sa.colorPorArticulo.id);
-          if (!idArt || !idColor) return;
-          var key = idArt + '_' + idColor;
-          if (!dedup[key]) {
-            dedup[key] = 1;
-            favorites.push({ idArticulo: idArt, idColorPorArticulo: idColor });
-          }
-        });
-      } else {
-        // sin subArticulos: usar el propio
-        var idArt  = articulo.idArticulo || (articulo.articulo && articulo.articulo.id);
-        var idColor = articulo.idColorPorArticulo || (articulo.colorPorArticulo && articulo.colorPorArticulo.id);
-        if (!idArt || !idColor) return;
-        var key = idArt + '_' + idColor;
-        if (!dedup[key]) {
-          dedup[key] = 1;
-          favorites.push({ idArticulo: idArt, idColorPorArticulo: idColor });
-        }
-      }
-    });
-
-    // 2) Backend
-    const res = await ServiceCliente.removeFavoritoBatch(favorites);
-    console.log("✅ removeFavoritoBatch ←", res);
-    if (!res || res.status !== 200) throw new Error('Respuesta no OK');
-
+    await ServiceCliente.removeFavoritoBatch(favorites);
+    console.log("✅ Todos desmarcados.");
+    if (!$scope.$$phase) $scope.$apply();
   } catch (e) {
-    console.error("🔥 Error removeFavoriteButton, revirtiendo UI:", e);
-    // 3) revertir UI
-    before.forEach(s => { s.obj.favorito = s.fav; actualizarIconoFavorito && actualizarIconoFavorito(s.obj); });
+    console.error("🔥 Error quitando favoritos:", e);
   } finally {
-    if (spinner) spinner.style.display = 'none';
-    $scope.$applyAsync(); // fuerza repaint inmediato
+    spinner.style.display = 'none';
   }
 };
 
@@ -768,32 +682,16 @@ $scope.removeFavoriteButton = async function () {
     $scope.getNameModal3d = articulo => 'modal' + articulo.idArticulo + articulo.idColorPorArticulo;
     $scope.getArticuloCodigoColor = articulo => articulo.idArticulo + '-' + articulo.idColorPorArticulo;
     $scope.getArticuloRutaIframe3D = articulo => articulo.rutaIframe3D;
-    $scope.getIdStarArticulo = function (a) {
-  var idColor = a.idColorPorArticulo || (a.colorPorArticulo ? a.colorPorArticulo.id : '');
-  return "star-" + a.idArticulo + '-' + idColor;
+   $scope.getIdStarArticulo = (a) => {
+  const idArt = a.idArticulo || a?.articulo?.id || '';
+  const idCol = a.idColorPorArticulo || a?.colorPorArticulo?.id || '';
+  return `star-${idArt}-${idCol}`;
 };
 
 
     // Modelo de datos inyectado desde PHP
     $scope.articulos = <?php echo json_encode($articulos); ?>;
 });
-// Normalización básica: boolean favorito + completar idColorPorArticulo
-angular.forEach($scope.articulos || [], function(a){
-  a.favorito = !!a.favorito;
-  if (!a.idColorPorArticulo && a.colorPorArticulo && a.colorPorArticulo.id) {
-    a.idColorPorArticulo = a.colorPorArticulo.id;
-  }
-  if (Array.isArray(a.subArticulos)) {
-    a.subArticulos.forEach(function(sa){
-      sa.favorito = !!sa.favorito;
-      if (!sa.idColorPorArticulo && sa.colorPorArticulo && sa.colorPorArticulo.id) {
-        sa.idColorPorArticulo = sa.colorPorArticulo.id;
-      }
-    });
-  }
-});
-
-
 </script>
 
 
@@ -801,105 +699,98 @@ angular.forEach($scope.articulos || [], function(a){
 
 <?php include('content/cliente/ordenamientosSelecciones.php'); ?>
 
+
+
   <div class="familia-header">
-    <?php if (!empty($imagenLateral) && $imagenLateral !== null): ?>
-      <img src="https://www.spiralshoes.com/koi/catalogos/img/familia_banner_lateral/<?php echo htmlspecialchars($imagenLateral); ?>">
-    <?php endif; ?>
+      <?php if (!empty($imagenLateral) && $imagenLateral !== null): ?>
+          <img src="https://www.spiralshoes.com/koi/catalogos/img/familia_banner_lateral/<?php echo htmlspecialchars($imagenLateral); ?>">
+      <?php endif; ?>
   </div>
 
-  <!-- ========================= Mobile ========================= -->
-  <div class="row">
-    <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2 text-left skip-row-top">
-      <h3><?php echo $tituloCatalogo ?></h3>
-      <h1><?php echo $familiaProducto ?></h1>
-      <div class="descripcion_lateral"><?php echo $familiaDescripcion; ?></div>
-    </div>
-
-    <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10">
-      <div class="row">
-
-        <div class="col-xs-6 col-sm-6 col-md-6 col-lg-4 item"
-            ng-repeat="articulo in articulos track by $index">
-
-          <div id="tarjeta" class="item-inner">
-
-            <a href="javascript:;" gallery-modal={{getImageUrls(articulo)}}>
-              <img ng-src="{{getImageUrl(articulo)}}" default-src="{{getUnavailableImageUrl()}}">
-              <div class=""><a href="www.spiralshoes.com"></a></div>
-            </a>
-
-            <div class="item-tipo">
-              <span></span>
+    <!-- Mobile -->
+    <div class="row">
+        <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2 text-left skip-row-top">
+            <h3><?php echo $tituloCatalogo ?></h3>
+            <h1><?php echo $familiaProducto ?></h1>
+            <div class="descripcion_lateral">
+              <?php echo $familiaDescripcion; ?>
             </div>
+        </div>
+        <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10">
+            <div class="row">
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-4 item" ng-repeat="articulo in articulos" ng-show="articulo.filtros">
+                    <div id = "tarjeta" class="item-inner">
+                        <a href="javascript:;" gallery-modal={{getImageUrls(articulo)}}>
 
-            <div class="item-precios">
-              <!-- <span>{{ funciones.formatearMoneda(getPrecioMayorista(articulo)) }} / {{ funciones.formatearMoneda(getPrecioMinorista(articulo)) }}</span> -->
-              <span class="subarticulo sub-inline-grid" ng-repeat="subarticulo in articulo.subArticulos">
-                <span>{{ subarticulo.nombre + ' - ' + subarticulo.idArticulo + ' ( ' + articulo.colorPorArticulo.id + ' )' }}</span>
-                <span>
-                  <span data-toggle="popover" data-html="true" data-placement="bottom" tabindex="0" item-stock={{subarticulo.cantidadTalles}}>
-                    <span class="badge item-stock-badge">Stock: {{ subarticulo.stock }}</span>
-                  </span>
-                  <span class="badge">Pronto:
-                    <span class="stock-produccion" stock-produccion={{getArticuloCodigoColor(subarticulo)}}>0</span>
-                  </span>
-                </span>
-              </span>
-            </div>
-   <div class="item-star">
-  <a id="{{getIdStarArticulo(articulo)}}"
-     href=""
-     ng-click="toggleFavorito2(articulo); $event.preventDefault();">
-    <i class="fa fa-2x"
-       ng-class="{
-         'fa-star':   articulo.favorito,
-         'fa-star-o': !articulo.favorito
-       }"></i>
-  </a>
-</div>
+                            <img ng-src="{{getImageUrl(articulo)}}" default-src="{{getUnavailableImageUrl()}}">
+
+                            <div class="">
+                              <a href="www.spiralshoes.com"></a>
+                            </div>
+                        </a>
+                        <div class="item-tipo">
+                        <span>
+                      
+                        </span>
+                         
+                       </div>
+                        <div class="item-precios">
+                             <!--<span>{{ funciones.formatearMoneda(getPrecioMayorista(articulo)) }} / {{ funciones.formatearMoneda(getPrecioMinorista(articulo)) }}</span> -->
+                            <span class="subarticulo sub-inline-grid" ng-repeat="subarticulo in articulo.subArticulos">
+                              <span>{{ subarticulo.nombre + ' - ' + subarticulo.idArticulo + ' ( ' + articulo.colorPorArticulo.id + ' )' }}</span>
+                              <span>
+                                <span data-toggle="popover" data-html="true" data-placement="bottom" tabindex="0"  item-stock={{subarticulo.cantidadTalles}}>
+                                  <span class="badge item-stock-badge">Stock: {{ subarticulo.stock }}</span>
+                                </span>
+                            	   <span class="badge">Pronto: <span class="stock-produccion" stock-produccion={{getArticuloCodigoColor(subarticulo)}}>0</span> </span>
+                             </span>
+                          	</span>
+                        </div>
 
 
+<span class="item-star"
+      ng-click="toggleFavorito(articulo)">
+  <i class="fa fa-2x"
+     ng-class="articulo.favorito ? 'fa-star star-on' : 'fa-star-o star-off'"
+     ng-attr-id="star-{{articulo.idArticulo}}-{{articulo.colorPorArticulo.id}}">
+  </i>
+</span>
 
-      
 
-            <div class="subitem-talles">
-              <span class="subarticulo" ng-repeat="subarticuloi in articulo.subArticulos">
-                <span>
-                  <span class="badge">{{ subarticuloi.primerTalle }} - {{ subarticuloi.ultimoTalle }}</span>
-                  <span class="badge inverted">{{ subarticuloi.formaDeComercializacion }}</span>
-                </span>
-                <span>
-                  <span class="badge" class="{'badge-danger': subarticuloi.colorPorArticulo.tipoProductoStock.id == '1'}">
-                    {{ subarticuloi.colorPorArticulo.tipoProductoStock.nombre }}
-                  </span>
-                  <span class="badge badge-danger" ng-if="subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc">
-                    -{{ subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc }}%
-                  </span>
-                </span>
-                <span> | {{ funciones.formatearMoneda(getPrecioMayorista(subarticuloi)) }} </span>
-              </span>
-            </div>
+                        <div class="subitem-talles">
 
-            <!-- Modal 3D (estructura original, contenido se completa dinámico) -->
-            <div id={{getNameModal3d(articulo)}} class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-              <span class="_ruta_iframe_3d_" style="display: none">{{articulo.rutaIframe3D}}</span>
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">
-                      <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
-                    </button>
-                  </div>
-                  <div class="modal-body">
-                  </div>
-                </div><!-- /.modal-content -->
-              </div><!-- /.modal-dialog -->
-            </div>
+							            <span class="subarticulo" ng-repeat="subarticuloi in articulo.subArticulos">
+                            <span>
+                              <span class="badge">{{ subarticuloi.primerTalle }} - {{ subarticuloi.ultimoTalle }}</span>
+                              <span class="badge inverted">{{ subarticuloi.formaDeComercializacion }}</span>
+                            </span>
+                            <span>
+    	                        <span class="badge"  class="{'badge-danger': subarticuloi.colorPorArticulo.tipoProductoStock.id == '1'}">{{ subarticuloi.colorPorArticulo.tipoProductoStock.nombre }}</span>
+    	                        <span class="badge badge-danger" ng-if="subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc">-{{ subarticuloi.colorPorArticulo.tipoProductoStock.descuentoPorc }}%</span>
+                            </span>
+  	                        <span>  | {{ funciones.formatearMoneda(getPrecioMayorista(subarticuloi)) }} </span>
+	                        </span>
+                  
+                        </div>
+                      
+        <div id={{getNameModal3d(articulo)}} class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+          <span class="_ruta_iframe_3d_" style="display: none">{{articulo.rutaIframe3D}}</span>
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              </div>
+              <div class="modal-body">
 
-          </div>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
         </div>
 
-      </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>

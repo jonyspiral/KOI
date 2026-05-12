@@ -16,6 +16,7 @@ class PedidoCliente extends Base {
 
     protected	$__table = 'pedidos_cliente_c';
     protected	$__primaryKey = array('id');
+    protected    $__autoIncrement = false;
 
     public		$id;
     public		$idCliente;
@@ -98,7 +99,7 @@ class PedidoCliente extends Base {
 	}
 
 	public function addItem(PedidoClienteItem $item) {
-		$this->getDetalle(); //En caso de pedido nuevo, esto me va a traer un array vacÃ­o
+		$this->getDetalle(); //En caso de pedido nuevo, esto me va a traer un array vacío
 		$this->_detalle[] = $item;
 	}
 

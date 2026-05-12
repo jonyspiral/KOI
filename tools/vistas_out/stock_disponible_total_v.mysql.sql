@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW stock_disponible_total_vASSELECT TOP 100 colores_por_articulo.cod_articulo, articulos.denom_articulo, colores_por_articulo.cod_color_articulo, colores_por_articulo.id_tipo_producto_st;;

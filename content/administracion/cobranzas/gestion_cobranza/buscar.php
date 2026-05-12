@@ -51,28 +51,55 @@ try {
 	$saldos = array();
 	if ($saldoFechaHasta) {
 		$saldosAFecha = Factory::getInstance()->getArrayFromStoredProcedure('saldo_clientes_a_fecha', Datos::objectToDB($saldoFechaHasta));
-		if($empresa != NULL){
-			$array_borrar = array();
-			$indice = 0;
-			foreach ($saldosAFecha as $saldo){
-				if($saldo['empresa'] != $empresa){
-					array_push($array_borrar,$indice);
-				}
-				$indice++;
-			}
-			foreach($array_borrar as $borrar){
-				unset($saldosAFecha[$borrar]);
-			}
-			$saldosAFecha = array_values($saldosAFecha);
-		}
 		foreach ($saldosAFecha as $saldo) {
-			$saldos[$saldo['cod_cli']] = Funciones::toFloat($saldo['saldo']);
+			if (($empresa != NULL) && ($saldo['empresa'] != $empresa)) {
+				continue;
+			}
+			if (!array_key_exists($saldo['cod_cli'], $saldos)) {
+				$saldos[$saldo['cod_cli']] = 0;
+			}
+			$saldos[$saldo['cod_cli']] += Funciones::toFloat($saldo['saldo']);
+		}
+	}
+
+	$clientesFiltrados = array();
+	foreach ($clientes as $cli) {
+		$cli['saldo'] = Funciones::toFloat($cli['saldo']);
+		$cli['saldo_historico'] = $saldoFechaHasta ? (array_key_exists($cli['cod_cli'], $saldos) ? $saldos[$cli['cod_cli']] : 0) : $cli['saldo'];
+		if (($saldoDesde && $cli['saldo_historico'] < $saldoDesde) || ($saldoHasta && $cli['saldo_historico'] > $saldoHasta)) {
+			continue;
+		}
+		$clientesFiltrados[] = $cli;
+	}
+
+	if (!count($clientesFiltrados)) {
+		throw new FactoryExceptionCustomException('No existen registros con el filtro especificado');
+	}
+
+	if ($saldoFechaHasta) {
+		switch ($orden) {
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+				usort($clientesFiltrados, create_function('$a, $b', '
+					$saldoA = $a["saldo_historico"];
+					$saldoB = $b["saldo_historico"];
+					if ($saldoA == $saldoB) {
+						return strcasecmp($a["razon_social"], $b["razon_social"]);
+					}
+					return ($saldoA < $saldoB) ? -1 : 1;
+				'));
+				if ($orden == 4 || $orden == 6) {
+					$clientesFiltrados = array_reverse($clientesFiltrados);
+				}
+				break;
 		}
 	}
 
 	$restaModoVendedor = ($modoVendedor ? 3 : 0);
 
-	$tabla = new HtmlTable(array('cantRows' => count($clientes), 'cantCols' => (10 - $restaModoVendedor), 'id' => 'tablaDatos', 'class' => 'registrosAlternados', 'cellSpacing' => 0, 'width' => '99%',
+	$tabla = new HtmlTable(array('cantRows' => count($clientesFiltrados), 'cantCols' => (10 - $restaModoVendedor), 'id' => 'tablaDatos', 'class' => 'registrosAlternados', 'cellSpacing' => 0, 'width' => '99%',
 								'tdBaseClass' => 'pRight10 pLeft10 bLeftDarkGray', 'tdBaseClassLast' => 'pRight10 pLeft10 bLeftDarkGray bRightDarkGray'));
 	$tabla->getRowCellArray($rows, $cells);
 	$headerConfig = array(
@@ -103,17 +130,14 @@ try {
 	$saldoFinal = 0;
 	$saldoFinalCheq = 0;
 	for ($i = 0; $i < $tabla->cantRows; $i++) {
-		$cli = $clientes[$i];
-		$cli['saldo'] = Funciones::toFloat($cli['saldo']);
-		//Cuando ponen saldoFechaHasta, el filtro de importes de saldo lo tengo que hacer a mano:
-		if (($saldoFechaHasta) && (($saldoDesde && $cli['saldo'] < $saldoDesde) || ($saldoHasta && $cli['saldo'] > $saldoHasta))) {
-			continue;
+		$cli = $clientesFiltrados[$i];
+		$saldoCliente = $cli['saldo_historico'];
+		$saldoCheques = ($saldoFechaHasta ? null : ($cli['total_cheques'] + ($cli['saldo'] > 0 ? $cli['saldo'] : 0)));
+
+		$saldoFinal += $saldoCliente;
+		if (!$saldoFechaHasta) {
+			$saldoFinalCheq += $saldoCheques;
 		}
-
-		$saldoCheques = ($cli['total_cheques'] + ($cli['saldo'] > 0 ? $cli['saldo'] : 0));
-
-		$saldoFinal += $cli['saldo'];
-		$saldoFinalCheq += $saldoCheques;
 
 		$rows[$i]->id = $cli['cod_cli'];
 		$rows[$i]->class = 's13';
@@ -128,7 +152,7 @@ try {
 			$cells[$i][2]->style->background_color = $claseCalificacion[$cli['cod_calificacion']]['fondo']; //Fix para el PDF
 			$cells[$i][2]->style->color = $claseCalificacion[$cli['cod_calificacion']]['letra']; //Fix para el PDF
 		}
-		$cells[$i][3]->content = $saldoFechaHasta ? $saldos[$cli['cod_cli']] : $cli['saldo'];
+		$cells[$i][3]->content = $saldoCliente;
 		$cells[$i][3]->class .= ' saldo cPointer';
 		$cells[$i][3]->title = 'Ir a la cuenta corriente del cliente';
 		$cells[$i][4]->content = ($saldoFechaHasta ? '' : $saldoCheques);
@@ -154,7 +178,7 @@ try {
 	$foots[3]->class = 'bold p10 bLightOrange aRight bTopWhite bLeftWhite';
 	$foots[3]->content = Funciones::formatearMoneda($saldoFinal);
 	$foots[4]->class = 'bold p10 bLightOrange aRight bTopWhite bLeftWhite cornerBR5';
-	$foots[4]->content = Funciones::formatearMoneda($saldoFinalCheq);
+	$foots[4]->content = ($saldoFechaHasta ? '' : Funciones::formatearMoneda($saldoFinalCheq));
 
 	$html = $tabla->create(true);
 	echo $html;

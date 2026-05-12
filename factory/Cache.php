@@ -1,87 +1,105 @@
-<?php
+﻿<?php
 
 class Cache {
-	private $_provider = null;
-	private static $_defaultTTL = false; // 2 hours
-	private static $_instance = null;
+    private $_provider = null;
+    private static $_defaultTTL = false; // 2 hours
+    private static $_instance = null;
 
-	public static function getInstance(){
-		if(!isset(self::$_instance)){
-			self::$_instance = new Cache();
-		}
-		return self::$_instance;
-	}
+    public static function getInstance(){
+        if(!isset(self::$_instance)){
+            self::$_instance = new Cache();
+        }
+        return self::$_instance;
+    }
 
-	private function getProvider(){
-		return $this->_provider;
-	}
+    private function getProvider(){
+        return $this->_provider;
+    }
 
-	public function __construct() {
-		$this->_provider = new Memcache();
-		if (!($connected = $this->_provider->connect(Config::cache_host, Config::cache_port))) {
-			Logger::addError('Could not connect to memcached server');
-		}
-	}
+    public function __construct() {
+        if (!class_exists('Memcache')) {
+            $this->_provider = false;
+            return;
+        }
 
-	public static function get($key, $tag = null) {
-		if (!is_null($tag) && is_string($tag)) {
-			$key = self::tagKey($tag, $key);
-		}
-		return self::getInstance()->getProvider()->get($key);
-	}
+        $this->_provider = new Memcache();
+        if (!($connected = $this->_provider->connect(Config::cache_host, Config::cache_port))) {
+            Logger::addError('Could not connect to memcached server');
+            $this->_provider = false;
+        }
+    }
 
-	public static function set($key, $object, $tag = null, $ttl = -1) {
-		($ttl !== false && $ttl < 0) && $ttl = self::$_defaultTTL;
+    public static function get($key, $tag = null) {
+        if (!self::getInstance()->getProvider()) {
+            return false;
+        }
 
-		// Check if we need to cache
-		if ($ttl === false) {
-			Logger::addDebug('Salteando cache para ' . $tag);
-			return false;
-		}
+        if (!is_null($tag) && is_string($tag)) {
+            $key = self::tagKey($tag, $key);
+        }
+        return self::getInstance()->getProvider()->get($key);
+    }
 
-		// Check if its a "tagged" key
-		if (!is_null($tag) && is_string($tag)) {
-			return self::set(self::tagKey($tag, $key), $object, null, $ttl);
-		}
+    public static function set($key, $object, $tag = null, $ttl = -1) {
+        ($ttl !== false && $ttl < 0) && $ttl = self::$_defaultTTL;
 
-		// Now we finally store
-		if (!($inserted = self::getInstance()->getProvider()->set($key, $object, false, $ttl))) {
-			Logger::addError('Could not insert into memcached server (key: ' . $key . ')');
-		}
-		return $inserted;
-	}
+        if ($ttl === false) {
+            Logger::addDebug('Salteando cache para ' . $tag);
+            return false;
+        }
 
-	public static function deleteAllByTag($tag) {
-		// Its a fake delete. We just override the tag prefix
-		return self::set('tags::' . $tag, self::getRandomHash(), null, 0); // Forever
-	}
+        if (!self::getInstance()->getProvider()) {
+            return false;
+        }
 
-	public static function stats() {
-		return self::getInstance()->getProvider()->getStats();
-	}
+        if (!is_null($tag) && is_string($tag)) {
+            return self::set(self::tagKey($tag, $key), $object, null, $ttl);
+        }
 
-	// Private auxiliary functions
+        if (!($inserted = self::getInstance()->getProvider()->set($key, $object, false, $ttl))) {
+            Logger::addError('Could not insert into memcached server (key: ' . $key . ')');
+        }
+        return $inserted;
+    }
 
-	private static function tagKey($tag, $key) {
-		return self::getTagCurrentId($tag) . '_' . $key;
-	}
+    public static function deleteAllByTag($tag) {
+        if (!self::getInstance()->getProvider()) {
+            return false;
+        }
 
-	private static function getTagCurrentId($tag) {
-		// Search the current prefix for the given tag
-		$currentId = self::get('tags::' . $tag);
+        return self::set('tags::' . $tag, self::getRandomHash(), null, 0);
+    }
 
-		// If there's no tag yet, we create one random
-		if (!$currentId) {
-			$currentId = self::getRandomHash();
-			self::set('tags::' . $tag, $currentId, null, 0); // Forever
-		}
+    public static function stats() {
+        if (!self::getInstance()->getProvider()) {
+            return false;
+        }
 
-		return $currentId;
-	}
+        return self::getInstance()->getProvider()->getStats();
+    }
 
-	private static function getRandomHash() {
-		return substr(md5(time() . rand(0, 7777777)), 0, 7);
-	}
+    private static function tagKey($tag, $key) {
+        return self::getTagCurrentId($tag) . '_' . $key;
+    }
+
+    private static function getTagCurrentId($tag) {
+        if (!self::getInstance()->getProvider()) {
+            return false;
+        }
+
+        $currentId = self::get('tags::' . $tag);
+
+        if (!$currentId) {
+            $currentId = self::getRandomHash();
+            self::set('tags::' . $tag, $currentId, null, 0);
+        }
+
+        return $currentId;
+    }
+
+    private static function getRandomHash() {
+        return substr(md5(time() . rand(0, 7777777)), 0, 7);
+    }
 }
 
 ?>

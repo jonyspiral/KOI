@@ -36,7 +36,7 @@ class FormularioFavoritoCliente extends Formulario {
 	public function abrir(){
 		$this->crearPdf();
 		$this->pdf->open(false);
-		//$this->pdf->deleteFiles();//Lo dejo? Lo saco? Lo guardo en otro lado el PDF? SÃ­, guardarlo en otro lado serÃ­a lo mejor!
+		//$this->pdf->deleteFiles();//Lo dejo? Lo saco? Lo guardo en otro lado el PDF? Sí, guardarlo en otro lado sería lo mejor!
 	}
 
 	//GETS y SETS

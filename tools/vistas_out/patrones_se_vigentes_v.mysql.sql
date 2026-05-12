@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW patrones_se_vigentes_vASSELECT TOP 100 Patrones_mp_detalle.cod_seccion, Patrones_mp_cabecera.cod_articulo, articulos.denom_articulo, Patrones_mp_detalle.cod_color_articulo, Patron;;

@@ -67,7 +67,7 @@ class RetiroSocio extends TransferenciaBase implements DocumentoContable {
 
 	public function validarCantidadPermitidaEfectivo($cantidad) {
 		if ($cantidad > 1) {
-			throw new FactoryExceptionCustomException('SÃ³lo se puede ingresar un importe de tipo efectivo');
+			throw new FactoryExceptionCustomException('Sólo se puede ingresar un importe de tipo efectivo');
 		}
 		return true;
 	}
@@ -173,7 +173,7 @@ class RetiroSocio extends TransferenciaBase implements DocumentoContable {
 			/** @var ImportePorOperacionItem $ixod */
 			$importe = $ixod->importe;
 			$fila['numeroFila'] = $i;
-			/** @var Cheque $importe */ //PUEDE NO SER UN CHEQUE, pero lo pongo asÃ­ para que me tome ->fechaVencimiento
+			/** @var Cheque $importe */ //PUEDE NO SER UN CHEQUE, pero lo pongo así para que me tome ->fechaVencimiento
 			$fila['fechaVencimiento'] = ($importe->getTipoImporte() == TiposImporte::cheque) ? $importe->fechaVencimiento : $fecha;
 			$fila['imputacion'] = $importe->getImputacion();
 			$fila['importeDebe'] = 0;

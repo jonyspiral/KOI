@@ -65,6 +65,33 @@ foreach ($favoritos as $favorito) {
     // Create a unique key for the item
     $uniqueKey = $favorito->colorPorArticulo->referenciaWebMayorista . $favorito->colorPorArticulo->id;
 
+    // Talles disponibles y stock interno por talle
+    foreach ($favorito->articulo->rangoTalle->posicion as $key => $talle) {
+        if ($talle != 'X' && $talle != '0' && $talle != '') {
+            $stockTalle = 0;
+            if (isset($stock[$favorito->idArticulo]) &&
+                isset($stock[$favorito->idArticulo][$favorito->idColorPorArticulo]) &&
+                isset($stock[$favorito->idArticulo][$favorito->idColorPorArticulo][$key])) {
+                $stockTalle = Funciones::toInt($stock[$favorito->idArticulo][$favorito->idColorPorArticulo][$key]);
+            }
+
+            $cantidadTalles[] = array(
+                'talle' => $talle,
+                'cantidad' => $stockTalle
+            );
+        }
+    }
+
+    $stockInterno = Funciones::keyIsSet(
+        Funciones::keyIsSet($stock, $favorito->idArticulo, array()),
+        $favorito->idColorPorArticulo,
+        array()
+    );
+    $stockInternoTotal = Funciones::sumaArray($stockInterno);
+
+    $primerTalle = count($cantidadTalles) ? $cantidadTalles[0]['talle'] : '';
+    $ultimoTalle = count($cantidadTalles) ? $cantidadTalles[count($cantidadTalles) - 1]['talle'] : '';
+
     // Datos básicos
     $fav = array(
         'idArticulo' => $favorito->idArticulo,
@@ -108,7 +135,7 @@ foreach ($favoritos as $favorito) {
     // Curvas de comercializacion y pares libres
     $fav['curvas'] = array();
     $fav['paresLibres'] = array();
-  
+
     if ($favorito->colorPorArticulo->formaDeComercializacion == 'M') {
         //var_dump($favorito->colorPorArticulo->curvas);die;
         foreach ($favorito->colorPorArticulo->curvas as $curva) {
@@ -160,14 +187,14 @@ foreach ($favoritos as $favorito) {
         //'totalPronto' => 0,
         // Add more data for sub-articulo here...
     );
-    
+
     // Example: Add this subArticulo to the 'subArticulos' array under the same uniqueKey
     $arrayFavoritos[$lin->tituloEcommerce]['items'][$uniqueKey]['subArticulos'][$favorito->idArticulo . '-' . $favorito->idColorPorArticulo] = $fav;
 }
 //die;
 
 foreach ($arrayFavoritos as &$favPorTipo) {
-  if (!isset($favPorTipo['items'])) continue;
+  if (!isset($favPorTipo['items'])) $totalPronto = 0;
 
   $totalMonto = 0;
   $totalPares = 0;
@@ -196,7 +223,7 @@ foreach ($arrayFavoritos as &$favPorTipo) {
 	          }
 	        }
 	      } else {
-	      	continue;
+	      	$totalPronto = 0;
 	      }
 	    } catch (Exception $e) {
 	    }
@@ -420,7 +447,7 @@ foreach ($arrayFavoritos as &$favPorTipo) {
           });
           doc.save('reporteFavoritos.pdf');*/
       };
-     
+
     });
 </script>
 
@@ -431,10 +458,10 @@ if (count($arrayFavoritos) > 0) { ?>
     <div>
         <div class="row well">
             <div class="col-xs-12">
-                <h2>Reporte del Pedido</h2>   
+                <h2>Reporte del Pedido</h2>
                 <button id="cmd" type="button" class="btn" ng-click="generarReporteFavorito()">
                     <i class="fa fa-fw fa-file-pdf-o"></i> Imprimir
-                </button>  
+                </button>
             </div>
         </div>
   <?php foreach($arrayFavoritos as $linea) { ?>
@@ -446,7 +473,7 @@ if (count($arrayFavoritos) > 0) { ?>
                     </div>
                 </div>
                 <div class="flexibles favorito">
-    <?php foreach($linea['items'] as $fav) { 
+    <?php foreach($linea['items'] as $fav) {
     	$articulo = $fav['fav'];
     	//print_r($articulo);
       $imagenUrl = $imagesUrl . $articulo['idArticulo'] . $articulo['idColorPorArticulo'] . '_e.jpg';?>
@@ -468,7 +495,7 @@ if (count($arrayFavoritos) > 0) { ?>
 
 
                             <div class="item-precios">
-	                            <?php foreach ($fav['subArticulos'] as $key => $subArticulo) {  ?> 
+	                            <?php foreach ($fav['subArticulos'] as $key => $subArticulo) {  ?>
 	                            <div class="item-aaa">
 	                            	<span>
 	                 <?php echo $subArticulo['nombre'] . ' - ' . $subArticulo['idArticulo'] . ' ' . $subArticulo['idColorPorArticulo']; ?>
@@ -479,10 +506,10 @@ if (count($arrayFavoritos) > 0) { ?>
                                         <?php if ($subArticulo['colorPorArticulo']['tipoProductoStock']['descuentoPorc']) { ?>
                                         <span class="badge badge-danger">-<?php echo $subArticulo['colorPorArticulo']['tipoProductoStock']['descuentoPorc']; ?>%</span>
                                     </span>
-	                               
+
 	                                <?php } ?>
 	                            </div>
-	                        	<?php } ?> 
+	                        	<?php } ?>
                         	</div>
                             <div class="item-name"><?php //echo $articulo['articulo']['nombre'] . ' - ' . $articulo['idArticulo'] . ' ' . $articulo['idColorPorArticulo'];
                             echo $articulo['articulo']['nombre'];
@@ -490,7 +517,7 @@ if (count($arrayFavoritos) > 0) { ?>
                         </div>
                         <div>
                         <!-- nuevo para mostrar los subArticulos con colorPorArticulo y los badges -->
-                        <?php foreach ($fav['subArticulos'] as $key => $subArticulo) { 
+                        <?php foreach ($fav['subArticulos'] as $key => $subArticulo) {
                         	//print_r($subArticulo);
                         ?>
 
@@ -532,7 +559,7 @@ if (count($arrayFavoritos) > 0) { ?>
                             <?php } ?>
 
                             <?php if ($subArticulo['formaDeComercializacion'] == 'M') { ?>
-                              <?php foreach($subArticulo['curvas'] as $j => $curva) { ?> 
+                              <?php foreach($subArticulo['curvas'] as $j => $curva) { ?>
                               <tr class="row-curva">
                                 <!-- Modular -->
                                 <td>Curva <?php echo $j; ?></td>

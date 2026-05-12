@@ -13,7 +13,7 @@ class TransferenciaBancariaImporte extends Importe {
 	protected	$_transferenciaBancariaOperacion;
 	protected	$_entradaSalida;
 	protected	$_cuentaBancaria;
-	public		$fechaTransferencia; //Sirve para asignarlo despuÃ©s en el guardar. No se persiste en el importe, sino en la operaciÃ³n
+	public		$fechaTransferencia; //Sirve para asignarlo después en el guardar. No se persiste en el importe, sino en la operación
 	public		$numeroTransferencia;
 
 	public function getTipoImporte(){
@@ -52,10 +52,10 @@ class TransferenciaBancariaImporte extends Importe {
 			if ($diferencia < 0.01) {
 				$importe = $caja->importeEfectivoFinal;
 			} else {
-				throw new FactoryExceptionCustomException('La caja del banco no tiene el efectivo suficiente para realizar esta operaciÃ³n');
+				throw new FactoryExceptionCustomException('La caja del banco no tiene el efectivo suficiente para realizar esta operación');
 			}*/
 			if (($caja->importeEfectivoFinal + abs($caja->importeDescubierto)) < $importe) {
-				throw new FactoryExceptionCustomException('La caja del banco no tiene el efectivo suficiente para realizar esta operaciÃ³n');
+				throw new FactoryExceptionCustomException('La caja del banco no tiene el efectivo suficiente para realizar esta operación');
 			}
 		}
 		return true;
@@ -66,7 +66,7 @@ class TransferenciaBancariaImporte extends Importe {
 	}
 
 	public function getObservacionContabilidad() {
-		return 'NÂº de transferencia: ' . $this->transferenciaBancariaOperacion->numeroTransferencia;
+		return 'Nº de transferencia: ' . $this->transferenciaBancariaOperacion->numeroTransferencia;
 	}
 
 	//GETS Y SETS

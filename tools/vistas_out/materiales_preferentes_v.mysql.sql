@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW materiales_preferentes_vASSELECT TOP 100 materiales.cod_material, Materias_primas.cod_color, materiales.denom_material AS Material, Proveedores_materias_primas.cod_proveedor, prov;;

@@ -1113,7 +1113,7 @@ class HtmlAutoSuggestBox extends Html {
 				}
 				break;
             case 'Patron':
-                if (true /*Usuario::logueado()->puede('listar/abm/vendedores/') TODO no tiene una funcionalidad asociada xq esto es para la ficha tï¿½cnica */) {
+                if (true /*Usuario::logueado()->puede('listar/abm/vendedores/') TODO no tiene una funcionalidad asociada xq esto es para la ficha t�cnica */) {
                     try {
                         $articulo = Funciones::get('idArticulo');
                         $color = Funciones::get('idColorPorArticulo');

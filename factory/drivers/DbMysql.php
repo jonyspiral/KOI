@@ -199,7 +199,21 @@ public function exec($sql, $params = array()) {
             $r = rtrim($r, " \t\n\r;") . " LIMIT " . $n;
         }
     }
-    return $r; // 👈 shim NO loguea; logueamos en query/exec
+    // IDENT_CURRENT('tabla') + IDENT_INCR('tabla') -> proximo AUTO_INCREMENT MySQL
+    $r = preg_replace_callback(
+      "/SELECT\s+IDENT_CURRENT\s*\(\s*'([^']+)'\s*\)\s*\+\s*IDENT_INCR\s*\(\s*'([^']+)'\s*\)\s*;?/i",
+      function($m) {
+        $table = str_replace("'", "''", $m[1]);
+        return "SELECT IFNULL(MAX(AUTO_INCREMENT), 1) AS computed " .
+               "FROM information_schema.TABLES " .
+               "WHERE TABLE_SCHEMA = DATABASE() " .
+               "AND TABLE_TYPE = 'BASE TABLE' " .
+               "AND LOWER(TABLE_NAME) = LOWER('" . $table . "');";
+      },
+      $r
+    );
+
+    return $r; // shim NO loguea; logueamos en query/exec
 }
 
       /* Helpers de seguridad/IDs */

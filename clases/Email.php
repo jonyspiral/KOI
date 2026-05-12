@@ -17,7 +17,7 @@ class Email extends Base {
 	public		$cco; //Array de direcciones (strings)
 	public		$asunto;
 	public		$contenido;
-	public		$imagenes; //Array de paths a las imÃ¡genes
+	public		$imagenes; //Array de paths a las imágenes
 	public		$adjuntos; //Array de paths a los attachments
 	public		$fechaProgramada;
 	public		$fechaEnviado;
@@ -35,7 +35,7 @@ class Email extends Base {
 	private		$email;
 	private		$emailDesarrollo = 'developement@spiralshoes.com';
 
-	//AcÃ¡ se pueden agregar cuentas desde las cuales se quiera mandar los mails (es el parÃ¡metro "de", que por defecto trae spiralkoi@gmail.com, ver $emailConfig)
+	//Acá se pueden agregar cuentas desde las cuales se quiera mandar los mails (es el parámetro "de", que por defecto trae spiralkoi@gmail.com, ver $emailConfig)
 	private 	$mailAccounts = array(
 		'spiralkoi@gmail.com' => array(
 			'name'			=> 'Spiral Shoes',
@@ -46,7 +46,7 @@ class Email extends Base {
 		),
 	);
 
-	//AcÃ¡ se puede poner valores default
+	//Acá se puede poner valores default
 	private		$emailDefaultData = array(
 		'de'				=> 'spiralkoi@gmail.com',
 		'para'				=> array(),
@@ -84,33 +84,33 @@ class Email extends Base {
 	}
 
 	protected function validarGuardar() {
-		// 1) Validar direcciÃ³n DE con las $mailAccounts
+		// 1) Validar dirección DE con las $mailAccounts
 		if (!isset($this->mailAccounts[$this->de])) {
-			throw new FactoryExceptionCustomException('La direcciÃ³n "' . $this->de . '" ingresada en el campo "DE" no es una de las direcciones posibles para enviar emails');
+			throw new FactoryExceptionCustomException('La dirección "' . $this->de . '" ingresada en el campo "DE" no es una de las direcciones posibles para enviar emails');
 		}
 
-		// 2) Validar direcciones PARA, CC y BCC segÃºn la funciÃ³n de validaciÃ³n
+		// 2) Validar direcciones PARA, CC y BCC según la función de validación
 		foreach (array('para', 'cc', 'cco') as $campo) {
 			if (count($this->$campo)) {
 				foreach ($this->$campo as $direccion) {
 					if (!self::validarDireccion($direccion)) {
-						throw new FactoryExceptionCustomException('La direcciÃ³n "' . $direccion . '" ingresada en el campo "' . $campo . '" no tiene un formato vÃ¡lido de email');
+						throw new FactoryExceptionCustomException('La dirección "' . $direccion . '" ingresada en el campo "' . $campo . '" no tiene un formato válido de email');
 					}
 				}
 			}
 		}
 
-		// 3) Validar que tenga que haber al menos una direcciÃ³n entre PARA, CC y BCC
+		// 3) Validar que tenga que haber al menos una dirección entre PARA, CC y BCC
 		if (!count($this->para) && !count($this->cc) && !count($this->cco)) {
 			throw new FactoryExceptionCustomException('Debe ingresar al menos un destinatario para el email');
 		}
 
-		// 4) Validar paths de imÃ¡genes y adjuntos
+		// 4) Validar paths de imágenes y adjuntos
 		foreach (array('imagenes', 'adjuntos') as $campo) {
 			if (count($this->$campo)) {
 				foreach ($this->$campo as $path) {
 					if (!file_exists($path)) {
-						throw new FactoryExceptionCustomException('No se encuentra el archivo "' . $path . '" que intentÃ³ ingresar en el campo "' . $campo . '"');
+						throw new FactoryExceptionCustomException('No se encuentra el archivo "' . $path . '" que intentó ingresar en el campo "' . $campo . '"');
 					}
 				}
 			}
@@ -139,7 +139,7 @@ class Email extends Base {
 	}
 
 	private function mapObjects() {
-		//Hago una salvaciÃ³n para cuando estoy en desarrollo, que no mande mails a los clientes
+		//Hago una salvación para cuando estoy en desarrollo, que no mande mails a los clientes
 		if (Config::desarrollo()) {
 			$this->para = array($this->emailDesarrollo);
 			$this->cc = array();
@@ -155,7 +155,7 @@ class Email extends Base {
 		$this->email->Username = $fromAccount['address'];
 		$this->email->Password = $fromAccount['password'];
 
-		//Ingreso las direcciones, imÃ¡genes y adjuntos correspondientes
+		//Ingreso las direcciones, imágenes y adjuntos correspondientes
 		foreach (array(array('para', 'AddAddress'), array('cc', 'AddCC'), array('cco', 'AddBCC'), array('imagenes', 'AddEmbeddedImage'), array('adjuntos', 'AddAttachment')) as $campo) {
 			$attr = $campo[0];
 			$array = $this->$attr;

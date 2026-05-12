@@ -1,2 +1,0 @@
-/*SELECT     dbo.Remitos_proveedor_cabecera.fecha_recepcion AS fecha_movimiento, dbo.remitos_proveedor_detalle.cod_material, dbo.remitos_proveedor_detalle.cod_color, 
-                      ISNULL(dbo.remitos_proveedor_detalle.cantidad, 0) * dbo.materiale

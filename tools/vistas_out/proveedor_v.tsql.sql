@@ -1,5 +1,0 @@
-
-
-CREATE VIEW [dbo].[proveedor_v] AS
-	SELECT p.cod_prov, p.tipo_proveedor, p.fecha_baja, p.vivo, p.razon_social, p.denom_fantasia, p.cuit, p.condicion_iva, p.rubro, p.imputacion_en_compra, p.calle, p.numero, 
-		p.piso, p.oficina_depto, p.cod_postal, p

@@ -30,10 +30,10 @@ abstract class Retencion extends Importe {
 	public static function validar($obj) {
 		parent::validar($obj);
 		if (!isset($obj['importe']) || !isset($obj['nombre']) || !isset($obj['cuit']) || !isset($obj['fecha'])) {
-			throw new FactoryExceptionCustomException('No se reconoce el formato de una retenciÃ³n');
+			throw new FactoryExceptionCustomException('No se reconoce el formato de una retención');
 		}
 		if (!isset($obj['importe']) || !isset($obj['tipoRetencion']['id'])) {
-			throw new FactoryExceptionCustomException('No se reconoce el formato de una retenciÃ³n');
+			throw new FactoryExceptionCustomException('No se reconoce el formato de una retención');
 		}
 	}
 
@@ -46,7 +46,7 @@ abstract class Retencion extends Importe {
 	}
 
 	public function getObservacionContabilidad() {
-		return 'NÂº de certificado: ' . $this->numeroCertificado;
+		return 'Nº de certificado: ' . $this->numeroCertificado;
 	}
 
 	//GETS Y SETS

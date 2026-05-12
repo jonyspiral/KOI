@@ -26,14 +26,14 @@ class Fichaje extends Base {
 	public		$tipoCorreccion;
 	public		$idMotivoAusentismo;
 	protected	$_motivoAusentismo;
-	protected	$_fichajeDiaAnterior;	//Es el Ãºltimo fichaje del Ãºltimo dÃ­a que trabajo (antes de hoy)
-	protected	$_fichajeAnterior;		//Si todavÃ­a no fichÃ³ hoy, o si fichÃ³ entrada [y salida], estÃ¡ en NULL
-										//Si ya fichÃ³ un reingreso [y reegreso], devuelve la ENT original 
-										//Si ya fichÃ³ mÃ¡s de un reingreso, devuelve el reingreso anterior
+	protected	$_fichajeDiaAnterior;	//Es el último fichaje del último día que trabajo (antes de hoy)
+	protected	$_fichajeAnterior;		//Si todavía no fichó hoy, o si fichó entrada [y salida], está en NULL
+										//Si ya fichó un reingreso [y reegreso], devuelve la ENT original 
+										//Si ya fichó más de un reingreso, devuelve el reingreso anterior
 										//(para poder borrar los datos de diferencias de horas)
-	protected	$_fichajePosterior;		//Si es un fichaje de entrada [y salida] y no tiene REI, estÃ¡ en NULL
+	protected	$_fichajePosterior;		//Si es un fichaje de entrada [y salida] y no tiene REI, está en NULL
 										//Si es un ENT y tiene REI, lo devuelve 
-										//Si ya fichÃ³ mÃ¡s de un reingreso, devuelve el reingreso siguiente (si existe)
+										//Si ya fichó más de un reingreso, devuelve el reingreso siguiente (si existe)
 
 	public function ausentismo() {
 		return !is_null($this->idMotivoAusentismo);

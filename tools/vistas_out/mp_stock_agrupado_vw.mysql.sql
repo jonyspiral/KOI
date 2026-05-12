@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW mp_stock_agrupado_vw AS SELECT cod_material, cod_color_material AS cod_color, SUM(CASE WHEN efecto_movimiento = 'e' THEN cantidad ELSE (- 1 * cantidad) END) AS cant, SUM(cant_1) AS c1, SUM(cant_2) AS c2, SUM(cant_3) AS c3, SUM(cant_4) AS c4, S;;

@@ -8,33 +8,17 @@ function sqlEscape($str) {
     return $fix_str;
 }
 
-function getStockEnProduccion($articulo, $color) {
-    // Sanitización mínima, no cambiamos contrato ni responsabilidades
-    $codigoArticulo = sqlEscape($articulo);
-    $codigoColor    = sqlEscape($color);
-
-    // MySQL (NO MSSQL). Usamos la vista de compatibilidad *_40_v
-    // y la capa interna: Datos::EjecutarSQLItem -> DbMysql->queryOne
-    $sql = "
-        SELECT cod_articulo, denom_articulo, cod_color_articulo,
-               cantidad, cant_1, cant_2, cant_3, cant_4, cant_5, cant_6, cant_7, cant_8, posic_1
-        FROM koi1_stage.stock_produccion_incumplida_40_v
-        WHERE cod_articulo = '{$codigoArticulo}'
-          AND cod_color_articulo = '{$codigoColor}'
-        LIMIT 1
-    ";
-
+function getStockEnProduccion($articulo, $color){
     try {
-        // Usa la lógica existente de KOI (mínimo cambio)
-        if (class_exists('Datos') && method_exists('Datos', 'EjecutarSQLItem')) {
-            $row = Datos::EjecutarSQLItem($sql, 'stock_produccion_incumplida_40_v');
-        } else {
-            // Si por algún motivo no está disponible (no debería pasar),
-            // devolvemos respuesta “vacía” sin romper el contrato.
-            return array('error' => 'driver interno no disponible');
-        }
+        $sql = 'SELECT *
+                FROM stock_produccion_incumplida_40_v
+                WHERE cod_articulo = ' . Datos::objectToDB($articulo) . '
+                  AND cod_color_articulo = ' . Datos::objectToDB($color) . '
+                LIMIT 1';
 
-        if (!$row) {
+        $row = Datos::EjecutarSQLItem($sql);
+
+        if (!$row || !is_array($row) || count($row) == 0) {
             return array('error' => 'no hay filas');
         }
 

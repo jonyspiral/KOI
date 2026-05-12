@@ -14,7 +14,7 @@ try {
 	$where .= 'anulado = ' . Datos::objectToDB('N');
 	$where .= (empty($idCliente) ? '' : ' AND cod_cli = ' . Datos::objectToDB($idCliente));
 	$where = trim($where, ' AND ');
-	$orderBy ='ORDER BY fecha_gestion DESC';
+	$orderBy = 'ORDER BY fecha_gestion DESC';
 
 	$seguimientoCliente = Factory::getInstance()->getListObject('SeguimientoCliente', $where . $orderBy);
 

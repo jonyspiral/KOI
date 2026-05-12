@@ -3,7 +3,7 @@
 class FormularioFactura extends Formulario {
 
 	public	$cantidadPares;
-	public	$remitosIncluidos; //Array con los nÃºmero de remitos que componen la factura
+	public	$remitosIncluidos; //Array con los número de remitos que componen la factura
 
 	public function __construct() {	
 		parent::__construct();

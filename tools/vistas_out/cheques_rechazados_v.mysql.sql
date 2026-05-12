@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW cheques_rechazados_v AS SELECT fecha_documento fecha, c.fecha_vencimiento, c.empresa, cli.cod_cli, cli.razon_social cliente_razon_social, p.cod_prov, p.razon_social proveedor_razon_social,c.librador_nombre, b.nombre banco_nombre, c.nu;;
