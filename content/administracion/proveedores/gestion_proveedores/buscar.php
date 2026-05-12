@@ -38,10 +38,53 @@ try {
 	if ($saldoFechaHasta) {
 		$saldosAFecha = Factory::getInstance()->getArrayFromStoredProcedure('saldo_proveedores_a_fecha', Datos::objectToDB($saldoFechaHasta));
 		foreach ($saldosAFecha as $saldo) {
-			$saldos[$saldo['cod_prov']] = Funciones::toFloat($saldo['saldo']);
+			if ($empresa && isset($saldo['empresa']) && ($saldo['empresa'] != $empresa)) {
+				continue;
+			}
+			if (!array_key_exists($saldo['cod_prov'], $saldos)) {
+				$saldos[$saldo['cod_prov']] = 0;
+			}
+			$saldos[$saldo['cod_prov']] += Funciones::toFloat($saldo['saldo']);
 		}
 	}
-	$tabla = new HtmlTable(array('cantRows' => count($proveedores), 'cantCols' => 6, 'id' => 'tablaDatos', 'class' => 'registrosAlternados', 'cellSpacing' => 0, 'width' => '99%'));
+
+	$proveedoresFiltrados = array();
+	foreach ($proveedores as $pro) {
+		$pro['saldo'] = Funciones::toFloat($pro['saldo']);
+		$pro['saldo_historico'] = $saldoFechaHasta ? (array_key_exists($pro['cod_prov'], $saldos) ? $saldos[$pro['cod_prov']] : 0) : $pro['saldo'];
+		if (($saldoDesde && $pro['saldo_historico'] < $saldoDesde) || ($saldoHasta && $pro['saldo_historico'] > $saldoHasta)) {
+			continue;
+		}
+		if (!$mostrarSaldoCero && abs($pro['saldo_historico']) < 0.009) {
+			continue;
+		}
+		$proveedoresFiltrados[] = $pro;
+	}
+
+	if (!count($proveedoresFiltrados)) {
+		throw new FactoryExceptionCustomException('No existen registros con el filtro especificado');
+	}
+
+	if ($saldoFechaHasta) {
+		switch ($orden) {
+			case 1:
+			case 2:
+				usort($proveedoresFiltrados, create_function('$a, $b', '
+					$saldoA = $a["saldo_historico"];
+					$saldoB = $b["saldo_historico"];
+					if ($saldoA == $saldoB) {
+						return strcasecmp($a["razon_social"], $b["razon_social"]);
+					}
+					return ($saldoA < $saldoB) ? -1 : 1;
+				'));
+				if ($orden == 2) {
+					$proveedoresFiltrados = array_reverse($proveedoresFiltrados);
+				}
+				break;
+		}
+	}
+
+	$tabla = new HtmlTable(array('cantRows' => count($proveedoresFiltrados), 'cantCols' => 6, 'id' => 'tablaDatos', 'class' => 'registrosAlternados', 'cellSpacing' => 0, 'width' => '99%'));
 	$tabla->getRowCellArray($rows, $cells);
 	$tabla->createHeaderFromArray(
 		array(
@@ -56,13 +99,9 @@ try {
 
 	$saldoFinal = 0;
 	for ($i = 0; $i < $tabla->cantRows; $i++) {
-		$pro = $proveedores[$i];
-		$pro['saldo'] = Funciones::toFloat($pro['saldo']);
-		//Cuando ponen saldoFechaHasta, el filtro de importes de saldo lo tengo que hacer a mano:
-		if (($saldoFechaHasta) && (($saldoDesde && $pro['saldo'] < $saldoDesde) || ($saldoHasta && $pro['saldo'] > $saldoHasta) || (!$mostrarSaldoCero && ($pro['saldo'] < 0.009 || $pro['saldo'] > -0.009)))) {
-			continue;
-		}
-		$saldoFinal += Funciones::toFloat($pro['saldo']);
+		$pro = $proveedoresFiltrados[$i];
+		$saldoProveedor = $pro['saldo_historico'];
+		$saldoFinal += $saldoProveedor;
 		for($j = 0; $j < $tabla->cantCols; $j++) {
 			$cells[$i][$j]->class = 'pRight10 pLeft10 bLeftDarkGray' . ($i == ($tabla->cantRows - 1) ? ' bBottomDarkGray' : '');
 			if ($j == ($tabla->cantCols - 1)) $cells[$i][$j]->class .= ' bRightDarkGray';
@@ -71,7 +110,7 @@ try {
 		$cells[$i][0]->content = '[' . $pro['cod_prov'] . '] ' . $pro['razon_social'];
 		$cells[$i][0]->class .= ' nombre cPointer';
 		$cells[$i][1]->content = Funciones::ponerGuionesAlCuit($pro['cuit']);
-		$cells[$i][2]->content = $saldoFechaHasta ? $saldos[$pro['cod_prov']] : $pro['saldo'];
+		$cells[$i][2]->content = $saldoProveedor;
 		$cells[$i][2]->class .= ' saldo cPointer';
 		$cells[$i][2]->title = 'Ir al aplicador';
 		$cells[$i][3]->content = $saldoFechaHasta ? '' : ($pro['total_cheques'] + ($pro['saldo'] > 0 ? $pro['saldo'] : 0));

@@ -191,6 +191,8 @@
 				  ($('#inputSaldoDesde').val() != 0 ? '&saldoDesde=' + $('#inputSaldoDesde').val() : '') +
 				  ($('#inputSaldoHasta').val() != 0 ? '&saldoHasta=' + $('#inputSaldoHasta').val() : '') +
 				  ($('#inputSaldoFechaHasta').val() != 0 ? '&saldoFechaHasta=' + $('#inputSaldoFechaHasta').val() : '') +
+			      ($('#rdEmpresa_1').isChecked() ? '&empresa=1' : '') +
+			      ($('#rdEmpresa_2').isChecked() ? '&empresa=2' : '') +
 				  '&orden=' + $('#inputOrden').val();
 		return url;
 	}
