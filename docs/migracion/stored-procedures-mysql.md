@@ -44,6 +44,8 @@ Scripts creados:
 
 - `docs/migracion/sql/saldo_proveedores_a_fecha.mysql.sql`
 - `docs/migracion/sql/saldo_clientes_a_fecha.mysql.sql`
+- `docs/migracion/sql/sp_stock_a_fecha.mysql.sql`
+- `docs/migracion/sql/sp_stock_mp_a_fecha.mysql.sql`
 
 Criterios del port:
 
@@ -54,6 +56,10 @@ Criterios del port:
 - mantienen la lógica de signo original:
   - `NDB` y `FAC` suman
   - el resto resta
+- para stock histórico:
+  - parten del stock actual
+  - agregan movimientos posteriores a la fecha consultada con signo invertido
+  - conservan la idea original de “reconstruir stock a fecha”
 
 ## Impacto esperado
 Módulos que usan SP desde `Factory` en el repo Docker deberían dejar de fallar por sintaxis `EXEC`, por ejemplo:
@@ -64,10 +70,11 @@ Módulos que usan SP desde `Factory` en el repo Docker deberían dejar de fallar
 
 ## Validación pendiente
 - Crear ambos SP en `koi1_stage`
+- Crear también:
+  - `sp_stock_a_fecha`
+  - `sp_stock_mp_a_fecha`
 - Confirmar búsqueda con `saldoFechaHasta` en Docker para:
   - gestión proveedores
   - gestión cobranza
 - Extraer y portar después:
-  - `sp_stock_a_fecha`
-  - `sp_stock_mp_a_fecha`
   - `movimientos_caja_sp`
