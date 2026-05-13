@@ -1,0 +1,36 @@
+DROP PROCEDURE IF EXISTS saldo_proveedores_a_fecha;
+
+DELIMITER $$
+
+CREATE PROCEDURE saldo_proveedores_a_fecha(IN p_fecha VARCHAR(19))
+BEGIN
+    DECLARE v_fecha DATETIME;
+
+    SET v_fecha = COALESCE(
+        STR_TO_DATE(p_fecha, '%d/%m/%Y %H:%i:%s'),
+        STR_TO_DATE(p_fecha, '%d/%m/%Y'),
+        STR_TO_DATE(p_fecha, '%Y-%m-%d %H:%i:%s'),
+        STR_TO_DATE(p_fecha, '%Y-%m-%d')
+    );
+
+    IF v_fecha IS NULL THEN
+        SIGNAL SQLSTATE '22007'
+            SET MESSAGE_TEXT = 'saldo_proveedores_a_fecha: formato de fecha invalido';
+    END IF;
+
+    SELECT
+        p.cod_prov,
+        IFNULL(SUM(
+            (CASE
+                WHEN d.tipo_docum = 'NDB' OR d.tipo_docum = 'FAC' THEN 1
+                ELSE -1
+            END) * d.importe_total
+        ), 0) AS saldo
+    FROM proveedores_datos p
+    LEFT JOIN documento_proveedor d
+        ON p.cod_prov = d.cod_proveedor
+       AND d.fecha < DATE_ADD(DATE(v_fecha), INTERVAL 1 DAY)
+    GROUP BY p.cod_prov;
+END$$
+
+DELIMITER ;

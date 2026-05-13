@@ -120,7 +120,7 @@ class Factory {
 		try {
 			$list = array();
 			//$obj = new $clase;
-			$list = $this->mapper->fillListObject(Datos::EjecutarSQL($this->mapper->getQueryStoredProcedure($storedProcedureName, $parametros), $clase), $list, $clase);
+			$list = $this->mapper->fillListObject(Datos::EjecutarStoredProcedure($storedProcedureName, $parametros), $list, $clase);
 			return $list;
 		} catch (Exception $ex) {
 			throw $ex;
@@ -130,7 +130,7 @@ class Factory {
 		try {
 			$dataArray = array();
 
-			$dataArray = $this->mapper->fillArray(Datos::EjecutarSQL($this->mapper->getQueryStoredProcedure($storedProcedureName, $parametros)), $dataArray);
+			$dataArray = $this->mapper->fillArray(Datos::EjecutarStoredProcedure($storedProcedureName, $parametros), $dataArray);
 			return $dataArray;
 		} catch (Exception $ex) {
 			throw $ex;
