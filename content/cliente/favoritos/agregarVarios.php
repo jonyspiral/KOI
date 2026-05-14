@@ -1,8 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 header('Access-Control-Allow-Origin: *');
 header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
 header('Access-Control-Allow-Methods: POST');
@@ -49,7 +45,9 @@ if (Usuario::logueado()->puede('cliente/favoritos/agregar/')) {
                 'message' => 'Ya estaba guardado'
             );
         } catch (Exception $ex) {
-            file_put_contents('/tmp/error_favoritos.log', date('c') . ' - ' . $ex->getMessage() . PHP_EOL, FILE_APPEND);
+            if (class_exists('Logger')) {
+                Logger::addError('favoritos/agregarVarios: ' . $ex->getMessage());
+            }
 
             $response[] = array(
                 'idArticulo' => isset($fav['idArticulo']) ? $fav['idArticulo'] : null,

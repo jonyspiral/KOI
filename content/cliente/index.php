@@ -119,7 +119,7 @@
     }
 </style>
 <script>
-    var bgImages = <? echo ($files ? json_encode($files) : '""'); ?>;
+    var bgImages = <?php echo ($files ? json_encode($files) : '""'); ?>;
 
     $('#full-bg').backgroundRotator({
       images: bgImages,
@@ -133,3 +133,4 @@
 <div class="nombre-coleccion-lg hidden-xs">
     <h1></h1>
 </div>
+

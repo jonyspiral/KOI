@@ -148,7 +148,7 @@ foreach ($pedidos as $pedido) {
     Koi.controller('PedidosCtrl', function ($scope, ServiceCliente) {
 
       $scope.funciones = funciones;
-      $scope.pedidos = <? echo json_encode($arrayPedidos); ?>;
+      $scope.pedidos = <?php echo json_encode($arrayPedidos); ?>;
 
       $scope.toggleDetalle = function (pedido) {
         pedido.abierto = !pedido.abierto;
@@ -245,3 +245,4 @@ foreach ($pedidos as $pedido) {
         </table>
     </div>
 </div>
+

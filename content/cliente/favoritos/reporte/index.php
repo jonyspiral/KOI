@@ -116,8 +116,8 @@ foreach ($favoritos as $favorito) {
         'formaDeComercializacion' => $favorito->colorPorArticulo->formaDeComercializacion,
         'stock' => Funciones::keyIsSet(Funciones::keyIsSet($stock, $favorito->idArticulo, array()), $favorito->idColorPorArticulo, array()),
         'stockTotal' => $stockInternoTotal,
-        'primerTalle' => $cantidadTalles[0]['talle'],
-        'ultimoTalle' => $cantidadTalles[count($cantidadTalles)-1]['talle'],
+        'primerTalle' => count($cantidadTalles) ? $cantidadTalles[0]['talle'] : '',
+        'ultimoTalle' => count($cantidadTalles) ? $cantidadTalles[count($cantidadTalles)-1]['talle'] : '',
         'cantidadTalles' => $cantidadTalles,
 
         //'pronto' => array(),
@@ -563,7 +563,7 @@ if (count($arrayFavoritos) > 0) { ?>
                               <tr class="row-curva">
                                 <!-- Modular -->
                                 <td>Curva <?php echo $j; ?></td>
-                                <?php $total = 0; foreach ($subArticulo['talles'] as $i => $talle){ $total += $subArticulo['cantidades'][$i]; ?>
+                                <?php $total = 0; foreach ($subArticulo['talles'] as $i => $talle){ $total += $curva['cantidades'][$i]; ?>
                                   <th class="aCenter"><?php echo $curva['cantidades'][$i] ?></th>
                                 <?php } ?>
                                 <td class="col-curvas-cantidad"><?php echo $total; ?></td>

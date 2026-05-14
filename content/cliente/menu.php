@@ -97,7 +97,7 @@ if ($filtrosSession = Funciones::session('catalogo_filtros')) {
         return ServiceCatalogo.filtros.show;
       };
 
-      $scope.tiposProductoStock = <? echo json_encode($arrayTipos) ?>;
+      $scope.tiposProductoStock = <?php echo json_encode($arrayTipos) ?>;
 
       $scope.filtros = {
         tipoProductoStock: {}
@@ -126,7 +126,7 @@ if ($filtrosSession = Funciones::session('catalogo_filtros')) {
       };
 
       $timeout(function () {
-        $scope.filtrosDefault = <? echo json_encode($filtrosDefault); ?>;
+        $scope.filtrosDefault = <?php echo json_encode($filtrosDefault); ?>;
         angular.forEach($scope.filtrosDefault, function (filtro) {
           $scope.filtros.tipoProductoStock[filtro] = true; // '1'
         });
@@ -220,3 +220,4 @@ if ($filtrosSession = Funciones::session('catalogo_filtros')) {
         </ul>
     </div>
 </aside>
+

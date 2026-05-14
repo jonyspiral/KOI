@@ -507,9 +507,10 @@ foreach (Usuario::logueado()->cliente->sucursales as $sucursal) {
 
       $scope.sumTotalDescuentoPorLinea = function (idLinea) {
         var total = 0;
-        $scope.favoritos[idLinea].items.forEach(function (articulo) {
+        for (const key of Object.keys($scope.favoritos[idLinea].items)) {
+          const articulo = $scope.favoritos[idLinea].items[key];
           total += $scope.sumTotalArticuloDescuento(articulo);
-        });
+        }
         return total;
       };
 

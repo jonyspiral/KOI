@@ -1,5 +1,5 @@
 <div class="mobile-company-name user-menu visible-xs">
-    <? echo Usuario::logueado()->contacto->nombre; ?>
+    <?php echo Usuario::logueado()->contacto->nombre; ?>
 </div>
 <div class="mobile-menu visible-xs">
     <div class="row">
@@ -26,9 +26,10 @@
                 <li class="divider"></li>
                 <li><a href="/pedidos/"><i class="fa fa-fw fa-shopping-cart"></i> Mis pedidos</a></li>
                 <li><a href="/favoritos/"><i class="fa fa-fw fa-star-half-empty fa-star"></i> Favoritos</a></li>
-                <!--<li><a href="/perfil/"><i class="fa fa-fw fa-user"></i> <? echo Usuario::logueado()->contacto->nombre; ?></a></li>-->
+                <!--<li><a href="/perfil/"><i class="fa fa-fw fa-user"></i> <?php echo Usuario::logueado()->contacto->nombre; ?></a></li>-->
                 <li class="arrow"></li>
             </ul>
         </div>
     </div>
 </div>
+
