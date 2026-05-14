@@ -150,21 +150,33 @@ public static function objectToDB($value) {
        ========================= */
 
     public static function BeginTransaction() {
-        return method_exists(self::db(), 'beginTransaction')
-            ? self::db()->beginTransaction()
-            : null;
+        $db = self::db();
+        if (method_exists($db, 'beginTransaction')) {
+            return $db->beginTransaction();
+        }
+        if (method_exists($db, 'begin')) {
+            return $db->begin();
+        }
+        return null;
     }
 
     public static function CommitTransaction() {
-        return method_exists(self::db(), 'commit')
-            ? self::db()->commit()
-            : null;
+        $db = self::db();
+        if (method_exists($db, 'commit')) {
+            return $db->commit();
+        }
+        return null;
     }
 
     public static function RollbackTransaction() {
-        return method_exists(self::db(), 'rollBack')
-            ? self::db()->rollBack()
-            : (method_exists(self::db(), 'rollback') ? self::db()->rollback() : null);
+        $db = self::db();
+        if (method_exists($db, 'rollBack')) {
+            return $db->rollBack();
+        }
+        if (method_exists($db, 'rollback')) {
+            return $db->rollback();
+        }
+        return null;
     }
 
     /* =========================

@@ -10,6 +10,13 @@ class Config {
 	//const conexion_sql_db = 'desarrollo';
     const conexion_sql_db = 'encinitas';
     //const conexion_sql_db = 'spiral';
+    // Compatibilidad con el motor MySQL nuevo sin romper referencias legacy.
+    const mysql_host = self::conexion_sql_ip;
+    const mysql_port = 3306;
+    const mysql_db = self::conexion_sql_db;
+    const mysql_user = self::conexion_sql_user;
+    const mysql_pass = self::conexion_sql_pass;
+    const mysql_charset = 'utf8mb4';
 	const siteRoot = '/';
     //const pageTitle = 'Desarrollo';
     const pageTitle = 'SPIRAL SHOES';

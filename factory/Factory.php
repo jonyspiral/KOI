@@ -14,7 +14,7 @@ class Factory {
         $this->mapper = new Mapper();
 
         // Inicializa conexión MySQL siempre
-        $this->db = new DbMysql([
+        $this->db = new DbMysql(array(
             'host'    => Config::mysql_host,
             'port'    => Config::mysql_port,
             'name'    => Config::mysql_db,
@@ -22,7 +22,7 @@ class Factory {
             'pass'    => Config::mysql_pass,
             'charset' => Config::mysql_charset,
             'timeout' => 5,
-        ]);
+        ));
     }
 
 
