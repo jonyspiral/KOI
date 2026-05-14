@@ -56,6 +56,7 @@ $js = array(
         'js/services/catalogo.js'
     )
 );
+$assetVersion = '20260514-3';
 ?>
 
 <!DOCTYPE html>
@@ -67,10 +68,10 @@ $js = array(
         <link rel='shortcut icon' type='image/ico' href='<?php echo Config::siteRoot; ?>img/varias/favicon.ico' />
         <?php
             foreach ($css as $cssPath) {
-                echo '<link href="' . Config::siteRoot . $cssPath . '" rel="stylesheet" type="text/css" />';
+                echo '<link href="' . Config::siteRoot . $cssPath . '?v=' . $assetVersion . '" rel="stylesheet" type="text/css" />';
             }
             foreach ($js['pre'] as $jsPath) {
-                echo '<script type="text/javascript" src="' . Config::siteRoot . $jsPath . '"></script>';
+                echo '<script type="text/javascript" src="' . Config::siteRoot . $jsPath . '?v=' . $assetVersion . '"></script>';
             }
         ?>
         <script type='text/javascript'>
@@ -78,7 +79,7 @@ $js = array(
         </script>
         <?php
         foreach ($js['post'] as $jsPath) {
-            echo '<script type="text/javascript" src="' . Config::siteRoot . $jsPath . '"></script>';
+            echo '<script type="text/javascript" src="' . Config::siteRoot . $jsPath . '?v=' . $assetVersion . '"></script>';
         }
         ?>
         <script type='text/javascript'>
@@ -221,3 +222,4 @@ $js = array(
 
     </body>
 </html>
+
