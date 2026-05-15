@@ -1,14 +1,14 @@
-<?php
+﻿<?php
 
 class Config {
-	// Configuraci�n de Conexi�n al servidor
-	const conexion_sql_ip = 'localhost';
+	// Configuraciï¿½n de Conexiï¿½n al servidor
+	const conexion_sql_ip = '192.168.2.210';
 	//const conexion_sql_user = 'Koi'; Usuario del SQL de CAMACHUI
 	//const conexion_sql_pass = 'Koisys.123'; Password del SQL de CAMACHUI
-	const conexion_sql_user = 'Koi';
-	const conexion_sql_pass = 'koisys';
+	const conexion_sql_user = 'koiuser';
+	const conexion_sql_pass = 'Route667?';
 	//const conexion_sql_db = 'desarrollo';
-    const conexion_sql_db = 'encinitas';
+    const conexion_sql_db = 'koi1_stage';
     //const conexion_sql_db = 'spiral';
     // Compatibilidad con el motor MySQL nuevo sin romper referencias legacy.
     const mysql_host = self::conexion_sql_ip;
@@ -22,13 +22,13 @@ class Config {
     const pageTitle = 'SPIRAL SHOES';
     //const pageTitle = 'Koi';
 	//const pathBase = '/xampp/htdocs/desarrollo/';
-    const pathBase = '/xampp/htdocs/encinitas/';
+    const pathBase = '/var/www/encinitas/';
     //const pathBase = '/xampp/htdocs/koi/';
     // const urlBase = 'http://desarrollo/';
     const urlBase = 'http://koi.spiralshoes.com/';
 
     // Cache
-    const cache_host = 'localhost';
+    const cache_host = '127.0.0.1';
     const cache_port = 11211;
 
     /*
@@ -53,3 +53,5 @@ class Config {
 }
 
 ?>
+
+

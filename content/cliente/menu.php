@@ -14,7 +14,7 @@ foreach ($tiposProductoStock as $tipo) {
     $arrayTipos[Funciones::toString($tipo->id)] = $tipo->nombreCatalogo;
 }
 
-$filtrosDefault = array('1', '2', '3', '4');
+$filtrosDefault = array('01', '02', '03', '04');
 if ($filtrosSession = Funciones::session('catalogo_filtros')) {
     try {
         $filtrosDefault = json_decode($filtrosSession, true);

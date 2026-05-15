@@ -142,8 +142,8 @@ class Cliente extends Base {
 		return ($this->vendedor->id == $vendedor->id);
 	}
 
-	public function getIdNombre() {
-		return parent::getIdNombre('razonSocial');
+	public function getIdNombre($nameField = 'nombre', $idField = 'id') {
+		return parent::getIdNombre('razonSocial', $idField);
 	}
 
 	public function tieneSucursalEntrega() {

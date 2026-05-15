@@ -24,29 +24,23 @@ if (Usuario::logueado()->puede('cliente/favoritos/agregar/')) {
 
     foreach ($decoded['favorites'] as $fav) {
         try {
-            $idArticulo = isset($fav['idArticulo']) ? $fav['idArticulo'] : null;
-            $idColorPorArticulo = isset($fav['idColorPorArticulo']) ? $fav['idColorPorArticulo'] : (isset($fav['idColor']) ? $fav['idColor'] : null);
-            if (!$idArticulo || !$idColorPorArticulo) {
-                throw new Exception('Payload incompleto para favorito');
-            }
-
             $favorito = FavoritoCliente::find();
             $favorito->cliente = Usuario::logueado()->cliente;
-            $favorito->colorPorArticulo = Factory::getInstance()->getColorPorArticulo($idArticulo, $idColorPorArticulo);
+            $favorito->colorPorArticulo = Factory::getInstance()->getColorPorArticulo($fav['idArticulo'], $fav['idColorPorArticulo']);
             $favorito->articulo = $favorito->colorPorArticulo->articulo;
 
             $favorito->guardar();
 
             $response[] = array(
-                'idArticulo' => $idArticulo,
-                'idColorPorArticulo' => $idColorPorArticulo,
+                'idArticulo' => $fav['idArticulo'],
+                'idColorPorArticulo' => $fav['idColorPorArticulo'],
                 'saved' => true,
                 'message' => 'Guardado'
             );
         } catch (FactoryExceptionRegistroExistente $ex) {
             $response[] = array(
-                'idArticulo' => isset($fav['idArticulo']) ? $fav['idArticulo'] : null,
-                'idColorPorArticulo' => isset($fav['idColorPorArticulo']) ? $fav['idColorPorArticulo'] : (isset($fav['idColor']) ? $fav['idColor'] : null),
+                'idArticulo' => $fav['idArticulo'],
+                'idColorPorArticulo' => $fav['idColorPorArticulo'],
                 'saved' => true,
                 'message' => 'Ya estaba guardado'
             );

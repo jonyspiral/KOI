@@ -195,7 +195,6 @@ foreach ($articulosTodos as $articulo) {
                 'idArticulo'              => $articulo->idArticulo,
                 'nombre'                  => $articulo->articulo->nombre,
                 'idColorPorArticulo'      => $articulo->idColorPorArticulo,
-                'favorito'                => in_array($articulo->idArticulo . '_' . $articulo->idColorPorArticulo, $arrayFavoritos),
                 'formaDeComercializacion' => $articulo->colorPorArticulo->formaDeComercializacion,
                 'precioMayorista'         => ($distribuidor ? $articulo->colorPorArticulo->precioDistribuidor : $articulo->colorPorArticulo->precioMayoristaDolar),
                 'precioMinorista'         => ($distribuidor ? $articulo->colorPorArticulo->precioDistribuidorMinorista : $articulo->colorPorArticulo->precioMinoristaDolar),
@@ -245,7 +244,6 @@ foreach ($articulosTodos as $articulo) {
             'idArticulo'              => $articulo->idArticulo,
             'nombre'                  => $articulo->articulo->nombre,
             'idColorPorArticulo'      => $articulo->idColorPorArticulo,
-            'favorito'                => in_array($articulo->idArticulo . '_' . $articulo->idColorPorArticulo, $arrayFavoritos),
             'formaDeComercializacion' => $articulo->colorPorArticulo->formaDeComercializacion,
             'precioMayorista'         => ($distribuidor ? $articulo->colorPorArticulo->precioDistribuidor : $articulo->colorPorArticulo->precioMayoristaDolar),
             'precioMinorista'         => ($distribuidor ? $articulo->colorPorArticulo->precioDistribuidorMinorista : $articulo->colorPorArticulo->precioMinoristaDolar),
@@ -540,9 +538,7 @@ function actualizarIconoFavorito(articulo, estadoForzado = null) {
 $scope.toggleFavorito = function (articulo) {
   if (!articulo) return;
 
-  const estaba = (articulo.subArticulos && articulo.subArticulos.length)
-    ? articulo.subArticulos.every(sa => !!sa.favorito)
-    : !!articulo.favorito;
+  const estaba = !!articulo.favorito;
   const nuevo  = !estaba;
 
   // Actualizar modelo (esto pinta el ícono vía ng-class de inmediato)
@@ -611,14 +607,7 @@ $scope.addFavoriteButton = async function () {
   }
 };
 $scope.articulos = <?php echo json_encode($articulos); ?>;
-$scope.articulos.forEach(a => {
-  if (a.subArticulos && a.subArticulos.length) {
-    a.subArticulos.forEach(sa => { sa.favorito = !!sa.favorito; });
-    a.favorito = a.subArticulos.every(sa => !!sa.favorito);
-  } else {
-    a.favorito = !!a.favorito;
-  }
-});
+$scope.articulos.forEach(a => { a.favorito = !!a.favorito; });
 
 
 $scope.removeFavoriteButton = async function () {
@@ -700,7 +689,8 @@ $scope.removeFavoriteButton = async function () {
 };
 
 
-    // Modelo ya inicializado arriba con normalizacion de favoritos
+    // Modelo de datos inyectado desde PHP
+    $scope.articulos = <?php echo json_encode($articulos); ?>;
 });
 </script>
 

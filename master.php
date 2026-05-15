@@ -14,8 +14,9 @@ function puedeSinLoguear($pagename) {
 }
 
 function findRealPath($filename) {
-	if (realpath($filename) == $filename) {
-		return $filename;
+	if (file_exists($filename)) {
+		$real = realpath($filename);
+		return $real ? $real : $filename;
 	}
 	$paths = explode(PATH_SEPARATOR, get_include_path());
 	foreach ($paths as $path) {
@@ -25,7 +26,8 @@ function findRealPath($filename) {
 			$fullpath = $path . DIRECTORY_SEPARATOR . $filename;
 		}
 		if (file_exists($fullpath)) {
-			return $fullpath;
+			$real = realpath($fullpath);
+			return $real ? $real : $fullpath;
 		}
 	}
 	return false;

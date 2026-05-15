@@ -710,7 +710,7 @@ class Mapper {
 				$colorPorArticulo->fotos[$i] = $dr['fotografia' . $i];
 			$colorPorArticulo->fotos[9] = $dr['zoom_lado_interno'];
 			$colorPorArticulo->fotos[10]= $dr['zoom_puntera'];
-			$colorPorArticulo->fotos[11] = $dr['zoom_caña'];
+			$colorPorArticulo->fotos[11] = array_key_exists('zoom_caña', $dr) ? $dr['zoom_caña'] : (array_key_exists('zoom_cana', $dr) ? $dr['zoom_cana'] : null);
 			$colorPorArticulo->fotos[12] = $dr['zoom_talon'];
 			$colorPorArticulo->clasificacionComercial = $dr['clasificacion_comercial'];
 			$colorPorArticulo->textoVarios = $dr['texto_varios'];
@@ -718,7 +718,7 @@ class Mapper {
 			$colorPorArticulo->textoTalon = $dr['texto_talon'];
 			//$colorPorArticulo->textoLengua = $dr['texto_lengua'];
 			$colorPorArticulo->textoLadoInterno = $dr['texto_lado_interno'];
-			$colorPorArticulo->textoCania = $dr['texto_caña'];
+			$colorPorArticulo->textoCania = array_key_exists('texto_caña', $dr) ? $dr['texto_caña'] : (array_key_exists('texto_cana', $dr) ? $dr['texto_cana'] : null);
 			$colorPorArticulo->precioRecargado = $dr['precio_recargado'];
 			$colorPorArticulo->idTipoProductoStock = Funciones::toInt($dr['id_tipo_producto_stock']);
 			$colorPorArticulo->ecommerceExiste = $dr['ecommerce_existe'];
@@ -14239,10 +14239,10 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 		try {
 			if ($modo == Modos::select){
 				$sql .= 'SELECT * ';
-				$sql .= 'FROM tipo_producto_Stock ';
+				$sql .= 'FROM tipo_producto_stock ';
 				$sql .= 'WHERE id_tipo_producto_stock_nro = ' . Datos::objectToDB($tipoProductoStock->id) . '; ';
 			} elseif ($modo == Modos::insert) {
-				$sql .= 'INSERT INTO tipo_producto_Stock (';
+				$sql .= 'INSERT INTO tipo_producto_stock (';
 				$sql .= 'id_tipo_producto_stock_nro, ';
 				$sql .= 'id_tipo_producto_stock, ';
                 $sql .= 'denom_tipo_producto, ';
@@ -14256,14 +14256,14 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				$sql .= Datos::objectToDB($tipoProductoStock->mostrarEnCatalogo) . ' ';
 				$sql .= '); ';
 			} elseif ($modo == Modos::update) {
-				$sql .= 'UPDATE tipo_producto_Stock SET ';
+				$sql .= 'UPDATE tipo_producto_stock SET ';
                 $sql .= 'denom_tipo_producto = ' . Datos::objectToDB($tipoProductoStock->nombre) . ', ';
 				$sql .= 'nombre_catalogo = ' . Datos::objectToDB($tipoProductoStock->nombreCatalogo) . ', ';
 				$sql .= 'mostrar_en_catalogo = ' . Datos::objectToDB($tipoProductoStock->mostrarEnCatalogo) . ' ';
 				$sql .= 'WHERE id_tipo_producto_stock_nro = ' . Datos::objectToDB($tipoProductoStock->id) . '; ';
 			//} elseif ($modo == Modos::delete) { No se usa.
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT ISNULL(MAX(id_tipo_producto_stock_nro), 0) + 1 FROM tipo_producto_Stock;';
+				$sql .= 'SELECT ISNULL(MAX(id_tipo_producto_stock_nro), 0) + 1 FROM tipo_producto_stock;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}

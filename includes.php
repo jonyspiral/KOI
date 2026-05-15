@@ -29,6 +29,10 @@ require_once('factory/FactoryExceptions.php');
 require_once('factory/Funciones.php');
 require_once('factory/Mapper.php');
 
+// RaiDrive/SFTP no puede materializar simultaneamente Html.php y HTML.php.
+// La clase se carga aca para evitar autoload case-sensitive en PHP 5.6/Linux.
+require_once('clases/Html.php.bak');
+
 /*
 require_once('clases/Base.php');
 

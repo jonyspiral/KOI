@@ -1,19 +1,4 @@
 Koi.factory('ServiceCliente', ['$http', function ($http) {
-  function normalizeFavoritosBatch(favoritos) {
-    if (!Array.isArray(favoritos)) return [];
-    return favoritos
-      .map(function (f) {
-        var idColor = f && (f.idColorPorArticulo || f.idColor || (f.colorPorArticulo && f.colorPorArticulo.id));
-        return {
-          idArticulo: f ? f.idArticulo : null,
-          idColorPorArticulo: idColor
-        };
-      })
-      .filter(function (f) {
-        return !!(f.idArticulo && f.idColorPorArticulo);
-      });
-  }
-
   var service = {
     basePath: '/content/cliente/',
 
@@ -28,15 +13,14 @@ Koi.factory('ServiceCliente', ['$http', function ($http) {
     },
 
     addFavorito: function (articulo, callback) {
-      var idColor = articulo.idColorPorArticulo || (articulo.colorPorArticulo && articulo.colorPorArticulo.id);
       this.post(
         this.basePath + 'favoritos/agregar.php',
-        {idArticulo: articulo.idArticulo, idColor: idColor},
+        {idArticulo: articulo.idArticulo, idColor: articulo.idColorPorArticulo},
         callback
       );
     },
 addFavoritoBatch: async function (favoritos) {
-  const payload = { favorites: normalizeFavoritosBatch(favoritos) };
+  const payload = { favorites: favoritos };
   console.log("📦 JSON ENVIADO:", JSON.stringify(payload));
 
   const res = await fetch('/content/cliente/favoritos/agregarVarios.php', {
@@ -65,17 +49,16 @@ addFavoritoBatch: async function (favoritos) {
 
 
     removeFavorito: function (articulo, callback) {
-      var idColor = articulo.idColorPorArticulo || (articulo.colorPorArticulo && articulo.colorPorArticulo.id);
       //console.log("articulo", articulo, "callback", callback);
       this.post(
         this.basePath + 'favoritos/borrar.php',
-        {idArticulo: articulo.idArticulo, idColor: idColor},
+        {idArticulo: articulo.idArticulo, idColor: articulo.idColorPorArticulo},
         callback
       );
     },
 
    removeFavoritoBatch: async function (favoritos) {
-  const payload = { favorites: normalizeFavoritosBatch(favoritos) };
+  const payload = { favorites: favoritos };
   console.log("📦 JSON ENVIADO (remove):", JSON.stringify(payload));
 
   const res = await fetch('/content/cliente/favoritos/borrarVarios.php', {

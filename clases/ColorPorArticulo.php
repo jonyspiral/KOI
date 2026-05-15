@@ -258,7 +258,7 @@ class ColorPorArticulo extends Base {
 		return Funciones::iIsSet((!is_null($cliente) && $cliente->listaAplicable == 'D') ? $this->precioDistribuidor : $this->precioMayoristaDolar, 0);
 	}
 
-	public function getIdNombre() {
+	public function getIdNombre($nameField = 'nombre', $idField = 'id') {
 		return '[' . $this->idArticulo . '-' . $this->id . '] ' . $this->articulo->nombre . ' - ' . $this->nombre;
 	}
 
