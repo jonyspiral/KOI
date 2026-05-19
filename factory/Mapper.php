@@ -710,7 +710,7 @@ class Mapper {
 				$colorPorArticulo->fotos[$i] = $dr['fotografia' . $i];
 			$colorPorArticulo->fotos[9] = $dr['zoom_lado_interno'];
 			$colorPorArticulo->fotos[10]= $dr['zoom_puntera'];
-			$colorPorArticulo->fotos[11] = array_key_exists('zoom_caña', $dr) ? $dr['zoom_caña'] : (array_key_exists('zoom_cana', $dr) ? $dr['zoom_cana'] : null);
+			$colorPorArticulo->fotos[11] = array_key_exists('zoom_cana', $dr) ? $dr['zoom_cana'] : (array_key_exists('zoom_caña', $dr) ? $dr['zoom_caña'] : null);
 			$colorPorArticulo->fotos[12] = $dr['zoom_talon'];
 			$colorPorArticulo->clasificacionComercial = $dr['clasificacion_comercial'];
 			$colorPorArticulo->textoVarios = $dr['texto_varios'];
@@ -718,7 +718,7 @@ class Mapper {
 			$colorPorArticulo->textoTalon = $dr['texto_talon'];
 			//$colorPorArticulo->textoLengua = $dr['texto_lengua'];
 			$colorPorArticulo->textoLadoInterno = $dr['texto_lado_interno'];
-			$colorPorArticulo->textoCania = array_key_exists('texto_caña', $dr) ? $dr['texto_caña'] : (array_key_exists('texto_cana', $dr) ? $dr['texto_cana'] : null);
+			$colorPorArticulo->textoCania = array_key_exists('texto_cana', $dr) ? $dr['texto_cana'] : (array_key_exists('texto_caña', $dr) ? $dr['texto_caña'] : null);
 			$colorPorArticulo->precioRecargado = $dr['precio_recargado'];
 			$colorPorArticulo->idTipoProductoStock = Funciones::toInt($dr['id_tipo_producto_stock']);
 			$colorPorArticulo->ecommerceExiste = $dr['ecommerce_existe'];
@@ -2693,7 +2693,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 			$patron->versionActual = $dr['version_actual'];
 			$patron->borrador = $dr['borrador'];
 			$patron->idHorma = trim($dr['cod_horma']);
-			$patron->disenio = Funciones::keyIsSet($dr, 'diseño');
+			$patron->disenio = Funciones::keyIsSet($dr, 'diseno') ? Funciones::keyIsSet($dr, 'diseno') : Funciones::keyIsSet($dr, 'diseño');
 			$patron->borradorViejo = $dr['borrador_viejo'];
 			$patron->costo = Funciones::keyIsSet($dr, 'costo');
 			return $patron;

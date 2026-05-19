@@ -1,0 +1,25 @@
+# Editor and IDE noise
+.idea/
+
+# Logs and temp runtime folders
+logs/
+tmp/
+content/cliente/tmp/
+
+# Windows / Explorer noise
+Thumbs.db
+thumbs.db
+
+# Local backup artifacts
+*.bak
+*.bak_*
+*.bak-*
+*.bak_dbg_*
+*.bak_flow_*
+*.bak_rollcore_*
+*.tar.gz
+*.log
+clases/Html (1).php
+
+# Local helper tooling
+tools/
