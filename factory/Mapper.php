@@ -5,7 +5,7 @@ class Mapper {
 		try {
 			$method = 'fill' . ucfirst(Funciones::getType($obj));
 			if (!method_exists($this, $method)) {
-				throw new Exception('No existe el método ' . $method . ' en la clase "Mapper".');
+				throw new Exception('No existe el mï¿½todo ' . $method . ' en la clase "Mapper".');
 			}
 			if (is_subclass_of($obj, 'Base'))
 				$obj->modo = Modos::update;
@@ -49,7 +49,7 @@ class Mapper {
 		try {
 			$method = 'mapperQuery' . ucfirst(Funciones::getType($obj));
 			if (!method_exists($this, $method)) {
-				throw new Exception('No existe el método ' . $method . ' en la clase "Mapper".');
+				throw new Exception('No existe el mï¿½todo ' . $method . ' en la clase "Mapper".');
 			}
 			return $this->$method($obj, $modo);
 		} catch (Exception $ex) {
@@ -710,7 +710,7 @@ class Mapper {
 				$colorPorArticulo->fotos[$i] = $dr['fotografia' . $i];
 			$colorPorArticulo->fotos[9] = $dr['zoom_lado_interno'];
 			$colorPorArticulo->fotos[10]= $dr['zoom_puntera'];
-			$colorPorArticulo->fotos[11] = array_key_exists('zoom_cana', $dr) ? $dr['zoom_cana'] : (array_key_exists('zoom_caña', $dr) ? $dr['zoom_caña'] : null);
+			$colorPorArticulo->fotos[11] = array_key_exists('zoom_cana', $dr) ? $dr['zoom_cana'] : (array_key_exists('zoom_caï¿½a', $dr) ? $dr['zoom_caï¿½a'] : null);
 			$colorPorArticulo->fotos[12] = $dr['zoom_talon'];
 			$colorPorArticulo->clasificacionComercial = $dr['clasificacion_comercial'];
 			$colorPorArticulo->textoVarios = $dr['texto_varios'];
@@ -718,7 +718,7 @@ class Mapper {
 			$colorPorArticulo->textoTalon = $dr['texto_talon'];
 			//$colorPorArticulo->textoLengua = $dr['texto_lengua'];
 			$colorPorArticulo->textoLadoInterno = $dr['texto_lado_interno'];
-			$colorPorArticulo->textoCania = array_key_exists('texto_cana', $dr) ? $dr['texto_cana'] : (array_key_exists('texto_caña', $dr) ? $dr['texto_caña'] : null);
+			$colorPorArticulo->textoCania = array_key_exists('texto_cana', $dr) ? $dr['texto_cana'] : (array_key_exists('texto_caï¿½a', $dr) ? $dr['texto_caï¿½a'] : null);
 			$colorPorArticulo->precioRecargado = $dr['precio_recargado'];
 			$colorPorArticulo->idTipoProductoStock = Funciones::toInt($dr['id_tipo_producto_stock']);
 			$colorPorArticulo->ecommerceExiste = $dr['ecommerce_existe'];
@@ -2090,7 +2090,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 			$horma->id = trim($dr['cod_horma']);
 			$horma->activa = $dr['activa'];
 			$horma->colorExterno = $dr['color_externo'];
-			$horma->diseniador = $dr['diseñador'];
+			$horma->diseniador = $dr['diseï¿½ador'];
 			$horma->fabricante = $dr['fabricante'];
 			$horma->fechaAlta = Funciones::formatearFecha($dr['incorporada_fecha'], 'd/m/Y');
 			$horma->fechaBaja = Funciones::formatearFecha($dr['desactivada_fecha'], 'd/m/Y');
@@ -2693,7 +2693,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 			$patron->versionActual = $dr['version_actual'];
 			$patron->borrador = $dr['borrador'];
 			$patron->idHorma = trim($dr['cod_horma']);
-			$patron->disenio = Funciones::keyIsSet($dr, 'diseno') ? Funciones::keyIsSet($dr, 'diseno') : Funciones::keyIsSet($dr, 'diseño');
+			$patron->disenio = Funciones::keyIsSet($dr, 'diseno') ? Funciones::keyIsSet($dr, 'diseno') : Funciones::keyIsSet($dr, 'diseï¿½o');
 			$patron->borradorViejo = $dr['borrador_viejo'];
 			$patron->costo = Funciones::keyIsSet($dr, 'costo');
 			return $patron;
@@ -5741,7 +5741,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 					$sql .= 'fotografia' . $i . ' = ' . Datos::objectToDB($colorPorArticulo->fotos[$i]) . ', ';
 				$sql .= 'zoom_lado_interno = ' . Datos::objectToDB($colorPorArticulo->fotos[9]) . ', ';
 				$sql .= 'zoom_puntera = ' . Datos::objectToDB($colorPorArticulo->fotos[10]) . ', ';
-				$sql .= 'zoom_caña = ' . Datos::objectToDB($colorPorArticulo->fotos[11]) . ', ';
+				$sql .= 'zoom_caï¿½a = ' . Datos::objectToDB($colorPorArticulo->fotos[11]) . ', ';
 				$sql .= 'zoom_talon = ' . Datos::objectToDB($colorPorArticulo->fotos[12]) . ', ';
 				$sql .= 'ecommerce_existe = ' . Datos::objectToDB($colorPorArticulo->ecommerceExiste) . ', ';
 				$sql .= 'ecommerce_fecha_ultima_sinc = ' . Datos::objectToDB($colorPorArticulo->ecommerceFechaUltimaSinc) . ', ';
@@ -6547,7 +6547,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 					/** @var $despachoItem DespachoItem */
 					if ($despachoItem->remitido()) {
 						//Si tiene remito no se puede borrar. Primero debe eliminarse el remito
-						throw new FactoryException('No se puede borrar el despacho ya que uno de sus items pertenece a un remito. Debe borrar el remito número ' . $despachoItem->remitoNumero . ' primero');
+						throw new FactoryException('No se puede borrar el despacho ya que uno de sus items pertenece a un remito. Debe borrar el remito nï¿½mero ' . $despachoItem->remitoNumero . ' primero');
 					}
 					$sql .= 'UPDATE despachos_d SET ';
 					$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
@@ -6637,7 +6637,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				//Es necesario controlar que no estï¿½ anulado para que no sigan aumentï¿½ndose los predespachados
 				//La otra opcion es bajar las cantidades del despacho_d a 0
 				if ($despachoItem->anulado == 'S')
-					throw new FactoryException('No se puede borrar el despacho porque ya está anulado');
+					throw new FactoryException('No se puede borrar el despacho porque ya estï¿½ anulado');
 				//Aumento la cantidad de predespachados del pedido
 				$sql .= 'UPDATE predespachos SET ';
 				$sql .= 'predespachados = predespachados + ' . Datos::objectToDB($despachoItem->cantidadTotal) . ', ';
@@ -7234,8 +7234,8 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				$sql .= 'WHERE id = ' . Datos::objectToDB($documentoProveedorAplicacion->id) . ' ';
 				$sql .= 'AND empresa = ' . Datos::objectToDB($documentoProveedorAplicacion->empresa) . ' ';
 				$sql .= 'AND tipo_docum = ' . Datos::objectToDB($documentoProveedorAplicacion->tipoDocumento) . ' ';
-				// if ($documentoProveedorAplicacion->esHaber() && $documentoProveedorAplicacion->tipoDocumento) { // Si no buscamos también por tipo_docum, puede ocurrir que haya más de un registro que cumple con los mismos requerimientos (me pasó que había una FAC y una OP)
-                //     $sql .= 'AND tipo_docum = ' . Datos::objectToDB($documentoProveedorAplicacion->tipoDocumento) . ' '; // Entonces eso hacía que detecte como que no existe un único registro, y fallaba
+				// if ($documentoProveedorAplicacion->esHaber() && $documentoProveedorAplicacion->tipoDocumento) { // Si no buscamos tambiï¿½n por tipo_docum, puede ocurrir que haya mï¿½s de un registro que cumple con los mismos requerimientos (me pasï¿½ que habï¿½a una FAC y una OP)
+                //     $sql .= 'AND tipo_docum = ' . Datos::objectToDB($documentoProveedorAplicacion->tipoDocumento) . ' '; // Entonces eso hacï¿½a que detecte como que no existe un ï¿½nico registro, y fallaba
                 // }
 				$sql .= '; ';
 			//} elseif ($modo == Modos::insert) {
@@ -7322,7 +7322,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 							$sql .= 'AND empresa = ' . Datos::objectToDB($documentoProveedorAplicacionHaber->empresa) . '; ';
 							break;
 						default:
-							throw new Exception('No se reconoce el tipo de documento al intentar aplicar. Debería ser "OP" o "REN"'); break;
+							throw new Exception('No se reconoce el tipo de documento al intentar aplicar. Deberï¿½a ser "OP" o "REN"'); break;
 					}
 				}
 			//} elseif ($modo == Modos::delete) {
@@ -8305,7 +8305,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 			} elseif ($modo == Modos::delete) {
 				//Si no tiene CAE, puedo volver to_do atrï¿½s! Si tiene CAE, no
 				if (isset($factura->cae))
-					throw new FactoryException('No se puede borrar la factura ya que tiene CAE. Debe hacer una nota de crédito');
+					throw new FactoryException('No se puede borrar la factura ya que tiene CAE. Debe hacer una nota de crï¿½dito');
 				if (!$factura->tieneDetalle()) {
 					foreach ($factura->detalle as $remito) {
 						$sql .= 'UPDATE remitos_c SET ';
@@ -9187,7 +9187,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				$sql .= 'color_externo, ';
 				$sql .= 'decidio_retirar, ';
 				$sql .= 'denom_horma, ';
-				$sql .= 'diseñador, ';
+				$sql .= 'diseï¿½ador, ';
 				$sql .= 'fabricante, ';
 				$sql .= 'observaciones, ';
 				$sql .= 'punto, ';
@@ -9216,7 +9216,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				$sql .= 'color_externo = ' . Datos::objectToDB($horma->colorExterno) . ', ';
 				$sql .= 'decidio_retirar = ' . Datos::objectToDB($horma->retiradaPor) . ', ';
 				$sql .= 'denom_horma = ' . Datos::objectToDB($horma->nombre) . ', ';
-				$sql .= 'diseñador = ' . Datos::objectToDB($horma->diseniador) . ', ';
+				$sql .= 'diseï¿½ador = ' . Datos::objectToDB($horma->diseniador) . ', ';
 				$sql .= 'fabricante = ' . Datos::objectToDB($horma->fabricante) . ', ';
 				$sql .= 'observaciones = ' . Datos::objectToDB($horma->observaciones) . ', ';
 				$sql .= 'punto = ' . Datos::objectToDB($horma->punto) . ', ';
@@ -10282,7 +10282,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 			} elseif ($modo == Modos::delete) {
 				//Si no tiene CAE, puedo volver to_do atrï¿½s! Si tiene CAE, no
 				if (isset($notaDeCredito->cae))
-					throw new FactoryException('No se puede borrar la nota de crédito ya que tiene CAE. Debe hacer una nota de débito');
+					throw new FactoryException('No se puede borrar la nota de crï¿½dito ya que tiene CAE. Debe hacer una nota de dï¿½bito');
 				$sql .= 'UPDATE documentos_c SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
@@ -10396,7 +10396,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 			} elseif ($modo == Modos::delete) {
 				//Si no tiene CAE, puedo volver to_do atrï¿½s! Si tiene CAE, no
 				if (isset($notaDeDebito->cae))
-					throw new FactoryException('No se puede borrar la nota de débito ya que tiene CAE. Debe hacer una nota de crédito');
+					throw new FactoryException('No se puede borrar la nota de dï¿½bito ya que tiene CAE. Debe hacer una nota de crï¿½dito');
 				$sql .= 'UPDATE documentos_c SET ';
 				$sql .= 'cod_usuario_baja = ' . Datos::objectToDB(Usuario::logueado()->id) . ', ';
 				$sql .= 'anulado = ' . Datos::objectToDB('S') . ', ';
@@ -11128,7 +11128,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				$sql .= 'version_actual, ';
 				$sql .= 'borrador, ';
 				$sql .= 'cod_horma, ';
-				$sql .= 'diseño, ';
+				$sql .= 'diseï¿½o, ';
 				$sql .= 'borrador_viejo ';
 				$sql .= ') VALUES (';
 				$sql .= Datos::objectToDB($patron->articulo->id) . ', ';
@@ -11156,7 +11156,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				$sql .= 'version_actual = ' . Datos::objectToDB($patron->versionActual) . ', ';
 				$sql .= 'borrador = ' . Datos::objectToDB($patron->borrador) . ', ';
 				$sql .= 'cod_horma = ' . Datos::objectToDB($patron->horma->id) . ', ';
-				$sql .= 'diseño = ' . Datos::objectToDB($patron->disenio) . ', ';
+				$sql .= 'diseï¿½o = ' . Datos::objectToDB($patron->disenio) . ', ';
 				$sql .= 'borrador_viejo = ' . Datos::objectToDB($patron->borradorViejo) . ' ';
 				$sql .= 'WHERE cod_articulo = ' . Datos::objectToDB($patron->idArticulo) . ' ';
 				$sql .= 'AND cod_color_articulo = ' . Datos::objectToDB($patron->idColorPorArticulo) . ' ';
@@ -15062,4 +15062,3 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 	}
 }
 
-?>

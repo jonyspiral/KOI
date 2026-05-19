@@ -1,30 +1,64 @@
-<?php require_once('../../../premaster.php'); if (Usuario::logueado()->puede('cliente/pedidos/agregar/')) { ?>
 <?php
+if (!ob_get_level()) {
+    ob_start();
+}
+
+function pedidosAgregarFatalHandler() {
+    $error = error_get_last();
+    if (!$error) {
+        return;
+    }
+
+    $fatalTypes = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR);
+    if (!in_array($error['type'], $fatalTypes, true)) {
+        return;
+    }
+
+    if (ob_get_length()) {
+        ob_clean();
+    }
+
+    echo json_encode(array(
+        'status' => 500,
+        'message' => 'Fatal error',
+        'data' => array(
+            'type' => $error['type'],
+            'message' => $error['message'],
+            'file' => $error['file'],
+            'line' => $error['line']
+        )
+    ));
+}
+
+register_shutdown_function('pedidosAgregarFatalHandler');
+
+require_once('../../../premaster.php');
+if (ob_get_length()) {
+    ob_clean();
+}
+
+$usuario = Usuario::logueado();
+if (!$usuario || !$usuario->puede('cliente/pedidos/agregar/')) {
+    Html::jsonError('Permiso denegado o usuario no logueado');
+}
 
 $idSucursal = Funciones::post('idSucursal');
 $idAlmacen = '01';
 $idTemporada = 9;
 
-
 try {
-
-    // Primero preparo el PedidoCliente
-
-	$pedidoCliente = PedidoCliente::find();
-    $pedidoCliente->cliente = Usuario::logueado()->cliente;
-    $pedidoCliente->sucursal = Factory::getInstance()->getSucursal(Usuario::logueado()->cliente->id, $idSucursal);
+    $pedidoCliente = PedidoCliente::find();
+    $pedidoCliente->cliente = $usuario->cliente;
+    $pedidoCliente->sucursal = Factory::getInstance()->getSucursal($usuario->cliente->id, $idSucursal);
     $pedidoCliente->estado = PedidoCliente::ESTADO_PENDIENTE;
 
-    $favoritos = Base::getListObject('FavoritoCliente', 'cod_cliente = ' . Datos::objectToDB(Usuario::logueado()->cliente->id));
+    $favoritos = Base::getListObject('FavoritoCliente', 'cod_cliente = ' . Datos::objectToDB($usuario->cliente->id));
 
-    $detalle = array();
     $nroItem = 1;
     foreach ($favoritos as $favorito) {
-        /** @var FavoritoCliente $favorito */
         $arrCantidades = array();
 
         if (count($favorito->curvas)) {
-			// Seteamos las cantidades del articulo segun las curvas
             foreach ($favorito->curvas as $idCurva => $cantCurvas) {
                 $curva = Factory::getInstance()->getCurva($idCurva);
                 $i = 1;
@@ -37,9 +71,8 @@ try {
                 }
             }
         } else {
-        	// Las cantidades son libres
             $i = 1;
-            foreach ($favorito->cantidades as $cantidad){
+            foreach ($favorito->cantidades as $cantidad) {
                 if (!array_key_exists($i, $arrCantidades)) {
                     $arrCantidades[$i] = 0;
                 }
@@ -57,7 +90,6 @@ try {
         $pedidoClienteItem->articulo = $favorito->articulo;
         $pedidoClienteItem->colorPorArticulo = $favorito->colorPorArticulo;
 
-        // Calculo descuentos por tipo de producto stock
         $descuentoItem = Funciones::toFloat($favorito->colorPorArticulo->tipoProductoStock->descuentoPorc);
         $importeConDescuentos = $favorito->colorPorArticulo->getPrecioSegunCliente($pedidoCliente->cliente) * ((100 - $descuentoItem) / 100);
 
@@ -69,22 +101,19 @@ try {
         $nroItem++;
     }
 
-	$pedidoCliente->calcularTotal();
+    $pedidoCliente->calcularTotal();
     if ($pedidoCliente->importeTotal <= 0) {
-        throw new FactoryExceptionCustomException('No se puede cargar un pedido vac�o');
+        throw new FactoryExceptionCustomException('No se puede cargar un pedido vacio');
     }
-
-
-    // Genero el Pedido
 
     $notaDePedido = Factory::getInstance()->getPedido();
     $notaDePedido->empresa = 1;
     $notaDePedido->cliente = $pedidoCliente->cliente;
     $notaDePedido->sucursal = $pedidoCliente->sucursal;
     $notaDePedido->idAlmacen = $idAlmacen;
-    $notaDePedido->vendedor = Factory::getInstance()->getVendedor(Usuario::logueado()->contacto->cliente->vendedor->id);
+    $notaDePedido->vendedor = Factory::getInstance()->getVendedor($usuario->contacto->cliente->vendedor->id);
     $notaDePedido->temporada = Factory::getInstance()->getTemporada($idTemporada);
-    $notaDePedido->usuario = Usuario::logueado();
+    $notaDePedido->usuario = $usuario;
     $notaDePedido->precioAlFacturar = 'S';
     $notaDePedido->aprobado = 'N';
 
@@ -102,39 +131,23 @@ try {
 
     $notaDePedido->calcularTotal();
 
-
-    // Guardamos to_do en transacci�n
-
     Factory::getInstance()->beginTransaction();
 
-    $notaDePedido->guardar()->notificar('comercial/pedidos/nota_de_pedido/agregar/'); // 1. Guardamos la nota de pedido
+    $notaDePedido->guardar()->notificar('comercial/pedidos/nota_de_pedido/agregar/');
     $pedidoCliente->pedido = $notaDePedido;
-	$pedidoCliente->guardar()->notificar('cliente/pedidos/agregar/'); // 2. Guardamos el PedidoCliente con el n�mero del pedido asociado
+    $pedidoCliente->guardar()->notificar('cliente/pedidos/agregar/');
 
-    // 3. Limpiamos las curvas de los favoritos (COMENTADO, ahora se quiere borrar la selecci�n de favoritos incluso)
-    /*foreach ($favoritos as $favorito) { // 3. Limpiamos los favoritos
-        $favorito->curvas = array();
-        for ($i = 1; $i <= 10; $i++) {
-            $favorito->cantidades[$i] = 0;
-        }
-        $favorito->guardar();
-    }*/
-
-    // 3. Limpiamos los favoritos
     foreach ($favoritos as $favorito) {
         $favorito->borrar();
     }
 
     Factory::getInstance()->commitTransaction();
 
-	Html::jsonSuccess('El pedido fue guardado correctamente');
+    Html::jsonSuccess('El pedido fue guardado correctamente');
 } catch (FactoryExceptionCustomException $ex) {
     Factory::getInstance()->rollbackTransaction();
-	Html::jsonError($ex->getMessage());
+    Html::jsonError($ex->getMessage());
 } catch (Exception $ex) {
     Factory::getInstance()->rollbackTransaction();
-	Html::jsonError('Ocurri� un error al intentar guardar el pedido. ' . $ex->getMessage());
+    Html::jsonError('Ocurrio un error al intentar guardar el pedido. ' . $ex->getMessage());
 }
-
-?>
-<?php } ?>

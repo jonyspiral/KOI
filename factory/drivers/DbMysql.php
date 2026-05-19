@@ -182,7 +182,7 @@ public function exec($sql, $params = array()) {
     // NOLOCK
     $r = preg_replace('/\s+WITH\s*\(\s*NOLOCK\s*\)/i', ' ', $r);
     // ISNULL → IFNULL
-    $r = str_ireplace('IFNULL(', 'IFNULL(', $r);
+    $r = str_ireplace('ISNULL(', 'IFNULL(', $r);
     // CHAR_LENGTH( → CHAR_LENGTH(
     $r = preg_replace('/\bLEN\s*\(/i', 'CHAR_LENGTH(', $r);
     // NOW() → NOW()

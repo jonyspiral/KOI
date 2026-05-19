@@ -62,4 +62,3 @@ function get_err_type($type) {
 	}
 	return $type;
 }
-?>

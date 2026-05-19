@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 class Config {
 	// Configuraciï¿½n de Conexiï¿½n al servidor
@@ -51,7 +51,4 @@ class Config {
         return self::conexion_sql_db == 'encinitas';
     }
 }
-
-?>
-
 

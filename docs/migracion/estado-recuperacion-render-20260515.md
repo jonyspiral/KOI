@@ -24,3 +24,9 @@
 - smoke test funcional completo en navegador: favoritos, pedidos y flujo detallado de modelo.
 - limpieza de archivos backup, `Thumbs.db` y artefactos locales antes de un commit de normalizacion.
 - revisar si quedan aliases heredados con `ñ` en otras vistas o mappers.
+
+## Excepcion operativa conocida
+- El mount RaiDrive/SFTP no materializa de forma confiable clases/Html.php y clases/HTML.php al mismo tiempo.
+- En el indice Git existen ambas rutas, pero en el filesystem expuesto pueden aparecer como ausentes y aun asi bloquear la recreacion de Html.php.
+- Por eso el baseline funcional actual mantiene la carga explicita de clases/Html.php.bak desde includes.php.
+- Esta excepcion debe resolverse fuera del mount problematico o en una copia local/WSL donde el filesystem respete case-sensitive de forma consistente.

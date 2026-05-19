@@ -1,23 +1,74 @@
 <?php
+if (!ob_get_level()) {
+    ob_start();
+}
+
+function favoritosBatchJsonResponse($status, $message, $data = array()) {
+    if (ob_get_length()) {
+        ob_clean();
+    }
+
+    echo json_encode(array(
+        'status' => $status,
+        'message' => $message,
+        'data' => $data
+    ));
+    exit;
+}
+
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if (!$error) {
+        return;
+    }
+
+    $fatalTypes = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR);
+    if (!in_array($error['type'], $fatalTypes, true)) {
+        return;
+    }
+
+    if (ob_get_length()) {
+        ob_clean();
+    }
+
+    echo json_encode(array(
+        'status' => 500,
+        'message' => 'Fatal error',
+        'data' => array(
+            'type' => $error['type'],
+            'message' => $error['message'],
+            'file' => $error['file'],
+            'line' => $error['line']
+        )
+    ));
+});
+
 header('Access-Control-Allow-Origin: *');
 header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
 header('Access-Control-Allow-Methods: POST');
 header('Content-Type: application/json');
 
 require_once('../../../premaster.php');
+if (ob_get_length()) {
+    ob_clean();
+}
 
-if (Usuario::logueado()->puede('cliente/favoritos/agregar/')) {
+try {
+    $usuario = Usuario::logueado();
+    if (!$usuario || !$usuario->puede('cliente/favoritos/agregar/')) {
+        favoritosBatchJsonResponse(403, 'Permiso denegado o usuario no logueado');
+    }
 
-    $content = trim(file_get_contents("php://input"));
+    $contentType = isset($_SERVER['CONTENT_TYPE']) ? trim($_SERVER['CONTENT_TYPE']) : '';
+    if (stripos($contentType, 'application/json') !== 0) {
+        favoritosBatchJsonResponse(400, 'Bad Request');
+    }
+
+    $content = trim(file_get_contents('php://input'));
     $decoded = json_decode($content, true);
 
-    if (!is_array($decoded) || !isset($decoded['favorites'])) {
-        echo json_encode(array(
-            'status' => 400,
-            'message' => 'Formato inválido',
-            'data' => array()
-        ));
-        exit;
+    if (!is_array($decoded) || !isset($decoded['favorites']) || !is_array($decoded['favorites'])) {
+        favoritosBatchJsonResponse(400, 'Formato invalido');
     }
 
     $response = array();
@@ -45,10 +96,6 @@ if (Usuario::logueado()->puede('cliente/favoritos/agregar/')) {
                 'message' => 'Ya estaba guardado'
             );
         } catch (Exception $ex) {
-            if (class_exists('Logger')) {
-                Logger::addError('favoritos/agregarVarios: ' . $ex->getMessage());
-            }
-
             $response[] = array(
                 'idArticulo' => isset($fav['idArticulo']) ? $fav['idArticulo'] : null,
                 'idColorPorArticulo' => isset($fav['idColorPorArticulo']) ? $fav['idColorPorArticulo'] : null,
@@ -58,19 +105,8 @@ if (Usuario::logueado()->puede('cliente/favoritos/agregar/')) {
         }
     }
 
-    echo json_encode(array(
-        'status' => 200,
-        'message' => 'success',
-        'data' => $response
-    ));
-    exit;
-
-} else {
-    echo json_encode(array(
-        'status' => 403,
-        'message' => 'Permiso denegado o usuario no logueado',
-        'data' => array()
-    ));
-    exit;
+    favoritosBatchJsonResponse(200, 'success', $response);
+} catch (Exception $ex) {
+    favoritosBatchJsonResponse(500, $ex->getMessage());
 }
 ?>

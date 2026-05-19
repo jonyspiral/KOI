@@ -1,4 +1,23 @@
 Koi.factory('ServiceCliente', ['$http', function ($http) {
+  async function postFavoritosBatch(url, favoritos) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ favorites: favoritos })
+    });
+
+    const raw = await res.text();
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} - ${raw || 'sin cuerpo'}`);
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      throw new Error(raw || 'Respuesta JSON invalida');
+    }
+  }
+
   var service = {
     basePath: '/content/cliente/',
 
@@ -19,37 +38,12 @@ Koi.factory('ServiceCliente', ['$http', function ($http) {
         callback
       );
     },
-addFavoritoBatch: async function (favoritos) {
-  const payload = { favorites: favoritos };
-  console.log("📦 JSON ENVIADO:", JSON.stringify(payload));
 
-  const res = await fetch('/content/cliente/favoritos/agregarVarios.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  const raw = await res.text();
-  console.log("🔴 Respuesta cruda del servidor (add):", raw);
-
-  if (!res.ok) throw new Error(`HTTP ${res.status} - ${raw || 'sin cuerpo'}`);
-
-  let json;
-  try {
-    json = JSON.parse(raw);
-  } catch (e) {
-    console.error("❌ No se pudo parsear JSON (add):", e);
-    throw e;
-  }
-  console.log("✅ Respuesta parseada JSON (add):", json);
-  return json;
-},
-
-
-
+    addFavoritoBatch: async function (favoritos) {
+      return postFavoritosBatch('/content/cliente/favoritos/agregarVarios.php', favoritos);
+    },
 
     removeFavorito: function (articulo, callback) {
-      //console.log("articulo", articulo, "callback", callback);
       this.post(
         this.basePath + 'favoritos/borrar.php',
         {idArticulo: articulo.idArticulo, idColor: articulo.idColorPorArticulo},
@@ -57,54 +51,27 @@ addFavoritoBatch: async function (favoritos) {
       );
     },
 
-   removeFavoritoBatch: async function (favoritos) {
-  const payload = { favorites: favoritos };
-  console.log("📦 JSON ENVIADO (remove):", JSON.stringify(payload));
+    removeFavoritoBatch: async function (favoritos) {
+      return postFavoritosBatch('/content/cliente/favoritos/borrarVarios.php', favoritos);
+    },
 
-  const res = await fetch('/content/cliente/favoritos/borrarVarios.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+    removeAllFavs: async function () {
+      const res = await fetch('/content/cliente/favoritos/borrarTodos.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
 
-  const raw = await res.text();
-  console.log("🔴 Respuesta cruda del servidor (remove):", raw);
+      const raw = await res.text();
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} - ${raw || 'sin cuerpo'}`);
+      }
 
-  if (!res.ok) throw new Error(`HTTP ${res.status} - ${raw || 'sin cuerpo'}`);
-
-  let json;
-  try {
-    json = JSON.parse(raw);
-  } catch (e) {
-    console.error("❌ No se pudo parsear JSON (remove):", e);
-    throw e;
-  }
-  console.log("✅ Respuesta parseada JSON (remove):", json);
-  return json;
-},
-
-removeAllFavs: async function () {
-  const res = await fetch('/content/cliente/favoritos/borrarTodos.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
-  });
-
-  const raw = await res.text();
-  console.log("🔴 Respuesta cruda del servidor (removeAll):", raw);
-
-  if (!res.ok) throw new Error(`HTTP ${res.status} - ${raw || 'sin cuerpo'}`);
-
-  let json;
-  try {
-    json = JSON.parse(raw);
-  } catch (e) {
-    console.error("❌ No se pudo parsear JSON (removeAll):", e);
-    throw e;
-  }
-  console.log("✅ Respuesta parseada JSON (removeAll):", json);
-  return json;
-},
-
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        throw new Error(raw || 'Respuesta JSON invalida');
+      }
+    },
 
     updateCurva: function (articulo, curva, callback) {
       this.post(
@@ -137,4 +104,3 @@ removeAllFavs: async function () {
 
   return service;
 }]);
-

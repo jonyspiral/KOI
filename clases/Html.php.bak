@@ -31,7 +31,7 @@ class Html {
 
 	/** @noinspection PhpInconsistentReturnPointsInspection */
 	static function echoTabla($array, $returnNoEcho = false){
-		/* $array estará compuesto de la siguiente manera:
+		/* $array estarï¿½ compuesto de la siguiente manera:
 		HTML::echoTabla('config' => arrayDeConfigTable, 'content' => arrayDeContenidoDeLaTable(
 				arrayTr('config' => arrayDeConfigTr(), 'content' => arrayDeContenidoDelTr(
 					arrayTd('config' => arrayDeConfigTd(), 'content' => '<label>ContenidoDelTd</label>'),
@@ -138,9 +138,9 @@ class Html {
 	}
 	static function jsonEncode($msg = '', $json = null, $responseType = JSONResponse::JSON_OBJECT, $nivelMaximo = -1, $nivel = 0, &$acumulador = array(), $abuelo = null){
 		//$nivelMaximo -1 = to_do, 0 = RAIZ
-		//Esta función recorre objetos según sus atributos y los va pasando a un JSON.
-		//También lista los atributos protected (para lazy loading).
-		//Como parámetro se le puede indicar el nivel máximo de profundidad a recorrer, siendo el más superficial el CERO.
+		//Esta funciï¿½n recorre objetos segï¿½n sus atributos y los va pasando a un JSON.
+		//Tambiï¿½n lista los atributos protected (para lazy loading).
+		//Como parï¿½metro se le puede indicar el nivel mï¿½ximo de profundidad a recorrer, siendo el mï¿½s superficial el CERO.
 
 		//Si no pongo lo de is_array y lo de is_object, un array con count 0 me lo tomaba como NULL
 		if (!is_array($json) && !is_object($json) && $json == null && $nivel == 0 && $msg == ''){
@@ -167,7 +167,7 @@ class Html {
 				if (is_scalar($val))
 					$val = utf8_encode($val);
 				else {
-					if (count($val) != 0 && ($nivelMaximo < 0 || ($nivel + 1) <= $nivelMaximo)) //Si el nivelMaximo es negativo o el nivel actual + 1 es menor q el máximo
+					if (count($val) != 0 && ($nivelMaximo < 0 || ($nivel + 1) <= $nivelMaximo)) //Si el nivelMaximo es negativo o el nivel actual + 1 es menor q el mï¿½ximo
 						$val = Html::jsonEncode($msg, $val, $responseType, $nivelMaximo, $nivel + 1, $acumulador, $json);
 				}
 				$aux[$id] = $val;
@@ -187,10 +187,10 @@ class Html {
 		}
 	}
 
-	static function jsonSuccess($msg = 'Completado con éxito', $obj = null){
+	static function jsonSuccess($msg = 'Completado con ï¿½xito', $obj = null){
 		echo Html::jsonEncode($msg, $obj, JSONResponse::JSON_SUCCESS);
 	}
-	static function jsonError($msg = 'Ocurrió un error', $obj = null){
+	static function jsonError($msg = 'Ocurriï¿½ un error', $obj = null){
         Logger::addError($msg, $obj);
 		echo Html::jsonEncode($msg, $obj, JSONResponse::JSON_ERROR);
 	}
@@ -207,7 +207,7 @@ class Html {
         Logger::addWarning($msg, $obj);
 		echo Html::jsonEncode($msg, $obj, JSONResponse::JSON_ALERT);
 	}
-	static function jsonInfo($msg = 'Completado con información adicional', $obj = null){
+	static function jsonInfo($msg = 'Completado con informaciï¿½n adicional', $obj = null){
         Logger::addInfo($msg, $obj);
 		echo Html::jsonEncode($msg, $obj, JSONResponse::JSON_INFO);
 	}
@@ -254,4 +254,3 @@ class Html {
 }
 
 
-?>

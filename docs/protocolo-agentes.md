@@ -1,21 +1,23 @@
 # Protocolo de agentes - KOI1 Encinitas
 
 ## Objetivo
-Mantener contexto técnico mínimo y decisiones operativas consistentes al trabajar sobre KOI1 legacy en dos entornos distintos:
+Mantener contexto técnico mínimo y decisiones operativas consistentes al trabajar sobre KOI1 legacy en entornos distintos:
 
-- `encinitas_prod_truth`: snapshot MSSQL / producción Windows
+- `C:\dev\encinitas_prod_real_20260515`: copia local limpia de producción KOI1 real / fuente primaria de análisis
+- `X:\xampp\htdocs\encinitas`: producción KOI1 real, solo para refrescar la copia local cuando se decida explícitamente
 - `encinitas`: adaptación Docker PHP 5.6 + MySQL 8
 
 ## Reglas
 1. Antes de cambiar código, identificar explícitamente el entorno objetivo.
 2. No asumir que un fix de MSSQL sirve en MySQL.
-3. No asumir que `origin/main` representa el estado correcto del server Docker.
-4. Cuando un cambio toca acceso a datos, documentar:
+3. No asumir que `origin/main`, `fonts/evy`, `C:\dev\encinitas_prod_truth` o un backup intermedio representan la fuente real.
+4. Para entender flujo legacy, comparar primero contra `C:\dev\encinitas_prod_real_20260515`.
+5. Cuando un cambio toca acceso a datos, documentar:
    - tablas/vistas/SP afectados
    - si usa `EXEC`, `CALL`, query directa o shim
    - si el cambio aplica a ambos entornos o solo a uno
-5. Si se toca un módulo legacy, actualizar `docs/INDEX.md` y agregar o ajustar una nota puntual en `docs/`.
-6. Si el cambio fue validado solo localmente, dejarlo explícito.
+6. Si se toca un módulo legacy, actualizar `docs/INDEX.md` y agregar o ajustar una nota puntual en `docs/`.
+7. Si el cambio fue validado solo localmente, dejarlo explícito.
 
 ## Checklist de sesión
 1. Confirmar repo/entorno objetivo.
@@ -25,7 +27,7 @@ Mantener contexto técnico mínimo y decisiones operativas consistentes al traba
 5. Actualizar documentación al cerrar la sesión.
 
 ## Convenciones de documentación
-- Documentar fechas absolutas (`2026-05-12`) en vez de “hoy” o “ayer”.
+- Documentar fechas absolutas (`2026-05-12`) en vez de "hoy" o "ayer".
 - Separar claramente:
   - problema
   - causa raíz

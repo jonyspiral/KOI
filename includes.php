@@ -39,4 +39,3 @@ require_once('clases/Base.php');
 require_once('clases/Cliente.php');
 require_once('clases/CondicionIva.php');
 */
-?>
