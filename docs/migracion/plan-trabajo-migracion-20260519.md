@@ -1,4 +1,4 @@
-﻿# Plan de trabajo y migracion - 2026-05-19
+# Plan de trabajo y migracion - 2026-05-19
 
 ## Objetivo
 Volver del modo recuperacion al modo migracion, tomando como baseline el estado funcional recuperado en mayo de 2026: login, render cliente, catalogo con filtros y render de BO en KOI1 sobre PHP 5.6 + MySQL.
@@ -36,7 +36,7 @@ Criterio de cierre:
 Objetivo: convertir parches de recuperacion en reglas tecnicas estables.
 
 Incluye:
-- normalizacion de aliases y nombres de campos sensibles a encoding (`ñ` vs ASCII)
+- normalizacion de aliases y nombres de campos sensibles a encoding (`ÃƒÂ±` vs ASCII)
 - normalizacion de nombres case-sensitive en MySQL/Linux
 - correccion de firmas incompatibles y warnings heredados
 - consolidacion de `Config`, `pathBase`, `includes`, `findRealPath`
@@ -101,11 +101,19 @@ Criterio de cierre:
 - listado de pedidos
 - PDF y detalle de modelo
 
-### Lote C. BO
-- validar render y navegacion
-- validar al menos un ABM simple y una pantalla sensible a datos
+### Lote C. PDF y reportes BO/comercial
+- comercial/*/getPdf.php (`VALIDADO`)
+- produccion/*/getPdf.php (`VALIDADO`)
+- administracion/*/getPdf.php (`VALIDADO`)
+- sistema/*/getPdf.php (bootstrap normalizado; smoke test pendiente)
+- formularios de negocio basados en Html2Pdf (motor saneado; smoke test pendiente)
 
-### Lote D. Infraestructura heredada
+### Lote D. BO interactivo
+- ABM simple inicial: `content/abm/bancos`
+- pantalla sensible a datos inicial: `content/administracion/proveedores/gestion_proveedores`
+- validar render, busqueda y al menos una accion por pantalla (`bancos` CRUD validado; `gestion_proveedores` busqueda + mutacion real validadas)
+
+### Lote E. Infraestructura heredada
 - endurecer `Base`, `Mapper`, `Factory`, `Datos`
 - identificar compatibilidad SQL reutilizable
 
@@ -124,7 +132,7 @@ Cada lote debe cerrar con:
 - queries complejas o stored procedures que no se resuelven con traduccion mecanica
 
 ## Proxima sesion recomendada
-La proxima sesion deberia enfocarse en `Fase 1 - Normalizacion`, comenzando por:
-- limpieza de encoding y aliases sensibles
-- consolidacion de helpers de carga y compatibilidad ya tocados
-- smoke test funcional de cliente y BO sobre baseline estable
+La proxima sesion deberia enfocarse en:
+- cerrar el remanente operativo de `Lote C` (`sistema` + formularios)
+- consolidar commit/push del cierre parcial de `Lote D` (`bancos` + `gestion_proveedores`)
+- seleccionar la siguiente pantalla BO interactiva para continuar `Lote D`

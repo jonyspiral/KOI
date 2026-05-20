@@ -7,9 +7,10 @@ $observaciones = Funciones::post('observaciones');
 $observacionesVendedor = Funciones::post('observacionesVendedor');
 
 try {
-	if (!isset($idCliente)) {
+	if (!isset($idCliente) || !preg_match('/^[0-9]+$/', (string) $idCliente)) {
 		throw new FactoryExceptionRegistroNoExistente();
 	}
+	$idCliente = Funciones::toInt($idCliente);
 	$cliente = Factory::getInstance()->getCliente($idCliente);
 	if (Usuario::logueado()->esVendedor()) {
 		if (!$cliente->suVendedorEs(Usuario::logueado()->personal)) {
@@ -22,13 +23,13 @@ try {
 	$cliente->observacionesVendedor = $observacionesVendedor;
 	$cliente->guardar()->notificar('administracion/cobranzas/gestion_cobranza/editar/');
 
-	Html::jsonSuccess('El cliente fue editado orrectamente', $cliente);
+	Html::jsonSuccess('El cliente fue editado correctamente', $cliente);
 } catch (FactoryExceptionCustomException $ex) {
 	Html::jsonError($ex->getMessage());
 } catch (FactoryExceptionRegistroNoExistente $ex) {
-	Html::jsonError('El cliente que intentó editar no existe');
+	Html::jsonError('El cliente que intentï¿½ editar no existe');
 } catch (Exception $ex){
-	Html::jsonError('Ocurrió un error al intentar editar el cliente');
+	Html::jsonError('Ocurriï¿½ un error al intentar editar el cliente');
 }
 
 ?>

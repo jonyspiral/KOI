@@ -1,6 +1,37 @@
-<?php require_once('../../../../../../premaster.php'); if (Usuario::logueado()->puede('administracion/tesoreria/cheques/reportes/seguimiento_cheques/buscar/')) { ?>
 <?php
+if (!ob_get_level()) {
+    ob_start();
+}
 
+function shutdown_content_administracion_tesoreria_cheques_reportes_seguimiento_cheques_getPdf_php() {
+    $error = error_get_last();
+    if (!$error || !in_array($error['type'], array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR))) {
+        return;
+    }
+    if (ob_get_length()) {
+        ob_clean();
+    }
+    if (!headers_sent()) {
+        header('Content-Type: application/json');
+    }
+    echo json_encode(array(
+        'status' => 500,
+        'message' => 'Fatal error',
+        'data' => $error,
+    ));
+}
+register_shutdown_function('shutdown_content_administracion_tesoreria_cheques_reportes_seguimiento_cheques_getPdf_php');
+
+require_once('../../../../../../premaster.php');
+if (ob_get_length()) {
+    ob_clean();
+}
+
+$usuario = Usuario::logueado();
+if (!$usuario || !$usuario->puede('administracion/tesoreria/cheques/reportes/seguimiento_cheques/buscar/')) {
+    Html::jsonError('Permiso denegado o usuario no logueado');
+    exit;
+}
 $empresa = Funciones::session('empresa');
 $fechaDesde = Funciones::get('fechaDesde');
 $fechaHasta = Funciones::get('fechaHasta');
@@ -36,7 +67,7 @@ try {
 	($importeDesde) && ($html2pdf->datosCabecera['Desde'] = $fechaDesde);
 	($importeHasta) && ($html2pdf->datosCabecera['Desde'] = $fechaDesde);
 	($idCuentaBancaria) && ($html2pdf->datosCabecera['Desde'] = $fechaDesde);
-	($idCaja) && ($html2pdf->datosCabecera['N� Caja'] = $idCaja);
+	($idCaja) && ($html2pdf->datosCabecera['NÃ‚Âº Caja'] = $idCaja);
 	($tipo != '0') && ($html2pdf->datosCabecera['Tipo'] = ($tipo == '1' ? 'Propio' : 'De terceros'));
 	($numero) && ($html2pdf->datosCabecera['Numero'] = $numero);
 	($rechazado != '0') && ($html2pdf->datosCabecera['Rechazados'] = ($rechazado == '1' ? 'S' : 'N'));
@@ -47,5 +78,3 @@ try {
 	Html::jsonError($ex->getMessage());
 }
 
-?>
-<?php } ?>
