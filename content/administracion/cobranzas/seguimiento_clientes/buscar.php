@@ -10,13 +10,16 @@ try {
 		throw new FactoryExceptionCustomException('Debe seleccionar un cliente');
 	}
 
-	$where = Funciones::strFechas($fechaDesde, $fechaHasta, 'fecha_gestion') . ' AND ';
-	$where .= 'anulado = ' . Datos::objectToDB('N');
-	$where .= (empty($idCliente) ? '' : ' AND cod_cli = ' . Datos::objectToDB($idCliente));
-	$where = trim($where, ' AND ');
-	$orderBy = 'ORDER BY fecha_gestion DESC';
+	$where = array();
+	$strFechas = Funciones::strFechas($fechaDesde, $fechaHasta, 'fecha_gestion');
+	if ($strFechas) {
+		$where[] = $strFechas;
+	}
+	$where[] = '(anulado = ' . Datos::objectToDB('N') . ' OR anulado IS NULL)';
+	$where[] = 'cod_cli = ' . Datos::objectToDB($idCliente);
+	$orderBy = ' ORDER BY fecha_gestion DESC';
 
-	$seguimientoCliente = Factory::getInstance()->getListObject('SeguimientoCliente', $where . $orderBy);
+	$seguimientoCliente = Factory::getInstance()->getListObject('SeguimientoCliente', implode(' AND ', $where) . $orderBy);
 
 	foreach($seguimientoCliente as $item) {
 		/** @var SeguimientoCliente $item */
