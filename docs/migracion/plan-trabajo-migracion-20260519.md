@@ -117,6 +117,9 @@ Criterio de cierre:
 - endurecer `Base`, `Mapper`, `Factory`, `Datos`
 - identificar compatibilidad SQL reutilizable
 
+## Criterio de pase a produccion Ubuntu
+Ver matriz-certificacion-produccion-ubuntu-20260520.md para el gate de go/no-go basado en riesgo, evidencia y cobertura por dominio.
+
 ## Definicion de terminado por lote
 Cada lote debe cerrar con:
 - estado funcional verificado
@@ -133,6 +136,6 @@ Cada lote debe cerrar con:
 
 ## Proxima sesion recomendada
 La proxima sesion deberia enfocarse en:
-- cerrar el remanente operativo de `Lote C` (`sistema` + formularios)
+- cerrar el remanente operativo de `Lote C` (`sistema/auditoria/calificacion_clientes` + `produccion/guia_de_porte` / `Formulario*.php`)
 - consolidar commit/push del cierre parcial de `Lote D` (`bancos` + `gestion_proveedores`)
 - seleccionar la siguiente pantalla BO interactiva para continuar `Lote D`

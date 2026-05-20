@@ -4,16 +4,20 @@
 $id = Funciones::post('id');
 
 try {
+	if (!preg_match('/^[0-9]+$/', (string) $id)) {
+		throw new FactoryExceptionRegistroNoExistente();
+	}
+
 	$gestionClientesCobranza = Factory::getInstance()->getSeguimientoCliente($id);
 	$gestionClientesCobranza->borrar();
 
-	Html::jsonSuccess('La gestión fue borrado correctamente');
+	Html::jsonSuccess('La gestion fue borrada correctamente');
 } catch (FactoryExceptionCustomException $ex) {
 	Html::jsonError($ex->getMessage());
 } catch (FactoryExceptionRegistroNoExistente $ex) {
-	Html::jsonError('La gestión que intentó borrar no existe');
+	Html::jsonError('La gestion que intento borrar no existe');
 } catch (Exception $ex){
-	Html::jsonError('Ocurrió un error al intentar borrar la gestión');
+	Html::jsonError('Ocurrio un error al intentar borrar la gestion');
 }
 ?>
 <?php } ?>

@@ -1,58 +1,73 @@
 # Avance Lote C - PDF sistema y formularios - 2026-05-19
 
-## Alcance de este sublote
+## Alcance
 
-Se relevo y cerro el ultimo tramo tecnico pendiente de `Lote C` despues de validar comercial, produccion y administracion.
+Cerrar el remanente tecnico del frente PDF despues de validar comercial, produccion y administracion.
 
-Incluye:
+## Trabajo aplicado
 
-- el unico endpoint `content/sistema/*/getPdf.php`
-- la base comun de formularios que consumen `Html2Pdf`
-- revision puntual de `Formulario*.php` en busca de errores mecanicos de ruta/modelo
-
-## Sistema
+### Sistema
 
 Se normalizo:
 
 - `content/sistema/auditoria/calificacion_clientes/getPdf.php`
 
-Cambio aplicado:
+Quedo con el mismo patron defensivo del resto de endpoints PDF:
 
-- `ob_start()` al inicio
-- `ob_clean()` luego del bootstrap
-- `shutdown_function` para fatales reales en JSON
-- chequeo explicito de permiso y usuario logueado
-- `exit` inmediato si falla el permiso
-- escritura UTF-8 sin BOM
+- `ob_start()`
+- `shutdown_function` para fatales
+- `ob_clean()` antes de emitir salida
+- chequeo explicito de sesion y permiso
+- `exit` inmediato si responde JSON de error
 
-## Formularios
+### Formularios
 
-Consumers relevados de `Html2Pdf` en `clases/Formulario*.php`: 21 clases.
+Se relevaron los flujos reales que usan `Formulario.php` y sus subclases.
 
-Hallazgo puntual corregido:
+Hallazgos:
 
-- `clases/FormularioGuiaDePorte.php` tenia mal concatenada la ruta del modelo y terminaba en `... . 'php'` en vez de `... . '.php'`
+- el motor comun ya quedo saneado por los fixes sobre `Html2Pdf`, `KoiServices`, rutas Linux y `Html.php.bak`
+- `FormularioGuiaDePorte.php` tenia un bug puntual de ruta de modelo que ya fue corregido
+- `content/produccion/guia_de_porte/getPdf.php` ahora tambien quedo normalizado con el mismo hardening defensivo de los demas endpoints PDF
 
-No se reescribio el resto de `Formulario*.php` porque el motor comun ya quedo saneado en:
+## Estado actual
 
-- `clases/Html2Pdf.php`
-- `clases/KoiServices.php`
-- `clases/Html.php.bak`
+- `content/sistema/auditoria/calificacion_clientes/getPdf.php`: `PENDIENTE DE SMOKE TEST`
+- `content/produccion/guia_de_porte/getPdf.php`: `PENDIENTE DE SMOKE TEST`
+- `Formulario*.php` en general: `MOTOR SANEADO`, falta evidencia funcional puntual
 
-## Estado de Lote C
+## Smoke test recomendado
 
-Subestado actual:
+### 1. Sistema / auditoria de calificacion de clientes
 
-- PDF comercial: `VALIDADO`
-- PDF produccion: `VALIDADO`
-- PDF administracion: `VALIDADO`
-- PDF sistema: `NORMALIZADO, SMOKE TEST PENDIENTE`
-- Formularios de negocio: `BASE TECNICA SANEADA, SMOKE TEST PENDIENTE`
+Usar una sesion valida contra `/` y probar:
 
-## Siguiente paso recomendado
+```bash
+curl -s -b /tmp/koi.cookie -c /tmp/koi.cookie \
+  -o /tmp/calificacion_clientes.pdf \
+  "http://127.0.0.1:8195/content/sistema/auditoria/calificacion_clientes/getPdf.php?fechaDesde=2026-05-01&fechaHasta=2026-05-20"
 
-Validar con la misma sesion autenticada:
+file /tmp/calificacion_clientes.pdf
+head -c 120 /tmp/calificacion_clientes.pdf | xxd
+```
 
-1. `content/sistema/auditoria/calificacion_clientes/getPdf.php`
-2. al menos un formulario que use `Formulario.php`
-3. `FormularioGuiaDePorte.php` en un flujo real que invoque su modelo
+### 2. Produccion / guia de porte
+
+Flujo directo del formulario real:
+
+```bash
+curl -s -b /tmp/koi.cookie -c /tmp/koi.cookie \
+  -o /tmp/guia_de_porte.pdf \
+  "http://127.0.0.1:8195/content/produccion/guia_de_porte/getPdf.php?numeroGuia=1&fecha=20/05/2026&senores=Cliente%20Prueba&clienteNro=1&direccionCalle=Siempreviva&direccionNumero=742&direccionPiso=&direccionDpto=&direccionLocalidad=Springfield&direccionCP=1000&cuit=20123456789&condicionIva=RI&transportistaSenor=Transportista%20Prueba&transportistaDomicilio=Ruta%201&transportistaCuit=20123456789&transportistaDni=12345678&detalle[0][cantidad]=1&detalle[0][descripcion]=Bulto%20de%20prueba"
+
+file /tmp/guia_de_porte.pdf
+head -c 120 /tmp/guia_de_porte.pdf | xxd
+```
+
+## Criterio de cierre del remanente de Lote C
+
+Se considera suficiente para cerrar este remanente si:
+
+- `calificacion_clientes/getPdf.php` devuelve PDF valido o error de negocio controlado
+- `guia_de_porte/getPdf.php` devuelve PDF valido o error de negocio controlado
+- no aparecen fatales, salida contaminada ni problemas de runtime Linux

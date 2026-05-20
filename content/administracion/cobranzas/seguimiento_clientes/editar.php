@@ -6,6 +6,10 @@ $observaciones = Funciones::post('observaciones');
 $estado = Funciones::post('estado');
 
 try {
+	if (!preg_match('/^[0-9]+$/', (string) $id)) {
+		throw new FactoryExceptionRegistroNoExistente();
+	}
+
 	$gestionClientesCobranza = Factory::getInstance()->getSeguimientoCliente($id);
 
 	$gestionClientesCobranza->observaciones = ($observaciones != $gestionClientesCobranza->observaciones ? $observaciones : $gestionClientesCobranza->observaciones);
@@ -13,13 +17,13 @@ try {
 
 	$gestionClientesCobranza->guardar();
 
-	Html::jsonSuccess('La gestión se editó correctamente', $gestionClientesCobranza->expand());
+	Html::jsonSuccess('La gestion se edito correctamente', $gestionClientesCobranza->expand());
 } catch (FactoryExceptionCustomException $ex) {
 	Html::jsonError($ex->getMessage());
 } catch (FactoryExceptionRegistroNoExistente $ex) {
-	Html::jsonError('No tine permisos para editar la gestión');
+	Html::jsonError('No tiene permisos para editar la gestion');
 } catch (Exception $ex){
-	Html::jsonError('Ocurrió un error al intentar editar la gestión Nº "' . $gestionClientesCobranza->id . '"');
+	Html::jsonError('Ocurrio un error al intentar editar la gestion Nro "' . $gestionClientesCobranza->id . '"');
 }
 
 ?>

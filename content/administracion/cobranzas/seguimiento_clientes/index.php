@@ -28,7 +28,7 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 			url += 'idCliente=' + $('#inputBuscarCliente_selectedValue').val();
 			url += '&fechaDesde=' + $('#inputBuscarDesde').val();
 			url += '&fechaHasta=' + $('#inputBuscarHasta').val();
-			var msgError = 'Ocurrió un error al intentar buscar',
+			var msgError = 'Ocurrio un error al intentar buscar',
 				cbSuccess = function(json){
 					$('#divGestionesClientesCobranza').html('');
 					llenarPantalla(json);
@@ -43,9 +43,9 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 			$('<thead>').addClass('tableHeader').append(
 				$('<tr>').append(
 					$('<th>').addClass('w30p').text('Detalle'),
-					$('<th>').addClass('w55p').text('Descripción'),
+					$('<th>').addClass('w55p').text('Descripcion'),
 					$('<th>').addClass('w5p').text('Estado'),
-					$('<th>').addClass('w10p').text('Acción')
+					$('<th>').addClass('w10p').text('Accion')
 				)
 			)
 		).append(
@@ -73,12 +73,12 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 		table.append(
 			$('<tr>').addClass('tableRow').append(
 				$('<td>').addClass('bold aLeft').append(
-					$('<label>').text('Nº: ' + o.id + ' - Cliente: ' + o.cliente.razonSocial)
+					$('<label>').text('Nro: ' + o.id + ' - Cliente: ' + o.cliente.razonSocial)
 				)
 			),
 			$('<tr>').addClass('tableRow').append(
 				$('<td>').addClass('aLeft').append(
-					$('<label>').text('Fecha gestión: ' + o.fechaGestion)
+					$('<label>').text('Fecha gestion: ' + o.fechaGestion)
 				)
 			)
 		);
@@ -103,7 +103,7 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 			switch (funciones.getJSONType(json)){
 				case funciones.jsonNull:
 				case funciones.jsonEmpty:
-					$.error('Ocurrió un error.');
+					$.error('Ocurrio un error.');
 					break;
 				case funciones.jsonError:
 					$.error(funciones.getJSONMsg(json));
@@ -134,7 +134,7 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 	}
 
 	function borrarGestion(o) {
-		var msg = '¿Está seguro que desea borrar la gestión Nº "' + o.id + '"?',
+		var msg = 'Esta seguro que desea borrar la gestion Nro "' + o.id + '"?',
 			url = '/content/administracion/cobranzas/seguimiento_clientes/borrar.php',
 			objeto = {id: o.id};
 		$.confirm(msg, function(r){
@@ -145,14 +145,14 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 					switch (funciones.getJSONType(json)){
 						case funciones.jsonNull:
 						case funciones.jsonEmpty:
-							$.error('Ocurrió un error.');
+							$.error('Ocurrio un error.');
 							break;
 						case funciones.jsonError:
 							$.error(funciones.getJSONMsg(json));
 							break;
 						case funciones.jsonSuccess:
 							removeTr(o.id);
-							$.success('El ticket fue eliminado correctamente');
+							$.success('La gestion fue borrada correctamente');
 							break;
 					}
 				});
@@ -167,7 +167,7 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 			observaciones: $('#inputObservaciones').val()
 		};
 		var url = '/content/administracion/cobranzas/seguimiento_clientes/agregar.php',
-			msj = 'La gestión se agregó correctamente';
+			msj = 'La gestion se agrego correctamente';
 		if (/*objeto.fecha == '' || */objeto.observaciones == '') {
 			$.error('Todos los campos son obligatorios.');
 		} else {
@@ -178,7 +178,7 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 				switch (funciones.getJSONType(json)){
 					case funciones.jsonNull:
 					case funciones.jsonEmpty:
-						$.error('Ocurrió un error.');
+						$.error('Ocurrio un error.');
 						break;
 					case funciones.jsonError:
 						$.error(funciones.getJSONMsg(json));
@@ -208,7 +208,7 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 		$('#inputObservaciones').focus();
 	}
 
-	function popUpEditarTicket(o){
+	function popUpEditarGestion(o){
 		var div = '<div class="h100 vaMiddle table-cell aLeft p10">' +
 				  '<table><tbody>' +
 				  '<tr><td><label for="inputObservaciones">Observaciones:</label></td><td><textarea id="inputObservaciones" class="textbox obligatorio inputForm w230 h150" ></textarea></td></tr>' +
@@ -221,7 +221,7 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 	}
 
 	function editarGestion(o){
-		popUpEditarTicket(o);
+		popUpEditarGestion(o);
 		$('#inputObservaciones').val(o.observaciones);
 		$('#inputTicketId').val(o.id);
 	}
@@ -233,7 +233,7 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 			estado: ($('#inputEstado' + o.id).isChecked() ? '1' : '0')
 		};
 		var url = '/content/administracion/cobranzas/seguimiento_clientes/editar.php',
-			msj = 'La gestión se editó correctamente';
+			msj = 'La gestion se edito correctamente';
 		if (objeto.observaciones == '') {
 			$.error('Todos los campos son obligatorios');
 		} else {
@@ -244,7 +244,7 @@ $admin = Usuario::logueado()->puede('sistema/tickets/administrador/');
 				switch (funciones.getJSONType(json)){
 					case funciones.jsonNull:
 					case funciones.jsonEmpty:
-						$.error('Ocurrió un error.');
+						$.error('Ocurrio un error.');
 						break;
 					case funciones.jsonError:
 						$.error(funciones.getJSONMsg(json));
