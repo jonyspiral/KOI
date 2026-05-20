@@ -30,7 +30,7 @@ try {
 } catch (FactoryExceptionRegistroExistente $ex){
 	Html::jsonError('Alguno de los documentos no existe. Por favor actualice la lista');
 } catch (Exception $ex){
-	Html::jsonError('Ocurrió un error al intentar aplicar los documentos');
+	Html::jsonError('Ocurrio un error al intentar aplicar los documentos');
 }
 
 ?>

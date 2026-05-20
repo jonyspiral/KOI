@@ -29,6 +29,9 @@ try {
 	if (is_null($idCliente)) {
 		throw new FactoryExceptionCustomException('Debe elegir al menos el cliente a aplicar');
 	}
+	if (!preg_match('/^[0-9]+$/', (string) $idCliente)) {
+		throw new FactoryExceptionCustomException('Debe elegir al menos el cliente a aplicar');
+	}
 	$cliente = Factory::getInstance()->getCliente($idCliente);
 	if ($modo == '2') {
 		//Desaplicar

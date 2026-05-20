@@ -1,7 +1,7 @@
 <?php require_once('../../../../premaster.php'); if (Usuario::logueado()->puede('administracion/cobranzas/aplicacion/editar/')) { ?>
 <?php
 
-//Esto corresponde al aplicar automático
+//Esto corresponde al aplicar automatico
 
 $empresa = Funciones::session('empresa');
 $idCliente = Funciones::post('cliente');
@@ -11,7 +11,10 @@ $hasta = Funciones::post('hasta');
 try {
 	$where = '';
 	if (is_null($idCliente)) {
-		throw new FactoryExceptionCustomException('Ocurrió un error el intentar asignar los documentos (no se obtuvo correctamente el cliente). Por favor recargue la página e inténtelo nuevamente');
+		throw new FactoryExceptionCustomException('Ocurrio un error al intentar asignar los documentos (no se obtuvo correctamente el cliente). Por favor recargue la pagina e intentelo nuevamente');
+	}
+	if (!preg_match('/^[0-9]+$/', (string) $idCliente)) {
+		throw new FactoryExceptionCustomException('Ocurrio un error al intentar asignar los documentos (no se obtuvo correctamente el cliente). Por favor recargue la pagina e intentelo nuevamente');
 	}
 	$cliente = Factory::getInstance()->getCliente($idCliente);
 	$where = Funciones::strFechas($desde, $hasta, 'fecha') . ' AND ';
@@ -50,7 +53,7 @@ try {
 } catch (FactoryExceptionRegistroExistente $ex){
 	Html::jsonError('Alguno de los documentos no existe. Por favor actualice la lista');
 } catch (Exception $ex){
-	Html::jsonError('Ocurrió un error al intentar aplicar los documentos');
+	Html::jsonError('Ocurrio un error al intentar aplicar los documentos');
 }
 
 ?>

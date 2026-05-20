@@ -1278,7 +1278,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 		try {
 			$documentoHija->id = $dr['id'];
 			$documentoHija->empresa = $dr['empresa'];
-			$documentoHija->anulado = $dr['anulada'];
+			$documentoHija->anulado = array_key_exists('anulada', $dr) ? $dr['anulada'] : (array_key_exists('anulado', $dr) ? $dr['anulado'] : null);
 			$documentoHija->importe = $dr['importe'];
 			$documentoHija->cancelPuntoDeVenta = $dr['cancel_punto_venta'];
 			$documentoHija->cancelTipoDocumento = $dr['cancel_tipo_docum'];
@@ -2466,8 +2466,8 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 	}
 	private function fillNotaDeCredito($dr, NotaDeCredito $notaDeCredito) {
 		try {
-			$notaDeCredito->idCausa = $dr['agrupa_causa'];
-			$notaDeCredito->cancelNumero = $dr['cancel_nro_documento'];
+			$notaDeCredito->idCausa = array_key_exists('agrupa_causa', $dr) ? $dr['agrupa_causa'] : null;
+			$notaDeCredito->cancelNumero = array_key_exists('cancel_nro_documento', $dr) ? $dr['cancel_nro_documento'] : null;
 			$notaDeCredito = $this->fillDocumentoHaber($dr, $notaDeCredito, false);
 			return $notaDeCredito;
 		} catch (Exception $ex) {
@@ -7011,6 +7011,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				$sql .= 'WHERE id = ' . Datos::objectToDB($documentoHija->id) . '; ';
 			} elseif ($modo == Modos::insert) {
 				$sql .= 'INSERT INTO documentos_h (';
+				$sql .= 'id, ';
 				$sql .= 'empresa, ';
 				$sql .= 'madre_punto_venta, ';
 				$sql .= 'madre_tipo_docum, ';
@@ -7024,6 +7025,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				$sql .= 'cod_usuario, ';
 				$sql .= 'fecha_alta ';
 				$sql .= ') VALUES (';
+				$sql .= Datos::objectToDB($documentoHija->id) . ', ';
 				$sql .= Datos::objectToDB($documentoHija->empresa) . ', ';
 				$sql .= Datos::objectToDB($documentoHija->madre->puntoDeVenta) . ', ';
 				$sql .= Datos::objectToDB($documentoHija->madre->tipoDocumento) . ', ';
@@ -7042,7 +7044,7 @@ $colorPorArticulo->referenciaWebMayorista = $dr['referencia_web_mayorista'];
 				$sql .= 'DELETE FROM documentos_h ';
 				$sql .= 'WHERE id = ' . Datos::objectToDB($documentoHija->id) . '; ';
 			} elseif ($modo == Modos::id) {
-				$sql .= 'SELECT IDENT_CURRENT(\'documentos_h\') + IDENT_INCR(\'documentos_h\');';
+				$sql .= 'SELECT ISNULL(MAX(id + 0), 0) + 1 FROM documentos_h;';
 			} else {
 				throw new FactoryException('Modo incorrecto');
 			}
