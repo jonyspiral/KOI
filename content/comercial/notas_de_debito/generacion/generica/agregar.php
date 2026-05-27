@@ -65,15 +65,13 @@ try {
 
 	$ndb->detalle = $arrDetalle;
 
-	$ndb->ivaImporte1 = ($ncr->empresa == 2 ? 0 : Funciones::toFloat(($importeGravado - $descuentoGravado) * $ndb->ivaPorcentaje1 / 100, 2)); //Lo tengo que hacer después del item porque $ncr->subtotal necesita los items para poder calcularse
+	$ndb->ivaImporte1 = ($ndb->empresa == 2 ? 0 : Funciones::toFloat(($importeGravado - $descuentoGravado) * $ndb->ivaPorcentaje1 / 100, 2)); //Lo tengo que hacer después del item porque el subtotal necesita los items para poder calcularse
 
-    Logger::addError('Guardando');
 	$ndb->guardar()->notificar('comercial/notas_de_debito/generacion/agregar/');
 
 	Factory::getInstance()->commitTransaction();
 	Html::jsonSuccess('La nota de débito fue guardada correctamente');
 } catch (Exception $ex){
-    Logger::addError($ex->getTraceAsString());
 	Factory::getInstance()->rollbackTransaction();
 	Html::jsonError('Ocurrió un error al intentar guardar la nota de débito ' . $ex->getMessage());
 }

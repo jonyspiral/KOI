@@ -65,9 +65,9 @@
 				if (r == funciones.si) {
 					var url = funciones.controllerUrl('agregar');
 					funciones.guardar(url, obj, function() {
-						$.info(this.responseMsg);
-						funciones.delay('$.showLoading()', 200);
-						refreshOne(obj);
+						$.info(this.responseMsg, function() {
+							refreshOne(obj);
+						});
 					}, null, null, false);
 				}
 			});

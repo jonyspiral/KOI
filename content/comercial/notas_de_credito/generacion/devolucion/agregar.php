@@ -89,7 +89,7 @@ try {
 	$ncr->guardar()->notificar('comercial/notas_de_credito/generacion/devolucion/agregar/');
 
 	Factory::getInstance()->commitTransaction();
-	Html::jsonSuccess('Se generaron correctamente ' . $i . ' nota(s) de crédito');
+	Html::jsonSuccess('La nota de crédito fue guardada correctamente');
 } catch (FactoryExceptionCustomException $ex) {
 	Factory::getInstance()->rollbackTransaction();
 	Html::jsonError($ex->getMessage());

@@ -3,22 +3,30 @@ DROP PROCEDURE IF EXISTS sp_stock_a_fecha;
 DELIMITER $$
 
 CREATE PROCEDURE sp_stock_a_fecha(
-    IN p_codAlmacen VARCHAR(10),
-    IN p_codArticulo VARCHAR(10),
-    IN p_codColor VARCHAR(10),
-    IN p_codTipo VARCHAR(20),
-    IN p_fecha VARCHAR(19)
+    IN p_codAlmacen VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+    IN p_codArticulo VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+    IN p_codColor VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+    IN p_codTipo VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+    IN p_fecha VARCHAR(19) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci
 )
 BEGIN
     DECLARE v_fecha DATETIME;
 
-    SET v_fecha = COALESCE(
-        NULLIF(STR_TO_DATE(p_fecha, '%d/%m/%Y %H:%i:%s'), NULL),
-        NULLIF(STR_TO_DATE(p_fecha, '%d/%m/%Y'), NULL),
-        NULLIF(STR_TO_DATE(p_fecha, '%Y-%m-%d %H:%i:%s'), NULL),
-        NULLIF(STR_TO_DATE(p_fecha, '%Y-%m-%d'), NULL),
-        NOW()
-    );
+    IF p_fecha LIKE '%-%' THEN
+        IF p_fecha LIKE '%:%' THEN
+            SET v_fecha = STR_TO_DATE(p_fecha, '%Y-%m-%d %H:%i:%s');
+        ELSE
+            SET v_fecha = STR_TO_DATE(p_fecha, '%Y-%m-%d');
+        END IF;
+    ELSEIF p_fecha LIKE '%/%' THEN
+        IF p_fecha LIKE '%:%' THEN
+            SET v_fecha = STR_TO_DATE(p_fecha, '%d/%m/%Y %H:%i:%s');
+        ELSE
+            SET v_fecha = STR_TO_DATE(p_fecha, '%d/%m/%Y');
+        END IF;
+    ELSE
+        SET v_fecha = NOW();
+    END IF;
 
     SELECT
         s.cod_almacen,
@@ -40,7 +48,21 @@ BEGIN
         SUM(s.cant_9) AS cant_9,
         SUM(s.cant_10) AS cant_10
     FROM (
-        SELECT *
+        SELECT
+            cod_almacen,
+            cod_articulo,
+            cod_color_articulo,
+            cantidad,
+            cant_1,
+            cant_2,
+            cant_3,
+            cant_4,
+            cant_5,
+            cant_6,
+            cant_7,
+            cant_8,
+            cant_9,
+            cant_10
         FROM stock
 
         UNION

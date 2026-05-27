@@ -120,8 +120,8 @@ class Funciones {
 		}
 
 		$strFechas = '';
-		(!is_null($desde)) && ($strFechas .= ' (' . $campoFecha . ' >= dbo.relativeDate(dbo.toDate(' . Datos::objectToDB(Funciones::formatearFecha($desde)) . '), ' . Datos::objectToDB('today') . ', 0)' . (is_null($hasta) ? ')' : ''));
-		(!is_null($hasta)) && ($strFechas .= ' AND ' . (is_null($desde) ? '(' : '') . '' . $campoFecha . ' < dbo.relativeDate(dbo.toDate(' . Datos::objectToDB(Funciones::formatearFecha($hasta)) . '), ' . Datos::objectToDB('tomorrow') . ', 0)) ');
+		(!is_null($desde)) && ($strFechas .= ' (' . $campoFecha . ' >= STR_TO_DATE(' . Datos::objectToDB(Funciones::formatearFecha($desde)) . ', ' . Datos::objectToDB('%d/%m/%Y') . ')' . (is_null($hasta) ? ')' : ''));
+		(!is_null($hasta)) && ($strFechas .= ' AND ' . (is_null($desde) ? '(' : '' ) . $campoFecha . ' < DATE_ADD(STR_TO_DATE(' . Datos::objectToDB(Funciones::formatearFecha($hasta)) . ', ' . Datos::objectToDB('%d/%m/%Y') . '), INTERVAL 1 DAY)) ');
 		return trim($strFechas, ' AND');
 	}
 	static function esFechaMayor($fecha1, $fecha2) {

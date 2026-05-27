@@ -129,7 +129,7 @@ public static function objectToDB($value) {
         } else {
             $paramStr = trim((string)$params);
             $sql = 'CALL ' . $name . (strlen($paramStr) ? '(' . $paramStr . ')' : '()');
-            return self::db()->query($sql);
+            $db = self::db(); if (method_exists($db, 'call')) { $sets = $db->call($sql); return (is_array($sets) && count($sets) > 0) ? $sets[0] : array(); } else { return $db->query($sql); }
         }
     }
 
@@ -191,24 +191,39 @@ public static function objectToDB($value) {
         return self::EjecutarCommand($sql, $params);
     }
     public static function EjecutarSQLsinQuery($sql) {
-    // Si tenés un shim T-SQL→MySQL, aplicalo acá
-    if (method_exists('Datos', '_shimTSql')) { $sql = self::_shimTSql($sql); }
-
-    if (function_exists('__dbg')) { __dbg('DATOS.EjecutarSQLsinQuery.sql', mb_substr($sql,0,500)); }
-
-    // Ejecuta con el driver actual (DbMysql->exec)
-    $db = self::db();
-    $ok = $db->exec($sql);
-
-    if ($ok === false && function_exists('__dbg')) {
-        $driverErr = null;
-        if (is_object($db)) {
-            if (method_exists($db, 'lastError'))       $driverErr = $db->lastError();
-            elseif (property_exists($db, 'lastError')) $driverErr = $db->lastError;
-        }
-        __dbg('DATOS.EjecutarSQLsinQuery.err', array('driverErr'=>$driverErr));
+    // Si tenes un shim T-SQL->MySQL, aplicalo aca
+    if (method_exists('Datos', '_shimTSql')) {
+        $sql = self::_shimTSql($sql);
     }
-    return $ok;
+
+    if (function_exists('__dbg')) {
+        __dbg('DATOS.EjecutarSQLsinQuery.sql', mb_substr($sql, 0, 500));
+    }
+
+    $db = self::db();
+
+    // Compatibilidad legacy: muchos mappers devuelven multiples sentencias
+    // separadas por ';' (ej: DELETE + UPDATE) en un solo string.
+    $partes = array_filter(array_map('trim', explode(';', $sql)), function ($stmt) {
+        return $stmt !== '';
+    });
+
+    if (!count($partes)) {
+        return 0;
+    }
+
+    $afectadas = 0;
+    foreach (array_values($partes) as $idx => $stmt) {
+        try {
+            $afectadas += (int)$db->exec($stmt);
+        } catch (Exception $ex) {
+            // Mantenemos el prefijo por indice para facilitar trazabilidad
+            // en errores de lotes SQL legacy.
+            throw new Exception(($idx + 1) . ' | ' . $ex->getMessage());
+        }
+    }
+
+    return $afectadas;
 }
 
 }

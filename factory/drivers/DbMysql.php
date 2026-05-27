@@ -80,6 +80,14 @@ class DbMysql {
                 while ($r = mysqli_fetch_assoc($result)) { $rows[] = $r; }
                 mysqli_free_result($result);
             }
+            
+            // Flush remaining result sets from Stored Procedures
+            while (mysqli_stmt_more_results($stmt) && mysqli_stmt_next_result($stmt)) {
+                if ($extraResult = mysqli_stmt_get_result($stmt)) {
+                    mysqli_free_result($extraResult);
+                }
+            }
+            
             mysqli_stmt_close($stmt);
 
         } else {
@@ -90,13 +98,21 @@ class DbMysql {
                 while ($r = mysqli_fetch_assoc($res)) { $rows[] = $r; }
                 mysqli_free_result($res);
             }
+            
+            // Flush remaining result sets from Stored Procedures
+            while (mysqli_more_results($this->ln) && mysqli_next_result($this->ln)) {
+                if ($extraResult = mysqli_store_result($this->ln)) {
+                    mysqli_free_result($extraResult);
+                }
+            }
         }
+        
         return $rows;
 
     } catch (Exception $ex) {
         $ok  = false;
         $err = $ex->getMessage();
-        throw $ex;
+        throw new Exception($err . " | SQL: " . $sql);
 
     } finally {
         $ms = (int)((microtime(true) - $t0) * 1000);
@@ -141,7 +157,7 @@ public function exec($sql, $params = array()) {
     } catch (Exception $ex) {
         $ok  = false;
         $err = $ex->getMessage();
-        throw $ex;
+        throw new Exception($err . " | SQL: " . $sql);
 
     } finally {
         $ms = (int)((microtime(true) - $t0) * 1000);
@@ -156,7 +172,7 @@ public function exec($sql, $params = array()) {
   function call($callSql){
     $callSql = $this->shim($callSql);
     $sets = array();
-    if (!mysqli_multi_query($this->ln,$callSql)) throw new Exception(mysqli_error($this->ln));
+    if (!mysqli_multi_query($this->ln,$callSql)) throw new Exception(mysqli_error($this->ln) . " | SQL: " . $callSql);
     do {
       if ($res = mysqli_store_result($this->ln)) {
         $rows=array(); while($row=mysqli_fetch_assoc($res)) $rows[]=$row; mysqli_free_result($res);

@@ -44,7 +44,7 @@ class MovimientoStock extends Base {
 				}
 			}
 			foreach ($this->cantidad as $posicion => $cantMovimiento) {
-				$stockActual->cantidad[$posicion] += (($this->tipoMovimiento == TiposMovimientoStock::negativo ? -1 : 1) * $cantMovimiento);
+					$stockActual->cantidad[$posicion] = Funciones::toInt(Funciones::keyIsSet($stockActual->cantidad, $posicion, 0)) + (($this->tipoMovimiento == TiposMovimientoStock::negativo ? -1 : 1) * Funciones::toInt($cantMovimiento));
 				if ($stockActual->cantidad[$posicion] < 0 && $this->tipoMovimiento != TiposMovimientoStock::inicial) {
 					$art = '[' . $this->almacen->id . '-' . $this->articulo->id . '-' . $this->colorPorArticulo->id . '] ' . $this->articulo->nombre;
 					throw new FactoryExceptionCustomException('No hay stock suficiente del artículo "' . $art . '" para realizar el movimiento');

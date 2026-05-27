@@ -2,16 +2,25 @@ DROP PROCEDURE IF EXISTS saldo_proveedores_a_fecha;
 
 DELIMITER $$
 
-CREATE PROCEDURE saldo_proveedores_a_fecha(IN p_fecha VARCHAR(19))
+CREATE PROCEDURE saldo_proveedores_a_fecha(IN p_fecha VARCHAR(19) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci)
 BEGIN
     DECLARE v_fecha DATETIME;
 
-    SET v_fecha = COALESCE(
-        STR_TO_DATE(p_fecha, '%d/%m/%Y %H:%i:%s'),
-        STR_TO_DATE(p_fecha, '%d/%m/%Y'),
-        STR_TO_DATE(p_fecha, '%Y-%m-%d %H:%i:%s'),
-        STR_TO_DATE(p_fecha, '%Y-%m-%d')
-    );
+    IF p_fecha LIKE '%-%' THEN
+        IF p_fecha LIKE '%:%' THEN
+            SET v_fecha = STR_TO_DATE(p_fecha, '%Y-%m-%d %H:%i:%s');
+        ELSE
+            SET v_fecha = STR_TO_DATE(p_fecha, '%Y-%m-%d');
+        END IF;
+    ELSEIF p_fecha LIKE '%/%' THEN
+        IF p_fecha LIKE '%:%' THEN
+            SET v_fecha = STR_TO_DATE(p_fecha, '%d/%m/%Y %H:%i:%s');
+        ELSE
+            SET v_fecha = STR_TO_DATE(p_fecha, '%d/%m/%Y');
+        END IF;
+    ELSE
+        SET v_fecha = NOW();
+    END IF;
 
     IF v_fecha IS NULL THEN
         SIGNAL SQLSTATE '22007'

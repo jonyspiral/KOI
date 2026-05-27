@@ -45,13 +45,13 @@ class MovimientoAlmacenConfirmacion extends Base {
 	public function guardar() {
 		try {
 			for ($i = 1; $i <= 10; $i++) {
-				$this->cantidad[$i] = Funciones::toInt($this->cantidad[$i]);
+					$this->cantidad[$i] = Funciones::toInt(Funciones::keyIsSet($this->cantidad, $i, 0));
 			}
 
 			//Para mayor seguridad chequeo el stock (igualmente se vuelve a chequear en el momento de la confirmación)
 			$stockActual = Factory::getInstance()->getStock($this->almacenOrigen->id, $this->articulo->id, $this->colorPorArticulo->id);
 			for ($i = 1; $i <= 10; $i++) {
-				if ($this->cantidad[$i] > $stockActual->cantidad[$i]) {
+					if ($this->cantidad[$i] > Funciones::toInt(Funciones::keyIsSet($stockActual->cantidad, $i, 0))) {
 					throw new FactoryExceptionCustomException('La cantidad actual en stock en la posición ' . $i . ' (' . ($stockActual->cantidad[$i]) . ') es mayor que la cantidad que se quiere mover (' . $this->cantidad[$i] . ')');
 				}
 			}
