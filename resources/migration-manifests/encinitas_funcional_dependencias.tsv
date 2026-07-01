@@ -1,0 +1,22 @@
+﻿flow_id	flow_name	dependency_id	logical_object	expected_type	source_sqlserver	required_by_paths	relation_rule	priority
+ET01	Sesion y ABM Clientes	ET01_USERS	users	BASE TABLE	encinitas	premaster.php; clases/Usuario.php; factory/Mapper.php	users.cod_usuario clave de sesion/login	CRITICA
+ET01	Sesion y ABM Clientes	ET01_ROLES_POR_USUARIO	roles_por_usuario	BASE TABLE	encinitas	clases/Usuario.php; clases/Rol.php; factory/Mapper.php	roles_por_usuario.cod_usuario -> users.cod_usuario; roles_por_usuario.cod_rol -> roles.cod_rol	CRITICA
+ET01	Sesion y ABM Clientes	ET01_ROLES	roles	BASE TABLE	encinitas	clases/Rol.php; factory/Mapper.php	roles.cod_rol maestro de autorizacion	CRITICA
+ET01	Sesion y ABM Clientes	ET01_FUNCIONALIDADES_POR_ROL	funcionalidades_por_rol	BASE TABLE	encinitas	clases/Usuario.php; clases/FuncionalidadPorRol.php; factory/Mapper.php	funcionalidades_por_rol.cod_rol -> roles.cod_rol	CRITICA
+ET01	Sesion y ABM Clientes	ET01_CONTACTOS	contactos	BASE TABLE	encinitas	clases/Usuario.php; clases/Cliente.php; factory/Mapper.php	users.cod_contacto -> contactos.cod_contacto	ALTA
+ET01	Sesion y ABM Clientes	ET01_CLIENTES	Clientes	BASE TABLE	encinitas	clases/Cliente.php; clases/Contacto.php; factory/Mapper.php	contactos.cod_cliente -> Clientes.cod_cli	ALTA
+ET01	Sesion y ABM Clientes	ET01_SUCURSALES	sucursales_clientes	BASE TABLE	encinitas	clases/Sucursal.php; clases/Cliente.php; factory/Mapper.php	contactos.cod_sucursal + cod_cliente -> sucursales_clientes.cod_suc + cod_cli	ALTA
+ET01	Sesion y ABM Clientes	ET01_OPERADORES_V	operadores_v	VIEW	encinitas	clases/Operador.php; factory/Mapper.php	users.cod_personal referencia operador/personal	ALTA
+ET01	Sesion y ABM Clientes	ET01_PERSONAL	personal	BASE TABLE	encinitas	clases/Personal.php; clases/Operador.php; factory/Mapper.php	users.cod_personal -> personal.cod_personal	ALTA
+ET05	Catalogo Cliente	ET05_CATALOGOS	catalogos	BASE TABLE	spiral	content/cliente/menu.php; content/cliente/catalogo/index.php; clases/Catalogo.php	catalogos.id ultimo catalogo vigente	CRITICA
+ET05	Catalogo Cliente	ET05_CATALOGO_SECCIONES	catalogo_secciones	BASE TABLE	spiral	content/cliente/menu.php; clases/CatalogoSeccion.php	catalogo_secciones.cod_catalogo -> catalogos.id	CRITICA
+ET05	Catalogo Cliente	ET05_LINEAS_PRODUCTOS	lineas_productos	BASE TABLE	spiral	content/cliente/menu.php; clases/LineaProducto.php; factory/Mapper.php	catalogo_secciones.cod_linea_producto -> lineas_productos.cod_linea_nro	CRITICA
+ET05	Catalogo Cliente	ET05_CATALOGO_SECCION_FAMILIAS	catalogo_seccion_familias	BASE TABLE	spiral	content/cliente/menu.php; content/cliente/catalogo/index.php; clases/CatalogoSeccionFamilia.php	catalogo_seccion_familias.cod_catalogo+cod_linea_producto -> catalogo_secciones	CRITICA
+ET05	Catalogo Cliente	ET05_FAMILIAS_PRODUCTO	familias_producto	BASE TABLE	spiral	content/cliente/menu.php; content/cliente/catalogo/index.php; clases/FamiliaProducto.php	catalogo_seccion_familias.cod_familia_producto -> familias_producto.id	CRITICA
+ET05	Catalogo Cliente	ET05_CATALOGO_SECCION_FAMILIA_ARTICULOS	catalogo_seccion_familia_articulos	BASE TABLE	spiral	content/cliente/catalogo/index.php; clases/CatalogoSeccionFamiliaArticulo.php	catalogo_seccion_familia_articulos(cod_articulo,cod_color_articulo) -> articulos/colores_por_articulo	CRITICA
+ET05	Catalogo Cliente	ET05_ARTICULOS	articulos	BASE TABLE	spiral	content/cliente/catalogo/index.php; clases/Articulo.php; factory/Mapper.php	catalogo_seccion_familia_articulos.cod_articulo -> articulos.cod_articulo	CRITICA
+ET05	Catalogo Cliente	ET05_COLORES_ARTICULO	colores_por_articulo	BASE TABLE	spiral	content/cliente/catalogo/index.php; clases/ColorPorArticulo.php; factory/Mapper.php	catalogo_seccion_familia_articulos.(cod_articulo,cod_color_articulo) -> colores_por_articulo	CRITICA
+ET05	Catalogo Cliente	ET05_TIPO_PRODUCTO_STOCK	tipo_producto_stock	BASE TABLE	spiral	content/cliente/menu.php; content/cliente/catalogo/index.php; clases/TipoProductoStock.php	colores_por_articulo.id_tipo_producto_stock -> tipo_producto_stock.id_tipo_producto_stock_nro	ALTA
+ET05	Catalogo Cliente	ET05_STOCK_MENOS_PENDIENTE	stock_menos_pendiente_vw	VIEW	spiral	content/cliente/catalogo/index.php	vista usada para stock por talle	ALTA
+ET05	Catalogo Cliente	ET05_ARTICULOS_IMAGENES	articulos_imagenes_v	VIEW	spiral	content/cliente/catalogo/index.php	vista usada para render de imagenes de catalogo	ALTA
+
