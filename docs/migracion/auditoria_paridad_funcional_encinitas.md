@@ -167,3 +167,33 @@ Agregar:
 - Sin migraciones ni cambios de esquema
 - Sin tocar empresa, runtime ni configuraciones
 - Solo lectura + generacion de reportes locales
+
+## Auditoria adicional de procedencia por triggers (Spiral -> Encinitas Test)
+Se agrego una verificacion especifica usando:
+
+- `\\SERVER\Produccion\spiral_triggers_inventario.CSV`
+- `\\SERVER\Produccion\spiral_triggers_encinitas.CSV`
+- cruce con inventario productivo `docs/migracion/produccion_operativa_spiral.csv`
+
+Artefactos generados:
+
+- `docs/migracion/manifiesto_procedencia_tablas_spiral.md`
+- `docs/migracion/manifiesto_procedencia_tablas_spiral.csv`
+
+Resumen de la corrida:
+
+- Tablas productivas auditadas: 37
+- Clasificacion: `CONFIRMADA_POR_TRIGGER_SPIRAL=1`, `POSIBLE_POR_TRIGGER=1`, `PRODUCTIVA_OBLIGATORIA_POR_INVENTARIO=35`, `LOCAL_SIN_EVIDENCIA_DE_SYNC=0`
+- Estado: `BLOCKER=24`, `ERROR=3`, `OK=10`
+
+Hallazgos puntuales:
+
+- Falta fisicamente en `encinitas_test`: `explosion_lote_temp`, `movimientos_almacen_mp`
+- Diferencia de PK detectada: `Tareas_detalle` (`spiral`: `nro_orden_fabricacion,nro_tarea,cod_seccion`; `encinitas_test`: `id`)
+- Se detectaron tablas con datos en `spiral` y 0 filas en `encinitas_test` (detalle en CSV), por ejemplo:
+  `confirmaciones_stock`, `movimientos_almacen`, `movimientos_stock_mp`, `Orden_fabricacion`, `Tareas_cabecera`.
+
+Nota de consistencia:
+
+- El inventario productivo actual disponible en `produccion_operativa_spiral.csv` contiene 55 objetos unicos (37 tablas), no 59.  
+  El cruce se hizo sobre el inventario vigente del repositorio.
