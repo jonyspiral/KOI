@@ -269,7 +269,16 @@ function runAudit(
         ? getObjectCatalog($connections['baseline'], $roles['baseline']['engine'])
         : array();
     $targetCatalog = getObjectCatalog($connections['target'], $roles['target']['engine']);
-    $manifestChecks = buildManifestChecks($flow, $manifestRows, $baselineCatalog, $targetCatalog);
+    $manifestChecks = buildManifestChecks(
+        $flow,
+        $manifestRows,
+        $baselineCatalog,
+        $targetCatalog,
+        $connections['baseline'],
+        $roles['baseline']['engine'],
+        $connections['target'],
+        $roles['target']['engine']
+    );
     $checks = array_merge($checks, $manifestChecks);
 
     $blocked = hasBlockingManifestMismatch($manifestChecks);
@@ -400,7 +409,16 @@ function filterManifestRows(array $rows, string $stage): array
     }));
 }
 
-function buildManifestChecks(array $flow, array $manifestRows, array $baselineCatalog, array $targetCatalog): array
+function buildManifestChecks(
+    array $flow,
+    array $manifestRows,
+    array $baselineCatalog,
+    array $targetCatalog,
+    PDO $baselinePdo,
+    string $baselineEngine,
+    PDO $targetPdo,
+    string $targetEngine
+): array
 {
     $checks = array();
     $manifestIndex = indexManifestRows($manifestRows);
@@ -422,17 +440,39 @@ function buildManifestChecks(array $flow, array $manifestRows, array $baselineCa
             continue;
         }
 
-        $checks = array_merge($checks, buildExactManifestChecks($object, $manifestRow, $baselineCatalog, $targetCatalog));
+        $checks = array_merge(
+            $checks,
+            buildExactManifestChecks(
+                $object,
+                $manifestRow,
+                $baselineCatalog,
+                $targetCatalog,
+                $baselinePdo,
+                $baselineEngine,
+                $targetPdo,
+                $targetEngine
+            )
+        );
     }
 
     return $checks;
 }
 
-function buildExactManifestChecks(array $object, array $manifestRow, array $baselineCatalog, array $targetCatalog): array
+function buildExactManifestChecks(
+    array $object,
+    array $manifestRow,
+    array $baselineCatalog,
+    array $targetCatalog,
+    PDO $baselinePdo,
+    string $baselineEngine,
+    PDO $targetPdo,
+    string $targetEngine
+): array
 {
     $checks = array();
     $expectedType = normalizeExactType($object['type']);
     $runtimeExact = trim((string) ($manifestRow['runtime_object_exact'] ?? ''));
+    $baselineExact = trim((string) ($manifestRow['baseline_object_exact'] ?? ''));
     $targetExact = trim((string) ($manifestRow['target_object_exact'] ?? ''));
     $manifestType = normalizeExactType((string) ($manifestRow['tipo'] ?? ''));
 
@@ -477,6 +517,20 @@ function buildExactManifestChecks(array $object, array $manifestRow, array $base
         );
     }
 
+    if (isUnresolvedManifestValue($baselineExact)) {
+        $checks[] = buildCheck(
+            'baseline_resolution',
+            $object['severity'],
+            $object['name'],
+            $object['type'],
+            'error',
+            array(
+                'manifest_baseline_object_exact' => $baselineExact,
+            ),
+            'baseline_object_exact is unresolved in the manifest.'
+        );
+    }
+
     if ($manifestType !== $expectedType) {
         $checks[] = buildCheck(
             'type_resolution',
@@ -492,18 +546,18 @@ function buildExactManifestChecks(array $object, array $manifestRow, array $base
         );
     }
 
-    if (!isUnresolvedManifestValue($runtimeExact)) {
-        $baselineMatch = resolveCatalogMatch($baselineCatalog, $runtimeExact, $expectedType);
+    if (!isUnresolvedManifestValue($baselineExact)) {
+        $baselineMatch = resolveCatalogMatch($baselineCatalog, $baselineExact, $expectedType);
         $checks[] = buildCheck(
-            'runtime_information_schema',
+            'baseline_information_schema',
             $object['severity'],
-            $runtimeExact,
+            $baselineExact,
             $expectedType,
             $baselineMatch['exact'] ? 'ok' : 'error',
             array('baseline' => $baselineMatch),
             $baselineMatch['exact']
-                ? 'runtime_object_exact exists in baseline information_schema with the expected exact type.'
-                : buildTargetMismatchDetail($runtimeExact, $expectedType, $baselineMatch, 'Baseline')
+                ? 'baseline_object_exact exists in baseline information_schema with the expected exact type.'
+                : buildTargetMismatchDetail($baselineExact, $expectedType, $baselineMatch, 'Baseline')
         );
     }
 
@@ -521,6 +575,127 @@ function buildExactManifestChecks(array $object, array $manifestRow, array $base
                 : buildTargetMismatchDetail($targetExact, $expectedType, $targetMatch, 'Target')
         );
     }
+
+    if (!isUnresolvedManifestValue($runtimeExact)) {
+        $checks = array_merge(
+            $checks,
+            buildRuntimeResolutionChecks($object, $runtimeExact, $baselineExact, $targetExact, $expectedType)
+        );
+        $checks = array_merge(
+            $checks,
+            buildRuntimeProbeChecks(
+                $object,
+                $runtimeExact,
+                $expectedType,
+                $baselinePdo,
+                $baselineEngine,
+                $targetPdo,
+                $targetEngine
+            )
+        );
+    }
+
+    return $checks;
+}
+
+function buildRuntimeResolutionChecks(
+    array $object,
+    string $runtimeExact,
+    string $baselineExact,
+    string $targetExact,
+    string $expectedType
+): array {
+    $checks = array();
+
+    $baselineCaseStatus = $runtimeExact === $baselineExact ? 'ok' : 'warning';
+    $targetCaseStatus = $runtimeExact === $targetExact ? 'ok' : 'warning';
+
+    $checks[] = buildCheck(
+        'runtime_resolution',
+        $object['severity'],
+        $runtimeExact,
+        $expectedType,
+        'ok',
+        array(
+            'code_runtime_object_exact' => $object['name'],
+            'manifest_runtime_object_exact' => $runtimeExact,
+        ),
+        'runtime_object_exact matches the literal object name used by legacy code.'
+    );
+
+    if (!isUnresolvedManifestValue($baselineExact)) {
+        $checks[] = buildCheck(
+            'case_compatibility',
+            $object['severity'],
+            $runtimeExact,
+            $expectedType,
+            $baselineCaseStatus,
+            array(
+                'runtime_object_exact' => $runtimeExact,
+                'baseline_object_exact' => $baselineExact,
+            ),
+            $baselineCaseStatus === 'ok'
+                ? 'Runtime literal and baseline physical object use the same casing.'
+                : 'Runtime literal and baseline physical object differ only by casing; this is informational if runtime resolution succeeds.'
+        );
+    }
+
+    if (!isUnresolvedManifestValue($targetExact)) {
+        $checks[] = buildCheck(
+            'case_compatibility',
+            $object['severity'],
+            $runtimeExact,
+            $expectedType,
+            $targetCaseStatus,
+            array(
+                'runtime_object_exact' => $runtimeExact,
+                'target_object_exact' => $targetExact,
+            ),
+            $targetCaseStatus === 'ok'
+                ? 'Runtime literal and target physical object use the same casing.'
+                : 'Runtime literal and target physical object differ only by casing; this is informational if runtime resolution succeeds.'
+        );
+    }
+
+    return $checks;
+}
+
+function buildRuntimeProbeChecks(
+    array $object,
+    string $runtimeExact,
+    string $expectedType,
+    PDO $baselinePdo,
+    string $baselineEngine,
+    PDO $targetPdo,
+    string $targetEngine
+): array {
+    $checks = array();
+    $baselineProbe = probeRuntimeResolution($baselinePdo, $baselineEngine, $runtimeExact, $expectedType);
+    $targetProbe = probeRuntimeResolution($targetPdo, $targetEngine, $runtimeExact, $expectedType);
+
+    $checks[] = buildCheck(
+        'runtime_probe',
+        $object['severity'],
+        $runtimeExact,
+        $expectedType,
+        $baselineProbe['ok'] ? 'ok' : 'error',
+        array('baseline' => $baselineProbe),
+        $baselineProbe['ok']
+            ? 'Baseline resolves the runtime literal with a read-only limited SELECT.'
+            : 'Baseline does not resolve the runtime literal with a read-only limited SELECT.'
+    );
+
+    $checks[] = buildCheck(
+        'runtime_probe',
+        $object['severity'],
+        $runtimeExact,
+        $expectedType,
+        $targetProbe['ok'] ? 'ok' : 'error',
+        array('target' => $targetProbe),
+        $targetProbe['ok']
+            ? 'Target resolves the runtime literal with a read-only limited SELECT.'
+            : 'Target does not resolve the runtime literal with a read-only limited SELECT.'
+    );
 
     return $checks;
 }
@@ -622,16 +797,18 @@ function compareFlowSides(
     foreach ($flow['counts'] as $countCheck) {
         $leftCount = safeCount($leftPdo, $leftEngine, $countCheck['object']);
         $rightCount = safeCount($rightPdo, $rightEngine, $countCheck['object']);
+        $sameCount = ((string) $leftCount === (string) $rightCount);
+        $status = $sameCount ? 'ok' : (string) ($countCheck['diff_status'] ?? 'warning');
         $checks[] = buildCheck(
-            'count',
+            (string) ($countCheck['category'] ?? 'count'),
             $countCheck['severity'],
             $countCheck['object'],
             $countCheck['type'],
-            ((string) $leftCount === (string) $rightCount) ? 'ok' : 'warning',
+            $status,
             array($leftLabel => array('count' => $leftCount), $rightLabel => array('count' => $rightCount)),
-            ((string) $leftCount === (string) $rightCount)
-                ? 'Row count matches.'
-                : 'Row count differs.'
+            $sameCount
+                ? (string) ($countCheck['match_detail'] ?? 'Row count matches.')
+                : (string) ($countCheck['diff_detail'] ?? 'Row count differs.')
         );
     }
 
@@ -728,14 +905,23 @@ function getFlows(): array
                 array('name' => 'localidades', 'type' => 'BASE TABLE', 'severity' => 'high'),
             ),
             'counts' => array(
-                array('object' => 'users', 'type' => 'table', 'severity' => 'medium'),
-                array('object' => 'roles', 'type' => 'table', 'severity' => 'medium'),
-                array('object' => 'roles_por_usuario', 'type' => 'table', 'severity' => 'medium'),
-                array('object' => 'personal', 'type' => 'table', 'severity' => 'medium'),
-                array('object' => 'Operadores', 'type' => 'table', 'severity' => 'medium'),
-                array('object' => 'Clientes', 'type' => 'table', 'severity' => 'medium'),
-                array('object' => 'sucursales_clientes', 'type' => 'table', 'severity' => 'medium'),
-                array('object' => 'Contactos', 'type' => 'table', 'severity' => 'medium'),
+                array('object' => 'users', 'type' => 'BASE TABLE', 'severity' => 'medium'),
+                array('object' => 'roles', 'type' => 'BASE TABLE', 'severity' => 'medium'),
+                array('object' => 'roles_por_usuario', 'type' => 'BASE TABLE', 'severity' => 'medium'),
+                array('object' => 'personal', 'type' => 'BASE TABLE', 'severity' => 'medium'),
+                array('object' => 'Operadores', 'type' => 'BASE TABLE', 'severity' => 'medium'),
+                array('object' => 'Clientes', 'type' => 'BASE TABLE', 'severity' => 'medium'),
+                array('object' => 'sucursales_clientes', 'type' => 'BASE TABLE', 'severity' => 'medium'),
+                array('object' => 'Contactos', 'type' => 'BASE TABLE', 'severity' => 'medium'),
+                array(
+                    'object' => 'condiciones_iva',
+                    'type' => 'BASE TABLE',
+                    'severity' => 'critical',
+                    'category' => 'fixture_count',
+                    'diff_status' => 'error',
+                    'match_detail' => 'Mandatory fixture condiciones_iva count matches between baseline and target.',
+                    'diff_detail' => 'Mandatory fixture condiciones_iva count differs between baseline and target.'
+                ),
             ),
             'keys' => array(
                 array('object' => 'users', 'type' => 'table', 'severity' => 'high', 'columns' => array('cod_usuario'), 'sql' => 'SELECT cod_usuario FROM users'),
@@ -952,6 +1138,38 @@ function objectExists(PDO $pdo, string $engine, string $name, string $type): boo
     $map = array('BASE TABLE' => 'U', 'VIEW' => 'V', 'PROCEDURE' => 'P', 'FUNCTION' => 'FN');
     $sql = 'SELECT 1 FROM sysobjects WHERE name = ? AND type = ?';
     return (bool) fetchOne($pdo, $sql, array($name, $map[$type] ?? 'U'));
+}
+
+function probeRuntimeResolution(PDO $pdo, string $engine, string $name, string $type): array
+{
+    $type = normalizeExactType($type);
+    if ($type === 'PROCEDURE' || $type === 'FUNCTION') {
+        return array(
+            'ok' => true,
+            'skipped' => true,
+            'detail' => 'Runtime probe skipped for routines.',
+        );
+    }
+
+    $sql = 'SELECT 1 AS probe FROM ' . quoteIdentifier($engine, $name);
+    if ($engine === 'mysql') {
+        $sql .= ' LIMIT 1';
+    }
+
+    try {
+        $rows = fetchAll($pdo, $sql, array());
+        return array(
+            'ok' => true,
+            'rows' => count($rows),
+            'sql' => $sql,
+        );
+    } catch (Throwable $throwable) {
+        return array(
+            'ok' => false,
+            'error' => $throwable->getMessage(),
+            'sql' => $sql,
+        );
+    }
 }
 
 function getViewDefinition(PDO $pdo, string $engine, string $name): string
