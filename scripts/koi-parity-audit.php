@@ -29,6 +29,7 @@ function main(array $argv): void
     if (!in_array($mode, array('parity', 'provenance'), true)) {
         fail('Invalid --mode. Use parity or provenance.');
     }
+    $checkManifestOnly = !empty($options['check-manifest-only']);
 
     $manifestPath = (string) ($options['manifest'] ?? DEFAULT_MANIFEST);
     $manifestRows = loadManifest($manifestPath);
@@ -42,8 +43,8 @@ function main(array $argv): void
     );
 
     $format = strtolower((string) ($options['format'] ?? 'human'));
-    $roles = buildRoles($mode, $options);
-    validateRoleSeparation($mode, $roles);
+    $roles = buildRoles($mode, $options, $checkManifestOnly);
+    validateRoleSeparation($mode, $roles, $checkManifestOnly);
 
     $connections = array();
     foreach ($roles as $role => $config) {
@@ -62,7 +63,8 @@ function main(array $argv): void
         $connections,
         $roles,
         $context,
-        $manifestPath
+        $manifestPath,
+        $checkManifestOnly
     );
 
     if ($format === 'human' || $format === 'all') {
@@ -106,6 +108,10 @@ function printUsage(): void
 {
     echo <<<TXT
 Usage:
+  php scripts/koi-parity-audit.php --check-manifest-only --flow=abm_clientes \\
+    --baseline-engine=mysql --baseline-dsn='mysql:host=127.0.0.1;dbname=koi1_stage;charset=utf8mb4' \\
+    --target-engine=mysql --target-dsn='mysql:host=127.0.0.1;dbname=encinitas_test;charset=utf8mb4'
+
   php scripts/koi-parity-audit.php --mode=parity --flow=abm_clientes \\
     --baseline-engine=mysql --baseline-dsn='mysql:host=127.0.0.1;dbname=koi1_stage;charset=utf8mb4' \\
     --target-engine=mysql --target-dsn='mysql:host=127.0.0.1;dbname=encinitas_test;charset=utf8mb4'
@@ -129,6 +135,7 @@ Required in provenance mode:
   --source-dsn=PDO_DSN
 
 Optional:
+  --check-manifest-only
   --baseline-user=USER
   --baseline-pass=PASS
   --target-user=USER
@@ -150,6 +157,7 @@ Environment fallbacks:
   KOI_SOURCE_USER, KOI_SOURCE_PASS
 
 Behavior:
+  check-manifest-only  Validate runtime/target exact names and exact types using MySQL information_schema only.
   parity      Compare baseline MySQL koi1_stage vs target MySQL encinitas_test.
   provenance  Compare target MySQL encinitas_test vs formal SQL Server source.
   The audit blocks if manifest names/types do not match target information_schema.
@@ -157,10 +165,10 @@ Behavior:
 TXT;
 }
 
-function buildRoles(string $mode, array $options): array
+function buildRoles(string $mode, array $options, bool $checkManifestOnly): array
 {
     $roles = array();
-    if ($mode === 'parity') {
+    if ($mode === 'parity' || $checkManifestOnly) {
         $roles['baseline'] = array(
             'engine' => requireValue($options, 'baseline-engine'),
             'dsn' => requireValue($options, 'baseline-dsn'),
@@ -178,7 +186,7 @@ function buildRoles(string $mode, array $options): array
         'label' => 'target:encinitas_test',
     );
 
-    if ($mode === 'provenance') {
+    if ($mode === 'provenance' && !$checkManifestOnly) {
         $roles['source'] = array(
             'engine' => requireValue($options, 'source-engine'),
             'dsn' => requireValue($options, 'source-dsn'),
@@ -192,11 +200,11 @@ function buildRoles(string $mode, array $options): array
     return $roles;
 }
 
-function validateRoleSeparation(string $mode, array $roles): void
+function validateRoleSeparation(string $mode, array $roles, bool $checkManifestOnly): void
 {
-    if ($mode === 'parity') {
+    if ($mode === 'parity' || $checkManifestOnly) {
         if ($roles['baseline']['engine'] !== 'mysql' || $roles['target']['engine'] !== 'mysql') {
-            fail('Parity mode requires MySQL for baseline and target.');
+            fail('Parity mode and --check-manifest-only require MySQL for baseline and target.');
         }
     }
 
@@ -204,7 +212,7 @@ function validateRoleSeparation(string $mode, array $roles): void
         fail('Target must always be MySQL encinitas_test.');
     }
 
-    if ($mode === 'provenance') {
+    if ($mode === 'provenance' && !$checkManifestOnly) {
         $sourceRole = $roles['source']['source_role'] ?? '';
         if (!in_array($sourceRole, array('encinitas', 'spiral'), true)) {
             fail('Provenance mode requires --source-role=encinitas|spiral.');
@@ -252,21 +260,26 @@ function runAudit(
     array $connections,
     array $roles,
     array $context,
-    string $manifestPath
+    string $manifestPath,
+    bool $checkManifestOnly
 ): array {
     $checks = array();
 
+    $baselineCatalog = isset($connections['baseline'])
+        ? getObjectCatalog($connections['baseline'], $roles['baseline']['engine'])
+        : array();
     $targetCatalog = getObjectCatalog($connections['target'], $roles['target']['engine']);
-    $manifestChecks = buildManifestChecks($flow, $manifestRows, $targetCatalog);
+    $manifestChecks = buildManifestChecks($flow, $manifestRows, $baselineCatalog, $targetCatalog);
     $checks = array_merge($checks, $manifestChecks);
 
     $blocked = hasBlockingManifestMismatch($manifestChecks);
-    if ($blocked) {
+    if ($blocked || $checkManifestOnly) {
         $summary = summarizeChecks($checks);
         return array(
             'generated_at' => gmdate('c'),
             'mode' => $mode,
-            'blocked' => true,
+            'blocked' => $blocked,
+            'check_manifest_only' => $checkManifestOnly,
             'manifest' => $manifestPath,
             'flow' => buildFlowMetadata($flow, $context),
             'roles' => buildRoleMetadata($roles),
@@ -312,6 +325,7 @@ function runAudit(
         'generated_at' => gmdate('c'),
         'mode' => $mode,
         'blocked' => false,
+        'check_manifest_only' => false,
         'manifest' => $manifestPath,
         'flow' => buildFlowMetadata($flow, $context),
         'roles' => buildRoleMetadata($roles),
@@ -386,62 +400,143 @@ function filterManifestRows(array $rows, string $stage): array
     }));
 }
 
-function buildManifestChecks(array $flow, array $manifestRows, array $targetCatalog): array
+function buildManifestChecks(array $flow, array $manifestRows, array $baselineCatalog, array $targetCatalog): array
 {
     $checks = array();
     $manifestIndex = indexManifestRows($manifestRows);
 
     foreach ($flow['objects'] as $object) {
-        $expectedKey = manifestKey($object['name'], $object['type']);
+        $expectedKey = manifestKey($object['name']);
         $manifestRow = $manifestIndex[$expectedKey] ?? null;
-        $targetMatch = resolveCatalogMatch($targetCatalog, $object['name'], $object['type']);
 
         if ($manifestRow === null) {
             $checks[] = buildCheck(
-                'name_resolution',
+                'manifest_resolution',
                 'critical',
                 $object['name'],
                 $object['type'],
                 'error',
-                array('manifest' => false, 'target' => $targetMatch),
+                array('manifest' => false),
                 'Object queried by legacy flow is missing from the manifest.'
             );
             continue;
         }
 
+        $checks = array_merge($checks, buildExactManifestChecks($object, $manifestRow, $baselineCatalog, $targetCatalog));
+    }
+
+    return $checks;
+}
+
+function buildExactManifestChecks(array $object, array $manifestRow, array $baselineCatalog, array $targetCatalog): array
+{
+    $checks = array();
+    $expectedType = normalizeExactType($object['type']);
+    $runtimeExact = trim((string) ($manifestRow['runtime_object_exact'] ?? ''));
+    $targetExact = trim((string) ($manifestRow['target_object_exact'] ?? ''));
+    $manifestType = normalizeExactType((string) ($manifestRow['tipo'] ?? ''));
+
+    if (isUnresolvedManifestValue($runtimeExact)) {
         $checks[] = buildCheck(
-            'name_resolution',
+            'runtime_resolution',
             $object['severity'],
             $object['name'],
             $object['type'],
-            $targetMatch['exact'] ? 'ok' : 'error',
+            'error',
             array(
-                'manifest' => true,
-                'manifest_object' => $manifestRow['objeto'],
-                'manifest_type' => $manifestRow['tipo'],
-                'target' => $targetMatch,
+                'manifest_runtime_object_exact' => $runtimeExact,
             ),
+            'runtime_object_exact is unresolved in the manifest.'
+        );
+    } elseif ($runtimeExact !== $object['name']) {
+        $checks[] = buildCheck(
+            'runtime_resolution',
+            $object['severity'],
+            $object['name'],
+            $object['type'],
+            'error',
+            array(
+                'manifest_runtime_object_exact' => $runtimeExact,
+                'code_runtime_object_exact' => $object['name'],
+            ),
+            'runtime_object_exact does not match the literal object name used by legacy code.'
+        );
+    }
+
+    if (isUnresolvedManifestValue($targetExact)) {
+        $checks[] = buildCheck(
+            'target_resolution',
+            $object['severity'],
+            $object['name'],
+            $object['type'],
+            'error',
+            array(
+                'manifest_target_object_exact' => $targetExact,
+            ),
+            'target_object_exact is unresolved in the manifest.'
+        );
+    }
+
+    if ($manifestType !== $expectedType) {
+        $checks[] = buildCheck(
+            'type_resolution',
+            $object['severity'],
+            $object['name'],
+            $object['type'],
+            'error',
+            array(
+                'manifest_type' => (string) ($manifestRow['tipo'] ?? ''),
+                'code_expected_type' => $expectedType,
+            ),
+            'Manifest exact type does not match the expected runtime type.'
+        );
+    }
+
+    if (!isUnresolvedManifestValue($runtimeExact)) {
+        $baselineMatch = resolveCatalogMatch($baselineCatalog, $runtimeExact, $expectedType);
+        $checks[] = buildCheck(
+            'runtime_information_schema',
+            $object['severity'],
+            $runtimeExact,
+            $expectedType,
+            $baselineMatch['exact'] ? 'ok' : 'error',
+            array('baseline' => $baselineMatch),
+            $baselineMatch['exact']
+                ? 'runtime_object_exact exists in baseline information_schema with the expected exact type.'
+                : buildTargetMismatchDetail($runtimeExact, $expectedType, $baselineMatch, 'Baseline')
+        );
+    }
+
+    if (!isUnresolvedManifestValue($targetExact)) {
+        $targetMatch = resolveCatalogMatch($targetCatalog, $targetExact, $expectedType);
+        $checks[] = buildCheck(
+            'target_information_schema',
+            $object['severity'],
+            $targetExact,
+            $expectedType,
+            $targetMatch['exact'] ? 'ok' : 'error',
+            array('target' => $targetMatch),
             $targetMatch['exact']
-                ? 'Manifest and target information_schema match the exact runtime name/type.'
-                : buildTargetMismatchDetail($object['name'], $object['type'], $targetMatch)
+                ? 'target_object_exact exists in target information_schema with the expected exact type.'
+                : buildTargetMismatchDetail($targetExact, $expectedType, $targetMatch, 'Target')
         );
     }
 
     return $checks;
 }
 
-function buildTargetMismatchDetail(string $name, string $type, array $targetMatch): string
+function buildTargetMismatchDetail(string $name, string $type, array $targetMatch, string $sideLabel): string
 {
     if ($targetMatch['case_insensitive']) {
-        return "Manifest/runtime expects {$type} {$name}, but target exposes {$targetMatch['actual_name']} as {$targetMatch['actual_type']}.";
+        return "{$sideLabel} information_schema expects {$type} {$name}, but exposes {$targetMatch['actual_name']} as {$targetMatch['actual_type']}.";
     }
-    return "Target information_schema does not expose {$type} {$name}.";
+    return "{$sideLabel} information_schema does not expose {$type} {$name}.";
 }
 
 function hasBlockingManifestMismatch(array $checks): bool
 {
     foreach ($checks as $check) {
-        if ($check['category'] === 'name_resolution' && $check['status'] === 'error') {
+        if ($check['status'] === 'error') {
             return true;
         }
     }
@@ -453,7 +548,7 @@ function buildSourceRoleChecks(array $flow, array $manifestRows, string $sourceR
     $checks = array();
     $manifestIndex = indexManifestRows($manifestRows);
     foreach ($flow['objects'] as $object) {
-        $key = manifestKey($object['name'], $object['type']);
+        $key = manifestKey($object['name']);
         $row = $manifestIndex[$key] ?? null;
         if ($row === null) {
             continue;
@@ -504,14 +599,14 @@ function compareFlowSides(
                 : 'Object exists on both sides.'
         );
 
-        if ($object['type'] === 'view' && $leftExists && $rightExists) {
+        if (normalizeExactType($object['type']) === 'VIEW' && $leftExists && $rightExists) {
             $leftDefinition = normalizeDefinition(getViewDefinition($leftPdo, $leftEngine, $object['name']));
             $rightDefinition = normalizeDefinition(getViewDefinition($rightPdo, $rightEngine, $object['name']));
             $checks[] = buildCheck(
                 'view_definition',
                 $object['severity'],
                 $object['name'],
-                'view',
+                'VIEW',
                 ($leftDefinition === $rightDefinition) ? 'ok' : 'error',
                 array(
                     $leftLabel => array('definition_hash' => sha1($leftDefinition)),
@@ -611,26 +706,26 @@ function getFlows(): array
             'label' => 'Base de sesion y ABM Clientes',
             'manifest_stage' => 'ET01 Base de sesión y ABM Clientes',
             'objects' => array(
-                array('name' => 'users', 'type' => 'table', 'severity' => 'critical'),
-                array('name' => 'roles', 'type' => 'table', 'severity' => 'critical'),
-                array('name' => 'roles_por_usuario', 'type' => 'table', 'severity' => 'critical'),
-                array('name' => 'roles_por_usuario_v', 'type' => 'view', 'severity' => 'critical'),
-                array('name' => 'funcionalidades_por_rol', 'type' => 'table', 'severity' => 'critical'),
-                array('name' => 'personal', 'type' => 'table', 'severity' => 'critical'),
-                array('name' => 'Operadores', 'type' => 'table', 'severity' => 'critical'),
-                array('name' => 'operadores_v', 'type' => 'view', 'severity' => 'critical'),
-                array('name' => 'Clientes', 'type' => 'table', 'severity' => 'critical'),
-                array('name' => 'sucursales_clientes', 'type' => 'table', 'severity' => 'critical'),
-                array('name' => 'sucursales_v', 'type' => 'view', 'severity' => 'critical'),
-                array('name' => 'Contactos', 'type' => 'table', 'severity' => 'high'),
-                array('name' => 'areas_empresa', 'type' => 'table', 'severity' => 'high'),
-                array('name' => 'condiciones_iva', 'type' => 'table', 'severity' => 'high'),
-                array('name' => 'Formas_pago', 'type' => 'table', 'severity' => 'high'),
-                array('name' => 'grupo_empresa', 'type' => 'table', 'severity' => 'high'),
-                array('name' => 'Grupos_clientes', 'type' => 'table', 'severity' => 'high'),
-                array('name' => 'Paises', 'type' => 'table', 'severity' => 'high'),
-                array('name' => 'Provincias', 'type' => 'table', 'severity' => 'high'),
-                array('name' => 'localidades', 'type' => 'table', 'severity' => 'high'),
+                array('name' => 'users', 'type' => 'BASE TABLE', 'severity' => 'critical'),
+                array('name' => 'roles', 'type' => 'BASE TABLE', 'severity' => 'critical'),
+                array('name' => 'roles_por_usuario', 'type' => 'BASE TABLE', 'severity' => 'critical'),
+                array('name' => 'roles_por_usuario_v', 'type' => 'VIEW', 'severity' => 'critical'),
+                array('name' => 'funcionalidades_por_rol', 'type' => 'BASE TABLE', 'severity' => 'critical'),
+                array('name' => 'personal', 'type' => 'BASE TABLE', 'severity' => 'critical'),
+                array('name' => 'Operadores', 'type' => 'BASE TABLE', 'severity' => 'critical'),
+                array('name' => 'operadores_v', 'type' => 'VIEW', 'severity' => 'critical'),
+                array('name' => 'Clientes', 'type' => 'BASE TABLE', 'severity' => 'critical'),
+                array('name' => 'sucursales_clientes', 'type' => 'BASE TABLE', 'severity' => 'critical'),
+                array('name' => 'sucursales_v', 'type' => 'VIEW', 'severity' => 'critical'),
+                array('name' => 'Contactos', 'type' => 'BASE TABLE', 'severity' => 'high'),
+                array('name' => 'areas_empresa', 'type' => 'BASE TABLE', 'severity' => 'high'),
+                array('name' => 'condiciones_iva', 'type' => 'BASE TABLE', 'severity' => 'high'),
+                array('name' => 'Formas_pago', 'type' => 'BASE TABLE', 'severity' => 'high'),
+                array('name' => 'grupo_empresa', 'type' => 'BASE TABLE', 'severity' => 'high'),
+                array('name' => 'Grupos_clientes', 'type' => 'BASE TABLE', 'severity' => 'high'),
+                array('name' => 'Paises', 'type' => 'BASE TABLE', 'severity' => 'high'),
+                array('name' => 'Provincias', 'type' => 'BASE TABLE', 'severity' => 'high'),
+                array('name' => 'localidades', 'type' => 'BASE TABLE', 'severity' => 'high'),
             ),
             'counts' => array(
                 array('object' => 'users', 'type' => 'table', 'severity' => 'medium'),
@@ -739,20 +834,20 @@ function getObjectCatalog(PDO $pdo, string $engine): array
     if ($engine === 'mysql') {
         $tables = fetchAll(
             $pdo,
-            "SELECT TABLE_NAME AS object_name, CASE WHEN TABLE_TYPE = 'VIEW' THEN 'view' ELSE 'table' END AS object_type FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()",
+            "SELECT TABLE_NAME AS object_name, TABLE_TYPE AS object_type FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()",
             array()
         );
         foreach ($tables as $row) {
-            $catalog[] = array('name' => (string) $row['object_name'], 'type' => (string) $row['object_type']);
+            $catalog[] = array('name' => (string) $row['object_name'], 'type' => normalizeExactType((string) $row['object_type']));
         }
 
         $routines = fetchAll(
             $pdo,
-            "SELECT ROUTINE_NAME AS object_name, LOWER(ROUTINE_TYPE) AS object_type FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = DATABASE()",
+            "SELECT ROUTINE_NAME AS object_name, ROUTINE_TYPE AS object_type FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = DATABASE()",
             array()
         );
         foreach ($routines as $row) {
-            $catalog[] = array('name' => (string) $row['object_name'], 'type' => normalizeRoutineType((string) $row['object_type']));
+            $catalog[] = array('name' => (string) $row['object_name'], 'type' => normalizeExactType((string) $row['object_type']));
         }
         return $catalog;
     }
@@ -765,25 +860,30 @@ function getObjectCatalog(PDO $pdo, string $engine): array
     foreach ($rows as $row) {
         $catalog[] = array(
             'name' => (string) $row['object_name'],
-            'type' => sqlServerTypeToLogical((string) $row['type']),
+            'type' => sqlServerTypeToExact((string) $row['type']),
         );
     }
     return $catalog;
 }
 
-function normalizeRoutineType(string $type): string
+function sqlServerTypeToExact(string $type): string
 {
-    return $type === 'procedure' ? 'procedure' : 'function';
+    $map = array('U' => 'BASE TABLE', 'V' => 'VIEW', 'P' => 'PROCEDURE', 'FN' => 'FUNCTION');
+    return $map[$type] ?? 'BASE TABLE';
 }
 
-function sqlServerTypeToLogical(string $type): string
+function normalizeExactType(string $type): string
 {
-    $map = array('U' => 'table', 'V' => 'view', 'P' => 'procedure', 'FN' => 'function');
-    return $map[$type] ?? 'table';
+    $normalized = strtoupper(trim($type));
+    if ($normalized === 'TABLE' || $normalized === 'BASE_TABLE') {
+        return 'BASE TABLE';
+    }
+    return $normalized;
 }
 
 function resolveCatalogMatch(array $catalog, string $name, string $type): array
 {
+    $type = normalizeExactType($type);
     foreach ($catalog as $row) {
         if ($row['name'] === $name && $row['type'] === $type) {
             return array(
@@ -818,29 +918,38 @@ function indexManifestRows(array $rows): array
 {
     $index = array();
     foreach ($rows as $row) {
-        $index[manifestKey((string) $row['objeto'], (string) $row['tipo'])] = $row;
+        $index[manifestKey((string) $row['objeto'])] = $row;
     }
     return $index;
 }
 
-function manifestKey(string $object, string $type): string
+function manifestKey(string $object): string
 {
-    return $type . '|' . $object;
+    return $object;
+}
+
+function isUnresolvedManifestValue(string $value): bool
+{
+    if ($value === '') {
+        return true;
+    }
+    return strpos(strtoupper($value), 'PENDIENTE') === 0;
 }
 
 function objectExists(PDO $pdo, string $engine, string $name, string $type): bool
 {
+    $type = normalizeExactType($type);
     if ($engine === 'mysql') {
-        if ($type === 'procedure' || $type === 'function') {
+        if ($type === 'PROCEDURE' || $type === 'FUNCTION') {
             $sql = 'SELECT 1 FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_NAME = ? AND ROUTINE_TYPE = ?';
-            return (bool) fetchOne($pdo, $sql, array($name, strtoupper($type)));
+            return (bool) fetchOne($pdo, $sql, array($name, $type));
         }
-        $tableType = ($type === 'view') ? 'VIEW' : 'BASE TABLE';
+        $tableType = ($type === 'VIEW') ? 'VIEW' : 'BASE TABLE';
         $sql = 'SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND TABLE_TYPE = ?';
         return (bool) fetchOne($pdo, $sql, array($name, $tableType));
     }
 
-    $map = array('table' => 'U', 'view' => 'V', 'procedure' => 'P', 'function' => 'FN');
+    $map = array('BASE TABLE' => 'U', 'VIEW' => 'V', 'PROCEDURE' => 'P', 'FUNCTION' => 'FN');
     $sql = 'SELECT 1 FROM sysobjects WHERE name = ? AND type = ?';
     return (bool) fetchOne($pdo, $sql, array($name, $map[$type] ?? 'U'));
 }
@@ -958,6 +1067,9 @@ function renderHuman(array $result): string
         return $role['label'] . ' [' . $role['engine'] . ']';
     }, $result['roles']));
     $lines[] = 'Manifest: ' . $result['manifest'];
+    if (!empty($result['check_manifest_only'])) {
+        $lines[] = 'Check manifest only: yes';
+    }
     $lines[] = 'Client case: ' . $result['flow']['client_id']
         . ' -> ' . $result['flow']['expected_vendedor']
         . ' -> ' . $result['flow']['expected_personal'];

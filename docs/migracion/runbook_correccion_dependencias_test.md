@@ -52,6 +52,21 @@ Primero resolver nombres reales:
 - registrar mayusculas/minusculas y tipo real
 - bloquear la auditoria si el manifiesto no coincide con `information_schema` de `encinitas_test`
 
+Ejemplo `--check-manifest-only` recomendado antes de comparar datos:
+
+```bash
+php scripts/koi-parity-audit.php \
+  --check-manifest-only \
+  --flow=abm_clientes \
+  --baseline-engine=mysql \
+  --baseline-dsn='mysql:host=127.0.0.1;dbname=koi1_stage;charset=utf8mb4' \
+  --target-engine=mysql \
+  --target-dsn='mysql:host=127.0.0.1;dbname=encinitas_test;charset=utf8mb4' \
+  --format=all \
+  --json-out=/tmp/abm_clientes_manifest.json \
+  --csv-out=/tmp/abm_clientes_manifest.csv
+```
+
 Ejemplo `--mode=parity` recomendado para la etapa inicial:
 
 ```bash
