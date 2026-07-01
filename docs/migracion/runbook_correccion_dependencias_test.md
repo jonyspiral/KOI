@@ -6,8 +6,11 @@ Este runbook cubre correcciones minimas de dependencias funcionales en ambientes
 
 Reglas base:
 
-- `koi1_stage` es solo referencia funcional y diagnostico.
-- La fuente formal para recargar no produccion es `SQL Server encinitas`.
+- `koi1_stage` es solo baseline funcional y diagnostico, siempre en lectura.
+- `encinitas_test` es el destino de prueba, siempre en lectura durante auditoria.
+- La fuente formal para recargar no produccion es `SQL Server encinitas` via `sqlsrv_encinitas`.
+- `spiral` queda reservado al carril productivo.
+- Nunca mezclar baseline, target y source formal en un mismo DSN.
 - No ejecutar acciones destructivas automaticamente.
 - No tocar `empresa`.
 - No tocar `/var/www/encinitas`.
@@ -43,25 +46,50 @@ Nunca:
 
 Ejecutar primero la auditoria funcional.
 
-Ejemplo recomendado para la etapa inicial:
+Primero resolver nombres reales:
+
+- detectar el nombre exacto que usa el codigo legacy
+- registrar mayusculas/minusculas y tipo real
+- bloquear la auditoria si el manifiesto no coincide con `information_schema` de `encinitas_test`
+
+Ejemplo `--mode=parity` recomendado para la etapa inicial:
 
 ```bash
 php scripts/koi-parity-audit.php \
+  --mode=parity \
   --flow=abm_clientes \
   --client-id=204 \
   --expected-vendedor=V00358 \
   --expected-personal=358 \
-  --stage-engine=mysql \
-  --stage-dsn='mysql:host=127.0.0.1;dbname=koi1_stage;charset=utf8mb4' \
-  --reference-engine=odbc \
-  --reference-dsn='odbc:Driver=FreeTDS;Server=sqlserver;Port=1433;Database=encinitas_test;TDS_Version=8.0' \
+  --baseline-engine=mysql \
+  --baseline-dsn='mysql:host=127.0.0.1;dbname=koi1_stage;charset=utf8mb4' \
+  --target-engine=mysql \
+  --target-dsn='mysql:host=127.0.0.1;dbname=encinitas_test;charset=utf8mb4' \
   --format=all \
   --json-out=/tmp/abm_clientes_audit.json \
   --csv-out=/tmp/abm_clientes_audit.csv
 ```
 
+Ejemplo `--mode=provenance` para trazabilidad no productiva:
+
+```bash
+php scripts/koi-parity-audit.php \
+  --mode=provenance \
+  --flow=abm_clientes \
+  --client-id=204 \
+  --expected-vendedor=V00358 \
+  --expected-personal=358 \
+  --target-engine=mysql \
+  --target-dsn='mysql:host=127.0.0.1;dbname=encinitas_test;charset=utf8mb4' \
+  --source-role=encinitas \
+  --source-engine=odbc \
+  --source-dsn='odbc:Driver=FreeTDS;Server=sqlserver;Port=1433;Database=encinitas;TDS_Version=8.0' \
+  --format=human
+```
+
 La auditoria debe dejar evidencia de:
 
+- bloqueo por desalineacion de nombres/tipos reales si corresponde
 - objetos faltantes
 - diferencias de views
 - claves funcionales faltantes
@@ -175,6 +203,7 @@ Una correccion minima en test solo puede darse por cerrada si existen:
 ## Lo que este runbook no permite
 
 - usar `koi1_stage` como fuente de recarga
+- usar `encinitas_test` como DSN ODBC o motor de referencia SQL Server
 - reconstruir produccion desde `encinitas`
 - correr migraciones reales sin aprobacion humana
 - guardar secretos, DSN o dumps en el repo

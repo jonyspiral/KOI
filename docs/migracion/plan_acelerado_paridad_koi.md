@@ -11,6 +11,19 @@ El orden de trabajo se organiza por flujos completos y pantallas operativas, no 
 
 ## Regla de procedencia
 
+### Roles de auditoria
+
+- Referencia funcional: `MySQL koi1_stage`, solo lectura, usada para comportamiento validado.
+- Destino de prueba: `MySQL encinitas_test`, solo lectura en auditoria, ambiente que debe alcanzar paridad.
+- Fuente formal de recarga no productiva: `SQL Server encinitas` via `sqlsrv_encinitas`, usada para trazabilidad, conteos y futuros applies aprobados.
+- Fuente formal productiva: `SQL Server spiral` via `sqlsrv_spiral`, usada solo para carril productivo.
+
+Regla dura:
+
+- nunca mezclar estos tres roles en un mismo DSN
+- `encinitas_test` no es DSN ODBC ni motor de referencia
+- `koi1_stage` no es origen de recarga
+
 ### No produccion
 
 - Ambitos: `koi1_stage`, `encinitas_test`, entornos de ensayo funcional.
@@ -28,8 +41,12 @@ El orden de trabajo se organiza por flujos completos y pantallas operativas, no 
 Cada etapa se ejecuta siempre en cuatro compuertas:
 
 1. Auditoria
+   - Resolver nombres reales antes de comparar datos.
    - Relevar dependencias reales desde codigo (`Factory.php`, `Mapper.php`, clases, endpoints y views/SP llamados).
-   - Comparar `koi1_stage` contra la referencia funcional de test.
+   - Registrar mayusculas/minusculas y tipo real (`tabla`, `view`, `procedure`, `function`) segun el runtime legacy.
+   - Bloquear la auditoria si el manifiesto no coincide con `information_schema` del destino.
+   - Modo `parity`: comparar baseline `MySQL koi1_stage` contra target `MySQL encinitas_test`.
+   - Modo `provenance`: comparar target `MySQL encinitas_test` contra `SQL Server encinitas` para no produccion y contra `SQL Server spiral` para produccion.
    - Detectar objetos faltantes, vistas distintas, filas que rompen joins y diferencias por clave funcional.
 2. Aprobacion
    - Revisar reporte humano + JSON/CSV.
@@ -65,6 +82,8 @@ Flujos y pantallas:
 
 Objetos eje:
 
+- usar siempre el nombre exacto consultado por el codigo legacy
+- no normalizar a alias genericos si el runtime usa otra capitalizacion
 - `users`, `roles`, `roles_por_usuario`, `roles_por_usuario_v`, `funcionalidades_por_rol`
 - `personal`, `Operadores`, `operadores_v`
 - `Clientes`, `sucursales_clientes`, `sucursales_v`, `Contactos`
@@ -269,9 +288,11 @@ Herramienta propuesta: `scripts/koi-parity-audit.php`
 
 Objetivo:
 
-- comparar `koi1_stage` contra `encinitas_test` por flujo funcional
+- comparar baseline `koi1_stage` contra target `encinitas_test` por flujo funcional en `--mode=parity`
+- comparar target `encinitas_test` contra fuente formal SQL Server en `--mode=provenance`
 - emitir salida humana y JSON/CSV
 - detectar:
+  - desalineacion entre manifiesto y `information_schema` del destino
   - objetos inexistentes
   - views con definicion distinta
   - tablas base faltantes
@@ -279,25 +300,44 @@ Objetivo:
   - diferencias de cantidad
   - diferencias por clave funcional
 
-Ejemplo de uso para ET01:
+Ejemplo de paridad para ET01:
 
 ```bash
 php scripts/koi-parity-audit.php \
+  --mode=parity \
   --flow=abm_clientes \
   --client-id=204 \
   --expected-vendedor=V00358 \
   --expected-personal=358 \
-  --stage-engine=mysql \
-  --stage-dsn='mysql:host=127.0.0.1;dbname=koi1_stage;charset=utf8mb4' \
-  --reference-engine=odbc \
-  --reference-dsn='odbc:Driver=FreeTDS;Server=sqlserver;Port=1433;Database=encinitas_test;TDS_Version=8.0' \
+  --baseline-engine=mysql \
+  --baseline-dsn='mysql:host=127.0.0.1;dbname=koi1_stage;charset=utf8mb4' \
+  --target-engine=mysql \
+  --target-dsn='mysql:host=127.0.0.1;dbname=encinitas_test;charset=utf8mb4' \
   --format=all \
   --json-out=/tmp/abm_clientes_audit.json \
   --csv-out=/tmp/abm_clientes_audit.csv
 ```
 
+Ejemplo de procedencia no productiva:
+
+```bash
+php scripts/koi-parity-audit.php \
+  --mode=provenance \
+  --flow=abm_clientes \
+  --client-id=204 \
+  --expected-vendedor=V00358 \
+  --expected-personal=358 \
+  --target-engine=mysql \
+  --target-dsn='mysql:host=127.0.0.1;dbname=encinitas_test;charset=utf8mb4' \
+  --source-role=encinitas \
+  --source-engine=odbc \
+  --source-dsn='odbc:Driver=FreeTDS;Server=sqlserver;Port=1433;Database=encinitas;TDS_Version=8.0' \
+  --format=human
+```
+
 Salida esperada de alto nivel:
 
+- bloqueo inmediato si el manifiesto no coincide con el nombre real o tipo real del destino
 - `users`, `roles`, `roles_por_usuario_v`, `Clientes`, `operadores_v`, `sucursales_v` existen en ambos lados
 - mismatch si la definicion de `operadores_v` o `roles_por_usuario_v` difiere
 - mismatch si cliente `204` no resuelve `V00358 -> 358 -> operadores_v`
@@ -316,6 +356,7 @@ Antes de cerrar cada etapa deben quedar:
 
 ## Pendientes de aprobacion humana
 
-- Confirmar DSN read-only de referencia para `encinitas_test`.
+- Confirmar DSN read-only de `koi1_stage` y `encinitas_test` para auditoria de paridad.
+- Confirmar DSN read-only SQL Server para `sqlsrv_encinitas` y `sqlsrv_spiral` en modo procedencia.
 - Confirmar catalogo final de objetos productivos que quedaran bloqueados con `sqlsrv_encinitas`.
 - Aprobar el primer lote ET01 antes de cualquier apply manual.

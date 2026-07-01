@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 const DEFAULT_FLOW = 'abm_clientes';
+const DEFAULT_MODE = 'parity';
 const DEFAULT_CLIENT_ID = 204;
 const DEFAULT_EXPECTED_VENDEDOR = 'V00358';
 const DEFAULT_EXPECTED_PERSONAL = '358';
+const DEFAULT_MANIFEST = 'resources/migration-manifests/encinitas_funcional.tsv';
 
 main($argv);
 
@@ -20,41 +22,47 @@ function main(array $argv): void
     $flowId = (string) ($options['flow'] ?? DEFAULT_FLOW);
     $flows = getFlows();
     if (!isset($flows[$flowId])) {
-        fwrite(STDERR, "Unknown flow: {$flowId}\n");
-        exit(2);
+        fail("Unknown flow: {$flowId}");
     }
 
-    $stageEngine = requireValue($options, 'stage-engine');
-    $stageDsn = requireValue($options, 'stage-dsn');
-    $stageUser = (string) ($options['stage-user'] ?? getenv('KOI_STAGE_USER') ?: '');
-    $stagePass = (string) ($options['stage-pass'] ?? getenv('KOI_STAGE_PASS') ?: '');
+    $mode = strtolower((string) ($options['mode'] ?? DEFAULT_MODE));
+    if (!in_array($mode, array('parity', 'provenance'), true)) {
+        fail('Invalid --mode. Use parity or provenance.');
+    }
 
-    $referenceEngine = requireValue($options, 'reference-engine');
-    $referenceDsn = requireValue($options, 'reference-dsn');
-    $referenceUser = (string) ($options['reference-user'] ?? getenv('KOI_REFERENCE_USER') ?: '');
-    $referencePass = (string) ($options['reference-pass'] ?? getenv('KOI_REFERENCE_PASS') ?: '');
-
-    $clientId = (string) ($options['client-id'] ?? DEFAULT_CLIENT_ID);
-    $expectedVendedor = (string) ($options['expected-vendedor'] ?? DEFAULT_EXPECTED_VENDEDOR);
-    $expectedPersonal = (string) ($options['expected-personal'] ?? DEFAULT_EXPECTED_PERSONAL);
-    $format = strtolower((string) ($options['format'] ?? 'human'));
-
-    $stage = connectDb($stageEngine, $stageDsn, $stageUser, $stagePass);
-    $reference = connectDb($referenceEngine, $referenceDsn, $referenceUser, $referencePass);
+    $manifestPath = (string) ($options['manifest'] ?? DEFAULT_MANIFEST);
+    $manifestRows = loadManifest($manifestPath);
+    $flow = $flows[$flowId];
+    $flowManifestRows = filterManifestRows($manifestRows, $flow['manifest_stage']);
 
     $context = array(
-        'client_id' => $clientId,
-        'expected_vendedor' => $expectedVendedor,
-        'expected_personal' => $expectedPersonal,
+        'client_id' => (string) ($options['client-id'] ?? DEFAULT_CLIENT_ID),
+        'expected_vendedor' => (string) ($options['expected-vendedor'] ?? DEFAULT_EXPECTED_VENDEDOR),
+        'expected_personal' => (string) ($options['expected-personal'] ?? DEFAULT_EXPECTED_PERSONAL),
     );
 
+    $format = strtolower((string) ($options['format'] ?? 'human'));
+    $roles = buildRoles($mode, $options);
+    validateRoleSeparation($mode, $roles);
+
+    $connections = array();
+    foreach ($roles as $role => $config) {
+        $connections[$role] = connectDb(
+            $config['engine'],
+            $config['dsn'],
+            $config['user'],
+            $config['pass']
+        );
+    }
+
     $result = runAudit(
-        $flows[$flowId],
-        $stage,
-        $reference,
-        $stageEngine,
-        $referenceEngine,
-        $context
+        $mode,
+        $flow,
+        $flowManifestRows,
+        $connections,
+        $roles,
+        $context,
+        $manifestPath
     );
 
     if ($format === 'human' || $format === 'all') {
@@ -98,21 +106,36 @@ function printUsage(): void
 {
     echo <<<TXT
 Usage:
-  php scripts/koi-parity-audit.php --flow=abm_clientes \\
-    --stage-engine=mysql --stage-dsn='mysql:host=127.0.0.1;dbname=koi1_stage;charset=utf8mb4' \\
-    --reference-engine=odbc --reference-dsn='odbc:Driver=FreeTDS;Server=sqlserver;Port=1433;Database=encinitas_test;TDS_Version=8.0'
+  php scripts/koi-parity-audit.php --mode=parity --flow=abm_clientes \\
+    --baseline-engine=mysql --baseline-dsn='mysql:host=127.0.0.1;dbname=koi1_stage;charset=utf8mb4' \\
+    --target-engine=mysql --target-dsn='mysql:host=127.0.0.1;dbname=encinitas_test;charset=utf8mb4'
 
-Required:
-  --stage-engine=mysql|odbc|dblib|sqlsrv
-  --stage-dsn=PDO_DSN
-  --reference-engine=mysql|odbc|dblib|sqlsrv
-  --reference-dsn=PDO_DSN
+  php scripts/koi-parity-audit.php --mode=provenance --flow=abm_clientes \\
+    --target-engine=mysql --target-dsn='mysql:host=127.0.0.1;dbname=encinitas_test;charset=utf8mb4' \\
+    --source-role=encinitas \\
+    --source-engine=odbc --source-dsn='odbc:Driver=FreeTDS;Server=sqlserver;Port=1433;Database=encinitas;TDS_Version=8.0'
+
+Required in parity mode:
+  --baseline-engine=mysql
+  --baseline-dsn=PDO_DSN
+  --target-engine=mysql
+  --target-dsn=PDO_DSN
+
+Required in provenance mode:
+  --target-engine=mysql
+  --target-dsn=PDO_DSN
+  --source-role=encinitas|spiral
+  --source-engine=odbc|dblib|sqlsrv
+  --source-dsn=PDO_DSN
 
 Optional:
-  --stage-user=USER
-  --stage-pass=PASS
-  --reference-user=USER
-  --reference-pass=PASS
+  --baseline-user=USER
+  --baseline-pass=PASS
+  --target-user=USER
+  --target-pass=PASS
+  --source-user=USER
+  --source-pass=PASS
+  --manifest=resources/migration-manifests/encinitas_funcional.tsv
   --flow=abm_clientes
   --client-id=204
   --expected-vendedor=V00358
@@ -122,16 +145,88 @@ Optional:
   --csv-out=/tmp/audit.csv
 
 Environment fallbacks:
-  KOI_STAGE_USER, KOI_STAGE_PASS, KOI_REFERENCE_USER, KOI_REFERENCE_PASS
+  KOI_BASELINE_USER, KOI_BASELINE_PASS
+  KOI_TARGET_USER, KOI_TARGET_PASS
+  KOI_SOURCE_USER, KOI_SOURCE_PASS
+
+Behavior:
+  parity      Compare baseline MySQL koi1_stage vs target MySQL encinitas_test.
+  provenance  Compare target MySQL encinitas_test vs formal SQL Server source.
+  The audit blocks if manifest names/types do not match target information_schema.
 
 TXT;
+}
+
+function buildRoles(string $mode, array $options): array
+{
+    $roles = array();
+    if ($mode === 'parity') {
+        $roles['baseline'] = array(
+            'engine' => requireValue($options, 'baseline-engine'),
+            'dsn' => requireValue($options, 'baseline-dsn'),
+            'user' => (string) ($options['baseline-user'] ?? getenv('KOI_BASELINE_USER') ?: ''),
+            'pass' => (string) ($options['baseline-pass'] ?? getenv('KOI_BASELINE_PASS') ?: ''),
+            'label' => 'baseline:koi1_stage',
+        );
+    }
+
+    $roles['target'] = array(
+        'engine' => requireValue($options, 'target-engine'),
+        'dsn' => requireValue($options, 'target-dsn'),
+        'user' => (string) ($options['target-user'] ?? getenv('KOI_TARGET_USER') ?: ''),
+        'pass' => (string) ($options['target-pass'] ?? getenv('KOI_TARGET_PASS') ?: ''),
+        'label' => 'target:encinitas_test',
+    );
+
+    if ($mode === 'provenance') {
+        $roles['source'] = array(
+            'engine' => requireValue($options, 'source-engine'),
+            'dsn' => requireValue($options, 'source-dsn'),
+            'user' => (string) ($options['source-user'] ?? getenv('KOI_SOURCE_USER') ?: ''),
+            'pass' => (string) ($options['source-pass'] ?? getenv('KOI_SOURCE_PASS') ?: ''),
+            'label' => 'source:' . requireValue($options, 'source-role'),
+            'source_role' => strtolower(requireValue($options, 'source-role')),
+        );
+    }
+
+    return $roles;
+}
+
+function validateRoleSeparation(string $mode, array $roles): void
+{
+    if ($mode === 'parity') {
+        if ($roles['baseline']['engine'] !== 'mysql' || $roles['target']['engine'] !== 'mysql') {
+            fail('Parity mode requires MySQL for baseline and target.');
+        }
+    }
+
+    if ($roles['target']['engine'] !== 'mysql') {
+        fail('Target must always be MySQL encinitas_test.');
+    }
+
+    if ($mode === 'provenance') {
+        $sourceRole = $roles['source']['source_role'] ?? '';
+        if (!in_array($sourceRole, array('encinitas', 'spiral'), true)) {
+            fail('Provenance mode requires --source-role=encinitas|spiral.');
+        }
+        if (!in_array($roles['source']['engine'], array('odbc', 'dblib', 'sqlsrv'), true)) {
+            fail('Provenance mode requires SQL Server access via odbc, dblib or sqlsrv.');
+        }
+    }
+
+    $usedDsns = array();
+    foreach ($roles as $role => $config) {
+        if (isset($usedDsns[$config['dsn']])) {
+            fail("Roles {$usedDsns[$config['dsn']]} and {$role} cannot share the same DSN.");
+        }
+        $usedDsns[$config['dsn']] = $role;
+    }
 }
 
 function requireValue(array $options, string $key): string
 {
     if (!isset($options[$key]) || $options[$key] === '') {
-        fwrite(STDERR, "Missing required option --{$key}\n");
-        exit(2);
+        fail("Missing required option --{$key}");
     }
     return (string) $options[$key];
 }
@@ -144,44 +239,285 @@ function connectDb(string $engine, string $dsn, string $user, string $pass): PDO
     ));
 
     if ($engine === 'mysql') {
-        $pdo->exec("SET NAMES utf8mb4");
+        $pdo->exec('SET NAMES utf8mb4');
     }
 
     return $pdo;
 }
 
-function runAudit(array $flow, PDO $stage, PDO $reference, string $stageEngine, string $referenceEngine, array $context): array
+function runAudit(
+    string $mode,
+    array $flow,
+    array $manifestRows,
+    array $connections,
+    array $roles,
+    array $context,
+    string $manifestPath
+): array {
+    $checks = array();
+
+    $targetCatalog = getObjectCatalog($connections['target'], $roles['target']['engine']);
+    $manifestChecks = buildManifestChecks($flow, $manifestRows, $targetCatalog);
+    $checks = array_merge($checks, $manifestChecks);
+
+    $blocked = hasBlockingManifestMismatch($manifestChecks);
+    if ($blocked) {
+        $summary = summarizeChecks($checks);
+        return array(
+            'generated_at' => gmdate('c'),
+            'mode' => $mode,
+            'blocked' => true,
+            'manifest' => $manifestPath,
+            'flow' => buildFlowMetadata($flow, $context),
+            'roles' => buildRoleMetadata($roles),
+            'summary' => $summary,
+            'checks' => $checks,
+        );
+    }
+
+    if ($mode === 'parity') {
+        $checks = array_merge(
+            $checks,
+            compareFlowSides(
+                $flow,
+                $connections['baseline'],
+                $connections['target'],
+                $roles['baseline']['engine'],
+                $roles['target']['engine'],
+                $context,
+                $roles['baseline']['label'],
+                $roles['target']['label']
+            )
+        );
+    } else {
+        $sourceRole = $roles['source']['source_role'];
+        $checks = array_merge($checks, buildSourceRoleChecks($flow, $manifestRows, $sourceRole));
+        $checks = array_merge(
+            $checks,
+            compareFlowSides(
+                $flow,
+                $connections['source'],
+                $connections['target'],
+                $roles['source']['engine'],
+                $roles['target']['engine'],
+                $context,
+                $roles['source']['label'],
+                $roles['target']['label']
+            )
+        );
+    }
+
+    $summary = summarizeChecks($checks);
+    return array(
+        'generated_at' => gmdate('c'),
+        'mode' => $mode,
+        'blocked' => false,
+        'manifest' => $manifestPath,
+        'flow' => buildFlowMetadata($flow, $context),
+        'roles' => buildRoleMetadata($roles),
+        'summary' => $summary,
+        'checks' => $checks,
+    );
+}
+
+function buildFlowMetadata(array $flow, array $context): array
 {
+    return array(
+        'id' => $flow['id'],
+        'label' => $flow['label'],
+        'manifest_stage' => $flow['manifest_stage'],
+        'client_id' => $context['client_id'],
+        'expected_vendedor' => $context['expected_vendedor'],
+        'expected_personal' => $context['expected_personal'],
+    );
+}
+
+function buildRoleMetadata(array $roles): array
+{
+    $metadata = array();
+    foreach ($roles as $role => $config) {
+        $metadata[$role] = array(
+            'engine' => $config['engine'],
+            'label' => $config['label'],
+        );
+        if (!empty($config['source_role'])) {
+            $metadata[$role]['source_role'] = $config['source_role'];
+        }
+    }
+    return $metadata;
+}
+
+function loadManifest(string $path): array
+{
+    if (!is_file($path)) {
+        fail("Manifest not found: {$path}");
+    }
+
+    $handle = fopen($path, 'r');
+    if ($handle === false) {
+        fail("Cannot open manifest: {$path}");
+    }
+
+    $header = fgetcsv($handle, 0, "\t");
+    if ($header === false) {
+        fclose($handle);
+        fail("Manifest is empty: {$path}");
+    }
+
+    $rows = array();
+    while (($data = fgetcsv($handle, 0, "\t")) !== false) {
+        if ($data === array(null) || count(array_filter($data, 'strlen')) === 0) {
+            continue;
+        }
+        $row = array();
+        foreach ($header as $index => $column) {
+            $row[$column] = $data[$index] ?? '';
+        }
+        $rows[] = $row;
+    }
+    fclose($handle);
+    return $rows;
+}
+
+function filterManifestRows(array $rows, string $stage): array
+{
+    return array_values(array_filter($rows, static function (array $row) use ($stage): bool {
+        return (string) ($row['id_etapa'] ?? '') === $stage;
+    }));
+}
+
+function buildManifestChecks(array $flow, array $manifestRows, array $targetCatalog): array
+{
+    $checks = array();
+    $manifestIndex = indexManifestRows($manifestRows);
+
+    foreach ($flow['objects'] as $object) {
+        $expectedKey = manifestKey($object['name'], $object['type']);
+        $manifestRow = $manifestIndex[$expectedKey] ?? null;
+        $targetMatch = resolveCatalogMatch($targetCatalog, $object['name'], $object['type']);
+
+        if ($manifestRow === null) {
+            $checks[] = buildCheck(
+                'name_resolution',
+                'critical',
+                $object['name'],
+                $object['type'],
+                'error',
+                array('manifest' => false, 'target' => $targetMatch),
+                'Object queried by legacy flow is missing from the manifest.'
+            );
+            continue;
+        }
+
+        $checks[] = buildCheck(
+            'name_resolution',
+            $object['severity'],
+            $object['name'],
+            $object['type'],
+            $targetMatch['exact'] ? 'ok' : 'error',
+            array(
+                'manifest' => true,
+                'manifest_object' => $manifestRow['objeto'],
+                'manifest_type' => $manifestRow['tipo'],
+                'target' => $targetMatch,
+            ),
+            $targetMatch['exact']
+                ? 'Manifest and target information_schema match the exact runtime name/type.'
+                : buildTargetMismatchDetail($object['name'], $object['type'], $targetMatch)
+        );
+    }
+
+    return $checks;
+}
+
+function buildTargetMismatchDetail(string $name, string $type, array $targetMatch): string
+{
+    if ($targetMatch['case_insensitive']) {
+        return "Manifest/runtime expects {$type} {$name}, but target exposes {$targetMatch['actual_name']} as {$targetMatch['actual_type']}.";
+    }
+    return "Target information_schema does not expose {$type} {$name}.";
+}
+
+function hasBlockingManifestMismatch(array $checks): bool
+{
+    foreach ($checks as $check) {
+        if ($check['category'] === 'name_resolution' && $check['status'] === 'error') {
+            return true;
+        }
+    }
+    return false;
+}
+
+function buildSourceRoleChecks(array $flow, array $manifestRows, string $sourceRole): array
+{
+    $checks = array();
+    $manifestIndex = indexManifestRows($manifestRows);
+    foreach ($flow['objects'] as $object) {
+        $key = manifestKey($object['name'], $object['type']);
+        $row = $manifestIndex[$key] ?? null;
+        if ($row === null) {
+            continue;
+        }
+        $declared = strtolower((string) ($row['origen_sqlserver'] ?? ''));
+        $checks[] = buildCheck(
+            'source_role',
+            $object['severity'],
+            $object['name'],
+            $object['type'],
+            $declared === $sourceRole ? 'ok' : 'error',
+            array(
+                'manifest_origin' => $declared,
+                'requested_source' => $sourceRole,
+            ),
+            $declared === $sourceRole
+                ? 'Manifest origin matches the requested SQL Server source role.'
+                : 'Manifest origin conflicts with the requested SQL Server source role.'
+        );
+    }
+    return $checks;
+}
+
+function compareFlowSides(
+    array $flow,
+    PDO $leftPdo,
+    PDO $rightPdo,
+    string $leftEngine,
+    string $rightEngine,
+    array $context,
+    string $leftLabel,
+    string $rightLabel
+): array {
     $checks = array();
 
     foreach ($flow['objects'] as $object) {
-        $stageExists = objectExists($stage, $stageEngine, $object['name'], $object['type']);
-        $referenceExists = objectExists($reference, $referenceEngine, $object['name'], $object['type']);
+        $leftExists = objectExists($leftPdo, $leftEngine, $object['name'], $object['type']);
+        $rightExists = objectExists($rightPdo, $rightEngine, $object['name'], $object['type']);
         $checks[] = buildCheck(
             'object',
             $object['severity'],
             $object['name'],
             $object['type'],
-            ($stageExists && $referenceExists) ? 'ok' : 'error',
-            array('exists' => $stageExists),
-            array('exists' => $referenceExists),
-            (!$stageExists || !$referenceExists)
+            ($leftExists && $rightExists) ? 'ok' : 'error',
+            array($leftLabel => array('exists' => $leftExists), $rightLabel => array('exists' => $rightExists)),
+            (!$leftExists || !$rightExists)
                 ? 'Object missing on one side.'
                 : 'Object exists on both sides.'
         );
 
-        if ($object['type'] === 'view' && $stageExists && $referenceExists) {
-            $stageDefinition = normalizeDefinition(getViewDefinition($stage, $stageEngine, $object['name']));
-            $referenceDefinition = normalizeDefinition(getViewDefinition($reference, $referenceEngine, $object['name']));
+        if ($object['type'] === 'view' && $leftExists && $rightExists) {
+            $leftDefinition = normalizeDefinition(getViewDefinition($leftPdo, $leftEngine, $object['name']));
+            $rightDefinition = normalizeDefinition(getViewDefinition($rightPdo, $rightEngine, $object['name']));
             $checks[] = buildCheck(
                 'view_definition',
                 $object['severity'],
                 $object['name'],
                 'view',
-                ($stageDefinition === $referenceDefinition) ? 'ok' : 'error',
-                array('definition_hash' => sha1($stageDefinition)),
-                array('definition_hash' => sha1($referenceDefinition)),
-                ($stageDefinition === $referenceDefinition)
+                ($leftDefinition === $rightDefinition) ? 'ok' : 'error',
+                array(
+                    $leftLabel => array('definition_hash' => sha1($leftDefinition)),
+                    $rightLabel => array('definition_hash' => sha1($rightDefinition)),
+                ),
+                ($leftDefinition === $rightDefinition)
                     ? 'View definition matches after normalization.'
                     : 'View definition differs after normalization.'
             );
@@ -189,38 +525,39 @@ function runAudit(array $flow, PDO $stage, PDO $reference, string $stageEngine, 
     }
 
     foreach ($flow['counts'] as $countCheck) {
-        $stageCount = safeCount($stage, $stageEngine, $countCheck['object']);
-        $referenceCount = safeCount($reference, $referenceEngine, $countCheck['object']);
+        $leftCount = safeCount($leftPdo, $leftEngine, $countCheck['object']);
+        $rightCount = safeCount($rightPdo, $rightEngine, $countCheck['object']);
         $checks[] = buildCheck(
             'count',
             $countCheck['severity'],
             $countCheck['object'],
             $countCheck['type'],
-            ((string) $stageCount === (string) $referenceCount) ? 'ok' : 'warning',
-            array('count' => $stageCount),
-            array('count' => $referenceCount),
-            ((string) $stageCount === (string) $referenceCount)
+            ((string) $leftCount === (string) $rightCount) ? 'ok' : 'warning',
+            array($leftLabel => array('count' => $leftCount), $rightLabel => array('count' => $rightCount)),
+            ((string) $leftCount === (string) $rightCount)
                 ? 'Row count matches.'
                 : 'Row count differs.'
         );
     }
 
     foreach ($flow['keys'] as $keyCheck) {
-        $stageRows = safeQuery($stage, $keyCheck['sql'], $context);
-        $referenceRows = safeQuery($reference, $keyCheck['sql'], $context);
-        $stageKeys = rowsToKeys($stageRows, $keyCheck['columns']);
-        $referenceKeys = rowsToKeys($referenceRows, $keyCheck['columns']);
-        $missingInStage = array_values(array_diff($referenceKeys, $stageKeys));
-        $missingInReference = array_values(array_diff($stageKeys, $referenceKeys));
-        $status = (count($missingInStage) === 0 && count($missingInReference) === 0) ? 'ok' : 'warning';
+        $leftRows = safeQuery($leftPdo, $keyCheck['sql'], $context);
+        $rightRows = safeQuery($rightPdo, $keyCheck['sql'], $context);
+        $leftKeys = rowsToKeys($leftRows, $keyCheck['columns']);
+        $rightKeys = rowsToKeys($rightRows, $keyCheck['columns']);
+        $missingInLeft = array_values(array_diff($rightKeys, $leftKeys));
+        $missingInRight = array_values(array_diff($leftKeys, $rightKeys));
+        $status = (count($missingInLeft) === 0 && count($missingInRight) === 0) ? 'ok' : 'warning';
         $checks[] = buildCheck(
             'functional_key',
             $keyCheck['severity'],
             $keyCheck['object'],
             $keyCheck['type'],
             $status,
-            array('keys' => count($stageKeys), 'missing' => array_slice($missingInStage, 0, 20)),
-            array('keys' => count($referenceKeys), 'missing' => array_slice($missingInReference, 0, 20)),
+            array(
+                $leftLabel => array('keys' => count($leftKeys), 'missing' => array_slice($missingInLeft, 0, 20)),
+                $rightLabel => array('keys' => count($rightKeys), 'missing' => array_slice($missingInRight, 0, 20)),
+            ),
             ($status === 'ok')
                 ? 'Functional keys match.'
                 : 'Functional keys differ.'
@@ -228,54 +565,42 @@ function runAudit(array $flow, PDO $stage, PDO $reference, string $stageEngine, 
     }
 
     foreach ($flow['joins'] as $joinCheck) {
-        $stageRows = safeQuery($stage, $joinCheck['sql'], $context);
-        $referenceRows = safeQuery($reference, $joinCheck['sql'], $context);
+        $leftRows = safeQuery($leftPdo, $joinCheck['sql'], $context);
+        $rightRows = safeQuery($rightPdo, $joinCheck['sql'], $context);
         $checks[] = buildCheck(
             'join_break',
             $joinCheck['severity'],
             $joinCheck['object'],
             $joinCheck['type'],
-            (count($stageRows) === 0 && count($referenceRows) === 0) ? 'ok' : 'warning',
-            array('rows' => count($stageRows), 'sample' => array_slice($stageRows, 0, 5)),
-            array('rows' => count($referenceRows), 'sample' => array_slice($referenceRows, 0, 5)),
-            (count($stageRows) === 0 && count($referenceRows) === 0)
+            (count($leftRows) === 0 && count($rightRows) === 0) ? 'ok' : 'warning',
+            array(
+                $leftLabel => array('rows' => count($leftRows), 'sample' => array_slice($leftRows, 0, 5)),
+                $rightLabel => array('rows' => count($rightRows), 'sample' => array_slice($rightRows, 0, 5)),
+            ),
+            (count($leftRows) === 0 && count($rightRows) === 0)
                 ? 'No broken joins detected.'
                 : 'Broken joins or orphan rows detected.'
         );
     }
 
     foreach ($flow['cases'] as $caseCheck) {
-        $stageRows = safeQuery($stage, $caseCheck['sql'], $context);
-        $referenceRows = safeQuery($reference, $caseCheck['sql'], $context);
-        $status = compareCaseRows($stageRows, $referenceRows, $caseCheck['required_pairs']) ? 'ok' : 'error';
+        $leftRows = safeQuery($leftPdo, $caseCheck['sql'], $context);
+        $rightRows = safeQuery($rightPdo, $caseCheck['sql'], $context);
+        $status = compareCaseRows($leftRows, $rightRows, $caseCheck['required_pairs']) ? 'ok' : 'error';
         $checks[] = buildCheck(
             'case',
             $caseCheck['severity'],
             $caseCheck['object'],
             $caseCheck['type'],
             $status,
-            array('rows' => $stageRows),
-            array('rows' => $referenceRows),
+            array($leftLabel => array('rows' => $leftRows), $rightLabel => array('rows' => $rightRows)),
             ($status === 'ok')
                 ? 'Mandatory case matches.'
                 : 'Mandatory case differs or is incomplete.'
         );
     }
 
-    $summary = summarizeChecks($checks);
-
-    return array(
-        'generated_at' => gmdate('c'),
-        'flow' => array(
-            'id' => $flow['id'],
-            'label' => $flow['label'],
-            'client_id' => $context['client_id'],
-            'expected_vendedor' => $context['expected_vendedor'],
-            'expected_personal' => $context['expected_personal'],
-        ),
-        'summary' => $summary,
-        'checks' => $checks,
-    );
+    return $checks;
 }
 
 function getFlows(): array
@@ -284,6 +609,7 @@ function getFlows(): array
         'abm_clientes' => array(
             'id' => 'abm_clientes',
             'label' => 'Base de sesion y ABM Clientes',
+            'manifest_stage' => 'ET01 Base de sesión y ABM Clientes',
             'objects' => array(
                 array('name' => 'users', 'type' => 'table', 'severity' => 'critical'),
                 array('name' => 'roles', 'type' => 'table', 'severity' => 'critical'),
@@ -372,14 +698,14 @@ function getFlows(): array
                         array('cod_operador', 'cod_operador'),
                         array('cod_personal', 'cod_personal'),
                     ),
-                    'sql' => "SELECT cod_operador, cod_personal, tipo_operador FROM operadores_v WHERE cod_operador = '{expected_vendedor}' OR cod_personal = {expected_personal}"
+                    'sql' => "SELECT cod_operador, cod_personal, tipo_operador FROM operadores_v WHERE cod_operador = {expected_vendedor} OR cod_personal = {expected_personal}"
                 ),
             ),
         ),
     );
 }
 
-function buildCheck(string $category, string $severity, string $object, string $type, string $status, array $stage, array $reference, string $detail): array
+function buildCheck(string $category, string $severity, string $object, string $type, string $status, array $sides, string $detail): array
 {
     return array(
         'category' => $category,
@@ -387,8 +713,7 @@ function buildCheck(string $category, string $severity, string $object, string $
         'object' => $object,
         'type' => $type,
         'status' => $status,
-        'stage' => $stage,
-        'reference' => $reference,
+        'sides' => $sides,
         'detail' => $detail,
     );
 }
@@ -408,12 +733,107 @@ function summarizeChecks(array $checks): array
     return $summary;
 }
 
+function getObjectCatalog(PDO $pdo, string $engine): array
+{
+    $catalog = array();
+    if ($engine === 'mysql') {
+        $tables = fetchAll(
+            $pdo,
+            "SELECT TABLE_NAME AS object_name, CASE WHEN TABLE_TYPE = 'VIEW' THEN 'view' ELSE 'table' END AS object_type FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()",
+            array()
+        );
+        foreach ($tables as $row) {
+            $catalog[] = array('name' => (string) $row['object_name'], 'type' => (string) $row['object_type']);
+        }
+
+        $routines = fetchAll(
+            $pdo,
+            "SELECT ROUTINE_NAME AS object_name, LOWER(ROUTINE_TYPE) AS object_type FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = DATABASE()",
+            array()
+        );
+        foreach ($routines as $row) {
+            $catalog[] = array('name' => (string) $row['object_name'], 'type' => normalizeRoutineType((string) $row['object_type']));
+        }
+        return $catalog;
+    }
+
+    $rows = fetchAll(
+        $pdo,
+        "SELECT name AS object_name, type FROM sysobjects WHERE type IN ('U', 'V', 'P', 'FN')",
+        array()
+    );
+    foreach ($rows as $row) {
+        $catalog[] = array(
+            'name' => (string) $row['object_name'],
+            'type' => sqlServerTypeToLogical((string) $row['type']),
+        );
+    }
+    return $catalog;
+}
+
+function normalizeRoutineType(string $type): string
+{
+    return $type === 'procedure' ? 'procedure' : 'function';
+}
+
+function sqlServerTypeToLogical(string $type): string
+{
+    $map = array('U' => 'table', 'V' => 'view', 'P' => 'procedure', 'FN' => 'function');
+    return $map[$type] ?? 'table';
+}
+
+function resolveCatalogMatch(array $catalog, string $name, string $type): array
+{
+    foreach ($catalog as $row) {
+        if ($row['name'] === $name && $row['type'] === $type) {
+            return array(
+                'exact' => true,
+                'case_insensitive' => true,
+                'actual_name' => $row['name'],
+                'actual_type' => $row['type'],
+            );
+        }
+    }
+
+    foreach ($catalog as $row) {
+        if (strcasecmp($row['name'], $name) === 0) {
+            return array(
+                'exact' => false,
+                'case_insensitive' => true,
+                'actual_name' => $row['name'],
+                'actual_type' => $row['type'],
+            );
+        }
+    }
+
+    return array(
+        'exact' => false,
+        'case_insensitive' => false,
+        'actual_name' => null,
+        'actual_type' => null,
+    );
+}
+
+function indexManifestRows(array $rows): array
+{
+    $index = array();
+    foreach ($rows as $row) {
+        $index[manifestKey((string) $row['objeto'], (string) $row['tipo'])] = $row;
+    }
+    return $index;
+}
+
+function manifestKey(string $object, string $type): string
+{
+    return $type . '|' . $object;
+}
+
 function objectExists(PDO $pdo, string $engine, string $name, string $type): bool
 {
     if ($engine === 'mysql') {
-        if ($type === 'procedure') {
+        if ($type === 'procedure' || $type === 'function') {
             $sql = 'SELECT 1 FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_NAME = ? AND ROUTINE_TYPE = ?';
-            return (bool) fetchOne($pdo, $sql, array($name, 'PROCEDURE'));
+            return (bool) fetchOne($pdo, $sql, array($name, strtoupper($type)));
         }
         $tableType = ($type === 'view') ? 'VIEW' : 'BASE TABLE';
         $sql = 'SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND TABLE_TYPE = ?';
@@ -433,7 +853,11 @@ function getViewDefinition(PDO $pdo, string $engine, string $name): string
         return (string) ($row['Create View'] ?? '');
     }
 
-    $rows = fetchAll($pdo, 'SELECT c.text FROM sysobjects o JOIN syscomments c ON o.id = c.id WHERE o.name = ? AND o.type = ? ORDER BY c.colid', array($name, 'V'));
+    $rows = fetchAll(
+        $pdo,
+        'SELECT c.text FROM sysobjects o JOIN syscomments c ON o.id = c.id WHERE o.name = ? AND o.type = ? ORDER BY c.colid',
+        array($name, 'V')
+    );
     $definition = '';
     foreach ($rows as $row) {
         $definition .= (string) ($row['text'] ?? reset($row));
@@ -444,7 +868,7 @@ function getViewDefinition(PDO $pdo, string $engine, string $name): string
 function normalizeDefinition(string $definition): string
 {
     $definition = strtolower($definition);
-    $definition = str_replace(array("[", "]", "`", '"', "\r", "\n", "\t"), ' ', $definition);
+    $definition = str_replace(array('[', ']', '`', '"', "\r", "\n", "\t"), ' ', $definition);
     $definition = preg_replace('/\s+/', ' ', $definition);
     return trim((string) $definition);
 }
@@ -489,15 +913,15 @@ function rowsToKeys(array $rows, array $columns): array
     return array_values(array_unique($keys));
 }
 
-function compareCaseRows(array $stageRows, array $referenceRows, array $requiredPairs): bool
+function compareCaseRows(array $leftRows, array $rightRows, array $requiredPairs): bool
 {
-    if (count($stageRows) === 0 || count($referenceRows) === 0) {
+    if (count($leftRows) === 0 || count($rightRows) === 0) {
         return false;
     }
-    $stage = $stageRows[0];
-    $reference = $referenceRows[0];
+    $left = $leftRows[0];
+    $right = $rightRows[0];
     foreach ($requiredPairs as $pair) {
-        if ((string) ($stage[$pair[0]] ?? '') !== (string) ($reference[$pair[1]] ?? '')) {
+        if ((string) ($left[$pair[0]] ?? '') !== (string) ($right[$pair[1]] ?? '')) {
             return false;
         }
     }
@@ -528,7 +952,12 @@ function quoteIdentifier(string $engine, string $identifier): string
 function renderHuman(array $result): string
 {
     $lines = array();
-    $lines[] = 'Parity audit: ' . $result['flow']['label'];
+    $lines[] = 'Audit mode: ' . $result['mode'];
+    $lines[] = 'Flow: ' . $result['flow']['label'];
+    $lines[] = 'Roles: ' . implode(', ', array_map(static function (array $role): string {
+        return $role['label'] . ' [' . $role['engine'] . ']';
+    }, $result['roles']));
+    $lines[] = 'Manifest: ' . $result['manifest'];
     $lines[] = 'Client case: ' . $result['flow']['client_id']
         . ' -> ' . $result['flow']['expected_vendedor']
         . ' -> ' . $result['flow']['expected_personal'];
@@ -536,6 +965,9 @@ function renderHuman(array $result): string
         . $result['summary']['ok'] . ' ok, '
         . $result['summary']['warnings'] . ' warnings, '
         . $result['summary']['errors'] . ' errors';
+    if (!empty($result['blocked'])) {
+        $lines[] = 'Blocked: yes, manifest/name resolution mismatch against target information_schema.';
+    }
     $lines[] = '';
 
     foreach ($result['checks'] as $check) {
@@ -558,7 +990,7 @@ function renderHuman(array $result): string
 function renderCsv(array $result): string
 {
     $fh = fopen('php://temp', 'r+');
-    fputcsv($fh, array('category', 'severity', 'object', 'type', 'status', 'stage', 'reference', 'detail'));
+    fputcsv($fh, array('category', 'severity', 'object', 'type', 'status', 'sides', 'detail'));
     foreach ($result['checks'] as $check) {
         fputcsv($fh, array(
             $check['category'],
@@ -566,11 +998,16 @@ function renderCsv(array $result): string
             $check['object'],
             $check['type'],
             $check['status'],
-            json_encode($check['stage'], JSON_UNESCAPED_SLASHES),
-            json_encode($check['reference'], JSON_UNESCAPED_SLASHES),
+            json_encode($check['sides'], JSON_UNESCAPED_SLASHES),
             $check['detail'],
         ));
     }
     rewind($fh);
     return stream_get_contents($fh) ?: '';
+}
+
+function fail(string $message): void
+{
+    fwrite(STDERR, $message . PHP_EOL);
+    exit(2);
 }
