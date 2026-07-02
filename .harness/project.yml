@@ -1,0 +1,117 @@
+﻿project:
+  name: "KOI legacy"
+  repository: "jonyspiral/KOI"
+  local_path: "C:\\dev\\koi"
+  harness_path: ".harness"
+  main_branch: "main"
+  current_bootstrap_branch: "chore/koi-harness-bootstrap"
+  reference_commit: "2add1fd0843673ebf69f944dbaecb4d03797154f"
+  framework_detected: "custom legacy PHP (non-Laravel)"
+  language_detected:
+    - "PHP"
+    - "JavaScript"
+    - "CSS"
+
+environments:
+  local_windows:
+    path: "C:\\dev\\koi"
+    role: "working copy"
+  server_host:
+    host: "192.168.2.210"
+    os: "Ubuntu Server 20.04"
+    app_path: "/var/www/koi"
+    mysql:
+      version: "8.0.42"
+      listen: "0.0.0.0:3306"
+      charset: "utf8mb4"
+      collation: "utf8mb4_0900_ai_ci"
+    ufw: "inactive"
+
+runtime:
+  production:
+    formal_name: "KOI Produccion"
+    container: "koi1-php56"
+    image: "koi1-php56:local"
+    host_bind: "127.0.0.1:8196"
+    container_port: 80
+    mount_host: "/var/www/koi"
+    mount_container: "/var/www/encinitas"
+    database: "koi1_prod"
+    public_url: "https://koi.spiralshoes.com/"
+    lan_url: "http://192.168.2.210:8196/"
+    public_proxy_target: "http://127.0.0.1:8196"
+  rollback:
+    formal_name: "KOI Rollback"
+    allowed_aliases:
+      - "baseline"
+    avoid_primary_name:
+      - "test"
+    container: "koi1-php56_test"
+    image: "koi1-php56:local"
+    host_bind: "0.0.0.0:8195"
+    container_port: 80
+    mount_host: "/var/www/koi_rollback_20260702_094857"
+    mount_container: "/var/www/encinitas"
+    database: "koi1_stage"
+    lan_url: "http://192.168.2.210:8195/"
+    public_exposure: "not intended"
+
+odbc_profiles:
+  - dsn_name: "KOI1_MYSQL_PROD_RW"
+    host: "192.168.2.210"
+    port: 3306
+    user: "koi_odbc"
+    database: "koi1_prod"
+    charset: "utf8mb4"
+    ssl_mode_requested: "Preferred"
+    usage: "operativo"
+    driver_recommended: "MySQL Connector/ODBC 8.0 (same architecture as Access)"
+    password_policy: "never store password in repo"
+    status: "pendiente de validar por PC"
+  - dsn_name: "KOI1_MYSQL_STAGE_RW"
+    host: "192.168.2.210"
+    port: 3306
+    user: "koi_odbc"
+    database: "koi1_stage"
+    charset: "utf8mb4"
+    ssl_mode_requested: "Preferred"
+    usage: "rollback baseline mantenimiento autorizado"
+    non_daily_ops: true
+    driver_recommended: "MySQL Connector/ODBC 8.0 (same architecture as Access)"
+    password_policy: "never store password in repo"
+    status: "pendiente de validar por PC"
+
+safe_verification_commands:
+  - "git status --short --untracked-files=all"
+  - "git diff --stat"
+  - "git diff --cached --stat"
+  - "powershell -ExecutionPolicy Bypass -File .harness/checks/verify-odbc-preflight.ps1"
+
+sensitive_files:
+  - ".env"
+  - "factory/Config.php"
+  - "**/*.bak"
+
+forbidden_without_explicit_authorization:
+  - "git add"
+  - "git commit"
+  - "git push"
+  - "git merge"
+  - "git rebase"
+  - "git reset --hard"
+  - "git clean -fd"
+  - "deploy"
+  - "mysql writes"
+  - "sql server writes"
+  - "nginx changes"
+  - "docker runtime changes"
+
+sources_of_truth:
+  primary_structured: ".harness/project.yml"
+  supporting_docs:
+    - ".harness/rules.md"
+    - ".harness/context.md"
+    - ".harness/current-task.md"
+    - ".harness/decisions.md"
+    - ".harness/open-issues.md"
+    - "docs/infraestructura/koi-legacy-topologia.md"

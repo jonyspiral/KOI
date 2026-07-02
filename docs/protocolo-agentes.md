@@ -1,36 +1,29 @@
-# Protocolo de agentes - KOI1 Encinitas
+# Protocolo de agentes - KOI legacy
 
 ## Objetivo
-Mantener contexto técnico mínimo y decisiones operativas consistentes al trabajar sobre KOI1 legacy en entornos distintos:
+Mantener decisiones operativas consistentes para KOI legacy sin mezclarlo con KOI2.
 
-- `C:\dev\encinitas_prod_real_20260515`: copia local limpia de producción KOI1 real / fuente primaria de análisis
-- `X:\xampp\htdocs\encinitas`: producción KOI1 real, solo para refrescar la copia local cuando se decida explícitamente
-- `encinitas`: adaptación Docker PHP 5.6 + MySQL 8
+## Reglas de trabajo
+1. Antes de cualquier cambio, confirmar repo objetivo `C:\dev\koi`.
+2. Usar `.harness/project.yml` como fuente estructurada principal del harness local.
+3. Usar como fuente operativa canonica `docs/infraestructura/koi-legacy-topologia.md`.
+4. No usar rutas legacy historicas del host (`/var/www/encinitas`, `/var/www/encinitas_test_runtime`) como destino operativo.
+5. No ejecutar git pull/merge/reset/checkout en `/var/www/koi` sin autorizacion explicita.
+6. No modificar Nginx publico, certificados, DNS o MikroTik sin autorizacion explicita.
+7. No tocar `/var/www/koi_rollback_20260702_094857`.
+8. No versionar `factory/Config.php` ni archivos `*.bak` productivos.
+9. Si cambia topologia o limites operativos, actualizar `.harness/project.yml`, `docs/infraestructura/koi-legacy-topologia.md` y luego `docs/INDEX.md`.
 
-## Reglas
-1. Antes de cambiar código, identificar explícitamente el entorno objetivo.
-2. No asumir que un fix de MSSQL sirve en MySQL.
-3. No asumir que `origin/main`, `fonts/evy`, `C:\dev\encinitas_prod_truth` o un backup intermedio representan la fuente real.
-4. Para entender flujo legacy, comparar primero contra `C:\dev\encinitas_prod_real_20260515`.
-5. Cuando un cambio toca acceso a datos, documentar:
-   - tablas/vistas/SP afectados
-   - si usa `EXEC`, `CALL`, query directa o shim
-   - si el cambio aplica a ambos entornos o solo a uno
-6. Si se toca un módulo legacy, actualizar `docs/INDEX.md` y agregar o ajustar una nota puntual en `docs/`.
-7. Si el cambio fue validado solo localmente, dejarlo explícito.
+## Checklist de sesion
+1. Revisar `.antigravity-context.md`.
+2. Revisar `.harness/project.yml`.
+3. Revisar `.harness/rules.md` y `.harness/current-task.md`.
+4. Revisar `docs/INDEX.md`.
+5. Revisar `docs/infraestructura/koi-legacy-topologia.md`.
+6. Ejecutar solo comandos de verificacion no destructivos salvo autorizacion explicita.
+7. Documentar validacion realizada y fecha absoluta.
 
-## Checklist de sesión
-1. Confirmar repo/entorno objetivo.
-2. Revisar `.antigravity-context.md`.
-3. Revisar `docs/INDEX.md`.
-4. Ejecutar solo validaciones acordes al entorno.
-5. Actualizar documentación al cerrar la sesión.
-
-## Convenciones de documentación
-- Documentar fechas absolutas (`2026-05-12`) en vez de "hoy" o "ayer".
-- Separar claramente:
-  - problema
-  - causa raíz
-  - fix aplicado
-  - validación realizada
-  - riesgos pendientes
+## Convenciones de documentacion
+- Usar fechas absolutas (ejemplo `2026-07-02`).
+- Separar problema, decision, validacion y riesgos.
+- No incluir credenciales, secretos ni `Config.php` productivo.
