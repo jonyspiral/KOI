@@ -197,9 +197,7 @@ echo "<!-- Debug: Desktop file = $file_desktop, Mobile file = $file_mobile -->";
 					login();
 			}
 			function login(){
-				if (validarLogin()){
-					document.forms[0].submit();
-				}
+				document.forms[0].submit();
 			}
 			function validarLogin(){
 				if ($('#user').val() == ''){
@@ -225,11 +223,11 @@ echo "<!-- Debug: Desktop file = $file_desktop, Mobile file = $file_mobile -->";
         <div class='change-empresa'></div> <!-- Círculo vacío negro con borde blanco -->
 		<div id='divBody'>
 			<div class='login-box-inner'>
-                <form name='login-box-form' action='' method='POST'>
+                <form name='login-box-form' action='' method='POST' onsubmit='return validarLogin();'>
                     <div>
                         <input type='text' id='user' name='user' placeholder='user' class='login-input-username' />
                         <input type='password' id='pass' name='pass' placeholder='password' class='login-input-password' onkeypress='ifEnter(window.event);' />
-                        <a href='javascript:login();' class='login-box-boton-acceder'>Login</a>
+                        <button type='submit' class='login-box-boton-acceder'>Login</button>
                         <div id='login-error-message'></div>
                         <input type='text' id='empresa' name='empresa' value='1' class='hidden' />
                     </div>
