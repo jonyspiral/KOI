@@ -18,7 +18,8 @@ register_shutdown_function('fatal_handler');
 //Login
 try {
     UsuarioLogin::login();
-    if ($_SERVER['REMOTE_ADDR'] == '190.104.245.136' || $_SERVER['REMOTE_ADDR'] == '190.190.22.173') {
+    $remoteAddr = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+    if ($remoteAddr == '190.104.245.136' || $remoteAddr == '190.190.22.173') {
 		Logger::addInfo('U: ' . Usuario::logueado()->id);
 	}
 } catch (LoginFailException $ex){

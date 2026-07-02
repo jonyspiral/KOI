@@ -21,7 +21,9 @@ function getSaldos($idCaja, $empresa, $desde) {
 	$saldosDesde = Factory::getInstance()->getArrayFromView('movimientos_caja_v_noanul', $whereDesde, 0, $fieldsDesde);
 	$saldosDesde1 = $saldosDesde[0]['saldo_desde'];
 
-	/*$saldoInicial = Factory::getInstance()->getArrayFromView('movimientos_caja_v_anul', $whereInicial, 0, $fieldsInicial);
+			$saldoInicial2 = 0;
+		$saldosDesde2 = 0;
+/*$saldoInicial = Factory::getInstance()->getArrayFromView('movimientos_caja_v_anul', $whereInicial, 0, $fieldsInicial);
 	$saldoInicial2 = Funciones::toFloat($saldoInicial[0]['importe_efectivo']) - Funciones::toFloat($saldoInicial[0]['saldo']);
 	$saldosDesde = Factory::getInstance()->getArrayFromView('movimientos_caja_v_anul', $whereDesde, 0, $fieldsDesde);
 	$saldosDesde2 = $saldosDesde[0]['saldo_desde'];*/
@@ -75,7 +77,12 @@ try {
 	$orderBy = ' ORDER BY fecha ASC, cod_importe_operacion ASC';
 
 	//$listaMovimientos = Factory::getInstance()->getArrayFromView('movimientos_caja_v', $where . $orderBy);
-	$listaMovimientos = Factory::getInstance()->getArrayFromStoredProcedure('movimientos_caja_sp', '@where = ' . Datos::objectToDB($where));
+	try {
+		$listaMovimientos = Factory::getInstance()->getArrayFromStoredProcedure('movimientos_caja_sp', '@where = ' . Datos::objectToDB($where));
+	} catch (Exception $ex) {
+		// Fallback MySQL: en algunos entornos el SP no existe o no acepta sintaxis legacy.
+		$listaMovimientos = Factory::getInstance()->getArrayFromView('movimientos_caja_v', $where . $orderBy);
+	}
 	$listaCheques = Factory::getInstance()->getArrayFromView('movimientos_caja_v_chq', $where . $orderBy);
 
 	if ((count($listaMovimientos) + count($listaCheques)) == 0) {

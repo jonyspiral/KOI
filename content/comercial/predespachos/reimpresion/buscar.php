@@ -3,13 +3,15 @@
 
 $empresa = Funciones::session('empresa');
 $idCliente = Funciones::get('idCliente');
-$numero = Funciones::get('numero');
+$idPedido = Funciones::get('idPedido');
+$idPedido = (empty($idPedido) ? Funciones::get('numero') : $idPedido);
 $almacen = Funciones::get('almacen');
 
 try {
 	$where = 'predespachados > 0  AND ';
 	$where .= 'empresa = ' . Datos::objectToDB($empresa) . ' AND ';
 	$where .= (empty($idCliente) ? '' : 'cod_cliente = ' . Datos::objectToDB($idCliente) . ' AND ');
+	$where .= (empty($idPedido) ? '' : 'nro_pedido = ' . Datos::objectToDB($idPedido) . ' AND ');
 	$where .= (empty($almacen) ? '' : 'cod_almacen = ' . Datos::objectToDB($almacen) . ' AND ');
 	$where = trim($where, ' AND ');
 	$where .= ' GROUP BY cod_cliente, cod_sucursal';

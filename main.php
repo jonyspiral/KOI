@@ -135,5 +135,23 @@
         </div>
         <?php include('footer.php'); ?>
     </div>
+    
+        <style type="text/css">
+            #koi-prod-signature {
+                position: fixed;
+                right: 10px;
+                bottom: 8px;
+                z-index: 2147483647;
+                padding: 3px 7px;
+                border-radius: 3px;
+                background: rgba(20, 20, 20, 0.58);
+                color: rgba(255, 255, 255, 0.82);
+                font: 10px/1.2 Arial, sans-serif;
+                letter-spacing: 0.6px;
+                pointer-events: none;
+                user-select: none;
+            }
+        </style>
+        <div id="koi-prod-signature">KOI PROD &middot; 8196</div>
     </body>
 </html>

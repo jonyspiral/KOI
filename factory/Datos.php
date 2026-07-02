@@ -128,9 +128,70 @@ public static function objectToDB($value) {
             return self::db()->query($sql, $params);
         } else {
             $paramStr = trim((string)$params);
+            $paramStr = self::normalizarParametrosStoredProcedure($paramStr);
             $sql = 'CALL ' . $name . (strlen($paramStr) ? '(' . $paramStr . ')' : '()');
             $db = self::db(); if (method_exists($db, 'call')) { $sets = $db->call($sql); return (is_array($sets) && count($sets) > 0) ? $sets[0] : array(); } else { return $db->query($sql); }
         }
+    }
+
+    private static function normalizarParametrosStoredProcedure($paramStr) {
+        $paramStr = trim((string)$paramStr);
+        if ($paramStr === '') {
+            return '';
+        }
+
+        $partes = self::splitSqlParams($paramStr);
+        $normalizados = array();
+        foreach ($partes as $p) {
+            $p = trim($p);
+            if ($p === '') {
+                continue;
+            }
+
+            // Convierte "@where = '...'" -> "'...'" para CALL en MySQL.
+            if (preg_match('/^@[A-Za-z0-9_]+\s*=\s*(.+)$/s', $p, $m)) {
+                $p = trim($m[1]);
+            }
+
+            // Limpia OUTPUT de sintaxis SQL Server.
+            $p = preg_replace('/\s+OUTPUT\s*$/i', '', $p);
+            $normalizados[] = $p;
+        }
+
+        return implode(', ', $normalizados);
+    }
+
+    private static function splitSqlParams($txt) {
+        $out = array();
+        $buf = '';
+        $inQuote = false;
+        $len = strlen($txt);
+
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $txt[$i];
+            if ($ch === "'") {
+                if ($inQuote && ($i + 1 < $len) && $txt[$i + 1] === "'") {
+                    $buf .= "''";
+                    $i++;
+                    continue;
+                }
+                $inQuote = !$inQuote;
+                $buf .= $ch;
+                continue;
+            }
+            if ($ch === ',' && !$inQuote) {
+                $out[] = $buf;
+                $buf = '';
+                continue;
+            }
+            $buf .= $ch;
+        }
+
+        if ($buf !== '') {
+            $out[] = $buf;
+        }
+
+        return $out;
     }
 
     /** Ejecuta un SP y devuelve una fila */

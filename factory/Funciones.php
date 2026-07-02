@@ -11,20 +11,20 @@ class Funciones {
 		return str_replace($buscarEsto, $reemplazarPorEsto, $enEsteString);
 	}
 	static function sacarTildes($str) {
-		$str = str_replace('Á', 'A', $str);
-		$str = str_replace('É', 'E', $str);
-		$str = str_replace('Í', 'I', $str);
-		$str = str_replace('Ó', 'O', $str);
-		$str = str_replace('Ú', 'U', $str);
-		$str = str_replace('Ñ', 'N', $str);
-		$str = str_replace('á', 'a', $str);
-		$str = str_replace('é', 'e', $str);
-		$str = str_replace('í', 'i', $str);
-		$str = str_replace('ó', 'o', $str);
-		$str = str_replace('ú', 'u', $str);
-		$str = str_replace('ñ', 'n', $str);
-		$str = str_replace('ü', 'u', $str);
-		$str = str_replace('Ü', 'U', $str);
+		$str = str_replace('', 'A', $str);
+		$str = str_replace('', 'E', $str);
+		$str = str_replace('', 'I', $str);
+		$str = str_replace('', 'O', $str);
+		$str = str_replace('', 'U', $str);
+		$str = str_replace('', 'N', $str);
+		$str = str_replace('', 'a', $str);
+		$str = str_replace('', 'e', $str);
+		$str = str_replace('', 'i', $str);
+		$str = str_replace('', 'o', $str);
+		$str = str_replace('', 'u', $str);
+		$str = str_replace('', 'n', $str);
+		$str = str_replace('', 'u', $str);
+		$str = str_replace('', 'U', $str);
 		return $str;
 	}
 	static function limpiarNombreDeArchivo($str) {
@@ -41,7 +41,7 @@ class Funciones {
 		$puntoPosDos = (strlen($numero) > ($puntoPos + 1)) ? strpos($numero, ',', $puntoPos + 1) : false;
 		if ($comaPosDos && $puntoPosDos) {
 			if ($exceptions) {
-				throw new FactoryExceptionCustomException('Formato de número no reconocido (tiene más de una coma y un punto)');
+				throw new FactoryExceptionCustomException('Formato de nmero no reconocido (tiene ms de una coma y un punto)');
 			}
 			return '';
 		}
@@ -49,12 +49,18 @@ class Funciones {
 			$numero = str_replace($comaPos < $puntoPos ? ',' : '.', '', $numero);
 		}
 		$numero = str_replace(',', '.', $numero);
-		return number_format($numero, abs($decimales), $simboloDecimales, $simboloMiles);
+			if (!is_numeric($numero)) {
+				return '';
+			}
+			return number_format((float)$numero, abs($decimales), $simboloDecimales, $simboloMiles);
 		/*
 		$numero = str_replace('$', '', $numero);
 		$numero = str_replace(' ', '', $numero);
 		$numero = str_replace(",", ".", $numero);
-		return number_format($numero, abs($decimales), $simboloDecimales, $simboloMiles);
+			if (!is_numeric($numero)) {
+				return '';
+			}
+			return number_format((float)$numero, abs($decimales), $simboloDecimales, $simboloMiles);
 		*/
 	}
 	static function formatearMoneda($numero, $simbolo = '$', $decimales = 2, $simboloDecimales = ',', $simboloMiles = '') {
@@ -76,10 +82,10 @@ class Funciones {
 			throw new FactoryExceptionCustomException('Debe ingresar una fecha "hasta"');
 		}
 		if (is_null($desde) && is_null($hasta) && ($maxDias || $minDias)) {
-			throw new FactoryExceptionCustomException('No se puede limitar la cantidad de días sin una fecha "desde" o "hasta"');
+			throw new FactoryExceptionCustomException('No se puede limitar la cantidad de das sin una fecha "desde" o "hasta"');
 		}
 
-		$error = 'El rango de fechas no puede superar los ' . $maxDias . ' días';
+		$error = 'El rango de fechas no puede superar los ' . $maxDias . ' das';
 
 		if ($maxDias) {
 			$desdeMasMaxDias = Funciones::sumarTiempo($desde, $maxDias, 'days');
@@ -121,7 +127,7 @@ class Funciones {
 
 		$strFechas = '';
 		(!is_null($desde)) && ($strFechas .= ' (' . $campoFecha . ' >= STR_TO_DATE(' . Datos::objectToDB(Funciones::formatearFecha($desde)) . ', ' . Datos::objectToDB('%d/%m/%Y') . ')' . (is_null($hasta) ? ')' : ''));
-		(!is_null($hasta)) && ($strFechas .= ' AND ' . (is_null($desde) ? '(' : '' ) . $campoFecha . ' < DATE_ADD(STR_TO_DATE(' . Datos::objectToDB(Funciones::formatearFecha($hasta)) . ', ' . Datos::objectToDB('%d/%m/%Y') . '), INTERVAL 1 DAY)) ');
+		(!is_null($hasta)) && ($strFechas .= ' AND ' . (is_null($desde) ? '(' : '' ) . $campoFecha . ' < DATE_ADD(STR_TO_DATE(' . Datos::objectToDB(Funciones::formatearFecha($hasta)) . ', ' . Datos::objectToDB('%d/%m/%Y') . '), INTERVAL 1 DAY)' . ')');
 		return trim($strFechas, ' AND');
 	}
 	static function esFechaMayor($fecha1, $fecha2) {
@@ -143,8 +149,8 @@ class Funciones {
 	}
 
 	/**
-	 * Devuelve la cantidad de días que hay entre la fecha 1 y la fecha 2
-	 * Si el tercer parámetro es FALSE, devuelve positivo si la primer fecha es mayor
+	 * Devuelve la cantidad de das que hay entre la fecha 1 y la fecha 2
+	 * Si el tercer parmetro es FALSE, devuelve positivo si la primer fecha es mayor
 	 *
 	 * @param      $fecha1
 	 * @param      $fecha2
@@ -201,7 +207,7 @@ class Funciones {
 			$fecha = strtotime(str_replace('/', '-', $fecha));
 		}
 		if (!$fecha) {
-			throw new FactoryExceptionCustomException('La fecha no tiene un formato válido, o es posterior al año 2037');
+			throw new FactoryExceptionCustomException('La fecha no tiene un formato vlido, o es posterior al ao 2037');
 		}
 		return date($formato, $fecha);
 	}
@@ -396,7 +402,7 @@ class Funciones {
 	static function padBoth($obj, $cantidad, $charRelleno = '0') {
 		if (!isset($obj) || is_null($obj))
 			return null;
-		//Si tiene que rellenar más de un lado que del otro, rellena más del right
+		//Si tiene que rellenar ms de un lado que del otro, rellena ms del right
 		return str_pad($obj, $cantidad, $charRelleno, STR_PAD_BOTH);
 	}
 	static function toLower($str) {
@@ -416,7 +422,7 @@ class Funciones {
 		$macAddr = false;
 		//Comando externo
 		$ipAddress = self::getIpAddress();
-		$arp = `arp -a $ipAddress`; //LAS COMILLAS VAN ASÍ!!!
+		$arp = `arp -a $ipAddress`; //LAS COMILLAS VAN AS!!!
 		$lines = explode('\n', $arp);
 		//Busco la linea que tiene la IP que busco
 		foreach($lines as $line) {

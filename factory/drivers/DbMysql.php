@@ -203,6 +203,74 @@ public function exec($sql, $params = array()) {
     $r = preg_replace('/\bLEN\s*\(/i', 'CHAR_LENGTH(', $r);
     // NOW() → NOW()
     $r = preg_replace('/\bGETDATE\s*\(\s*\)/i', 'NOW()', $r);
+    // dbo.toDate(x) -> conversión tolerante de formatos legacy a DATETIME MySQL
+    $r = preg_replace_callback(
+      '/\bdbo\.toDate\s*\(\s*([^)]+?)\s*\)/i',
+      function($m) {
+        $arg = $m[1];
+        return "(COALESCE(" .
+               "STR_TO_DATE($arg, '%d/%m/%Y %H:%i:%s')," .
+               "STR_TO_DATE($arg, '%d/%m/%Y %H:%i')," .
+               "STR_TO_DATE($arg, '%d/%m/%Y')," .
+               "STR_TO_DATE($arg, '%Y-%m-%d %H:%i:%s')," .
+               "STR_TO_DATE($arg, '%Y-%m-%d %H:%i')," .
+               "STR_TO_DATE($arg, '%Y-%m-%d')" .
+               "))";
+      },
+      $r
+    );
+    // dbo.relativeDate(base, 'today|tomorrow|yesterday', n) -> DATE_ADD(DATE(base), INTERVAL offset DAY)
+    $r = preg_replace_callback(
+      "/\\bdbo\\.relativeDate\\s*\\(\\s*([^,]+?)\\s*,\\s*'([^']+)'\\s*,\\s*(-?\\d+)\\s*\\)/i",
+      function($m) {
+        $base = trim($m[1]);
+        $ref = strtolower(trim($m[2]));
+        $n = (int)$m[3];
+        $offset = $n;
+        if ($ref === 'tomorrow') {
+          $offset += 1;
+        } elseif ($ref === 'yesterday') {
+          $offset -= 1;
+        }
+        return "DATE_ADD(DATE($base), INTERVAL $offset DAY)";
+      },
+      $r
+    );
+    // dbo.getDatePart('part', x) -> EXTRACT()/funciones MySQL
+    $r = preg_replace_callback(
+      "/\\bdbo\\.getDatePart\\s*\\(\\s*'([^']+)'\\s*,\\s*([^)]+?)\\s*\\)/i",
+      function($m) {
+        $part = strtolower(trim($m[1]));
+        $arg = trim($m[2]);
+        switch ($part) {
+          case 'year': return "EXTRACT(YEAR FROM $arg)";
+          case 'month': return "EXTRACT(MONTH FROM $arg)";
+          case 'day': return "EXTRACT(DAY FROM $arg)";
+          case 'hour': return "EXTRACT(HOUR FROM $arg)";
+          case 'minute': return "EXTRACT(MINUTE FROM $arg)";
+          case 'second': return "EXTRACT(SECOND FROM $arg)";
+          case 'weekday': return "DAYOFWEEK($arg)";
+          default: return "EXTRACT($part FROM $arg)";
+        }
+      },
+      $r
+    );
+    // dbo.dateName('part', x) -> DATE_FORMAT()/nombres MySQL
+    $r = preg_replace_callback(
+      "/\\bdbo\\.dateName\\s*\\(\\s*'([^']+)'\\s*,\\s*([^)]+?)\\s*\\)/i",
+      function($m) {
+        $part = strtolower(trim($m[1]));
+        $arg = trim($m[2]);
+        switch ($part) {
+          case 'month': return "DATE_FORMAT($arg, '%M')";
+          case 'weekday': return "DATE_FORMAT($arg, '%W')";
+          case 'year': return "DATE_FORMAT($arg, '%Y')";
+          case 'day': return "DATE_FORMAT($arg, '%d')";
+          default: return "DATE_FORMAT($arg, '%Y-%m-%d')";
+        }
+      },
+      $r
+    );
     // DATEDIFF(b, a) → DATEDIFF(b, a)
     $r = preg_replace('/\bDATEDIFF\s*\(\s*day\s*,\s*([^,]+)\s*,\s*([^)]+)\)/i', 'DATEDIFF($2, $1)', $r);
     // @@IDENTITY → LAST_INSERT_ID()
@@ -234,6 +302,13 @@ public function exec($sql, $params = array()) {
 
       /* Helpers de seguridad/IDs */
     public function escape($value) {
+        if (is_array($value) || is_object($value)) {
+            $encoded = json_encode($value, JSON_UNESCAPED_UNICODE);
+            if ($encoded === false) {
+                $encoded = '';
+            }
+            return mysqli_real_escape_string($this->ln, $encoded);
+        }
         return mysqli_real_escape_string($this->ln, (string)$value);
     }
 

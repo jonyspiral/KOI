@@ -31,8 +31,8 @@ try {
 	$incluyeAlMenosUno = false;
 	$incluye = 'tipo_docum IN(';
 	foreach ($arrayDocumentosIncluidos as $tipoDocumento => $incluido) {
-		$incluyeAlMenosUno = true;
 		if ($incluido) {
+			$incluyeAlMenosUno = true;
 			$incluye .= Datos::objectToDB($tipoDocumento) . ', ';
 		}
 	}
